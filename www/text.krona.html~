@@ -1,0 +1,388 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xml:lang="en" lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <script id="notfound">window.onload=function(){document.body.innerHTML="Could not get resources from \"http://krona.sourceforge.net\"."}</script>
+  <script src="krona-2.0.js"></script>
+ </head>
+ <body>
+  <img id="hiddenImage" src="http://krona.sourceforge.net/img/hidden.png" style="display:none"/>
+  <img id="loadingImage" src="http://krona.sourceforge.net/img/loading.gif" style="display:none"/>
+  <noscript>Javascript must be enabled to view this page.</noscript>
+  <div style="display:none">
+  <krona collapse="true" key="true">
+   <attributes magnitude="magnitude">
+    <data enable="text.krona.html.files/enable.js">members</data>
+    <attribute display="Total">magnitude</attribute>
+   </attributes>
+   <datasets>
+    <dataset>mix2_19_annotation</dataset>
+   </datasets>
+<node name="all">
+ <magnitude><val>15795</val></magnitude>
+ <node name="NA">
+  <magnitude><val>6</val></magnitude>
+  <node name="NA">
+   <magnitude><val>6</val></magnitude>
+   <node name="NA">
+    <magnitude><val>6</val></magnitude>
+    <node name="NA">
+     <magnitude><val>3</val></magnitude>
+     <node name="NA">
+      <magnitude><val>1</val></magnitude>
+      <node name="NA">
+       <magnitude><val>1</val></magnitude>
+       <node name="uncultured microorganism">
+        <magnitude><val>1</val></magnitude>
+       </node>
+      </node>
+     </node>
+     <node name="Inoviridae">
+      <magnitude><val>2</val></magnitude>
+      <node name="Inovirus">
+       <magnitude><val>2</val></magnitude>
+       <node name="Pseudomonas phage Pf1">
+        <magnitude><val>2</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+    <node name="Caudovirales">
+     <magnitude><val>3</val></magnitude>
+     <node name="Siphoviridae">
+      <magnitude><val>1</val></magnitude>
+      <node name="Lambdalikevirus">
+       <magnitude><val>1</val></magnitude>
+       <node name="NA">
+        <magnitude><val>1</val></magnitude>
+       </node>
+      </node>
+     </node>
+     <node name="Myoviridae">
+      <magnitude><val>2</val></magnitude>
+      <node name="P2likevirus">
+       <magnitude><val>2</val></magnitude>
+       <node name="Pseudomonas phage phiCTX">
+        <magnitude><val>2</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+   </node>
+  </node>
+ </node>
+ <node name="Bacteria">
+  <magnitude><val>15789</val></magnitude>
+  <node name="Armatimonadetes">
+   <magnitude><val>1</val></magnitude>
+   <node name="NA">
+    <magnitude><val>1</val></magnitude>
+    <node name="NA">
+     <magnitude><val>1</val></magnitude>
+     <node name="NA">
+      <magnitude><val>1</val></magnitude>
+      <node name="Fimbriimonas">
+       <magnitude><val>1</val></magnitude>
+       <node name="NA">
+        <magnitude><val>1</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+   </node>
+  </node>
+  <node name="Firmicutes">
+   <magnitude><val>1339</val></magnitude>
+   <node name="Negativicutes">
+    <magnitude><val>1339</val></magnitude>
+    <node name="Selenomonadales">
+     <magnitude><val>1335</val></magnitude>
+     <node name="Acidaminococcaceae">
+      <magnitude><val>1334</val></magnitude>
+      <node name="Acidaminococcus">
+       <magnitude><val>1334</val></magnitude>
+       <node name="Acidaminococcus fermentans">
+        <magnitude><val>1333</val></magnitude>
+       </node>
+       <node name="NA">
+        <magnitude><val>1</val></magnitude>
+       </node>
+      </node>
+     </node>
+     <node name="Veillonellaceae">
+      <magnitude><val>1</val></magnitude>
+      <node name="Megasphaera">
+       <magnitude><val>1</val></magnitude>
+       <node name="Megasphaera elsdenii">
+        <magnitude><val>1</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+    <node name="NA">
+     <magnitude><val>4</val></magnitude>
+     <node name="NA">
+      <magnitude><val>4</val></magnitude>
+      <node name="NA">
+       <magnitude><val>4</val></magnitude>
+       <node name="NA">
+        <magnitude><val>4</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+   </node>
+  </node>
+  <node name="Verrucomicrobia">
+   <magnitude><val>1</val></magnitude>
+   <node name="Opitutae">
+    <magnitude><val>1</val></magnitude>
+    <node name="NA">
+     <magnitude><val>1</val></magnitude>
+     <node name="NA">
+      <magnitude><val>1</val></magnitude>
+      <node name="NA">
+       <magnitude><val>1</val></magnitude>
+       <node name="NA">
+        <magnitude><val>1</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+   </node>
+  </node>
+  <node name="NA">
+   <magnitude><val>3</val></magnitude>
+   <node name="NA">
+    <magnitude><val>3</val></magnitude>
+    <node name="NA">
+     <magnitude><val>3</val></magnitude>
+     <node name="NA">
+      <magnitude><val>3</val></magnitude>
+      <node name="NA">
+       <magnitude><val>3</val></magnitude>
+       <node name="endophytic bacterium 841P-3">
+        <magnitude><val>1</val></magnitude>
+       </node>
+       <node name="NA">
+        <magnitude><val>2</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+   </node>
+  </node>
+  <node name="Proteobacteria">
+   <magnitude><val>13123</val></magnitude>
+   <node name="Betaproteobacteria">
+    <magnitude><val>6</val></magnitude>
+    <node name="Burkholderiales">
+     <magnitude><val>2</val></magnitude>
+     <node name="Comamonadaceae">
+      <magnitude><val>2</val></magnitude>
+      <node name="Variovorax">
+       <magnitude><val>1</val></magnitude>
+       <node name="NA">
+        <magnitude><val>1</val></magnitude>
+       </node>
+      </node>
+      <node name="Acidovorax">
+       <magnitude><val>1</val></magnitude>
+       <node name="NA">
+        <magnitude><val>1</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+    <node name="NA">
+     <magnitude><val>4</val></magnitude>
+     <node name="NA">
+      <magnitude><val>4</val></magnitude>
+      <node name="NA">
+       <magnitude><val>4</val></magnitude>
+       <node name="NA">
+        <magnitude><val>4</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+   </node>
+   <node name="Gammaproteobacteria">
+    <magnitude><val>13111</val></magnitude>
+    <node name="Pseudomonadales">
+     <magnitude><val>8929</val></magnitude>
+     <node name="Pseudomonadaceae">
+      <magnitude><val>8929</val></magnitude>
+      <node name="Pseudomonas">
+       <magnitude><val>8929</val></magnitude>
+       <node name="NA">
+        <magnitude><val>29</val></magnitude>
+       </node>
+       <node name="Pseudomonas aeruginosa">
+        <magnitude><val>8899</val></magnitude>
+       </node>
+       <node name="Pseudomonas cichorii">
+        <magnitude><val>1</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+    <node name="Enterobacteriales">
+     <magnitude><val>4130</val></magnitude>
+     <node name="Enterobacteriaceae">
+      <magnitude><val>4130</val></magnitude>
+      <node name="Shigella">
+       <magnitude><val>2</val></magnitude>
+       <node name="Shigella flexneri">
+        <magnitude><val>1</val></magnitude>
+       </node>
+       <node name="Shigella sonnei">
+        <magnitude><val>1</val></magnitude>
+       </node>
+      </node>
+      <node name="Salmonella">
+       <magnitude><val>17</val></magnitude>
+       <node name="Salmonella enterica">
+        <magnitude><val>17</val></magnitude>
+       </node>
+      </node>
+      <node name="Escherichia">
+       <magnitude><val>4109</val></magnitude>
+       <node name="Escherichia albertii">
+        <magnitude><val>4</val></magnitude>
+       </node>
+       <node name="Escherichia coli">
+        <magnitude><val>4085</val></magnitude>
+       </node>
+       <node name="NA">
+        <magnitude><val>20</val></magnitude>
+       </node>
+      </node>
+      <node name="Klebsiella">
+       <magnitude><val>2</val></magnitude>
+       <node name="Klebsiella oxytoca">
+        <magnitude><val>1</val></magnitude>
+       </node>
+       <node name="Klebsiella pneumoniae">
+        <magnitude><val>1</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+    <node name="NA">
+     <magnitude><val>52</val></magnitude>
+     <node name="NA">
+      <magnitude><val>52</val></magnitude>
+      <node name="NA">
+       <magnitude><val>52</val></magnitude>
+       <node name="NA">
+        <magnitude><val>52</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+   </node>
+   <node name="NA">
+    <magnitude><val>6</val></magnitude>
+    <node name="NA">
+     <magnitude><val>6</val></magnitude>
+     <node name="NA">
+      <magnitude><val>6</val></magnitude>
+      <node name="NA">
+       <magnitude><val>6</val></magnitude>
+       <node name="NA">
+        <magnitude><val>6</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+   </node>
+  </node>
+  <node name="Actinobacteria">
+   <magnitude><val>1322</val></magnitude>
+   <node name="NA">
+    <magnitude><val>8</val></magnitude>
+    <node name="NA">
+     <magnitude><val>8</val></magnitude>
+     <node name="NA">
+      <magnitude><val>8</val></magnitude>
+      <node name="NA">
+       <magnitude><val>8</val></magnitude>
+       <node name="NA">
+        <magnitude><val>8</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+   </node>
+   <node name="Actinobacteria">
+    <magnitude><val>1314</val></magnitude>
+    <node name="Actinomycetales">
+     <magnitude><val>1087</val></magnitude>
+     <node name="Pseudonocardiaceae">
+      <magnitude><val>1</val></magnitude>
+      <node name="Saccharothrix">
+       <magnitude><val>1</val></magnitude>
+       <node name="NA">
+        <magnitude><val>1</val></magnitude>
+       </node>
+      </node>
+     </node>
+     <node name="Streptomycetaceae">
+      <magnitude><val>1085</val></magnitude>
+      <node name="Kitasatospora">
+       <magnitude><val>5</val></magnitude>
+       <node name="NA">
+        <magnitude><val>5</val></magnitude>
+       </node>
+      </node>
+      <node name="Streptomyces">
+       <magnitude><val>1080</val></magnitude>
+       <node name="Streptomyces sp. NRRL 2288">
+        <magnitude><val>1</val></magnitude>
+       </node>
+       <node name="NA">
+        <magnitude><val>135</val></magnitude>
+       </node>
+       <node name="Streptomyces sp. FR-008">
+        <magnitude><val>1</val></magnitude>
+       </node>
+       <node name="Streptomyces griseus">
+        <magnitude><val>2</val></magnitude>
+       </node>
+       <node name="Streptomyces albus">
+        <magnitude><val>938</val></magnitude>
+       </node>
+       <node name="Streptomyces sp. YN86">
+        <magnitude><val>3</val></magnitude>
+       </node>
+      </node>
+     </node>
+     <node name="Micromonosporaceae">
+      <magnitude><val>1</val></magnitude>
+      <node name="Actinoplanes">
+       <magnitude><val>1</val></magnitude>
+       <node name="NA">
+        <magnitude><val>1</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+    <node name="NA">
+     <magnitude><val>227</val></magnitude>
+     <node name="NA">
+      <magnitude><val>227</val></magnitude>
+      <node name="NA">
+       <magnitude><val>227</val></magnitude>
+       <node name="NA">
+        <magnitude><val>227</val></magnitude>
+       </node>
+      </node>
+     </node>
+    </node>
+   </node>
+  </node>
+ </node>
+</node>
+  </krona>
+</div></body></html>
