@@ -18,6 +18,39 @@ GetDataFromCT <-function(dataC,dataT)
   return(list(counts=counts,taxo=taxo))
 }
 
+GetInteraction2 <- function(target)
+{ 
+  res=c()
+  namesTarget = colnames(target)[2:ncol(target)]
+  k=1
+  for(i in 1:(length(namesTarget)-1))
+  { 
+    for(j in (i+1):length(namesTarget))
+    { 
+      res[k] = paste(namesTarget[i],":",namesTarget[j],sep="")
+      k = k+1
+    }
+  }
+  
+  return(res)
+}
+
+
+
+
+PrintContrasts <- function (coefs, contrasts) 
+{
+  contrast <- paste(ifelse(contrast > 0, "+ ", ""), contrast, sep = "")
+  contrast <- gsub("( 1)|(1)", "", contrast)
+  out <- paste(contrast[contrast != 0], coefs[contrast != 0], collapse = " ", sep = " ")
+
+  return(out)
+}
+
+
+
+
+
 
 
 
