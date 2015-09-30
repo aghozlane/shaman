@@ -74,12 +74,18 @@ body <- dashboardBody(
   #### Statistical analysis
 
     tabItem(tabName = "RunDiff",
-            fluidRow(column(width=4,infoBoxOutput("RowTarget",width=NULL))),
+            fluidRow(
+              column(width=3,infoBoxOutput("RowTarget",width=NULL)),
+              column(width=3,infoBoxOutput("InfoContrast",width=NULL)),
+              column(width=3,infoBoxOutput("InfoTaxo",width=NULL)),
+              column(width=3,infoBoxOutput("InfoDESeq",width=NULL))
+            ),
             fluidRow(
               column(width=5,
                 box(title="Experimental design",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = FALSE,
                   fluidRow(
-                    column(width=8,fileInput('fileTarget', h6(strong('Select your target file')),width="100%"))
+                    column(width=6,fileInput('fileTarget', h6(strong('Select your target file')),width="100%")),
+                    column(width=6,uiOutput("SelectTaxo"))
                   ),
                   fluidRow( 
                     column(width=6,uiOutput("SelectInterestVar")),
@@ -120,7 +126,8 @@ body <- dashboardBody(
                     ),
                     column(width=3,uiOutput("RefSelect"))
                   )
-                )
+                ),
+                uiOutput("BoxTarget")
               )
             ),
             
@@ -137,7 +144,8 @@ body <- dashboardBody(
                       actionButton("RemoveContrast","Remove",icon = icon("remove"))
                     ),
                     column(width=3,
-                      uiOutput("ContrastOverview")
+                      h5(strong("Selected contrast:")),
+                      htmlOutput("ContrastOverview")
                     ) 
                 )
               )  
@@ -146,8 +154,43 @@ body <- dashboardBody(
     ),
     tabItem(tabName = "DiagPlot",
             fluidRow(
-              column(width=3,p("Diagnostic plots"))      
-            )  
+              column(width=9,
+                box(title = "Plot",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
+                  plotOutput("PlotDiag"),  
+                  p(Align='right',
+                    downloadButton("exportPDFdiag", "Download pdf"),
+                    downloadButton("exportPNGdiag", "Download png")
+                  )
+                ),
+                
+                br(),
+                conditionalPanel(condition="input.DiagPlot=='Sfactors'",
+                  box(title = "Size factors",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
+                    dataTableOutput("SizeFactTable")
+                  )
+                )
+              ),
+              column(width=3,
+                box(
+                  title = "Options",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
+                    selectInput("DiagPlot",h6(strong("Select the plot")),c("Total barplot"="barplotTot","Nul barplot"="barplotNul","Maj. taxonomy"="MajTax", "Density"="densityPlot","Size factors"="Sfactors", "Size factors VS total"="SfactorsVStot", "PCA"="pcaPlot")),
+                    conditionalPanel(condition="input.DiagPlot!='pcaPlot' && input.DiagPlot!='Sfactors' && input.DiagPlot!='SfactorsVStot' ",uiOutput("VarIntBarPlot"))
+                    
+#                 conditionalPanel(condition="input.RadioPlotBi=='Nuage'",selectInput("ColorBiplot", "Couleur",choices=c("Bleue" = 'blue',"Rouge"='red',"Vert"='green', "Noir"='black'),width="50%")),
+#                 sliderInput("TransAlphaBi", "Transparence",min=1, max=100, value=50, step=1),
+#                 conditionalPanel(condition="input.RadioPlotBi!='Nuage'", radioButtons("SensGraphBi","Sens du graph",choices=c("Vertical"="Vert","Horizontal"="Hori"))),
+#                 conditionalPanel(condition="input.RadioPlotBi=='box'", checkboxInput("CheckAddPointsBoxBi","Ajouter les données",value=FALSE)) 
+               ),
+                box(
+                  title = "Appearance",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
+                    conditionalPanel(condition="input.DiagPlot=='Sfactors'",
+                                     h6(strong("Layout")),
+                                     numericInput("NbcolSfactors", h6("Columns"),min=1,value = NA)
+                    )
+
+              )
+            )
+        )
     ),
     tabItem(tabName = "TableDiff",
             fluidRow(

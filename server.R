@@ -17,8 +17,11 @@ shinyServer(function(input, output,session) {
 ##
 #####################################################
   
-  namesfile = "www/BaseContrast.txt"
-  #file.create(namesfile,showWarnings=FALSE)
+  ## Create base for contrast
+  rand = floor(runif(1,0,1e9))
+  namesfile = paste("www/base/BaseContrast_",rand,".txt",sep="")
+  file.create(namesfile,showWarnings=FALSE)
+
   ## Counts file
   dataInputCounts <-reactive({ 
     
@@ -60,6 +63,14 @@ shinyServer(function(input, output,session) {
     
     ## Rownames
     rownames(data)=data[,1];data=data[,-1]
+    
+    
+    ## Add NA
+    data=as.matrix(data)
+    indNa = which(data=="")
+    data[indNa]=NA
+    
+    
     
     return(as.data.frame(data))
   })
@@ -157,7 +168,7 @@ shinyServer(function(input, output,session) {
     ))
 
   
-  ## Tab box for visualisation
+  ## Tab box for data visualisation
   output$TabBoxData <- renderUI({
     
     data=dataInput()
@@ -189,27 +200,10 @@ shinyServer(function(input, output,session) {
     
     
     data = read.csv(inFile$datapath,sep="\t",header=TRUE)
-    
-    return(as.data.frame(data))
+    rownames(target) <- as.character(target[, 1])
+    return((data))
   })
 
-
-  # Infobox design
-  output$RowTarget <- renderInfoBox({
-    
-    target = dataInputTarget()
-    
-    InterVar = input$InterestVar
-    Interaction = input$Interaction2
-    alltmp = c(InterVar,Interaction)
-    
-    if(!is.null(target)) 
-    {
-      #### Ajout fontion check target
-      infoBox(h6(strong("Target format")), subtitle = h6("Your target file is OK"), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
-    }
-    else infoBox(h6(strong("Warning")), subtitle = h6("Label of the target file must correspond to counts table column names") ,color = "orange",width=NULL,fill=TRUE, icon = icon("warning"))
-  })
 
 
   ## Interest Variables
@@ -263,20 +257,58 @@ shinyServer(function(input, output,session) {
   })
 
 
+  # Infobox design
+  output$RowTarget <- renderInfoBox({
+    
+    target = dataInputTarget()
+    
+    if(!is.null(target)) 
+    {
+      #### Ajout fontion check target
+      infoBox(h6(strong("Target file")), subtitle = h6("Your target file is OK"), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
+    }
+    else infoBox(h6(strong("Target file")), subtitle = h6("Label of the target file must correspond to counts table column names") ,color = "orange",width=NULL,fill=TRUE, icon = icon("warning"))
+  })
+
+
+
+
+  ## taget table
+  output$DataTarget <- renderDataTable(
+  dataInputTarget(),
+  options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
+                 pageLength = 10,scrollX=TRUE
+  ))
+
+
+  ## Box for target visualisation
+  output$BoxTarget <- renderUI({
+    
+    target = dataInputTarget()
+    
+    if(!is.null(target) &&  nrow(target)>0)
+    {
+      box(title="Target file overview",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
+          dataTableOutput("DataTarget")
+      )  
+    }
+    
+  })
+
+
 
 #####################################################
 ##
 ##            DEFINE CONTRAST
 ##
 #####################################################
-
   
   output$contrastMat <- renderUI({
     
-    
-    #dds=RunDESeq2()
-    #names = resultsNames(dds)
-    names=c('test1',"test2","test3")
+    resDiff = ResDiffAnal()
+    dds = resDiff$dds
+    names = resultsNames(dds)
+
     Contrast=list()
     
     for(i in 1:length(names)){Contrast[[i]] = textInput(names[i],names[i],0)}
@@ -286,94 +318,247 @@ shinyServer(function(input, output,session) {
   })
 
 
-  output$ContrastOverview <- renderUI({
+  output$ContrastOverview <- renderPrint({
     
-    #dds=RunDESeq2()
-    #names = resultsNames(dds)
-    names=c('test1',"test2","test3")
+    resDiff = ResDiffAnal()
+    dds = resDiff$dds
+    names = resultsNames(dds)
+    
     cont = input$ContrastList
-    ContrastBase = read.table(namesfile,header=TRUE)
+    filesize = file.info(namesfile)[,"size"]
     
-    res = PrintContrasts(names,ContrastBase[,cont])
-    return(res)
+    if(filesize!=0)
+    { 
+      ContrastBase = read.table(namesfile,header=TRUE)
+      ind = which(colnames(ContrastBase)%in%cont)
+      div(HTML(PrintContrasts(names,sapply(ContrastBase[,ind],as.numeric),cont)))
+    }
   })
 
 
-
-  BaseContrast <- function(input,namesfile)
-  {  
-    #dds=RunDESeq2()
-    #names = resultsNames(dds)
-    
-    oldContrast = read.table(namesfile,header=TRUE)
-    names=c('test1',"test2","test3")
-    v_tmp = c()
-    
-    for(i in 1:length(names))
-    {  
-      Tinput = paste("input$",names[i],sep="")
-      print(Tinput)
-      print(input$test1)
-      
-      expr=parse(text=Tinput)
-      val = eval(expr) 
-      print(val)
-      v_tmp[i] = as.numeric(val)
-    }
-    print(v_tmp)
-    colnamesTmp = c(colnames(oldContrast),input$ContrastName)
-    mat = cbind(oldContrast,v_tmp)
-    write.table(mat,namesfile,row.names=FALSE,col.names = colnamesTmp)
-  }
-
-
+  ## Add contrast function
   AddCont <-eventReactive(input$AddContrast,{
     
+    resDiff = ResDiffAnal()
+    dds = resDiff$dds
+    names = resultsNames(dds)
     
-    BaseContrast(input,namesfile)
+    BaseContrast(input,names,namesfile)
     tmp = read.table(namesfile,header=TRUE)
-    Contrast = colnames(tmp)
+    Contrast = colnames(as.matrix(tmp))
     updateSelectInput(session, "ContrastList","Contrasts",Contrast)
     
-  
   })
 
-  ## 
+  ## Add contrast 
   observeEvent(input$AddContrast,{  
     
     AddCont()
     
   })
 
-
+ 
   
-  ## Get the results from MEMHDX
+  ## Remove contrast function
   RemoveCont <-eventReactive(input$RemoveContrast,{
     
-    tmp = read.table(namesfile,header=TRUE)
-    print(input$ContrastList)
-    matKept = tmp[,-which(colnames(tmp)%in%input$ContrastList)]
-    ContrastKept = colnames(matKept)
-    print(ContrastKept)
-    write.table(matKept,namesfile,row.names=FALSE,col.names = ContrastKept)
-    
-    updateSelectInput(session, "ContrastList","Contrasts",ContrastKept)
+    ## get the size of the contrast base file
+    filesize = file.info(namesfile)[,"size"]
+    if(filesize!=0)
+    { 
+      tmp = read.table(namesfile,header=TRUE)
+      ind = which(colnames(tmp)%in%input$ContrastList)
+      matKept = as.matrix(tmp[,-ind])
+      ContrastKept = colnames(tmp)[-ind]
+      
+      if(ncol(matKept)>0) write.table(matKept,namesfile,row.names=FALSE,col.names = ContrastKept)
+      else file.create(namesfile,showWarnings=FALSE)
+      updateSelectInput(session, "ContrastList","Contrasts",ContrastKept)
+    }
   })
   
   
   
-  ## Run MEMHDX via RunProcess button
+  ## Remove contrast
   observeEvent(input$RemoveContrast,{  
     
     RemoveCont()
     
   })
 
+
+  # Infobox Contrast
+  output$InfoContrast <- renderInfoBox({
+    
+    test = FALSE
+    input$AddContrast
+    
+    filesize = isolate(file.info(namesfile)[,"size"])
+    if(filesize!=0) 
+    {
+      tmp = read.table(namesfile,header=TRUE)
+      if(any(as.vector(tmp)!=0)) test = TRUE
+    }
+    
+    if(test) 
+    {
+      infoBox(h6(strong("Contrasts")), subtitle = h6("Contrasts OK"), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
+    }
+    else infoBox(h6(strong("Contrasts")), subtitle = h6("At least one contrast (non null) must be defined") ,color = "orange",width=NULL,fill=TRUE, icon = icon("warning"))
+  })
+
+
+
 #####################################################
 ##
-##                OPTIONS DIFF ANALYSIS
+##                DESEQ2 run
 ##
 #####################################################
+
+
+
+  # Infobox Contrast
+  output$InfoDESeq <- renderInfoBox({
+    
+    input$RunDESeq
+    box = NULL
+    target = isolate(dataInputTarget())
+    taxo = input$TaxoSelect
+
+    if(!is.null(target) && taxo!="...") 
+    {
+      infoBox(h6(strong("Statistical analysis")), subtitle = h6("Differential analysis is done !"), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
+    }
+    else infoBox(h6(strong("Statistical analysis")), subtitle = h6("Not done !"), icon = icon("warning"),color = "orange",width=NULL,fill=TRUE) 
+    
+  })
+  
+
+  ## Get the results from DESeq2
+  ResDiffAnal <-eventReactive(input$RunDESeq,{
+    
+    data = dataInput() 
+
+    target = dataInputTarget()
+    design = GetDesign(input)
+    counts = GetCountsMerge(data,input$TaxoSelect)
+   
+    Get_dds_object(input,counts,target,design)
+
+    
+  })
+  
+  
+  
+  ## Run DESeq2 via RunDESeq button
+  observeEvent(input$RunDESeq,{  
+    
+    ResDiffAnal()
+    
+  })
+
+  
+#####################################################
+##
+##                Taxonomy
+##
+#####################################################
+  
+  
+  # Infobox Contrast
+  output$SelectTaxo <- renderUI({
+    
+    data = dataInput()
+    if(!is.null(data$taxo) && nrow(data$taxo)>0)
+    { 
+      tmp = colnames(data$taxo)
+      selectInput("TaxoSelect",h6(strong("Select the taxonomy")),c("...",tmp))
+    }
+    else selectInput("TaxoSelect",h6(strong("Select the taxonomy")),c("..."))
+
+  })
+  
+
+
+  
+  # Infobox taxo
+  output$InfoTaxo <- renderInfoBox({
+  
+    taxo = input$TaxoSelect
+    print(taxo)
+    if(taxo!="...") 
+    {
+      infoBox(h6(strong("Taxonomy")), subtitle = h6(taxo), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
+    }
+    else infoBox(h6(strong("Taxonomy")), subtitle = h6("Select the taxonomy for the analysis") ,color = "orange",width=NULL,fill=TRUE, icon = icon("warning"))
+  })
+
+
+
+#####################################################
+##
+##                Diagnostic plots
+##
+#####################################################
+
+
+  
+  output$VarIntBarPlot <- renderUI({
+    
+    int = input$InterestVar
+    if(length(int)>=2) intSel = int[c(1,2)]
+    else intSel = int[1]
+    
+    selectizeInput("VarInt",h6(strong("Select the variables of interest (max 2)")),int, selected = intSel,multiple = TRUE,options = list(maxItems = 2))
+    
+  })
+  
+  
+  output$PlotDiag <- renderPlot({
+    
+    resDiff = ResDiffAnal()
+    Plot_diag(input,resDiff)
+  })
+
+
+  SizeFactor_table <-reactive({ 
+    res = ResDiffAnal()
+    return(t(data.frame(Factor=sizeFactors(res$dds))))
+    
+  })
+
+  output$SizeFactTable <- renderDataTable(
+    SizeFactor_table(),
+    options = list(scrollX=TRUE,searching = FALSE
+  ))
+
+#####################################################
+##
+##                EXPORT DIAG GRAPH
+##
+#####################################################
+
+  ## PDF  
+  output$exportPDFdiag <- downloadHandler(
+    filename <- function() { paste(input$DiagPlot,'meta16S.pdf',sep="_")},
+    content <- function(file) {
+      pdf(file, width = 6, height = 4)
+      print(Plot_diag(input,ResDiffAnal()))
+      dev.off()
+    }
+  )
+
+  
+  ## PNG
+  output$exportPNGdiag <- downloadHandler(
+    filename <- function() { paste(input$DiagPlot,'meta16S.png',sep="_") },
+    content <- function(file) {
+      png(file, width = 600, height = 400)
+      print(Plot_diag(input,ResDiffAnal()))
+      dev.off()
+    }
+  )
+
 
 
 
@@ -407,7 +592,7 @@ shinyServer(function(input, output,session) {
 #     if(!is.null(target)) 
 #     {
 #       mod = target[,input$SelectVarRef]
-#       selectInput("SelectRef",h6(strong("")),mod)
+#       selectInput("SelectRef",h6(strong("")),mod) 
 #     }
 #     
 #   })
