@@ -1,8 +1,16 @@
 library(shiny)
 library(psych)
 library(ggplot2)
-#library(gdata)
-#install_github('rCharts', 'ramnathv')
+library(vegan)
+library(ggdendro)
+library(dendextend)
+library(circlize)
+
+if (!require(d3heatmap)) {
+  install.packages('d3heatmap')
+  library(d3heatmap)
+}
+library(rNVD3)
 source("internal.R")
 
 renderDataTable <- DT::renderDataTable
@@ -19,8 +27,10 @@ shinyServer(function(input, output,session) {
   
   ## Create base for contrast
   rand = floor(runif(1,0,1e9))
-  namesfile = paste("www/base/BaseContrast_",rand,".txt",sep="")
-  file.create(namesfile,showWarnings=FALSE)
+#   namesfile = paste("www/base/BaseContrast_",rand,".txt",sep="")
+#   file.create(namesfile,showWarnings=FALSE)
+
+namesfile = "www/All_Contrast.txt"
 
   ## Counts file
   dataInputCounts <-reactive({ 
@@ -45,7 +55,8 @@ shinyServer(function(input, output,session) {
 
     ## Rownames
     rownames(data)=data[,1];data=data[,-1]
-    
+   # ord = order(colnames(data))
+    #data = data[,ord]
     return(as.data.frame(data))
   })
   
@@ -59,18 +70,22 @@ shinyServer(function(input, output,session) {
     if (is.null(inFile)) return(NULL)
     
 
-    data = read.csv(inFile$datapath,sep="\t",header=TRUE)
+    data = read.csv(inFile$datapath,sep="\t",header=(input$TypeTaxo=="Table"))
     
     ## Rownames
     rownames(data)=data[,1];data=data[,-1]
     
+    if(input$TypeTaxo=="RDP") 
+    {
+      ## Keep only the annotation
+      data = data[,c(6,9,12,15,18,21)]
+      colnames(data) = c("Kingdom","Phylum","Class","Order","Family","Genus")
+    }
     
     ## Add NA
     data=as.matrix(data)
-    indNa = which(data=="")
+      indNa = c(which(data==""),which(data=="uncultured"))
     data[indNa]=NA
-    
-    
     
     return(as.data.frame(data))
   })
@@ -116,6 +131,29 @@ shinyServer(function(input, output,session) {
   })
   
   
+
+  ## Merge counts data
+  dataMergeCounts <-reactive({ 
+    
+    counts = NULL
+    CheckTarget = FALSE
+    data = dataInput() 
+    target = dataInputTarget()
+    
+    taxo = input$TaxoSelect
+    
+    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target)) 
+    {
+      design = GetDesign(input)
+      tmp = GetCountsMerge(input,data,taxo,target,design)
+      counts = tmp$counts
+      CheckTarget = tmp$CheckTarget
+    }
+
+    return(list(counts=counts,CheckTarget=CheckTarget))
+  })
+
+
   
   
 #####################################################
@@ -130,19 +168,25 @@ shinyServer(function(input, output,session) {
     
     data = dataInput()
     
-#     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0)
-#     {
+    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0)
+    {
       sidebarMenu(
         menuItem("Statistical analysis",
                  menuSubItem("Run differential analysis",tabName="RunDiff"),
-                 menuSubItem("Diagnostic plots",tabName="DiagPlot"),
+                 menuSubItem("Diagnostic plots",tabName="DiagPlotTab"),
                  menuSubItem("Tables",tabName="TableDiff"),
                  icon = icon("bar-chart-o"), tabName = "AnaStat"),
-        menuItem("Data visualisation", icon = icon("area-chart"), tabName = "Visu"),
+        menuItem("Visualization", 
+                 menuSubItem("Barplot",tabName="BarplotVisu"),
+                 menuSubItem("Heatmap",tabName="HeatmapVisu"),
+                 menuSubItem("Boxplot",tabName="BoxplotVisu"),
+                 menuSubItem("Diversity",tabName="DiversityVisu"),
+                 menuSubItem("Rarefaction",tabName="RarefactionVisu"),
+                 icon = icon("area-chart"), tabName = "Visu"),
         menuItem("Krona plot", icon = icon("pie-chart"), tabName = "Krona")
 
       )
-#     }
+     }
   })
   
   
@@ -195,12 +239,16 @@ shinyServer(function(input, output,session) {
   dataInputTarget <-reactive({ 
     
     inFile <- input$fileTarget
-    
+    counts = dataInput()$counts
     if (is.null(inFile)) return(NULL)
     
     
     data = read.csv(inFile$datapath,sep="\t",header=TRUE)
-    rownames(target) <- as.character(target[, 1])
+    rownames(data) <- as.character(data[, 1])
+    #ord = order(rownames(data))
+    #data = data[ord,]
+    ### A SUPPRIMER 
+    #rownames(data) <- colnames(counts)
     return((data))
   })
 
@@ -273,12 +321,97 @@ shinyServer(function(input, output,session) {
 
 
 
-  ## taget table
+  ## target table
   output$DataTarget <- renderDataTable(
   dataInputTarget(),
   options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
                  pageLength = 10,scrollX=TRUE
   ))
+
+  ## Counts table for the selected taxonomy level
+  output$CountsMerge <- renderDataTable(
+    dataMergeCounts()$counts,
+    options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
+                   pageLength = 10,scrollX=TRUE
+    ))
+
+
+  ## Box for target visualisation
+  output$BoxCountsMerge <- renderUI({
+    
+    counts = dataMergeCounts()$counts
+    taxo = input$TaxoSelect
+    
+    if(!is.null(counts) && taxo != "...")
+    {
+      box(title=paste("Counts table (",taxo,")",sep=""),width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
+          dataTableOutput("CountsMerge"),
+          downloadButton('ExportCounts', 'Export normalised counts'),
+          downloadButton('ExportRelative', 'Export relative abundance')
+      )  
+    }
+    
+  })
+
+  ## Export in .csv
+  output$ExportCounts <- downloadHandler(
+    filename = function() { 'NomrCounts.csv' },
+    content = function(file){write.csv(dataMergeCounts()$counts, file, sep='\t')}
+  )
+## Export in .csv
+output$ExportRelative <- downloadHandler(
+  filename = function() { 'RelativeAb.csv' },
+  content = function(file){write.csv(dataMergeCounts()$counts/colSums(dataMergeCounts()$counts), file,, sep='\t')}
+)
+
+
+#################################################
+##        FOR PIERRE
+#################################################
+#   
+#   ## Merge counts data
+#   dataMergeCounts_pierre <-reactive({ 
+#     resDiff = ResDiffAnal()
+#     dds = resDiff$dds
+#     counts = round(counts(dds, normalized = TRUE))
+#     
+#     VarInt = input$VisuVarIntBoxP
+#     ind_taxo = rownames(counts)
+#     
+#     tmp_merge = GetDataToPlot(resDiff,VarInt,ind_taxo,aggregate=TRUE)
+#     counts_tmp_combined = tmp_merge$counts
+#     
+#     return(counts_tmp_combined)
+#   })
+# 
+# 
+# 
+# 
+# output$CountsMerge_pierre <- renderDataTable(
+#   dataMergeCounts_pierre(),
+#   options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
+#                  pageLength = 10,scrollX=TRUE
+#   ))
+# 
+# 
+# ## Box for target visualisation
+# output$BoxCountsMerge_pierre <- renderUI({
+#     box(title="Counts table",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
+#         dataTableOutput("CountsMerge_pierre"),
+#         downloadButton('ExportPloted', 'Export')
+#     )
+# })
+# 
+# 
+# ## Export in .csv
+# output$ExportPloted <- downloadHandler(
+#   filename = function() { 'CountsMerge.csv' },
+#   content = function(file){write.csv(dataMergeCounts_pierre(), file, sep='\t')}
+# )
+
+#################################################
+##       END FOR PIERRE
+#################################################
 
 
   ## Box for target visualisation
@@ -347,7 +480,8 @@ shinyServer(function(input, output,session) {
     tmp = read.table(namesfile,header=TRUE)
     Contrast = colnames(as.matrix(tmp))
     updateSelectInput(session, "ContrastList","Contrasts",Contrast)
-    
+    updateSelectInput(session, "ContrastList_table","Contrasts",Contrast)
+    updateSelectInput(session, "ContrastList_table_FC","Contrasts",Contrast)
   })
 
   ## Add contrast 
@@ -374,6 +508,8 @@ shinyServer(function(input, output,session) {
       if(ncol(matKept)>0) write.table(matKept,namesfile,row.names=FALSE,col.names = ContrastKept)
       else file.create(namesfile,showWarnings=FALSE)
       updateSelectInput(session, "ContrastList","Contrasts",ContrastKept)
+      updateSelectInput(session, "ContrastList_table","Contrasts",ContrastKept)
+      updateSelectInput(session, "ContrastList_table_FC","Contrasts",ContrastKept)
     }
   })
   
@@ -423,7 +559,7 @@ shinyServer(function(input, output,session) {
     input$RunDESeq
     box = NULL
     target = isolate(dataInputTarget())
-    taxo = input$TaxoSelect
+    taxo = isolate(input$TaxoSelect)
 
     if(!is.null(target) && taxo!="...") 
     {
@@ -437,19 +573,43 @@ shinyServer(function(input, output,session) {
   ## Get the results from DESeq2
   ResDiffAnal <-eventReactive(input$RunDESeq,{
     
-    data = dataInput() 
-
+    counts = dataMergeCounts()$counts
     target = dataInputTarget()
     design = GetDesign(input)
-    counts = GetCountsMerge(data,input$TaxoSelect)
    
     Get_dds_object(input,counts,target,design)
 
     
   })
-  
-  
-  
+
+
+##### SUPPRIMER POUR AMINE
+
+#   observeEvent(input$RunDESeq,{
+#     
+#     
+#     filesize = file.info(namesfile)[,"size"]
+#     
+#     if(filesize!=0)
+#     { 
+#       file.create(namesfile,showWarnings=FALSE)
+#       updateSelectInput(session, "ContrastList","Contrasts","")
+#       updateSelectInput(session, "ContrastList_table","Contrasts","")
+#       
+#     }
+#     
+#   })
+
+
+# data = dataInput() 
+# 
+# target = dataInputTarget()
+# design = GetDesign(input)
+# counts = GetCountsMerge(data,input$TaxoSelect)
+#   
+
+
+
   ## Run DESeq2 via RunDESeq button
   observeEvent(input$RunDESeq,{  
     
@@ -472,9 +632,9 @@ shinyServer(function(input, output,session) {
     if(!is.null(data$taxo) && nrow(data$taxo)>0)
     { 
       tmp = colnames(data$taxo)
-      selectInput("TaxoSelect",h6(strong("Select the taxonomy")),c("...",tmp))
+      selectInput("TaxoSelect",h6(strong("Select the taxonomy level")),c("...",tmp,"OTU"))
     }
-    else selectInput("TaxoSelect",h6(strong("Select the taxonomy")),c("..."))
+    else selectInput("TaxoSelect",h6(strong("Select the taxonomy level")),c("..."))
 
   })
   
@@ -484,11 +644,14 @@ shinyServer(function(input, output,session) {
   # Infobox taxo
   output$InfoTaxo <- renderInfoBox({
   
+    data = dataInput() 
     taxo = input$TaxoSelect
-    print(taxo)
-    if(taxo!="...") 
+    
+    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="...") 
     {
-      infoBox(h6(strong("Taxonomy")), subtitle = h6(taxo), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
+      counts = dataMergeCounts()$counts
+      nfeature = nrow(counts)
+      infoBox(h6(strong("Taxonomy")), subtitle = h6(paste(taxo, ", nb features: ",nfeature,sep="")), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
     }
     else infoBox(h6(strong("Taxonomy")), subtitle = h6("Select the taxonomy for the analysis") ,color = "orange",width=NULL,fill=TRUE, icon = icon("warning"))
   })
@@ -503,7 +666,7 @@ shinyServer(function(input, output,session) {
 
 
   
-  output$VarIntBarPlot <- renderUI({
+  output$VarIntDiag <- renderUI({
     
     int = input$InterestVar
     if(length(int)>=2) intSel = int[c(1,2)]
@@ -515,11 +678,23 @@ shinyServer(function(input, output,session) {
   
   
   output$PlotDiag <- renderPlot({
+    input$RunDESeq
     
-    resDiff = ResDiffAnal()
+    resDiff = isolate(ResDiffAnal())
     Plot_diag(input,resDiff)
   })
 
+  output$PlotpcoaEigen <- renderPlot({
+    
+    resDiff = ResDiffAnal()
+    Plot_diag_pcoaEigen(input,resDiff)
+  })
+
+  output$PlotEigen <- renderPlot({
+    
+    resDiff = ResDiffAnal()
+    Plot_diag_Eigen(input,resDiff)
+  })
 
   SizeFactor_table <-reactive({ 
     res = ResDiffAnal()
@@ -532,6 +707,25 @@ shinyServer(function(input, output,session) {
     options = list(scrollX=TRUE,searching = FALSE
   ))
 
+
+  ## Select Modality PCOA
+
+  output$ModMat <- renderUI({
+    
+    VarInt = input$VarInt
+    target = dataInputTarget()
+    
+    Mod = list()
+    
+    for(i in 1:length(VarInt)){
+      value = as.character(unique(as.factor(target[,VarInt[i]])))
+      Mod[[i]] = selectizeInput(paste("Mod",VarInt[i],sep=""),VarInt[i],value,selected=value, multiple = TRUE)
+    }
+  
+    return(Mod)
+    
+  })
+
 #####################################################
 ##
 ##                EXPORT DIAG GRAPH
@@ -542,7 +736,7 @@ shinyServer(function(input, output,session) {
   output$exportPDFdiag <- downloadHandler(
     filename <- function() { paste(input$DiagPlot,'meta16S.pdf',sep="_")},
     content <- function(file) {
-      pdf(file, width = 6, height = 4)
+      pdf(file)
       print(Plot_diag(input,ResDiffAnal()))
       dev.off()
     }
@@ -553,13 +747,319 @@ shinyServer(function(input, output,session) {
   output$exportPNGdiag <- downloadHandler(
     filename <- function() { paste(input$DiagPlot,'meta16S.png',sep="_") },
     content <- function(file) {
-      png(file, width = 600, height = 400)
+      png(file, width = 1000, height = 1000)
       print(Plot_diag(input,ResDiffAnal()))
       dev.off()
     }
   )
 
 
+#####################################################
+##
+##                EXPORT VISU GRAPH
+##
+#####################################################
+
+  ## PDF  
+  output$exportPDFVisu <- downloadHandler(
+    filename <- function() { paste("test",'meta16S.pdf',sep="_")},
+    content <- function(file) {
+      pdf(file, width = 6, height = 4)
+      Plot_Visu(input,ResDiffAnal())
+      dev.off()
+    }
+  )
+  
+  
+  ## PNG
+  output$exportPNGVisu <- downloadHandler(
+    filename <- function() { paste("test",'meta16S.png',sep="_") },
+    content <- function(file) {
+      png(file, width = 600, height = 400)
+      Plot_Visu(input,ResDiffAnal())
+      dev.off()
+    }
+  )
+
+#####################################################
+##
+##                DIFF TABLES
+##
+#####################################################
+
+
+#   output$ContrastListTable <- renderUI({
+#     
+#     filesize = file.info(namesfile)[,"size"]
+#     if(filesize!=0)
+#     { 
+#       tmp = read.table(namesfile,header=TRUE)
+#       cont = colnames(tmp)
+#     }  
+#     selectInput("ContrastList_table",h6(strong("Contrast list")),cont, multiple = FALSE)
+#     
+#   })
+
+
+  output$ContrastOverviewTable <- renderPrint({
+    
+    resDiff = ResDiffAnal()
+    dds = resDiff$dds
+    names = resultsNames(dds)
+    
+    cont = input$ContrastList_table
+    filesize = file.info(namesfile)[,"size"]
+    
+    if(filesize!=0)
+    { 
+      ContrastBase = read.table(namesfile,header=TRUE)
+      ind = which(colnames(ContrastBase)%in%cont)
+      div(HTML(PrintContrasts(names,sapply(ContrastBase[,ind],as.numeric),cont)))
+    }
+  })
+
+
+
+
+  ## Get the diff table
+  dataDiff <-reactive({ 
+    
+    resDiff = ResDiffAnal()
+    filesize = file.info(namesfile)[,"size"]
+    res=NULL 
+    
+    if(filesize!=0)
+    { 
+      BaseContrast = read.table(namesfile,header=TRUE)
+      res = TableDiff_print(input,BaseContrast,resDiff, info = NULL) 
+    } 
+    
+    return(res)
+  })
+
+
+
+  ## Complete diff table
+  output$DataDiffcomplete <- renderDataTable(
+    dataDiff()$complete,
+    options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
+                   pageLength = 10,scrollX=TRUE
+    ))
+  
+  ## Up diff table
+  output$DataDiffup <- renderDataTable(
+    dataDiff()$up,
+    options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
+                   pageLength = 10,scrollX=TRUE
+    ))
+  
+  ## Down diff table
+  output$DataDiffdown <- renderDataTable(
+    dataDiff()$down,
+    options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
+                   pageLength = 10,scrollX=TRUE
+    ))
+
+
+  ## TabBox for diff table
+  output$TabBoxDataDiff <- renderUI({
+    
+    data = dataDiff()
+    
+    if(!is.null(data))
+    {
+      
+      tabBox(width = NULL, selected = "Complete",
+             tabPanel("Complete",dataTableOutput("DataDiffcomplete")),
+             tabPanel("Up",dataTableOutput("DataDiffup")),
+             tabPanel("Down",dataTableOutput("DataDiffdown"))  
+      )
+    }
+    
+  })
+
+
+#####################################################
+##
+##                VISUALISATION
+##
+#####################################################
+
+
+  output$PlotVisu <- renderChart({
+    resDiff = ResDiffAnal()
+    if(!is.null(resDiff$dds)) Plot_Visu_Barplot(input,resDiff)
+  })
+
+#   output$d3heatmap <- renderD3heatmap({
+#     resDiff = ResDiffAnal()
+#     Plot_Visu_Heatmap(input,resDiff)
+#   })
+# 
+# 
+
+  output$heatmap <- renderPlot({
+    resDiff = ResDiffAnal()
+    BaseContrast = read.table(namesfile,header=TRUE)
+    if(!is.null(resDiff$dds))
+    { 
+      if(input$HeatMapType=="Counts")  Plot_Visu_Heatmap(input,resDiff)
+      if(input$HeatMapType=="Log2FC")     Plot_Visu_Heatmap_FC(input,BaseContrast,resDiff)
+    }
+  },height=reactive(input$heightHeat))
+
+
+
+  output$Boxplot <- renderPlot({
+    resDiff = ResDiffAnal()
+    if(!is.null(resDiff$dds)) Plot_Visu_Boxplot(input,resDiff)
+  },height=reactive(input$heightBoxP))
+
+
+  output$DiversityPlot <- renderPlot({
+    resDiff = ResDiffAnal()
+    if(!is.null(resDiff$dds)) Plot_Visu_Diversity(input,resDiff,type="point")
+  })
+
+
+  output$SelectVarBoxDiv <- renderUI({
+    
+    selectVar = input$VisuVarIntDiv
+    
+    if(!is.null(selectVar)) 
+    {
+      selectInput("VarBoxDiv", h6(strong("By")),selectVar)
+    }
+    
+  })
+
+#   output$DiversityBoxPlot <- renderPlot({
+#     resDiff = ResDiffAnal()
+#     if(!is.null(resDiff$dds)) Plot_Visu_Diversity(input,resDiff,type="box")
+#   })
+
+  ranges <- reactiveValues(x = NULL, y = NULL)
+
+  output$RarefactionPlot <- renderPlot({
+    resDiff = ResDiffAnal()
+    taxo = input$TaxoSelect
+    if(!is.null(resDiff)) Plot_Visu_Rarefaction(input,resDiff,ranges$x,ranges$y,ylab=taxo)
+  },height=800,width=1500)
+
+  observeEvent(input$RarefactionPlot_dblclick, {
+    brush <- input$RarefactionPlot_brush
+    if (!is.null(brush)) {
+      ranges$x <- c(brush$xmin, brush$xmax)
+      ranges$y <- c(brush$ymin, brush$ymax)
+      
+    } else {
+      ranges$x <- NULL
+      ranges$y <- NULL
+    }
+  })
+
+
+  output$TaxoToPlotBP <- renderUI({
+    
+    data = dataInput() 
+    taxo = input$TaxoSelect
+    
+    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="...") 
+    {
+      counts = dataMergeCounts()$counts
+      sumTot = rowSums(counts)
+      ord = order(sumTot,decreasing=TRUE)
+      Available_taxo = rownames(counts)[ord]
+      selTaxo = Available_taxo[1:min(12,length(Available_taxo))]
+      selectizeInput("selectTaxoPlotBP",h6(strong(paste("Select the",input$TaxoSelect, "to plot"))),Available_taxo, selected = selTaxo,multiple = TRUE,options = list(minItems = 2))    
+    }
+    
+  })
+
+
+  output$TaxoToPlotHM <- renderUI({
+    
+    data = dataInput() 
+    taxo = input$TaxoSelect
+    
+    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="...") 
+    {
+      counts = dataMergeCounts()$counts
+      sumTot = rowSums(counts)
+      ord = order(sumTot,decreasing=TRUE)
+      Available_taxo = rownames(counts)[ord]
+      selTaxo = Available_taxo[1:min(12,length(Available_taxo))]
+      selectizeInput("selectTaxoPlotHM",h6(strong(paste("Select the",input$TaxoSelect, "to plot"))),Available_taxo, selected = selTaxo,multiple = TRUE,options = list(minItems = 2))    
+    }
+    
+  })
+
+  output$TaxoToPlotBoxP <- renderUI({
+    
+    data = dataInput() 
+    taxo = input$TaxoSelect
+    
+    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="...") 
+    {
+      counts = dataMergeCounts()$counts
+      sumTot = rowSums(counts)
+      ord = order(sumTot,decreasing=TRUE)
+      Available_taxo = rownames(counts)[ord]
+      selTaxo = Available_taxo[1:min(4,length(Available_taxo))]
+      selectizeInput("selectTaxoPlotBoxP",h6(strong(paste("Select the",input$TaxoSelect, "to plot"))),Available_taxo, selected = selTaxo,multiple = TRUE,options = list(maxItems = 4))    
+    }
+    
+  })
+
+
+
+
+  output$VarIntVisuBP <- renderUI({
+    
+    int = input$InterestVar
+    if(length(int)>=2) intSel = int[c(1,2)]
+    else intSel = int[1]
+    
+    selectizeInput("VisuVarIntBP",h6(strong("Select the variables of interest")),int, selected = intSel,multiple = TRUE,options = list(minItems = 1))
+    
+  })
+
+  output$VarIntVisuHM <- renderUI({
+    
+    int = input$InterestVar
+    if(length(int)>=2) intSel = int[c(1,2)]
+    else intSel = int[1]
+    
+    selectizeInput("VisuVarIntHM",h6(strong("Select the variables of interest")),int, selected = intSel,multiple = TRUE,options = list(minItems = 1))
+    
+  })
+
+  output$VarIntVisuBoxP <- renderUI({
+    
+    int = input$InterestVar
+    intSel = int[1]
+    
+    selectizeInput("VisuVarIntBoxP",h6(strong("X variable")),int, selected = intSel,multiple = TRUE)
+    
+  })
+
+  output$VarIntVisuDiv <- renderUI({
+    
+    int = input$InterestVar
+    intSel = int[1]
+    
+    selectizeInput("VisuVarIntDiv",h6(strong("X variable")),int, selected = intSel,multiple = TRUE)
+    
+  })
+  
+#   output$DiversityGroupBy <- renderUI({
+#     
+#     int = input$InterestVar
+#     intSel = int[1]
+#     
+#     selectizeInput("GroupBy",h6(strong("Group by")),int, selected = intSel)
+#     
+#   })
 
 
 #   ## Select variable for reference
