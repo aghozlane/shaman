@@ -5,7 +5,10 @@
   {
     
     counts = biom_data(dataBIOM)
-    taxo = observation_metadata(dataBIOM)
+    counts = as.matrix(counts)
+    counts = as.data.frame(counts)
+    taxo = as.data.frame(observation_metadata(dataBIOM))
+
     return(list(counts=counts,taxo=taxo))
   }
   
@@ -69,6 +72,7 @@
     ## Select cols in the target
     labels = target[,1]
     ind = which(colnames(CT)%in%labels)
+    
     
     if(length(ind)==length(labels))
     { 
@@ -835,7 +839,7 @@
     if(input$SensPlotVisuHM=="Horizontal") counts_tmp_combined = t(as.matrix(counts_tmp_combined))
          #print(counts_tmp_combined)
     return(heatmap.2(counts_tmp_combined, dendrogram = "none", Rowv = NA, Colv = NA, na.rm = TRUE, density.info="none", margins=c(12,8),trace="none",srtCol=45,
-                    col = col, scale = input$scaleHeatmap,cexRow = 0.4,cexCol = 0.4))
+                    col = col, scale = input$scaleHeatmap,cexRow = 0.6))
 #     return(d3heatmap(counts_tmp_combined, dendrogram = "none", Rowv = NA, Colv = NA, na.rm = TRUE, 
 #                      width = 1500, height = 1000, show_grid = FALSE, colors = col, scale = input$scaleHeatmap,
 #                      cexRow = 0.6))
@@ -1388,7 +1392,7 @@
         samples.supp <- colnames(counts(dds))[group %in% conds.supp]
         col.supp <- c(samples.supp, paste("norm", samples.supp, sep = "."))
         complete.name <- complete.name[, -which(names(complete.name) %in% col.supp)]
-      } 
+      }
       ### ??????????
 
       res.name <- data.frame(Id = rownames(result[[name]]), 
@@ -1419,66 +1423,6 @@
     }
     #return(list(complete=complete.name,up=up.name,down=down.name))
     return(list(complete=complete.name[,c("Id","baseMean","FC","log2FoldChange","padj")],up=up.name[,c("Id","baseMean","FC","log2FoldChange","padj")],down=down.name[,c("Id","baseMean","FC","log2FoldChange","padj")]))
-  }
-  
-  
-  
-  Get_log2FC <-function(input,BaseContrast,resDiff, info = NULL)
-  {
-    
-    VarInt = input$VarInt
-    dds = resDiff$dds
-    counts = resDiff$counts
-    target = resDiff$target
-    SelContrast = input$ContrastList_table_FC
-    nbCont = length(SelContrast)
-    result = list()
-    alpha = input$AlphaVal
-    cooksCutoff = ifelse(input$CooksCutOff!='Auto',ifelse(input$CooksCutOff!=Inf,input$CutOffVal,Inf),TRUE)
-    
-    for(i in 1:nbCont)
-    { 
-      cont = as.character(SelContrast[i])
-      result[[cont]] <- results(dds,contrast=BaseContrast[,cont],pAdjustMethod=input$AdjMeth,
-                                                  cooksCutoff=cooksCutoff,
-                                                  independentFiltering=input$IndFiltering,alpha=alpha)
-    }
-    log2FC = as.matrix(round(result[[SelContrast[1]]][, "log2FoldChange"], 3))
-    if(nbCont>1)
-    {
-      for(i in 2:nbCont)
-      {
-        log2FC = cbind(log2FC,round(result[[SelContrast[i]]][, "log2FoldChange"], 3))
-      }
-      colnames(log2FC) = names(result)
-    }
-    rownames(log2FC) = rownames(result[[SelContrast[1]]])
-    return(log2FC)
-  }
-  
-  
-  Plot_Visu_Heatmap_FC <- function(input,BaseContrast,resDiff){
-    
-    log2FC = Get_log2FC(input,BaseContrast,resDiff, info = NULL)
-    ind_taxo = input$selectTaxoPlotHM
-    ind = rownames(log2FC)%in%ind_taxo
-    
-    log2FC = log2FC[ind,]
-      
-      col <- switch(input$colors,
-                    "green-blue"=colorRampPalette(brewer.pal(9,"GnBu"))(200),
-                    "blue-white-red"=colorRampPalette(rev(brewer.pal(9, "RdBu")))(200),
-                    "purple-white-orange"=colorRampPalette(rev(brewer.pal(9, "PuOr")))(200),
-                    "red-yellow-green"= colorRampPalette(rev(brewer.pal(9,"RdYlGn")))(200))
-    
-      col <- c(colorRampPalette(c("blue","white"))(n = 100),colorRampPalette(c("white",  "firebrick1", "firebrick2", "firebrick3", "firebrick4"))(n = 100))
-      ## Transpose matrix if Horizontal
-      
-      if(input$SensPlotVisuHM=="Horizontal") log2FC = t(as.matrix(log2FC))
-      return(heatmap.2(log2FC, dendrogram = "row", Rowv = TRUE, Colv = NA, na.rm = TRUE, density.info="none", margins=c(12,8),trace="none",srtCol=45,
-                       col = col, scale = input$scaleHeatmap,cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap))
-    
-    
   }
   
   

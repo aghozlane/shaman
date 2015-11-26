@@ -1,15 +1,53 @@
-
 library(shinydashboard)
-library(DT)
-library(biom)
-library(DESeq2)
-library(rNVD3)
-library(RColorBrewer)
-library(gplots)
-library(ggdendro)
-library(dendextend)
-library(circlize)
-library(ade4)
+if (!require(rNVD3)) {
+  install.packages('rNVD3')
+  library(rNVD3)
+}
+if (!require(psych)) {
+  install.packages('psych')
+  library(psych)
+}
+if (!require(ggplot2)) {
+  install.packages('ggplot2')
+  library(ggplot2)
+}
+if (!require(vegan)) {
+  install.packages('vegan')
+  library(vegan)
+}
+if (!require(dendextend)) {
+  install.packages('dendextend')
+  library(dendextend)
+}
+if (!require(circlize)) {
+  install.packages('circlize')
+  library(circlize)
+}
+if (!require(biom)) {
+  install.packages('biom')
+  library(biom)
+}
+if (!require(DT)) {
+  install.packages('DT')
+  library(DT)
+}
+if (!require(RColorBrewer)) {
+  install.packages('RColorBrewer')
+  library(RColorBrewer)
+}
+if (!require(gplots)) {
+  install.packages('gplots')
+  library(gplots)
+}
+if (!require(DESeq2)) {
+  source("https://bioconductor.org/biocLite.R")
+  biocLite("DESeq2")
+  library(DESeq2)
+}
+if (!require(ade4)) {
+  install.packages('ade4')
+  library(ade4)
+}
 
 sidebar <- dashboardSidebar(
   sidebarMenu(
@@ -205,9 +243,7 @@ body <- dashboardBody(
                                      selectInput("DistPCOA","Distance",c("euclidean", "canberra", "bray", "kulczynski", "jaccard", 
                                                               "gower", "altGower", "morisita", "horn","mountford","raup","binomial",
                                                               "chao","cao","mahalanobis"),selected="jaccard")
-                                     ),
-                    downloadButton("exportPDFdiag", "Download pdf"),
-                    downloadButton("exportPNGdiag", "Download png")
+                                     )
 #                 conditionalPanel(condition="input.RadioPlotBi=='Nuage'",selectInput("ColorBiplot", "Couleur",choices=c("Bleue" = 'blue',"Rouge"='red',"Vert"='green', "Noir"='black'),width="50%")),
 #                 sliderInput("TransAlphaBi", "Transparence",min=1, max=100, value=50, step=1),
 #                 conditionalPanel(condition="input.RadioPlotBi!='Nuage'", radioButtons("SensGraphBi","Sens du graph",choices=c("Vertical"="Vert","Horizontal"="Hori"))),
@@ -236,6 +272,20 @@ body <- dashboardBody(
 #                   sliderInput("widthDiag", "width",min=100,max=1500,value = 1000,step =10)
                  
 
+              ),
+              box(title = "Export",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
+                  selectInput("Exp_format",h5(strong("Export format")),c("png"="png","pdf"="pdf","eps"="eps","svg"="svg"), multiple = FALSE),
+                  fluidRow(
+                  column(width=6,numericInput("heightDiagExport", "Height (in px)",min=100,max=NA,value = 500,step =1)),
+                  column(width=6,numericInput("widthDiagExport", "Width (in px)",min=100,max=NA,value = 500,step =1))
+                  ),
+                  downloadButton("exportdiag", "Export")
+                  
+#                   downloadButton("exportPDFdiag", "Download pdf"),
+#                   downloadButton("exportPNGdiag", "Download png"),
+#                   downloadButton("exportEPSdiag", "Download eps"),
+#                   downloadButton("exportSVGdiag", "Download svg"),
+                  
               )
             )
         )
@@ -289,8 +339,6 @@ body <- dashboardBody(
             
             column(width=3,
               box(title = "Options",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
-                selectInput(inputId = "HeatMapType",label = h6(strong("Data")),choices = c("Counts" = "Counts", "Log2FC" = "Log2FC"),selected = "Counts"),
-                selectInput("ContrastList_table_FC",h6(strong("Contrast list")),"", multiple = TRUE),
                 uiOutput("VarIntVisuHM"),
                 uiOutput("TaxoToPlotHM"),
                 radioButtons(inputId = "SensPlotVisuHM",label = "Type: ",choices = c("Vertical" = "Vertical", "Horizontal" = "Horizontal"),selected = "Vertical"),
@@ -298,8 +346,7 @@ body <- dashboardBody(
               ),
               box(title = "Appearance",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
                 selectInput("colors", label="Gradient of colors:",choices = c("green-blue", "blue-white-red", "purple-white-orange", "red-yellow-green")),
-                sliderInput("heightHeat", h6(strong("Height")),min=100,max=2000,value = 800),
-                sliderInput("LabelSizeHeatmap", h6(strong("Label size")),min=0.1,max=2,value = 0.7,step = 0.1)
+                sliderInput("heightHeat", h6(strong("Height")),min=100,max=2000,value = 800)
               )
             )
           )

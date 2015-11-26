@@ -1,16 +1,40 @@
-library(shiny)
-library(psych)
-library(ggplot2)
-library(vegan)
-library(ggdendro)
-library(dendextend)
-library(circlize)
-
+library(shinydashboard)
+if (!require(rNVD3)) {
+  install.packages('rNVD3')
+  library(rNVD3)
+}
+if (!require(psych)) {
+  install.packages('psych')
+  library(psych)
+}
+if (!require(ggplot2)) {
+  install.packages('ggplot2')
+  library(ggplot2)
+}
+if (!require(vegan)) {
+  install.packages('vegan')
+  library(vegan)
+}
+# if (!require(ggdendro)) {
+#   install.packages('ggdendro')
+#   library(ggdendro)
+# }
+if (!require(dendextend)) {
+  install.packages('dendextend')
+  library(dendextend)
+}
+if (!require(circlize)) {
+  install.packages('circlize')
+  library(circlize)
+}
 if (!require(d3heatmap)) {
   install.packages('d3heatmap')
   library(d3heatmap)
 }
-library(rNVD3)
+if (!require(biom)) {
+  install.packages('biom')
+  library(biom)
+}
 source("internal.R")
 
 renderDataTable <- DT::renderDataTable
@@ -27,10 +51,10 @@ shinyServer(function(input, output,session) {
   
   ## Create base for contrast
   rand = floor(runif(1,0,1e9))
-#   namesfile = paste("www/base/BaseContrast_",rand,".txt",sep="")
-#   file.create(namesfile,showWarnings=FALSE)
+  namesfile = paste("www/base/BaseContrast_",rand,".txt",sep="")
+  file.create(namesfile,showWarnings=FALSE)
 
-namesfile = "www/All_Contrast.txt"
+#namesfile = "www/All_Contrast.txt"
 
   ## Counts file
   dataInputCounts <-reactive({ 
@@ -97,14 +121,9 @@ namesfile = "www/All_Contrast.txt"
     inFile <- input$fileBiom
     
     if (is.null(inFile)) return(NULL)
+    data = read_biom(inFile$datapath)
     
-    
-    data = read.csv(inFile$datapath,sep=",",header=TRUE)
-    
-    ## Rownames
-    rownames(data)=data[,1];data=data[,-1]
-    
-    return(as.data.frame(data))
+    return(data)
   })
 
 
@@ -149,7 +168,6 @@ namesfile = "www/All_Contrast.txt"
       counts = tmp$counts
       CheckTarget = tmp$CheckTarget
     }
-
     return(list(counts=counts,CheckTarget=CheckTarget))
   })
 
@@ -358,11 +376,12 @@ namesfile = "www/All_Contrast.txt"
     filename = function() { 'NomrCounts.csv' },
     content = function(file){write.csv(dataMergeCounts()$counts, file, sep='\t')}
   )
-## Export in .csv
-output$ExportRelative <- downloadHandler(
-  filename = function() { 'RelativeAb.csv' },
-  content = function(file){write.csv(dataMergeCounts()$counts/colSums(dataMergeCounts()$counts), file,, sep='\t')}
-)
+
+  ## Export in .csv
+  output$ExportRelative <- downloadHandler(
+    filename = function() { 'RelativeAb.csv' },
+    content = function(file){write.csv(dataMergeCounts()$counts/colSums(dataMergeCounts()$counts), file,, sep='\t')}
+  )
 
 
 #################################################
@@ -481,7 +500,6 @@ output$ExportRelative <- downloadHandler(
     Contrast = colnames(as.matrix(tmp))
     updateSelectInput(session, "ContrastList","Contrasts",Contrast)
     updateSelectInput(session, "ContrastList_table","Contrasts",Contrast)
-    updateSelectInput(session, "ContrastList_table_FC","Contrasts",Contrast)
   })
 
   ## Add contrast 
@@ -509,7 +527,6 @@ output$ExportRelative <- downloadHandler(
       else file.create(namesfile,showWarnings=FALSE)
       updateSelectInput(session, "ContrastList","Contrasts",ContrastKept)
       updateSelectInput(session, "ContrastList_table","Contrasts",ContrastKept)
-      updateSelectInput(session, "ContrastList_table_FC","Contrasts",ContrastKept)
     }
   })
   
@@ -732,27 +749,19 @@ output$ExportRelative <- downloadHandler(
 ##
 #####################################################
 
-  ## PDF  
-  output$exportPDFdiag <- downloadHandler(
-    filename <- function() { paste(input$DiagPlot,'meta16S.pdf',sep="_")},
+  #### Export Diag
+  output$exportdiag <- downloadHandler(
+    filename <- function() { paste(input$DiagPlot,paste('meta16S',input$Exp_format,sep="."),sep="_") },
     content <- function(file) {
-      pdf(file)
+      if(input$Exp_format=="png") png(file, width = input$widthDiagExport, height = input$heightDiagExport)
+      if(input$Exp_format=="pdf") pdf(file, width = input$widthDiagExport/96, height = input$heightDiagExport/96)
+      if(input$Exp_format=="eps") postscript(file, width = input$widthDiagExport/96, height = input$heightDiagExport/96)
+      if(input$Exp_format=="svg") svg(file, width = input$widthDiagExport/96, height = input$heightDiagExport/96)
+      
       print(Plot_diag(input,ResDiffAnal()))
       dev.off()
     }
   )
-
-  
-  ## PNG
-  output$exportPNGdiag <- downloadHandler(
-    filename <- function() { paste(input$DiagPlot,'meta16S.png',sep="_") },
-    content <- function(file) {
-      png(file, width = 1000, height = 1000)
-      print(Plot_diag(input,ResDiffAnal()))
-      dev.off()
-    }
-  )
-
 
 #####################################################
 ##
@@ -900,12 +909,7 @@ output$ExportRelative <- downloadHandler(
 
   output$heatmap <- renderPlot({
     resDiff = ResDiffAnal()
-    BaseContrast = read.table(namesfile,header=TRUE)
-    if(!is.null(resDiff$dds))
-    { 
-      if(input$HeatMapType=="Counts")  Plot_Visu_Heatmap(input,resDiff)
-      if(input$HeatMapType=="Log2FC")     Plot_Visu_Heatmap_FC(input,BaseContrast,resDiff)
-    }
+    if(!is.null(resDiff$dds)) Plot_Visu_Heatmap(input,resDiff)
   },height=reactive(input$heightHeat))
 
 
