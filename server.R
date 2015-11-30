@@ -63,24 +63,13 @@ shinyServer(function(input, output,session) {
   
     if (is.null(inFile)) return(NULL)
     
-    ## Get the extension
-#     tmp = strsplit(inFile$name, ".",fixed=T)[[1]]
-#     ext = tmp[length(tmp)]
-#     
-#     ## header
-#     header = FALSE
-#     if(input$header==1) header=TRUE
-    
-    ## Read data
-#     if(ext=="csv") data = read.csv(inFile$datapath,sep=",",header=header)
-#     if(ext=="xls") data = read.csv(inFile$datapath,sep="\t",header=header)
-    
+
     data = read.csv(inFile$datapath,sep="\t",header=TRUE)
 
     ## Rownames
-    rownames(data)=data[,1];data=data[,-1]
-   # ord = order(colnames(data))
-    #data = data[,ord]
+    
+    if(!TRUE%in%duplicated(data[,1])) rownames(data)=data[,1];data=data[,-1]
+
     return(as.data.frame(data))
   })
   
@@ -93,22 +82,22 @@ shinyServer(function(input, output,session) {
     
     if (is.null(inFile)) return(NULL)
     
-
-    data = read.csv(inFile$datapath,sep="\t",header=(input$TypeTaxo=="Table"))
+    if(input$TypeTaxo=="Table") 
+    {
+      data = read.csv(inFile$datapath,sep="\t",header=TRUE)
     
-    ## Rownames
-    rownames(data)=data[,1];data=data[,-1]
+      ## Rownames
+      if(!TRUE%in%duplicated(data[,1])) rownames(data)=data[,1];data=data[,-1]
+    }
     
     if(input$TypeTaxo=="RDP") 
     {
-      ## Keep only the annotation
-      data = data[,c(6,9,12,15,18,21)]
-      colnames(data) = c("Kingdom","Phylum","Class","Order","Family","Genus")
+      data = read_rdp(inFile$datapath,input$RDP_th)
     }
     
     ## Add NA
     data=as.matrix(data)
-      indNa = c(which(data==""),which(data=="uncultured"))
+    indNa = which(data=="")
     data[indNa]=NA
     
     return(as.data.frame(data))
@@ -132,21 +121,35 @@ shinyServer(function(input, output,session) {
   dataInput <-reactive({ 
     
     data = NULL
+    check = NULL
+    percent = NULL
     
     if(input$FileFormat=="fileCounts")
     {
       Counts = dataInputCounts()
       Taxo = dataInputTaxo()
-      data = GetDataFromCT(Counts,Taxo)
+      if(!is.null(Counts) && !is.null(Taxo))
+      { 
+        tmp = GetDataFromCT(Counts,Taxo)
+        data = list(counts=tmp$counts,taxo=tmp$taxo)
+        check = list(CheckCounts=tmp$CheckCounts,CheckTaxo=tmp$CheckTaxo,CheckPercent=tmp$CheckPercent)
+        percent = tmp$Percent
+      }    
     }
     
     if(input$FileFormat=="fileBiom")
     {
       tmpBIOM = dataInputBiom()
-      if(!is.null(tmpBIOM)) data = GetDataFromBIOM(tmpBIOM)
+      if(!is.null(tmpBIOM))
+      {
+        tmp = GetDataFromBIOM(tmpBIOM)
+        data = list(counts=tmp$counts,taxo=tmp$taxo)
+        check = list(CheckCounts=tmp$CheckCounts,CheckTaxo=tmp$CheckTaxo,CheckPercent=tmp$CheckPercent)
+        percent = tmp$Percent
+      }
     }
     
-    return(data)
+    return(list(data=data,check=check,percent=percent))
   })
   
   
@@ -156,7 +159,7 @@ shinyServer(function(input, output,session) {
     
     counts = NULL
     CheckTarget = FALSE
-    data = dataInput() 
+    data = dataInput()$data
     target = dataInputTarget()
     
     taxo = input$TaxoSelect
@@ -172,7 +175,66 @@ shinyServer(function(input, output,session) {
   })
 
 
-  
+  # Infobox Error counts
+  output$InfoErrorCounts <- renderInfoBox({
+    
+    tmp = dataInput()
+    data = tmp$data
+    check = tmp$check
+    cond = (!is.null(data$counts) && nrow(data$counts)>0)
+    res =infoBox(h6(strong("Counts table")), subtitle = h6("Load the counts table") ,color = "light-blue",width=NULL,fill=TRUE, icon = icon("upload"))
+    
+    if(cond)
+    {
+      if(!is.null(check$CheckCounts$Warning)) res = infoBox(h6(strong("Counts table")), subtitle = h6(check$CheckCounts$Warning), icon = icon("warning"),color = "orange",width=NULL,fill=TRUE)
+      if(!is.null(check$CheckCounts$Error)) res = infoBox(h6(strong("Counts table")), subtitle = h6(check$CheckCounts$Error), icon = icon("thumbs-o-down"),color = "red",width=NULL,fill=TRUE)
+      if(is.null(check$CheckCounts$Error) && is.null(check$CheckCounts$Warning)) res = infoBox(h6(strong("Counts table")), subtitle = h6(paste("Format of the counts table seems to be OK")), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
+    }
+    
+    return(res)
+  })
+
+  # Infobox Error counts
+  output$InfoErrorTaxo <- renderInfoBox({
+    
+    tmp = dataInput()
+    data = tmp$data
+    check = tmp$check
+    cond = (!is.null(data$taxo) && nrow(data$taxo)>0)
+    res =infoBox(h6(strong("Taxonomy table")), subtitle = h6("Load the taxonomy table") ,color = "light-blue",width=NULL,fill=TRUE, icon = icon("upload"))
+    
+    if(cond)
+    {
+      if(!is.null(check$CheckTaxo$Warning)) res = infoBox(h6(strong("Taxonomy table")), subtitle = h6(check$CheckTaxo$Warning), icon = icon("warning"),color = "orange",width=NULL,fill=TRUE)
+      if(!is.null(check$CheckTaxo$Error)) res = infoBox(h6(strong("Taxonomy table")), subtitle = h6(check$CheckTaxo$Error), icon = icon("thumbs-o-down"),color = "red",width=NULL,fill=TRUE)
+      if(is.null(check$CheckTaxo$Error) && is.null(check$CheckTaxo$Warning)) res = infoBox(h6(strong("Taxonomy table")), subtitle = h6(paste("Format of the taxonomy table seems to be OK")), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
+    }
+    
+    return(res)
+  })
+
+
+  # Infobox Error counts
+  output$valueErrorPercent <- renderInfoBox({
+    
+    tmp = dataInput()
+    data = tmp$data
+    check = tmp$check
+    cond = (!is.null(data$counts) && nrow(data$counts)>0 && !is.null(data$taxo) && nrow(data$taxo)>0)
+    res = valueBox(paste0(0, "%"),h6(strong("Annotated features")), color = "light-blue",width=NULL,icon = icon("list"))
+    
+    if(cond)
+    {
+      percent = round(100*tmp$percent,2)
+      if(percent==0) res = valueBox(paste0(percent, "%"),h6(strong("Annotated features")), color = "red",width=NULL,icon = icon("list"))  
+      if(percent!=0) res = valueBox(paste0(percent, "%"),h6(strong("Annotated features")), color = "green",width=NULL,icon = icon("list"))  
+      
+    }
+    
+    return(res)
+  })
+
+
   
 #####################################################
 ##
@@ -184,9 +246,14 @@ shinyServer(function(input, output,session) {
   
   output$dymMenu <- renderMenu({
     
-    data = dataInput()
+    tmp = dataInput()
+    data = tmp$data
+    check = tmp$check
     
-    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0)
+    ## Check error in the counts and taxonomy table 
+    CheckOK = (is.null(check$CheckCounts$Error) && is.null(check$CheckTaxo$Error)  && is.null(check$CheckPercent))
+
+    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && CheckOK)
     {
       sidebarMenu(
         menuItem("Statistical analysis",
@@ -205,6 +272,12 @@ shinyServer(function(input, output,session) {
 
       )
      }
+    else{
+      sidebarMenu(
+        menuItem("")
+      )
+    }
+    
   })
   
   
@@ -217,14 +290,14 @@ shinyServer(function(input, output,session) {
   
   ## Counts Table
   output$DataCounts <- renderDataTable(
-    dataInput()$counts, 
+    dataInput()$data$counts, 
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
                    pageLength = 10,scrollX=TRUE
     ))
   
   ## Taxonomy table
   output$DataTaxo <- renderDataTable(
-    dataInput()$taxo, 
+    dataInput()$data$taxo, 
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
                    pageLength = 10,scrollX=TRUE
     ))
@@ -233,7 +306,7 @@ shinyServer(function(input, output,session) {
   ## Tab box for data visualisation
   output$TabBoxData <- renderUI({
     
-    data=dataInput()
+    data=dataInput()$data
     
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0)
     {
@@ -257,7 +330,7 @@ shinyServer(function(input, output,session) {
   dataInputTarget <-reactive({ 
     
     inFile <- input$fileTarget
-    counts = dataInput()$counts
+    counts = dataInput()$data$counts
     if (is.null(inFile)) return(NULL)
     
     
@@ -645,7 +718,7 @@ shinyServer(function(input, output,session) {
   # Infobox Contrast
   output$SelectTaxo <- renderUI({
     
-    data = dataInput()
+    data = dataInput()$data
     if(!is.null(data$taxo) && nrow(data$taxo)>0)
     { 
       tmp = colnames(data$taxo)
@@ -661,7 +734,7 @@ shinyServer(function(input, output,session) {
   # Infobox taxo
   output$InfoTaxo <- renderInfoBox({
   
-    data = dataInput() 
+    data = dataInput()$data
     taxo = input$TaxoSelect
     
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="...") 
@@ -965,7 +1038,7 @@ shinyServer(function(input, output,session) {
 
   output$TaxoToPlotBP <- renderUI({
     
-    data = dataInput() 
+    data = dataInput()$data 
     taxo = input$TaxoSelect
     
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="...") 
@@ -983,7 +1056,7 @@ shinyServer(function(input, output,session) {
 
   output$TaxoToPlotHM <- renderUI({
     
-    data = dataInput() 
+    data = dataInput()$data
     taxo = input$TaxoSelect
     
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="...") 
@@ -1000,7 +1073,7 @@ shinyServer(function(input, output,session) {
 
   output$TaxoToPlotBoxP <- renderUI({
     
-    data = dataInput() 
+    data = dataInput()$data
     taxo = input$TaxoSelect
     
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="...") 

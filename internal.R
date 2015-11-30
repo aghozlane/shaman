@@ -1,24 +1,134 @@
 
 
 
+## Function for the rdp format
+getval <- function(annotation_rdp, interest, threshold_annot){
+  annotation_rdp = unlist(strsplit(annotation_rdp,"\t"))
+  annotation = c(annotation_rdp[1])
+  for(level in interest){
+    idlevel=which(annotation_rdp == level)
+    if(length(idlevel)>0){
+      if(as.numeric(annotation_rdp[idlevel+1]) >= threshold_annot){
+        annotation = c(annotation, gsub("\"", "", annotation_rdp[idlevel-1]))
+      }
+      else annotation = c(annotation, "NA")
+    }
+    else annotation = c(annotation, "NA")  
+  }
+  return(annotation)
+}
+
+## Read rdp file
+read_rdp <- function(filename, threshold_annot)
+{
+  interest=c("phylum", "class", "order", "family", "genus")
+  conn <- file(filename,open="r")
+  linn <-readLines(conn)
+  tab=t(sapply(1:length(linn), function(i) getval(linn[i], interest, threshold_annot)))
+  close(conn)
+  
+  if(!TRUE%in%duplicated(tab[,1])) rownames(tab)=tab[,1];tab=tab[,-1]
+  colnames(tab) = c("Phylum","Class","Order","Family","Genus")
+  
+  return(tab)
+}
+
+
+
+
+
+
+
+
+
+CheckCountsTable <- function(counts)
+  {
+    Error = NULL
+    Warning = NULL
+    numTest = FALSE%in%sapply(counts,is.numeric)
+    if(ncol(counts)<=1){Error = "The number of columns of the counts table must be at least 2" }
+    if(nrow(counts)<=1){Error = "The number of rows of the counts table must be at least 2" }
+    if(numTest){Error = "The counts table must contain only numeric values" }
+    if(!numTest)
+    {
+      if(0%in%colSums(counts)){Error = "At least one of the column of the counts table is 0" }
+      if(min(counts)<0){Error = "The counts table must contain only positive values" }
+    }
+    if(TRUE%in%sapply(counts,is.na)){Warning = "NA values are considered as 0 is the counts table"; counts[sapply(counts,is.na)]=0}
+    
+  
+    return(list(Error=Error,Warning=Warning,counts=counts))
+  }
+  
+  CheckTaxoTable <- function(taxo)
+  {
+    Error = NULL
+    Warning = NULL
+    if(ncol(taxo)<=1){Error = "The number of columns of the taxonomy table must be at least 2" }
+    if(nrow(taxo)<=1){Error = "The number of rows if the taxonomy table must be at least 2" }
+    print(is.numeric(taxo[2,4]))
+    if(TRUE%in%is.numeric(taxo)){Error = "The taxonomy table must contain only character" }
+
+    for(i in 1:ncol(taxo))
+    {
+      level = levels(taxo[,i])
+      nb = length(level)
+      if(nb==1 && level=="NA"){ Error = "At least one column contains only NA"}
+    }
+    
+    return(list(Error=Error,Warning=Warning))
+  }
+  
+  PercentAnnot <- function(counts,taxo)
+  {
+    Error = NULL  
+    tmp = table(rownames(counts)%in%rownames(taxo))
+    print(tmp)
+    Percent = tmp["TRUE"]/sum(tmp)
+    if(is.na(Percent)) Percent = 0
+    print(Percent)
+    if(Percent==0){Error = "Counts table and annotation do not matched" }
+       
+    return(list(Error=Error,Percent=Percent))
+  }
+  
+  
   GetDataFromBIOM <-function(dataBIOM)
   {
-    
+    ## Counts table
     counts = biom_data(dataBIOM)
     counts = as.matrix(counts)
     counts = as.data.frame(counts)
+    CheckCounts = CheckCountsTable(counts)
+    counts = CheckCounts$counts
+    
+    ## Taxonomy table
     taxo = as.data.frame(observation_metadata(dataBIOM))
-
-    return(list(counts=counts,taxo=taxo))
+    CheckTaxo = CheckTaxoTable(taxo)
+    
+    ## Pourcentage of annotation
+    tmp = PercentAnnot(counts,taxo)
+    
+    return(list(counts=counts,taxo=taxo,CheckCounts=CheckCounts,CheckTaxo=CheckTaxo,Percent=tmp$Percent,CheckPercent=tmp$Error))
   }
   
   
   GetDataFromCT <-function(dataC,dataT)
   {
     
+    ## Counts table
     counts = dataC
-    taxo = dataT
-    return(list(counts=counts,taxo=taxo))
+    CheckCounts = CheckCountsTable(counts)
+    counts = CheckCounts$counts
+    
+    ## Taxonomy table
+    taxo = as.data.frame(dataT)
+    CheckTaxo = CheckTaxoTable(taxo)
+    
+    ## Pourcentage of annotation
+    tmp = PercentAnnot(counts,taxo)
+    
+    return(list(counts=counts,taxo=taxo,CheckCounts=CheckCounts,CheckTaxo=CheckTaxo,Percent=tmp$Percent,CheckPercent=tmp$Error))
   }
   
   GetInteraction2 <- function(target)
@@ -1066,288 +1176,6 @@
     return(plot)
   }
   
-  
-  
-  
-  
-  #   ## Get tables from contrasts
-#   GetTableFromContrast  <- function (object, contrast, name, lfcThreshold = 0, altHypothesis = c("greaterAbs","lessAbs", "greater", "less"), listValues = c(1, -1), cooksCutoff, 
-#                             independentFiltering = TRUE, alpha = 0.1, filter, theta, pAdjustMethod = "BH", format = c("DataFrame", "GRanges", "GRangesList"), test, addMLE = FALSE, parallel = FALSE, 
-#                             BPPARAM = bpparam()) 
-#   {
-#     name = resultsNames(object)[length(resultsNames(object))]
-#     
-#     if (!"results" %in% mcols(mcols(object))$type) {
-#       stop("cannot find results columns in object, first call DESeq, nbinomWaldTest, or nbinomLRT")
-#     }
-#     if (missing(test)) {
-#       test <- attr(object, "test")
-#     }
-#     else if (test == "Wald" & attr(object, "test") == "LRT") {
-#       object <- makeWaldTest(object)
-#     }
-#     else if (test == "LRT" & attr(object, "test") == "Wald") {
-#       stop("the LRT requires the user run nbinomLRT or DESeq(dds,test='LRT')")
-#     }
-#     format <- match.arg(format, choices = c("DataFrame", "GRanges", 
-#                                             "GRangesList"))
-#     if (addMLE & !attr(object, "betaPrior")) {
-#       stop("addMLE=TRUE is only for when a beta prior was used. otherwise, the log2 fold changes are already MLE")
-#     }
-#     if (format == "GRanges" & is(rowData(object), "GRangesList")) {
-#       if (any(elementLengths(rowData(object)) == 0)) {
-#         stop("rowData is GRangesList and one or more GRanges have length 0. Use format='DataFrame' or 'GRangesList'")
-#       }
-#     }
-#     hasIntercept <- attr(terms(design(object)), "intercept") == 
-#       1
-#     isExpanded <- attr(object, "modelMatrixType") == "expanded"
-#     termsOrder <- attr(terms.formula(design(object)), "order")
-#     if ((test == "Wald") & (isExpanded | !hasIntercept) & missing(contrast) &  all(termsOrder < 2)) 
-#       {
-#       if (missing(name)) 
-#       {
-#         designVars <- all.vars(design(object))
-#         lastVarName <- designVars[length(designVars)]
-#         lastVar <- colData(object)[[lastVarName]]
-#         if (is.factor(lastVar)) {
-#           nlvls <- nlevels(lastVar)
-#           contrast <- c(lastVarName, levels(lastVar)[nlvls], levels(lastVar)[1])
-#         }
-#       }
-#     }
-#     if (missing(name)) {
-#       #name <- lastCoefName(object)
-#       name=""
-#     }
-#     altHypothesis <- match.arg(altHypothesis, choices = c("greaterAbs", "lessAbs", "greater", "less"))
-#     stopifnot(lfcThreshold >= 0)
-#     stopifnot(length(lfcThreshold) == 1)
-#     stopifnot(length(altHypothesis) == 1)
-#     stopifnot(length(alpha) == 1)
-#     stopifnot(length(pAdjustMethod) == 1)
-#     stopifnot(length(listValues) == 2 & is.numeric(listValues))
-#     stopifnot(listValues[1] > 0 & listValues[2] < 0)
-#     if (length(name) != 1 | !is.character(name)) {
-#       stop("the argument 'name' should be a character vector of length 1")
-#     }
-#     if (lfcThreshold == 0 & altHypothesis == "lessAbs") {
-#       stop("when testing altHypothesis='lessAbs', set the argument lfcThreshold to a positive value")
-#     }
-#     print(names(mcols(object)))
-#     WaldResults <- paste0("WaldPvalue_", name) %in% names(mcols(object))
-#     print("OKG1.3")
-#     LRTResults <- "LRTPvalue" %in% names(mcols(object))
-#     print("OKG1.4")
-#     if (!(WaldResults | LRTResults)) {
-#       stop("cannot find appropriate results in the DESeqDataSet.\npossibly nbinomWaldTest or nbinomLRT has not yet been run.")
-#     }
-#     if (!missing(contrast)) {
-#       if (is.character(contrast) & length(contrast) != 3) {
-#         stop("'contrast', as a character vector of length 3, should have the form:\ncontrast = c('factorName','numeratorLevel','denominatorLevel'),\nsee the manual page of ?results for more information")
-#       }
-#       if (is.list(contrast) & length(contrast) == 1) {
-#         contrast <- list(contrast[[1]], character())
-#       }
-#       if (is.list(contrast) & length(contrast) != 2) {
-#         stop("'contrast', as a list, should have length 2,\nsee the manual page of ?results for more information")
-#       }
-#       if (is.list(contrast) & !(is.character(contrast[[1]]) & 
-#                                   is.character(contrast[[2]]))) {
-#         stop("'contrast', as a list of length 2, should have character vectors as elements,\nsee the manual page of ?results for more information")
-#       }
-#       print("OKG2")
-#       res <- if (!parallel) {cleanContrast(object, contrast, expanded = isExpanded, listValues = listValues, test = test)}
-#       else if (parallel) {
-#         nworkers <- BPPARAM$workers
-#         idx <- factor(sort(rep(seq_len(nworkers), length = nrow(object))))
-#         do.call(rbind, bplapply(levels(idx), function(l) {
-#           cleanContrast(object[idx == l, , drop = FALSE], 
-#                         contrast, expanded = isExpanded, listValues = listValues, 
-#                         test = test)
-#         }, BPPARAM = BPPARAM))
-#       }
-#     }
-#     else {
-#       log2FoldChange <- getCoef(object, name)
-#       lfcSE <- getCoefSE(object, name)
-#       stat <- getStat(object, test, name)
-#       pvalue <- getPvalue(object, test, name)
-#       res <- cbind(mcols(object)["baseMean"], log2FoldChange, 
-#                    lfcSE, stat, pvalue)
-#       names(res) <- c("baseMean", "log2FoldChange", "lfcSE", 
-#                       "stat", "pvalue")
-#     }
-#     print("OKG4")
-#     rownames(res) <- rownames(object)
-#     if (addMLE) {
-#       if (!missing(contrast)) {
-#         if (is.numeric(contrast)) 
-#           stop("addMLE only implemented for: contrast=c('condition','B','A')")
-#         if (is.list(contrast)) 
-#           stop("addMLE only implemented for: contrast=c('condition','B','A')")
-#         res <- cbind(res, mleContrast(object, contrast))
-#       }
-#       else {
-#         mleName <- paste0("MLE_", name)
-#         mleNames <- names(mcols(object))[grep("MLE_", names(mcols(object)))]
-#         if (!mleName %in% mleNames) 
-#           stop("MLE_ plus 'name' was not found as a column in mcols(dds)")
-#         mleColumn <- mcols(object)[mleName]
-#         names(mleColumn) <- "lfcMLE"
-#         mcols(mleColumn)$description <- paste("log2 fold change (MLE):", 
-#                                               name)
-#         res <- cbind(res, mleColumn)
-#       }
-#       res <- res[, c("baseMean", "log2FoldChange", "lfcMLE", 
-#                      "lfcSE", "stat", "pvalue")]
-#     }
-#     print("OKG5")
-#     if (!(lfcThreshold == 0 & altHypothesis == "greaterAbs")) {
-#       if (test == "LRT") {
-#         warning("tests of log fold change above or below a theshold are Wald tests.\nLikelihood ratio test p-values are overwritten")
-#       }
-#       if (altHypothesis == "greaterAbs") {
-#         newStat <- sign(res$log2FoldChange) * pmax(0, (abs(res$log2FoldChange) - 
-#                                                          lfcThreshold))/res$lfcSE
-#         newPvalue <- pmin(1, 2 * pnorm(abs(res$log2FoldChange), 
-#                                        mean = lfcThreshold, sd = res$lfcSE, lower.tail = FALSE))
-#       }
-#       else if (altHypothesis == "lessAbs") {
-#         if (attr(object, "betaPrior")) {
-#           stop("testing altHypothesis='lessAbs' requires setting the DESeq() argument betaPrior=FALSE")
-#         }
-#         newStatAbove <- pmax(0, lfcThreshold - res$log2FoldChange)/res$lfcSE
-#         pvalueAbove <- pnorm(res$log2FoldChange, mean = lfcThreshold, 
-#                              sd = res$lfcSE, lower.tail = TRUE)
-#         newStatBelow <- pmax(0, res$log2FoldChange + lfcThreshold)/res$lfcSE
-#         pvalueBelow <- pnorm(res$log2FoldChange, mean = -lfcThreshold, 
-#                              sd = res$lfcSE, lower.tail = FALSE)
-#         newStat <- pmin(newStatAbove, newStatBelow)
-#         newPvalue <- pmax(pvalueAbove, pvalueBelow)
-#       }
-#       else if (altHypothesis == "greater") {
-#         newStat <- pmax(0, res$log2FoldChange - lfcThreshold)/res$lfcSE
-#         newPvalue <- pnorm(res$log2FoldChange, mean = lfcThreshold, 
-#                            sd = res$lfcSE, lower.tail = FALSE)
-#       }
-#       else if (altHypothesis == "less") {
-#         newStat <- pmax(0, lfcThreshold - res$log2FoldChange)/res$lfcSE
-#         newPvalue <- pnorm(res$log2FoldChange, mean = -lfcThreshold, 
-#                            sd = res$lfcSE, lower.tail = TRUE)
-#       }
-#       print("OKG6")
-#       res$stat <- newStat
-#       res$pvalue <- newPvalue
-#     }
-#     m <- nrow(attr(object, "dispModelMatrix"))
-#     p <- ncol(attr(object, "dispModelMatrix"))
-#     if (m > p) {
-#       defaultCutoff <- qf(0.99, p, m - p)
-#       if (missing(cooksCutoff)) {
-#         cooksCutoff <- defaultCutoff
-#       }
-#       stopifnot(length(cooksCutoff) == 1)
-#       if (is.logical(cooksCutoff) & cooksCutoff) {
-#         cooksCutoff <- defaultCutoff
-#       }
-#     }
-#     else {
-#       cooksCutoff <- FALSE
-#     }
-#     print("OKG7")
-#     performCooksCutoff <- (is.numeric(cooksCutoff) | cooksCutoff)
-#     if ((m > p) & performCooksCutoff) {
-#       cooksOutlier <- mcols(object)$maxCooks > cooksCutoff
-#       res$pvalue[cooksOutlier] <- NA
-#     }
-#     if (sum(mcols(object)$replace, na.rm = TRUE) > 0) {
-#       nowZero <- which(mcols(object)$replace & mcols(object)$baseMean == 
-#                          0)
-#       res$log2FoldChange[nowZero] <- 0
-#       if (addMLE) {
-#         res$lfcMLE[nowZero] <- 0
-#       }
-#       res$lfcSE[nowZero] <- 0
-#       res$stat[nowZero] <- 0
-#       res$pvalue[nowZero] <- 1
-#     }
-#     print("OKG8")
-#     if (independentFiltering) {
-#       if (missing(filter)) {
-#         filter <- res$baseMean
-#       }
-#       if (missing(theta)) {
-#         lowerQuantile <- mean(filter == 0)
-#         if (lowerQuantile < 0.95) 
-#           upperQuantile <- 0.95
-#         else upperQuantile <- 1
-#         theta <- seq(lowerQuantile, upperQuantile, length = 20)
-#       }
-#       stopifnot(length(theta) > 1)
-#       stopifnot(length(filter) == nrow(object))
-#       filtPadj <- filtered_p(filter = filter, test = res$pvalue, 
-#                              theta = theta, method = pAdjustMethod)
-#       numRej <- colSums(filtPadj < alpha, na.rm = TRUE)
-#       j <- which.max(numRej)
-#       res$padj <- filtPadj[, j, drop = TRUE]
-#       cutoffs <- quantile(filter, theta)
-#       filterThreshold <- cutoffs[j]
-#       filterNumRej <- data.frame(theta = theta, numRej = numRej)
-#     }
-#     else {
-#       res$padj <- p.adjust(res$pvalue, method = pAdjustMethod)
-#     }
-#     mcols(res)$type[names(res) == "padj"] <- "results"
-#     mcols(res)$description[names(res) == "padj"] <- paste(pAdjustMethod, "adjusted p-values")
-#     
-#     print("OKG9")
-#     deseqRes <- DESeqResults(res)
-#     if (independentFiltering) {
-#       attr(deseqRes, "filterThreshold") <- filterThreshold
-#       attr(deseqRes, "filterNumRej") <- filterNumRej
-#     }
-#     if (format == "DataFrame") {
-#       return(deseqRes)
-#     }
-#     else if (format == "GRangesList") {
-#       if (class(rowData(object)) == "GRanges") 
-#         message("rowData is GRanges")
-#       out <- rowData(object)
-#       mcols(out) <- deseqRes
-#       return(out)
-#     }
-#     else if (format == "GRanges") {
-#       if (class(rowData(object)) == "GRangesList") {
-#         message("rowData is GRangesList, unlisting the ranges")
-#         out <- unlist(range(rowData(object)))
-#         mcols(out) <- deseqRes
-#         return(out)
-#       }
-#       else {
-#         out <- rowData(object)
-#         mcols(out) <- deseqRes
-#         return(out)
-#       }
-#     }
-#   }
-#   
-#   
-#   TableDiff_result <- function(input,BaseContrast,resDiff)
-#   {
-#     VarInt = input$VarInt
-#     dds = resDiff$dds
-#     counts = resDiff$counts
-#     target = resDiff$target
-#     group = as.data.frame(target[,VarInt])
-#     result = list()
-#     
-#     result[[input$ContrastList_table]] <- GetTableFromContrast(dds,contrast=BaseContrast[,input$ContrastList_table],pAdjustMethod=input$AdjMeth,
-#                                cooksCutoff=ifelse(!is.null(input$CooksCutOff),input$CutOffVal,TRUE),
-#                                independentFiltering=input$IndFiltering,alpha=input$AlphaVal)
-#     return(result)
-#   }
-#   
   
   TableDiff_print <- function(input,BaseContrast,resDiff, info = NULL) 
   {

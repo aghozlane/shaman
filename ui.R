@@ -64,58 +64,44 @@ body <- dashboardBody(
     ),
     tabItem(tabName = "Upload",
             tags$style(type='text/css', ".well { max-width: 20em; }"),
-            # Tags:
-            tags$head(
-              tags$style(type="text/css", "select[multiple] { width: 100%; height:10em}"),
-              tags$style(type="text/css", "select { width: 100%}"),
-              tags$style(type="text/css", "input { width: 19em; max-width:100%}")
-            ),
             fluidRow(
-              column(12,
-                  h3(strong("Instructions")),
-                   p("Provide the input data")
-#                   p("Décrire le format des différents fichiers"),
-#                   p("Décrire le format des différents fichiers"),
-#                   p("Décrire le format des différents fichiers")
-              ),
-              br(),
-              
-              column(3,
-                box(title="Select your file format",width = NULL, status = "success", solidHeader = TRUE,collapsible = FALSE,
+              column(width=3,valueBoxOutput("valueErrorPercent",width=NULL)),
+              column(width=3,infoBoxOutput("InfoErrorCounts",width=NULL)),
+              column(width=3,infoBoxOutput("InfoErrorTaxo",width=NULL))
+            ),
+            br(),
+             fluidRow(
+                box(title="Select your file format",width = 3,status = "success", solidHeader = TRUE,collapsible = FALSE,
                   selectInput("FileFormat","",c("Counts table & taxonomy"="fileCounts","BIOM file"="fileBiom"),selected="fileCounts")
-                )
-                #uiOutput("LoadButton")
-              ),
-              column(9,
+                ),
                 conditionalPanel(condition="input.FileFormat=='fileCounts'",
-                  box(title="Load the counts table",width = 4, status = "primary", solidHeader = TRUE,collapsible = FALSE,
+                  box(title="Load the counts table",width = 3,height = "250px", status = "primary", solidHeader = TRUE,collapsible = FALSE,
                     fileInput('fileCounts', h6(strong('Select your file')),width="100%")
                   ),
                   
-                  box(title="Load the taxonomy file",width = 4, status = "primary", solidHeader = TRUE,collapsible = FALSE,
-                      radioButtons("TypeTaxo",h6(strong("Format:")),c("Table"="Table","RDP"="RDP")),
+                  box(title="Load the taxonomy file",width = 3,height = "250px", status = "primary", solidHeader = TRUE,collapsible = FALSE,
+                      fluidRow(
+                        column(width=6,radioButtons("TypeTaxo",h6(strong("Format:")),c("Table"="Table","RDP"="RDP"))),
+                        column(width=6,
+                             conditionalPanel(condition="input.TypeTaxo=='RDP'",numericInput("RDP_th",h6(strong("Threshold:")),0.5,step=0.01,min=0.01,max=1))
+                        )
+                      ),
                       fileInput('fileTaxo', h6(strong('Select your file')),width="100%")
                   )
                   
                 ),
                 
                 conditionalPanel(condition="input.FileFormat=='fileBiom'",
-                                 box(title="Load the BIOM file",width = 4, status = "primary", solidHeader = TRUE,collapsible = FALSE,
+                                 box(title="Load the BIOM file",width = 3,height = "250px", status = "primary", solidHeader = TRUE,collapsible = FALSE,
                                      fileInput('fileBiom', h5(strong('Select your file')),width="100%")
                                  )           
                 )
-                
-              ),
+             ),
               column(12,uiOutput("TabBoxData"))
 
               
-          )
+          
     ),
-    
-    
-    
-    
-    
     
   #### Statistical analysis
 
@@ -125,7 +111,7 @@ body <- dashboardBody(
               column(width=3,infoBoxOutput("InfoContrast",width=NULL)),
               column(width=3,infoBoxOutput("InfoTaxo",width=NULL)),
               column(width=3,infoBoxOutput("InfoDESeq",width=NULL))
-            ),
+            ),            
             fluidRow(
               column(width=5,
                 box(title="Experimental design",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = FALSE,
