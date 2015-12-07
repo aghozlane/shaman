@@ -161,7 +161,7 @@ CheckCountsTable <- function(counts)
       contrast <- contrasts[,i]
       contrast <- paste(ifelse(contrast > 0, "+ ", ""), contrast, sep = "")
       contrast <- gsub("( 1)|(1)", "", contrast)
-      out = paste(out,paste("<b>",contnames[i], ":</b> <br/>", paste(contrast[contrast != 0], coefs[contrast != 0], collapse = " ", sep = " ")),"<br/>")
+      out = paste(out,paste("<b>",contnames[i], "</b> <br/>", paste(contrast[contrast != 0], coefs[contrast != 0], collapse = " ", sep = " ")),"<br/>")
     }
     return(out)
     

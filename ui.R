@@ -108,9 +108,9 @@ body <- dashboardBody(
     tabItem(tabName = "RunDiff",
             fluidRow(
               column(width=3,infoBoxOutput("RowTarget",width=NULL)),
-              column(width=3,infoBoxOutput("InfoContrast",width=NULL)),
               column(width=3,infoBoxOutput("InfoTaxo",width=NULL)),
-              column(width=3,infoBoxOutput("InfoDESeq",width=NULL))
+              column(width=3,infoBoxOutput("InfoDESeq",width=NULL)),
+              column(width=3,conditionalPanel(condition="input.RunDESeq>=1",infoBoxOutput("InfoContrast",width=NULL)))
             ),            
             fluidRow(
               column(width=5,
@@ -122,7 +122,7 @@ body <- dashboardBody(
                   fluidRow( 
                     column(width=6,uiOutput("SelectInterestVar")),
                     column(width=6,uiOutput("SelectInteraction2")),
-                    column(width=6,actionButton("RunDESeq",strong("Run analysis"),icon = icon("caret-right")))
+                    column(width=6,uiOutput("RunButton"))
                   )
                 ),
                 uiOutput("BoxTarget"),
@@ -165,31 +165,17 @@ body <- dashboardBody(
                     column(width=3,uiOutput("RefSelect"))
                   )
                 ),
-                box(title="Contrasts",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
-                    column(width=3,uiOutput("contrastMat")),
-                    column(width=3,
-                           textInput("ContrastName","Contrast name","Name..."),
-                           actionButton("AddContrast","Add contrast",icon = icon("plus"))
-                    ),
-                    column(width=3,
-                           selectInput("ContrastList","Contrasts","",multiple=TRUE,size=2,selectize=FALSE),
-                           actionButton("RemoveContrast","Remove",icon = icon("remove"))
-                    ),
-                    column(width=3,
-                           h5(strong("Selected contrast:")),
-                           htmlOutput("ContrastOverview")
-                    ) 
-                )
-                
-                
+                fluidRow(
+                column(width=8,
+                       uiOutput("contrastBox"),
+                       uiOutput("contrastBoxAdvanced")
+                       ),
+                column(width=4,
+                       uiOutput("contrastDefined")
+                )  
+                ) 
               )
             )
-            
-#             fluidRow(
-#               column(width=12,
-# 
-#               )  
-#             )
             
     ),
     tabItem(tabName = "DiagPlotTab",

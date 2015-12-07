@@ -54,7 +54,7 @@ shinyServer(function(input, output,session) {
   namesfile = paste("www/base/BaseContrast_",rand,".txt",sep="")
   file.create(namesfile,showWarnings=FALSE)
 
-#namesfile = "www/All_Contrast.txt"
+  #namesfile = "www/All_Contrast.txt"
 
   ## Counts file
   dataInputCounts <-reactive({ 
@@ -62,12 +62,10 @@ shinyServer(function(input, output,session) {
     inFile <- input$fileCounts
   
     if (is.null(inFile)) return(NULL)
-    
 
     data = read.csv(inFile$datapath,sep="\t",header=TRUE)
 
     ## Rownames
-    
     if(!TRUE%in%duplicated(data[,1])) rownames(data)=data[,1];data=data[,-1]
 
     return(as.data.frame(data))
@@ -273,9 +271,7 @@ shinyServer(function(input, output,session) {
       )
      }
     else{
-      sidebarMenu(
-        menuItem("")
-      )
+      sidebarMenu()
     }
     
   })
@@ -406,7 +402,7 @@ shinyServer(function(input, output,session) {
       #### Ajout fontion check target
       infoBox(h6(strong("Target file")), subtitle = h6("Your target file is OK"), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
     }
-    else infoBox(h6(strong("Target file")), subtitle = h6("Label of the target file must correspond to counts table column names") ,color = "orange",width=NULL,fill=TRUE, icon = icon("warning"))
+    else infoBox(h6(strong("Target file")), subtitle = h6("Label of the target file must correspond to counts table column names") ,color = "light-blue",width=NULL,fill=TRUE, icon = icon("warning"))
   })
 
 
@@ -536,7 +532,7 @@ shinyServer(function(input, output,session) {
 
     Contrast=list()
     
-    for(i in 1:length(names)){Contrast[[i]] = textInput(names[i],names[i],0)}
+    for(i in 1:length(names)){Contrast[[i]] = numericInput(names[i],names[i],0,step=1,min=-1,max=1)}
   
     return(Contrast)
     
@@ -582,8 +578,52 @@ shinyServer(function(input, output,session) {
     
   })
 
- 
+
+  ## Add contrast function
+  AddContEasy <-eventReactive(input$AddContrastEasy,{
+    
+    resDiff = ResDiffAnal()
+    dds = resDiff$dds
+    names = resultsNames(dds)
+#     
+#     BaseContrast(input,names,namesfile)
+#     tmp = read.table(namesfile,header=TRUE)
+#     Contrast = colnames(as.matrix(tmp))
+    updateSelectInput(session, "ContrastList","Contrasts",Contrast)
+    updateSelectInput(session, "ContrastList_table","Contrasts",Contrast)
+  })
   
+  ## Add contrast 
+  observeEvent(input$AddContrastEasy,{  
+    
+    AddContEasy()
+    
+  })
+
+
+  AddContFromFile <-eventReactive(input$fileContrast,{ 
+    
+    res = ReadContrastFile()
+    createdCont = NULL
+    filesize = file.info(namesfile)[,"size"]
+    if(filesize!=0){ createdCont = read.table(namesfile,header=TRUE) }
+      
+    if(!is.null(res))
+    { 
+      if(!is.null(createdCont)) res = cbind(res,createdCont)
+      updateSelectInput(session, "ContrastList","Contrasts",colnames(res))
+      updateSelectInput(session, "ContrastList_table","Contrasts",colnames(res))
+      
+      write.table(res,namesfile,row.names=FALSE)
+    }
+  })
+ 
+ observeEvent(input$fileContrast,{ 
+    
+   AddContFromFile()
+  })
+
+
   ## Remove contrast function
   RemoveCont <-eventReactive(input$RemoveContrast,{
     
@@ -617,7 +657,9 @@ shinyServer(function(input, output,session) {
   output$InfoContrast <- renderInfoBox({
     
     test = FALSE
+    res = infoBox(h6(strong("Contrasts")), subtitle = h6("At least one contrast (non null) must be defined"), icon = icon("warning"),color = "light-blue",width=NULL,fill=TRUE)
     input$AddContrast
+    input$RemoveContrast
     
     filesize = isolate(file.info(namesfile)[,"size"])
     if(filesize!=0) 
@@ -628,10 +670,108 @@ shinyServer(function(input, output,session) {
     
     if(test) 
     {
-      infoBox(h6(strong("Contrasts")), subtitle = h6("Contrasts OK"), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
+      res = infoBox(h6(strong("Contrasts")), subtitle = h6("Contrasts OK"), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
     }
-    else infoBox(h6(strong("Contrasts")), subtitle = h6("At least one contrast (non null) must be defined") ,color = "orange",width=NULL,fill=TRUE, icon = icon("warning"))
+    return(res)
   })
+
+
+  
+  output$contrastBox <- renderUI({
+    
+    resDiff = ResDiffAnal()
+    int = input$Interaction2
+    target = resDiff$target
+    
+    InterVar = input$InterestVar
+    ModInterestAll = unique(target[,InterVar])
+    test = c()
+    for(i in 1:length(InterVar)){ test =c(test,input$Select1_contrast%in%target[,InterVar[i]]) }
+    
+    ModInterestCond = unique(target[,which(test)])
+    #alltmp = c(InterVar,Interaction)
+    
+    
+   
+    if(!is.null(resDiff))
+    { 
+      box(title="Contrasts",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = FALSE,
+          fluidRow(
+            column(width=3,selectInput("Select1_contrast",label=h6(strong("Compare")),ModInterestAll)),
+            column(width=3,selectInput("Select2_contrast",label=h6(strong("To")),ModInterestCond)),
+            if(length(int)>=1) column(width=3,selectInput("Select3_contrast",label=h6(strong("For")),c("All","WT","Delta"))),
+            column(width=3,br(),br(),actionButton("AddContrastEasy","Add",icon = icon("plus")))
+          )
+      )
+    }
+    
+  })
+
+
+  output$contrastBoxAdvanced <- renderUI({
+    
+    resDiff = ResDiffAnal()
+    
+    if(!is.null(resDiff))
+    { 
+      box(title="Contrasts (advanced user)",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
+          fluidRow(
+            column(width=12,
+                   fileInput('fileContrast', h6(strong('Select a file of contrasts')),width="60%")
+            ),
+            hr(),
+            column(width=12,h6(strong("Define contrasts by yourself"))),
+            column(width=6,textInput("ContrastName",label = NULL,value = "Contrast name")),
+            column(width=6,actionButton("AddContrast","Add contrast",icon = icon("plus")))
+          ),
+          fluidRow(column(width=12,uiOutput("contrastMat")))
+      )
+    }
+    
+  })
+
+
+  output$contrastDefined <- renderUI({
+    resDiff = ResDiffAnal()
+    
+    if(!is.null(resDiff))
+    { 
+      box(title="Defined contrasts",width = NULL, status = "primary", solidHeader = TRUE,collapsible = FALSE,collapsed = FALSE,
+          fluidRow(
+            column(width=11,
+                   selectInput("ContrastList","Contrasts","",multiple=TRUE,size=4,selectize=FALSE,width = '100%'),
+                   fluidRow(
+                      column(width=6,actionButton("RemoveContrast","Remove",icon = icon("remove"))),
+                      column(width=6,downloadButton("exportContrast", "Export"))
+                   ),
+                   htmlOutput("ContrastOverview")
+            )
+            
+          )
+      )
+    }
+  })
+
+
+  ReadContrastFile <-reactive({ 
+    
+    inFile <- input$fileContrast
+    
+    if (is.null(inFile)) return(NULL)
+    
+    res = read.csv(inFile$datapath,sep=" ",header=TRUE)
+    
+    return(res)
+  })
+  
+
+  output$exportContrast <- downloadHandler(
+    filename <- function() {"Contrasts.txt"},
+    content <- function(file) {
+      file.copy(namesfile,file)
+    }
+  )
+
 
 
 
@@ -646,16 +786,12 @@ shinyServer(function(input, output,session) {
   # Infobox Contrast
   output$InfoDESeq <- renderInfoBox({
     
-    input$RunDESeq
-    box = NULL
-    target = isolate(dataInputTarget())
-    taxo = isolate(input$TaxoSelect)
+      
+      resDiff = ResDiffAnal()
+      if(!is.null(resDiff)){
+        infoBox(h6(strong("Statistical analysis")), subtitle = h6("Differential analysis is done !"), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
+      }
 
-    if(!is.null(target) && taxo!="...") 
-    {
-      infoBox(h6(strong("Statistical analysis")), subtitle = h6("Differential analysis is done !"), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
-    }
-    else infoBox(h6(strong("Statistical analysis")), subtitle = h6("Not done !"), icon = icon("warning"),color = "orange",width=NULL,fill=TRUE) 
     
   })
   
@@ -671,33 +807,6 @@ shinyServer(function(input, output,session) {
 
     
   })
-
-
-##### SUPPRIMER POUR AMINE
-
-#   observeEvent(input$RunDESeq,{
-#     
-#     
-#     filesize = file.info(namesfile)[,"size"]
-#     
-#     if(filesize!=0)
-#     { 
-#       file.create(namesfile,showWarnings=FALSE)
-#       updateSelectInput(session, "ContrastList","Contrasts","")
-#       updateSelectInput(session, "ContrastList_table","Contrasts","")
-#       
-#     }
-#     
-#   })
-
-
-# data = dataInput() 
-# 
-# target = dataInputTarget()
-# design = GetDesign(input)
-# counts = GetCountsMerge(data,input$TaxoSelect)
-#   
-
 
 
   ## Run DESeq2 via RunDESeq button
@@ -743,7 +852,7 @@ shinyServer(function(input, output,session) {
       nfeature = nrow(counts)
       infoBox(h6(strong("Taxonomy")), subtitle = h6(paste(taxo, ", nb features: ",nfeature,sep="")), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
     }
-    else infoBox(h6(strong("Taxonomy")), subtitle = h6("Select the taxonomy for the analysis") ,color = "orange",width=NULL,fill=TRUE, icon = icon("warning"))
+    else infoBox(h6(strong("Taxonomy")), subtitle = h6("Select the taxonomy for the analysis") ,color = "light-blue",width=NULL,fill=TRUE, icon = icon("warning"))
   })
 
 
@@ -959,6 +1068,21 @@ shinyServer(function(input, output,session) {
     }
     
   })
+
+
+  ## Run button
+
+output$RunButton <- renderUI({
+  
+  res = NULL
+  target = dataInputTarget()
+  taxo = input$TaxoSelect
+  if(!is.null(target) && taxo!="...") res = actionButton("RunDESeq",strong("Run analysis"),icon = icon("caret-right"))
+  
+  return(res)
+})
+
+
 
 
 #####################################################
