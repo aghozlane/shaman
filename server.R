@@ -569,6 +569,7 @@ shinyServer(function(input, output,session) {
     Contrast = colnames(as.matrix(tmp))
     updateSelectInput(session, "ContrastList","Contrasts",Contrast)
     updateSelectInput(session, "ContrastList_table","Contrasts",Contrast)
+    updateSelectInput(session, "ContrastList_table_FC","Contrasts",Contrast)
   })
 
   ## Add contrast 
@@ -591,6 +592,7 @@ shinyServer(function(input, output,session) {
 #     Contrast = colnames(as.matrix(tmp))
     updateSelectInput(session, "ContrastList","Contrasts",Contrast)
     updateSelectInput(session, "ContrastList_table","Contrasts",Contrast)
+    updateSelectInput(session, "ContrastList_table_FC","Contrasts",Contrast)
   })
   
   ## Add contrast 
@@ -613,7 +615,7 @@ shinyServer(function(input, output,session) {
       if(!is.null(createdCont)) res = cbind(res,createdCont)
       updateSelectInput(session, "ContrastList","Contrasts",colnames(res))
       updateSelectInput(session, "ContrastList_table","Contrasts",colnames(res))
-      
+      updateSelectInput(session, "ContrastList_table_FC","Contrasts",colnames(res))
       write.table(res,namesfile,row.names=FALSE)
     }
   })
@@ -640,6 +642,7 @@ shinyServer(function(input, output,session) {
       else file.create(namesfile,showWarnings=FALSE)
       updateSelectInput(session, "ContrastList","Contrasts",ContrastKept)
       updateSelectInput(session, "ContrastList_table","Contrasts",ContrastKept)
+      updateSelectInput(session, "ContrastList_table_FC","Contrasts",ContrastKept)
     }
   })
   
@@ -952,14 +955,19 @@ shinyServer(function(input, output,session) {
 #####################################################
 
   ## PDF  
-  output$exportPDFVisu <- downloadHandler(
-    filename <- function() { paste("test",'meta16S.pdf',sep="_")},
-    content <- function(file) {
-      pdf(file, width = 6, height = 4)
-      Plot_Visu(input,ResDiffAnal())
-      dev.off()
-    }
-  )
+## PDF  
+output$exportPDFVisu <- downloadHandler(
+  filename <- function() { paste("test",'meta16S.ps',sep="_")},
+  content <- function(file) {
+    resDiff = ResDiffAnal()
+    BaseContrast = read.table(namesfile,header=TRUE)
+    #ggsave(filename = filename, Plot_Visu_Heatmap_FC(input,BaseContrast,resDiff),width = input$widthHeat, height = input$heightHeat)
+    postscript(file, width = input$widthHeat, height = input$heightHeat)
+    if(input$HeatMapType=="Counts")  Plot_Visu_Heatmap(input,resDiff)
+    if(input$HeatMapType=="Log2FC")     Plot_Visu_Heatmap_FC(input,BaseContrast,resDiff)
+    dev.off()
+  }
+)
   
   
   ## PNG
@@ -1106,9 +1114,13 @@ output$RunButton <- renderUI({
 
   output$heatmap <- renderPlot({
     resDiff = ResDiffAnal()
-    if(!is.null(resDiff$dds)) Plot_Visu_Heatmap(input,resDiff)
+    BaseContrast = read.table(namesfile,header=TRUE)
+    if(!is.null(resDiff$dds))
+    { 
+      if(input$HeatMapType=="Counts")  Plot_Visu_Heatmap(input,resDiff)
+      if(input$HeatMapType=="Log2FC")     Plot_Visu_Heatmap_FC(input,BaseContrast,resDiff)
+    }
   },height=reactive(input$heightHeat))
-
 
 
   output$Boxplot <- renderPlot({

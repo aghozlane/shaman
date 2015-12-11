@@ -296,34 +296,40 @@ body <- dashboardBody(
   ),
   
 
-  tabItem(tabName = "HeatmapVisu",
-          fluidRow(
-            column(width=9,
-                   #d3heatmapOutput(outputId ='d3heatmap', width = "1000p", height = "800px")
-              
-                plotOutput("heatmap")
-              
-            ),
-                  
-            #                    downloadButton("exportPDFVisu", "Download pdf"),
-            #                    downloadButton("exportPNGVisu", "Download png")
-            #)      
-            
-            column(width=3,
-              box(title = "Options",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
-                uiOutput("VarIntVisuHM"),
-                uiOutput("TaxoToPlotHM"),
-                radioButtons(inputId = "SensPlotVisuHM",label = "Type: ",choices = c("Vertical" = "Vertical", "Horizontal" = "Horizontal"),selected = "Vertical"),
-                selectInput(inputId = "scaleHeatmap",label = h6(strong("Scale:")),choices = c("None" = "none", "Rows" = "row", "Column" = "col"),selected = "none")
-              ),
-              box(title = "Appearance",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
-                selectInput("colors", label="Gradient of colors:",choices = c("green-blue", "blue-white-red", "purple-white-orange", "red-yellow-green")),
-                sliderInput("heightHeat", h6(strong("Height")),min=100,max=2000,value = 800)
-              )
-            )
+tabItem(tabName = "HeatmapVisu",
+        fluidRow(
+          column(width=9,
+                 #d3heatmapOutput(outputId ='d3heatmap', width = "1000p", height = "800px")
+                 
+                 plotOutput("heatmap")
+                 
+          ),
+          column(width=3,
+                 box(title = "Options",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
+                     selectInput(inputId = "HeatMapType",label = h6(strong("Data")),choices = c("Counts" = "Counts", "Log2FC" = "Log2FC"),selected = "Counts"),
+                     selectInput("ContrastList_table_FC",h6(strong("Contrast list")),"", multiple = TRUE),
+                     uiOutput("VarIntVisuHM"),
+                     uiOutput("TaxoToPlotHM"),
+                     radioButtons(inputId = "SensPlotVisuHM",label = "Type: ",choices = c("Vertical" = "Vertical", "Horizontal" = "Horizontal"),selected = "Vertical"),
+                     selectInput(inputId = "scaleHeatmap",label = h6(strong("Scale:")),choices = c("None" = "none", "Rows" = "row", "Column" = "col"),selected = "none"),
+                     downloadButton("exportPDFVisu", "Download pdf")
+                 ),
+                 box(title = "Appearance",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
+                     selectInput("colors", label="Gradient of colors:",choices = c("green-blue", "blue-white-red", "purple-white-orange", "red-yellow-green")),
+                     sliderInput("heightHeat", h6(strong("Height")),min=100,max=2000,value = 800),
+                     sliderInput("widthHeat", h6(strong("Width")),min=100,max=2000,value = 800),
+                     sliderInput("LabelSizeHeatmap", h6(strong("Label size")),min=0.1,max=2,value = 0.7,step = 0.1),
+                     sliderInput("LabelOrientHeatmap", h6(strong("Label orientation")),min=0,max=90,value = 0,step = 5),
+                     sliderInput("LabelColOffsetHeatmap", h6(strong("Label column offset")),min=0,max=4,value = 0,step = 0.5),
+                     sliderInput("LabelRowOffsetHeatmap", h6(strong("Label row offset")),min=0,max=4,value = 0,step = 0.5),
+                     sliderInput("rightMargin", h6(strong("Right margin")),min=0,max=20,value = 6,step = 1),
+                     sliderInput("lowerMargin", h6(strong("Lower margin")),min=0,max=20,value = 6,step = 1)
+                     
+                 )
           )
-          
-  ),
+        )
+        
+),
 
   
   tabItem(tabName = "BoxplotVisu",

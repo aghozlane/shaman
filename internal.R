@@ -66,7 +66,6 @@ CheckCountsTable <- function(counts)
     Warning = NULL
     if(ncol(taxo)<=1){Error = "The number of columns of the taxonomy table must be at least 2" }
     if(nrow(taxo)<=1){Error = "The number of rows if the taxonomy table must be at least 2" }
-    print(is.numeric(taxo[2,4]))
     if(TRUE%in%is.numeric(taxo)){Error = "The taxonomy table must contain only character" }
 
     for(i in 1:ncol(taxo))
@@ -83,10 +82,8 @@ CheckCountsTable <- function(counts)
   {
     Error = NULL  
     tmp = table(rownames(counts)%in%rownames(taxo))
-    print(tmp)
     Percent = tmp["TRUE"]/sum(tmp)
     if(is.na(Percent)) Percent = 0
-    print(Percent)
     if(Percent==0){Error = "Counts table and annotation do not matched" }
        
     return(list(Error=Error,Percent=Percent))
@@ -1254,4 +1251,64 @@ CheckCountsTable <- function(counts)
   }
   
   
+  Get_log2FC <-function(input,BaseContrast,resDiff, info = NULL)
+  {
+    
+    VarInt = input$VarInt
+    dds = resDiff$dds
+    counts = resDiff$counts
+    target = resDiff$target
+    SelContrast = input$ContrastList_table_FC
+    nbCont = length(SelContrast)
+    result = list()
+    alpha = input$AlphaVal
+    cooksCutoff = ifelse(input$CooksCutOff!='Auto',ifelse(input$CooksCutOff!=Inf,input$CutOffVal,Inf),TRUE)
+    
+    for(i in 1:nbCont)
+    { 
+      cont = as.character(SelContrast[i])
+      result[[cont]] <- results(dds,contrast=BaseContrast[,cont],pAdjustMethod=input$AdjMeth,
+                                cooksCutoff=cooksCutoff,
+                                independentFiltering=input$IndFiltering,alpha=alpha)
+    }
+    log2FC = as.matrix(round(result[[SelContrast[1]]][, "log2FoldChange"], 3))
+    if(nbCont>1)
+    {
+      for(i in 2:nbCont)
+      {
+        log2FC = cbind(log2FC,round(result[[SelContrast[i]]][, "log2FoldChange"], 3))
+      }
+      colnames(log2FC) = names(result)
+    }
+    rownames(log2FC) = rownames(result[[SelContrast[1]]])
+    return(log2FC)
+  }
+  
+  
+  Plot_Visu_Heatmap_FC <- function(input,BaseContrast,resDiff){
+    
+    log2FC = Get_log2FC(input,BaseContrast,resDiff, info = NULL)
+    ind_taxo = input$selectTaxoPlotHM
+    ind = rownames(log2FC)%in%ind_taxo
+    
+    log2FC = log2FC[ind,]
+    
+    col <- switch(input$colors,
+                  "green-blue"=colorRampPalette(brewer.pal(9,"GnBu"))(200),
+                  "blue-white-red"=colorRampPalette(rev(brewer.pal(9, "RdBu")))(200),
+                  "purple-white-orange"=colorRampPalette(rev(brewer.pal(9, "PuOr")))(200),
+                  "red-yellow-green"= colorRampPalette(rev(brewer.pal(9,"RdYlGn")))(200))
+    
+    #col <- c(colorRampPalette(c("blue","white"))(n = 100),colorRampPalette(c("white",  "firebrick1", "firebrick2", "firebrick3", "firebrick4"))(n = 100))
+    col <- c(colorRampPalette(c("royalblue4","royalblue3","royalblue2","royalblue1","white"))(n = 100),colorRampPalette(c("white",  "firebrick1", "firebrick2", "firebrick3", "firebrick4"))(n = 100))
+    ## Transpose matrix if Horizontal
+    
+    if(input$SensPlotVisuHM=="Horizontal") log2FC = t(as.matrix(log2FC))
+    return(heatmap.2(log2FC, dendrogram = "row", Rowv = TRUE, Colv = NA, na.rm = TRUE, density.info="none", margins=c(input$lowerMargin,input$rightMargin),trace="none",srtCol=input$LabelOrientHeatmap,
+                     col = col, scale = input$scaleHeatmap,cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap))
+    
+    
+  }
+
+
   
