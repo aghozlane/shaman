@@ -51,7 +51,8 @@ shinyServer(function(input, output,session) {
   
   ## Create base for contrast
   rand = floor(runif(1,0,1e9))
-  namesfile = paste("www/base/BaseContrast_",rand,".txt",sep="")
+  namesfile = tempfile(pattern = "BaseContrast", tmpdir = tempdir(), fileext = "")
+  #paste("/srv/shiny-server/sample-apps/meta16s/BaseContrast_",rand,".txt",sep="")
   file.create(namesfile,showWarnings=FALSE)
 
   #namesfile = "www/All_Contrast.txt"
@@ -547,7 +548,7 @@ shinyServer(function(input, output,session) {
     
     cont = input$ContrastList
     filesize = file.info(namesfile)[,"size"]
-    
+    if(is.na(filesize)){filesize=0}
     if(filesize!=0)
     { 
       ContrastBase = read.table(namesfile,header=TRUE)
@@ -608,6 +609,7 @@ shinyServer(function(input, output,session) {
     res = ReadContrastFile()
     createdCont = NULL
     filesize = file.info(namesfile)[,"size"]
+    if(is.na(filesize)){filesize=0}
     if(filesize!=0){ createdCont = read.table(namesfile,header=TRUE) }
       
     if(!is.null(res))
@@ -631,6 +633,7 @@ shinyServer(function(input, output,session) {
     
     ## get the size of the contrast base file
     filesize = file.info(namesfile)[,"size"]
+    if(is.na(filesize)){filesize=0}
     if(filesize!=0)
     { 
       tmp = read.table(namesfile,header=TRUE)
@@ -665,6 +668,7 @@ shinyServer(function(input, output,session) {
     input$RemoveContrast
     
     filesize = isolate(file.info(namesfile)[,"size"])
+    if(is.na(filesize)){filesize=0}
     if(filesize!=0) 
     {
       tmp = read.table(namesfile,header=TRUE)
@@ -1008,7 +1012,7 @@ output$exportPDFVisu <- downloadHandler(
     
     cont = input$ContrastList_table
     filesize = file.info(namesfile)[,"size"]
-    
+    if(is.na(filesize)){filesize=0}
     if(filesize!=0)
     { 
       ContrastBase = read.table(namesfile,header=TRUE)
@@ -1026,7 +1030,7 @@ output$exportPDFVisu <- downloadHandler(
     resDiff = ResDiffAnal()
     filesize = file.info(namesfile)[,"size"]
     res=NULL 
-    
+    if(is.na(filesize)){filesize=0}
     if(filesize!=0)
     { 
       BaseContrast = read.table(namesfile,header=TRUE)

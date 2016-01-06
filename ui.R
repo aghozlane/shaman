@@ -288,8 +288,8 @@ body <- dashboardBody(
                 radioButtons(inputId = "SensPlotVisuBP",label = "Type: ",choices = c("Vertical" = "multiBarChart", "Horizontal" = "multiBarHorizontalChart"),selected = "multiBarChart")
               ),
               box(title = "Appearance",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
-                sliderInput("heightVisu", h6(strong("Height")),min=100,max=2000,value = 800),
-                sliderInput("widthVisu", h6(strong("Width")),min=100,max=1200,value = 1000)
+                sliderInput("heightVisu", h6(strong("Height")),min=100,max=4000,value = 800),
+                sliderInput("widthVisu", h6(strong("Width")),min=100,max=4000,value = 1000)
               )
             )
           )
