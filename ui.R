@@ -52,6 +52,7 @@ if (!require(ade4)) {
 sidebar <- dashboardSidebar(
   sidebarMenu(
     menuItem("Home", tabName = "Home", icon = icon("home")),
+    menuItem("Tutorial", tabName = "Tutorial", icon = icon("book")),
     menuItem("Upload your data", tabName = "Upload", icon = icon("upload")),
     menuItemOutput("dymMenu")
   )
@@ -61,6 +62,9 @@ body <- dashboardBody(
   tabItems(
     tabItem(tabName = "Home",
             h2("Bienvenue !")
+    ),
+    tabItem(tabName = "Tutorial",
+            h2("How to !")
     ),
     tabItem(tabName = "Upload",
             tags$style(type='text/css', ".well { max-width: 20em; }"),
@@ -184,7 +188,7 @@ body <- dashboardBody(
                 box(title = "Plot",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
                   plotOutput("PlotDiag")
                 ),
-                conditionalPanel(condition="input.DiagPlot=='Sfactors'",
+                conditionalPanel(condition="input.DiagPlot=='SfactorsVStot'",
                   box(title = "Size factors",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
                     dataTableOutput("SizeFactTable")
                   )
@@ -203,11 +207,14 @@ body <- dashboardBody(
                 
               ),
               column(width=3,
+                box(title = "Select your plot",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = FALSE,collapsed= FALSE,
+                  selectInput("DiagPlot","",c("Total barplot"="barplotTot","Nul barplot"="barplotNul",
+                                              "Maj. taxonomy"="MajTax", "Density"="densityPlot", 
+                                              "Size factors VS total"="SfactorsVStot", "PCA"="pcaPlot", "PCoA"="pcoaPlot","Clustering" = "clustPlot",
+                                              "SERE" = "SERE"))
+                    ),
                 box(title = "Options",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
-                    selectInput("DiagPlot",h6(strong("Select the plot")),c("Total barplot"="barplotTot","Nul barplot"="barplotNul",
-                                                                           "Maj. taxonomy"="MajTax", "Density"="densityPlot","Size factors"="Sfactors", 
-                                                                           "Size factors VS total"="SfactorsVStot", "PCA"="pcaPlot", "PCoA"="pcoaPlot","Clustering" = "clustPlot",
-                                                                           "SERE" = "SERE")),
+                    
                     conditionalPanel(condition="input.DiagPlot!='Sfactors' && input.DiagPlot!='SfactorsVStot' ",uiOutput("VarIntDiag")),
                     conditionalPanel(condition="input.DiagPlot=='pcoaPlot'",
                                      h5(strong("Select the modalities")),
@@ -215,7 +222,7 @@ body <- dashboardBody(
                                      selectInput("DistPCOA","Distance",c("euclidean", "canberra", "bray", "kulczynski", "jaccard", 
                                                               "gower", "altGower", "morisita", "horn","mountford","raup","binomial",
                                                               "chao","cao","mahalanobis"),selected="jaccard")
-                                     )
+                    )
 #                 conditionalPanel(condition="input.RadioPlotBi=='Nuage'",selectInput("ColorBiplot", "Couleur",choices=c("Bleue" = 'blue',"Rouge"='red',"Vert"='green', "Noir"='black'),width="50%")),
 #                 sliderInput("TransAlphaBi", "Transparence",min=1, max=100, value=50, step=1),
 #                 conditionalPanel(condition="input.RadioPlotBi!='Nuage'", radioButtons("SensGraphBi","Sens du graph",choices=c("Vertical"="Vert","Horizontal"="Hori"))),
@@ -223,10 +230,10 @@ body <- dashboardBody(
                ),
                 box(
                   title = "Appearance",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
-                    conditionalPanel(condition="input.DiagPlot=='Sfactors'",
-                                     h6(strong("Layout")),
-                                     numericInput("NbcolSfactors", h6("Columns"),min=1,value = NA)
-                    ),
+#                     conditionalPanel(condition="input.DiagPlot=='Sfactors'",
+#                                      h6(strong("Layout")),
+#                                      numericInput("NbcolSfactors", h6("Columns"),min=1,value = NA)
+#                     ),
                   conditionalPanel(condition="input.DiagPlot=='clustPlot'",
                                    h6(strong("Layout")),
                                    selectInput("typeHculst", h6("Type"),c("Horizontal"="hori","Fan"="fan")),
@@ -269,157 +276,156 @@ body <- dashboardBody(
                      box(title = "Select your contrast",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
                          selectInput("ContrastList_table",h6(strong("Contrast list")),"", multiple = FALSE),
                          htmlOutput("ContrastOverviewTable")
-                      )
+                     ),
+                     box(title = "Export",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
+                         fluidRow(column(width=12,selectInput("WhichExportTable", "Select the table to export",c("Complete"="Complete","Up"="Up","Down"="Down")))),
+                         uiOutput("ExportTableButton")   
+                     )
             )
             )
     ),
   
   #### Data Viz
   
-  tabItem(tabName = "BarplotVisu",
+  tabItem(tabName = "Visu",
           fluidRow(
-            column(width=9,showOutput("PlotVisu")),
+            column(width=9,
+                  uiOutput("plotVisu")
+            ),
 
             column(width=3,
-              box(title = "Options",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
-                uiOutput("VarIntVisuBP"),
-                uiOutput("TaxoToPlotBP"),
-                radioButtons(inputId = "CountsOrProp",label = "Value: ",choices = c("Proportions" = "prop", "Counts" = "counts"),selected = "prop"),
-                radioButtons(inputId = "SensPlotVisuBP",label = "Type: ",choices = c("Vertical" = "multiBarChart", "Horizontal" = "multiBarHorizontalChart"),selected = "multiBarChart")
+              box(title = "Select your plot",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = FALSE,collapsed= FALSE,
+                  selectizeInput("PlotVisuSelect","",c("Barplot"="Barplot","Heatmap"="Heatmap","Boxplot"="Boxplot","Diversity"="Diversity","Rarefaction"="Rarefaction"),selected = "Barplot")
               ),
+              
+              
+              
+              ########################################################################
+              ###
+              ###               Options Visualization
+              ###
+              ########################################################################
+              
+              
+              box(title = "Options",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
+                  
+                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction'",
+                                    uiOutput("VarIntVisu")
+                  ),
+                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity'",
+                                   radioButtons("SelectSpecifTaxo","Select the features",c("Most abundant"="Most","All"="All", "Differential features" = "Diff"))
+                  ),
+                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && input.SelectSpecifTaxo=='Diff'",
+                                   selectizeInput("ContrastList_table_Visu","",choices = "", multiple = FALSE)
+                  ),
+                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity'",
+                                   uiOutput("TaxoToPlotVisu")
+                  ),
+
+                  
+                  
+                ##################
+                ## BARPLOT
+                ##################
+                conditionalPanel(condition="input.PlotVisuSelect=='Barplot'",
+                                 selectizeInput(inputId = "CountsOrProp",label = h6(strong("Type of data")),choices = c("Proportions" = "prop", "Counts" = "counts"),selected = "prop")
+                ),
+                
+                
+                ##################
+                ## HEATMAP
+                ##################
+                conditionalPanel(condition="input.PlotVisuSelect=='Heatmap'",
+                                 selectizeInput(inputId = "HeatMapType",label = h6(strong("Type of data")),choices = c("Counts" = "Counts", "Log2FC" = "Log2FC"),selected = "Counts")                                 
+                ),
+                conditionalPanel(condition="input.PlotVisuSelect=='Heatmap' && input.HeatMapType=='Log2FC'",
+                                 selectizeInput("ContrastList_table_FC",h6(strong("Contrasts (Min = 2)")),choices = "", multiple = TRUE)
+                ),
+                conditionalPanel(condition="input.PlotVisuSelect=='Heatmap'",
+                                 selectizeInput(inputId = "scaleHeatmap",label = h6(strong("Scale:")),choices = c("None" = "none", "Rows" = "row", "Column" = "col"),selected = "none")
+                                 
+                ),
+                
+                ##################
+                ## BOXPLOT
+                ##################
+                conditionalPanel(condition="input.PlotVisuSelect=='Boxplot'",
+                                 selectizeInput("typeDataBox",h6(strong("Type of data")),c("Log2"="Log2","Relative"="Relative"))
+                ),
+                
+                ##################
+                ## DIVERSITY
+                ##################
+                conditionalPanel(condition="input.PlotVisuSelect=='Diversity'",
+                                 selectizeInput("WhichDiv",h6(strong("Diversity")),c('Alpha','Beta','Gamma'),selected  = c('Alpha','Beta','Gamma'),multiple=TRUE),
+                                 checkboxInput("AddBoxplotDiv","AddBoxplot",value=FALSE)
+                ),
+                conditionalPanel(condition="input.PlotVisuSelect=='Diversity' && input.AddBoxplotDiv",
+                                 uiOutput("SelectVarBoxDiv")
+                )
+              ),
+              
+              
+              ########################################################################
+              ###
+              ###               Appearance Visualization
+              ###
+              ########################################################################
+              
+              
               box(title = "Appearance",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
                 sliderInput("heightVisu", h6(strong("Height")),min=100,max=4000,value = 800),
-                sliderInput("widthVisu", h6(strong("Width")),min=100,max=4000,value = 1000)
+
+                ##################
+                ## BOXPLOT
+                ##################
+                conditionalPanel(condition="input.PlotVisuSelect=='Boxplot'",
+                                 checkboxInput("CheckAddPointsBox","Add points",value=TRUE)
+                ),
+                
+                ##################
+                ## DIVERSITY
+                ##################
+                conditionalPanel(condition="input.PlotVisuSelect=='Diversity'",
+                                 sliderInput("sizePointGlobal", h6(strong("Points size")),min=0.5,max=10,value =3,step=0.5),
+                                 checkboxInput("SplitVisuGlobal","Split diversity",value=FALSE)
+                ),
+                
+                ##################
+                ## HEATMAP
+                ##################
+                conditionalPanel(condition="input.PlotVisuSelect=='Heatmap' && input.HeatMapType!='Log2FC'",
+                                 selectInput("colors", label=h6(strong("Gradient of colors")),choices = c("green-blue", "blue-white-red", "purple-white-orange", "red-yellow-green"))
+                ),
+                conditionalPanel(condition="input.PlotVisuSelect=='Heatmap'",
+                                 fluidRow(
+                                   column(width=12,h6(strong("Labels options"))),
+                                   column(width=6,sliderInput("LabelSizeHeatmap", h6("Size"),min=0.1,max=2,value = 0.7,step = 0.1)),
+                                   column(width=6,sliderInput("LabelOrientHeatmap", h6("Orientation"),min=0,max=90,value = 0,step = 5)),
+                                   column(width=6,sliderInput("LabelColOffsetHeatmap", h6("Column offset"),min=0,max=4,value = 0,step = 0.5)),
+                                   column(width=6,sliderInput("LabelRowOffsetHeatmap", h6("Row offset"),min=0,max=4,value = 0,step = 0.5)),
+                                   
+                                   column(width=12,h6(strong("Margins options"))),
+                                   column(width=6,sliderInput("rightMargin", h6("Right"),min=0,max=20,value = 6,step = 1)),
+                                   column(width=6,sliderInput("lowerMargin", h6("Lower"),min=0,max=20,value = 6,step = 1))
+                                 )
+                ),              
+                
+                ##################
+                ## ALL
+                ##################
+
+                conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction'",
+                                 radioButtons(inputId = "SensPlotVisu",label = h6(strong("Orientation")),choices = c("Vertical" = "Vertical", "Horizontal" = "Horizontal"),selected = "Vertical",inline = TRUE)
+                )
+                
               )
             )
           )
   ),
   
 
-tabItem(tabName = "HeatmapVisu",
-        fluidRow(
-          column(width=9,
-                 #d3heatmapOutput(outputId ='d3heatmap', width = "1000p", height = "800px")
-                 
-                 plotOutput("heatmap")
-                 
-          ),
-          column(width=3,
-                 box(title = "Options",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
-                     selectInput(inputId = "HeatMapType",label = h6(strong("Data")),choices = c("Counts" = "Counts", "Log2FC" = "Log2FC"),selected = "Counts"),
-                     selectInput("ContrastList_table_FC",h6(strong("Contrast list")),"", multiple = TRUE),
-                     uiOutput("VarIntVisuHM"),
-                     uiOutput("TaxoToPlotHM"),
-                     radioButtons(inputId = "SensPlotVisuHM",label = "Type: ",choices = c("Vertical" = "Vertical", "Horizontal" = "Horizontal"),selected = "Vertical"),
-                     selectInput(inputId = "scaleHeatmap",label = h6(strong("Scale:")),choices = c("None" = "none", "Rows" = "row", "Column" = "col"),selected = "none"),
-                     downloadButton("exportPDFVisu", "Download pdf")
-                 ),
-                 box(title = "Appearance",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
-                     selectInput("colors", label="Gradient of colors:",choices = c("green-blue", "blue-white-red", "purple-white-orange", "red-yellow-green")),
-                     sliderInput("heightHeat", h6(strong("Height")),min=100,max=2000,value = 800),
-                     sliderInput("widthHeat", h6(strong("Width")),min=100,max=2000,value = 800),
-                     sliderInput("LabelSizeHeatmap", h6(strong("Label size")),min=0.1,max=2,value = 0.7,step = 0.1),
-                     sliderInput("LabelOrientHeatmap", h6(strong("Label orientation")),min=0,max=90,value = 0,step = 5),
-                     sliderInput("LabelColOffsetHeatmap", h6(strong("Label column offset")),min=0,max=4,value = 0,step = 0.5),
-                     sliderInput("LabelRowOffsetHeatmap", h6(strong("Label row offset")),min=0,max=4,value = 0,step = 0.5),
-                     sliderInput("rightMargin", h6(strong("Right margin")),min=0,max=20,value = 6,step = 1),
-                     sliderInput("lowerMargin", h6(strong("Lower margin")),min=0,max=20,value = 6,step = 1)
-                     
-                 )
-          )
-        )
-        
-),
 
-  
-  tabItem(tabName = "BoxplotVisu",
-          fluidRow(
-            column(width=9,plotOutput("Boxplot"),                uiOutput("BoxCountsMerge_pierre")),
-            
-            #                    downloadButton("exportPDFVisu", "Download pdf"),
-            #                    downloadButton("exportPNGVisu", "Download png")
-            #)      
-            
-            column(width=3,
-                   box(title = "Options",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
-                       uiOutput("VarIntVisuBoxP"),
-                       uiOutput("TaxoToPlotBoxP"),
-                       selectInput("typeDataBox","Type of data",c("Log2"="Log2","Relative"="Relative")),
-                       radioButtons(inputId = "SensPlotVisuBoxP",label = "Type: ",choices = c("Vertical" = "Vertical", "Horizontal" = "Horizontal"),selected = "Vertical")
-                   ),
-                   box(title = "Appearance",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
-                       #selectInput("colors", label="Gradient of colors:",choices = c("green-blue", "blue-white-red", "purple-white-orange", "red-yellow-green")),
-                       sliderInput("heightBoxP", h6(strong("Height")),min=100,max=2000,value = 800),
-                        checkboxInput("CheckAddPointsBox","Add points",value=TRUE)
-                   
-                   )
-            )
-          )
-          
-  ),
-
-  tabItem(tabName = "DiversityVisu",
-          fluidRow(
-            column(width=9,plotOutput("DiversityPlot")
-#                    conditionalPanel(condition="input.AddBoxplotDiv==TRUE",
-#                                     plotOutput("DiversityBoxPlot")
-#                    )
-                   ),
-            
-            
-            column(width=3,
-                   box(title = "Options",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
-                       uiOutput("VarIntVisuDiv"),
-                       selectizeInput("WhichDiv",h6(strong("Diversity")),c('Alpha','Beta','Gamma'),selected  = c('Alpha','Beta','Gamma'),multiple=TRUE),
-                       radioButtons(inputId = "SensPlotVisuGlobal",label = "Type: ",choices = c("Vertical" = "Vertical", "Horizontal" = "Horizontal"),selected = "Vertical"),
-                       checkboxInput("AddBoxplotDiv","AddBoxplot",value=FALSE),
-                       conditionalPanel(condition="input.AddBoxplotDiv==TRUE",
-                                        uiOutput("SelectVarBoxDiv")
-                       )
-                       #                      uiOutput("DiversityGroupBy")
-                   ),
-                   box(title = "Appearance",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
-                       #selectInput("colors", label="Gradient of colors:",choices = c("green-blue", "blue-white-red", "purple-white-orange", "red-yellow-green")),
-                       sliderInput("sizePointGlobal", h6(strong("Points size")),min=0.5,max=10,value =3,step=0.5),
-                       checkboxInput("SplitVisuGlobal","Split diversity",value=FALSE)
-                       
-                   )
-            )
-          )
-          
-  ),
-
-  
-  tabItem(tabName = "RarefactionVisu",
-          fluidRow(
-            column(width=9,
-                   plotOutput("RarefactionPlot",
-                              dblclick = "RarefactionPlot_dblclick",
-                              brush = brushOpts(
-                                id = "RarefactionPlot_brush",
-                                resetOnNew = TRUE
-                              )
-                   ))
-            
-            
-#             column(width=3,
-#                    box(title = "Options",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
-# #                        uiOutput("VarIntVisuDiv"),
-# #                        selectizeInput("WhichDiv",h6(strong("Diversity")),c('Alpha','Beta','Gamma'),selected  = c('Alpha','Beta','Gamma'),multiple=TRUE),
-# #                        radioButtons(inputId = "SensPlotVisuGlobal",label = "Type: ",choices = c("Vertical" = "Vertical", "Horizontal" = "Horizontal"),selected = "Vertical")
-# #                        
-# #                        #                      uiOutput("DiversityGroupBy")
-#                    ),
-#                    box(title = "Appearance",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
-# #                        #selectInput("colors", label="Gradient of colors:",choices = c("green-blue", "blue-white-red", "purple-white-orange", "red-yellow-green")),
-# #                        sliderInput("sizePointGlobal", h6(strong("Points size")),min=0.5,max=5,value = 1.5,step=0.5),
-# #                        checkboxInput("SplitVisuGlobal","Split diversity",value=FALSE)
-# #                        
-#                    )
-#             )
-          )
-          
-  ),
 
   #### Krona plot
   tabItem(tabName = "Krona",

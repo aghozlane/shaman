@@ -186,19 +186,23 @@ CheckCountsTable <- function(counts)
       CT = CT[,ind]
       
       ## Order CT according to the target
-      CT = OrderCounts(CT,labels)
+      CT = OrderCounts(counts=CT,labels=labels)$CountsOrder
 #       ind0 = which(rowSums(CT)==0)
 #       if(length(ind0)>0) CT = CT[-ind0,]
       
       ## Counts normalisation
+print(head(CT))
+print(head(target))
       dds <- DESeqDataSetFromMatrix(countData=CT, colData=target, design=design)
       dds <- estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)))
-
+      normFactors = sizeFactors(dds) 
+print(normFactors)
+print(colSums(CT))
       CT = as.data.frame(round(counts(dds, normalized = TRUE)))
       ordOTU = order(rownames(taxo))
       indOTU_annot = which(rownames(CT)%in%rownames(taxo))
       counts_annot = CT[indOTU_annot[ordOTU],]
-      
+
       if(taxoSelect=="OTU") counts = counts_annot
       else{
       taxoS = taxo[ordOTU,taxoSelect]
@@ -207,31 +211,34 @@ CheckCountsTable <- function(counts)
       }
       
       ## Ordering the counts table according to the target labels 
-      counts = OrderCounts(counts,labels)
+      tmpOrder = OrderCounts(counts,normFactors,labels)
+      counts = tmpOrder$CountsOrder
+      normFactors = tmpOrder$normFactorsOrder
       CheckTarget = TRUE
     }
-    return(list(counts=counts,CheckTarget=CheckTarget))
+    return(list(counts=counts,CheckTarget=CheckTarget,normFactors=normFactors))
   }
 
   ## Order the counts 
-  OrderCounts <- function(counts,labels)
+  OrderCounts <- function(counts,normFactors=NULL,labels)
   {
     n = length(labels)
     CountsOrder = counts
-
+    normFactorsOrder = normFactors
     for(i in 1:n)
     {
       
       ind = which(labels[i]==colnames(counts))
       CountsOrder[,i] = counts[,ind]
+      if(!is.null(normFactors)) normFactorsOrder[i] = normFactors[ind]
     }
     colnames(CountsOrder) = labels
-    return(CountsOrder)
+    return(list(CountsOrder=CountsOrder,normFactorsOrder = normFactorsOrder))
   }
   
   
   ## Get the dds object of DESeq2
-  Get_dds_object <- function(input,counts,target,design)
+  Get_dds_object <- function(input,counts,target,design,normFactorsOTU)
   {
     
     dds <- DESeqDataSetFromMatrix(countData=counts, colData=target, design=design)
@@ -242,7 +249,7 @@ CheckCountsTable <- function(counts)
     sizeFactors(dds)<- normFactors
     dds <- estimateDispersions(dds, fitType=input$fitType)
     dds <- nbinomWaldTest(dds)
-    return(list(dds = dds,counts=counts,target=target,design=design))
+    return(list(dds = dds,counts=counts,target=target,design=design,normFactors = normFactorsOTU))
   }
 
   ## Get the design according to the input
@@ -267,8 +274,10 @@ CheckCountsTable <- function(counts)
     dds = resDiff$dds
     counts = resDiff$counts
     target = resDiff$target
+    normFactors = resDiff$normFactors
     group = as.data.frame(target[,VarInt])
     rownames(group) = rownames(target)
+    
     
     ## If more than 4 levels for one factor
     if(length(VarInt)>1)  maxFact =max(sapply(group,FUN=function(x) length(levels(x))))
@@ -280,8 +289,8 @@ CheckCountsTable <- function(counts)
     if(input$DiagPlot=="densityPlot") densityPlotTot(input,counts, group = group, col=colors)
     if(input$DiagPlot=="MajTax") majTaxPlot(input,counts, group = group, col=colors)
     if(input$DiagPlot=="SERE") SEREplot(input,counts)
-    if(input$DiagPlot=="Sfactors") diagSFactors(input,dds,frame=1) 
-    if(input$DiagPlot=="SfactorsVStot") diagSFactors(input,dds,frame=2) 
+    #if(input$DiagPlot=="Sfactors") diagSFactors(input,dds,frame=1) 
+    if(input$DiagPlot=="SfactorsVStot") diagSFactors(input,dds,normFactors,frame=2) 
     if(input$DiagPlot=="pcaPlot") PCAPlot_meta(input,dds, group,  type.trans = input$TransType, col = colors)
     if(input$DiagPlot=="pcoaPlot") PCoAPlot_meta(input,dds, group) 
     if(input$DiagPlot=="clustPlot") HCPlot(input,dds,group,type.trans=input$TransType)
@@ -565,7 +574,7 @@ CheckCountsTable <- function(counts)
 
 
   ## Plots of size factors
-  diagSFactors<-function (input,dds,frame=1) 
+  diagSFactors<-function (input,dds,normFactors,frame=1) 
   {
     geomeans <- exp(rowMeans(log(counts(dds))))
     samples <- colnames(counts(dds))
@@ -573,10 +582,10 @@ CheckCountsTable <- function(counts)
     xmin <- min(counts.trans[is.finite(counts.trans)], na.rm = TRUE)
     xmax <- max(counts.trans[is.finite(counts.trans)], na.rm = TRUE)
     
-    if(!is.na(input$NbcolSfactors)) parCols = as.numeric(input$NbcolSfactors)
-    else parCols = ceiling(ncol(counts.trans)/3)
-    
-    parRows = ceiling(ncol(counts.trans)/parCols)
+#     if(!is.na(input$NbcolSfactors)) parCols = as.numeric(input$NbcolSfactors)
+#     else parCols = ceiling(ncol(counts.trans)/3)
+#     
+#     parRows = ceiling(ncol(counts.trans)/parCols)
 
     if(frame==1)
     {
@@ -586,16 +595,16 @@ CheckCountsTable <- function(counts)
              xlab = expression(log[2] ~ (counts/geometric ~ mean)), las = 1, xlim = c(xmin, xmax), 
              main = paste("Size factors diagnostic - Sample ",samples[j], sep = ""), col = "skyblue")
         
-        abline(v = log2(sizeFactors(dds)[j]), col = "red", lwd = 1.5)
+        abline(v = log2(normFactors[j]), col = "red", lwd = 1.5)
       }
     }
     
     if(frame==2)
     {
-      plot(sizeFactors(dds), colSums(counts(dds)), pch = 19, las = 1, 
+      plot(normFactors, colSums(counts(dds)), pch = 19, las = 1, 
            ylab = "Total number of reads", xlab = "Size factors", 
            main = "Diagnostic: size factors vs total number of reads")
-      abline(lm(colSums(counts(dds)) ~ sizeFactors(dds) + 0), lty = 2, col = "grey")
+      abline(lm(colSums(counts(dds)) ~ normFactors + 0), lty = 2, col = "grey")
     }
   }
 
@@ -858,10 +867,10 @@ CheckCountsTable <- function(counts)
   
   Plot_Visu_Barplot <- function(input,resDiff)
   {
-
+    
     ## Get Input for BarPlot
-    VarInt = input$VisuVarIntBP
-    ind_taxo = input$selectTaxoPlotBP
+    VarInt = input$VisuVarInt
+    ind_taxo = input$selectTaxoPlot
     
     counts_tmp_combined = GetDataToPlot(resDiff,VarInt,ind_taxo)$counts
     nbKept = length(ind_taxo)
@@ -903,8 +912,10 @@ CheckCountsTable <- function(counts)
         
         colnames(dataBarPlot_mat) = c("Taxonomy","Proportions","AllVar")
         dataBarPlot_mat[,2] = tmp_counts
-  
-        plotd3 <- nvd3Plot(Proportions ~ AllVar | Taxonomy, data = dataBarPlot_mat, type = input$SensPlotVisuBP, id = 'barplotTaxo',height = input$heightVisu,width=input$widthVisu)
+        if(input$SensPlotVisu == "Vertical") Sens = "multiBarChart"
+        if(input$SensPlotVisu == "Horizontal") Sens = "multiBarHorizontalChart"
+      
+        plotd3 <- nvd3Plot(Proportions ~ AllVar | Taxonomy, data = dataBarPlot_mat, type = Sens, id = 'barplotTaxo',height = input$heightVisu,width=input$widthVisu)
         plotd3$chart(stacked = TRUE)
     } 
     else{ 
@@ -926,8 +937,8 @@ CheckCountsTable <- function(counts)
   
   Plot_Visu_Heatmap <- function(input,resDiff){
   
-  VarInt = input$VisuVarIntHM
-  ind_taxo = input$selectTaxoPlotHM
+  VarInt = input$VisuVarInt
+  ind_taxo = input$selectTaxoPlot
   
   counts_tmp_combined = GetDataToPlot(resDiff,VarInt,ind_taxo)$counts
   
@@ -943,13 +954,13 @@ CheckCountsTable <- function(counts)
                   "red-yellow-green"= colorRampPalette(rev(brewer.pal(9,"RdYlGn")))(200))
     
     ## Transpose matrix if Horizontal
-    if(input$SensPlotVisuHM=="Horizontal") counts_tmp_combined = t(as.matrix(counts_tmp_combined))
+    if(input$SensPlotVisu=="Horizontal") counts_tmp_combined = t(as.matrix(counts_tmp_combined))
          #print(counts_tmp_combined)
-    return(heatmap.2(counts_tmp_combined, dendrogram = "none", Rowv = NA, Colv = NA, na.rm = TRUE, density.info="none", margins=c(12,8),trace="none",srtCol=45,
-                    col = col, scale = input$scaleHeatmap,cexRow = 0.6))
-#     return(d3heatmap(counts_tmp_combined, dendrogram = "none", Rowv = NA, Colv = NA, na.rm = TRUE, 
-#                      width = 1500, height = 1000, show_grid = FALSE, colors = col, scale = input$scaleHeatmap,
-#                      cexRow = 0.6))
+    #return(heatmap.2(counts_tmp_combined, dendrogram = "none", Rowv = NA, Colv = NA, na.rm = TRUE, density.info="none", margins=c(12,8),trace="none",srtCol=45,
+                    #col = col, scale = input$scaleHeatmap,cexRow = 0.6))
+     return(d3heatmap(counts_tmp_combined, dendrogram = "none", Rowv = NA, Colv = NA, na.rm = TRUE, 
+                      width = input$widthVisu, height = input$heightVisu, show_grid = FALSE, colors = col, scale = input$scaleHeatmap,
+                      cexRow = 0.6))
   }
 
   
@@ -966,8 +977,8 @@ CheckCountsTable <- function(counts)
     
     gg = NULL
     ## Get Input for BoxPlot
-    VarInt = input$VisuVarIntBoxP
-    ind_taxo = input$selectTaxoPlotBoxP
+    VarInt = input$VisuVarInt
+    ind_taxo = input$selectTaxoPlot
     
     tmp_merge = GetDataToPlot(resDiff,VarInt,ind_taxo,aggregate=FALSE)
     counts_tmp_combined = tmp_merge$counts
@@ -1017,7 +1028,7 @@ CheckCountsTable <- function(counts)
       gg = ggplot(dataBarPlot_mat,aes(x=Samples,y=Value,fill=Samples))  + geom_boxplot(alpha=0.7) + theme_bw()  + theme(axis.text.x = element_text(angle = 90, hjust = 1))
       gg = gg + ylab(input$typeDataBox)
       if(input$CheckAddPointsBox) gg = gg + geom_point(position=position_jitterdodge(dodge.width=0.9))
-      if(input$SensPlotVisuBoxP=="Horizontal") gg = gg + coord_flip()
+      if(input$SensPlotVisu=="Horizontal") gg = gg + coord_flip()
       if(nbKept>1) gg = gg + facet_wrap(~ Taxonomy)
     }
     
@@ -1041,8 +1052,8 @@ CheckCountsTable <- function(counts)
     #target = resDiff$target
     
     ## Get Input for the plot
-    VarInt = input$VisuVarIntDiv
-    VarIntBoxDiv = input$VarBoxDiv 
+    VarInt = input$VisuVarInt
+    #VarIntBoxDiv = input$VarBoxDiv 
     ind_taxo = rownames(counts)
     
     tmp = GetDataToPlot(resDiff,VarInt,ind_taxo,aggregate=FALSE)
@@ -1057,7 +1068,8 @@ CheckCountsTable <- function(counts)
       nb = length(alpha)
       dataTmp = data.frame(value=c(alpha,beta,gamma),
                            diversity = c(rep("Alpha",nb),rep("Beta",nb),rep("Gamma",nb)),
-                           Var = as.character(rep(names(alpha),3)), X = as.character(rep(targetInt[,VarIntBoxDiv],3)))
+                           Var = as.character(rep(names(alpha),3)),
+                           X = as.character(rep(targetInt[,VarIntBoxDiv],3)))
      
       ## Merge targetInt et dataTmp par rapport à Var
 #       VectX = c()
@@ -1076,7 +1088,7 @@ CheckCountsTable <- function(counts)
       { 
         gg = ggplot(dataTmp, aes(x=Var, y=value, color=diversity)) + theme_bw() + theme(axis.text.x = element_text(angle = 90, hjust = 1))
         gg = gg + geom_point(size=input$sizePointGlobal) 
-        if(input$SensPlotVisuGlobal=="Horizontal") gg = gg + coord_flip()
+        if(input$SensPlotVisu=="Horizontal") gg = gg + coord_flip()
         if(input$SplitVisuGlobal==TRUE) gg = gg + facet_wrap(~ diversity)
       }
 #       if(type=="box")
@@ -1251,63 +1263,70 @@ CheckCountsTable <- function(counts)
   }
   
   
-  Get_log2FC <-function(input,BaseContrast,resDiff, info = NULL)
+  Get_log2FC_padj <-function(input,BaseContrast,resDiff, info = NULL)
   {
-    
+    log2FC = NULL
+    padj = NULL
     VarInt = input$VarInt
     dds = resDiff$dds
     counts = resDiff$counts
     target = resDiff$target
-    SelContrast = input$ContrastList_table_FC
+    SelContrast = colnames(BaseContrast)
     nbCont = length(SelContrast)
     result = list()
     alpha = input$AlphaVal
     cooksCutoff = ifelse(input$CooksCutOff!='Auto',ifelse(input$CooksCutOff!=Inf,input$CutOffVal,Inf),TRUE)
-    
-    for(i in 1:nbCont)
-    { 
-      cont = as.character(SelContrast[i])
-      result[[cont]] <- results(dds,contrast=BaseContrast[,cont],pAdjustMethod=input$AdjMeth,
-                                cooksCutoff=cooksCutoff,
-                                independentFiltering=input$IndFiltering,alpha=alpha)
-    }
-    log2FC = as.matrix(round(result[[SelContrast[1]]][, "log2FoldChange"], 3))
-    if(nbCont>1)
-    {
-      for(i in 2:nbCont)
-      {
-        log2FC = cbind(log2FC,round(result[[SelContrast[i]]][, "log2FoldChange"], 3))
+
+      for(i in 1:nbCont)
+      { 
+        cont = as.character(SelContrast[i])
+        result[[cont]] <- results(dds,contrast=BaseContrast[,cont],pAdjustMethod=input$AdjMeth,
+                                  cooksCutoff=cooksCutoff,
+                                  independentFiltering=input$IndFiltering,alpha=alpha)
       }
-      colnames(log2FC) = names(result)
-    }
-    rownames(log2FC) = rownames(result[[SelContrast[1]]])
-    return(log2FC)
+      log2FC = as.matrix(round(result[[SelContrast[1]]][, "log2FoldChange"], 3))
+      padj = as.matrix(round(result[[SelContrast[1]]][, "padj"], 3))
+      if(nbCont>1)
+      {
+        for(i in 2:nbCont)
+        {
+          log2FC = cbind(log2FC,round(result[[SelContrast[i]]][, "log2FoldChange"], 3))
+          padj = cbind(padj,round(result[[SelContrast[i]]][, "padj"], 7))
+        }
+        colnames(log2FC) = names(result)
+        colnames(padj) = names(result)
+      }
+      rownames(log2FC) = rownames(result[[SelContrast[1]]])
+      rownames(padj) = rownames(result[[SelContrast[1]]])
+
+    return(list(log2FC=log2FC,padj=padj))
   }
   
   
   Plot_Visu_Heatmap_FC <- function(input,BaseContrast,resDiff){
     
-    log2FC = Get_log2FC(input,BaseContrast,resDiff, info = NULL)
-    ind_taxo = input$selectTaxoPlotHM
-    ind = rownames(log2FC)%in%ind_taxo
+    res = NULL
+    SelContrast = input$ContrastList_table_FC
+    log2FC = Get_log2FC_padj(input,BaseContrast,resDiff, info = NULL)$log2FC
+    cont = which(SelContrast%in%colnames(log2FC))
+    log2FC = log2FC[,cont] 
     
-    log2FC = log2FC[ind,]
-    
-    col <- switch(input$colors,
-                  "green-blue"=colorRampPalette(brewer.pal(9,"GnBu"))(200),
-                  "blue-white-red"=colorRampPalette(rev(brewer.pal(9, "RdBu")))(200),
-                  "purple-white-orange"=colorRampPalette(rev(brewer.pal(9, "PuOr")))(200),
-                  "red-yellow-green"= colorRampPalette(rev(brewer.pal(9,"RdYlGn")))(200))
-    
-    #col <- c(colorRampPalette(c("blue","white"))(n = 100),colorRampPalette(c("white",  "firebrick1", "firebrick2", "firebrick3", "firebrick4"))(n = 100))
-    col <- c(colorRampPalette(c("royalblue4","royalblue3","royalblue2","royalblue1","white"))(n = 100),colorRampPalette(c("white",  "firebrick1", "firebrick2", "firebrick3", "firebrick4"))(n = 100))
-    ## Transpose matrix if Horizontal
-    
-    if(input$SensPlotVisuHM=="Horizontal") log2FC = t(as.matrix(log2FC))
-    return(heatmap.2(log2FC, dendrogram = "row", Rowv = TRUE, Colv = NA, na.rm = TRUE, density.info="none", margins=c(input$lowerMargin,input$rightMargin),trace="none",srtCol=input$LabelOrientHeatmap,
-                     col = col, scale = input$scaleHeatmap,cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap))
-    
-    
+    if(!is.null(log2FC))
+    { 
+      ind_taxo = input$selectTaxoPlot
+      ind = rownames(log2FC)%in%ind_taxo
+      log2FC = log2FC[ind,]
+      
+      
+      col <- c(colorRampPalette(c("royalblue4","royalblue3","royalblue2","royalblue1","white"))(n = 100),colorRampPalette(c("white",  "firebrick1", "firebrick2", "firebrick3", "firebrick4"))(n = 100))
+      ## Transpose matrix if Horizontal
+      if(input$SensPlotVisu=="Horizontal") log2FC = t(as.matrix(log2FC))
+
+      res = d3heatmap(log2FC, dendrogram = "row", Rowv = TRUE, Colv = NA, na.rm = TRUE, 
+                       width = input$widthVisu, height = input$heightVisu, show_grid = FALSE, colors = col, scale = input$scaleHeatmap,cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, 
+                       offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap)
+    }
+    return(res)
   }
 
 
