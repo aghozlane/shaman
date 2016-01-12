@@ -1264,7 +1264,26 @@ output$RunButton <- renderUI({
     selectizeInput("VisuVarInt",h6(strong("Select the variables of interest")),int, selected = intSel,multiple = TRUE)
     
   })
-
+  #####################################################
+  ##
+  ##                KRONA
+  ##
+  #####################################################
+  output$krona <- renderTable({
+    data = dataInput()$data 
+    taxo = input$TaxoSelect
+    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="...") 
+    {
+      print(data$counts)
+    krona_table=tempfile(pattern = "krona", tmpdir = tempdir(), fileext = "")
+    url=paste(krona_table, ".html", sep="")
+    #system(paste("export PERL5LIB=/home/aghozlan/workspace/META16S_App/KronaTools-2.6/lib:$PERL5LIB; /home/aghozlan/workspace/META10S_App/krona_bin/bin/ktImportText", krona_table))
+    system(paste("ktImportText", krona_table))
+    refs <- paste0("<a href='",  url, "' target='_blank'>krona</a>")
+    
+    data.frame(refs)
+    }
+  }, sanitize.text.function = function(x) x)
 
 #   output$VarIntVisuBP <- renderUI({
 #     
