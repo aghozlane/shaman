@@ -1,8 +1,8 @@
 library(shinydashboard)
-if (!require(rNVD3)) {
-  install.packages('rNVD3')
-  library(rNVD3)
-}
+# if (!require(rNVD3)) {
+#   install.packages('rNVD3')
+#   library(rNVD3)
+# }
 if (!require(psych)) {
   install.packages('psych')
   library(psych)
@@ -376,10 +376,13 @@ body <- dashboardBody(
               box(title = "Appearance",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
                 sliderInput("heightVisu", h6(strong("Height")),min=100,max=4000,value = 800),
 
+
+                
                 ##################
                 ## BOXPLOT
                 ##################
                 conditionalPanel(condition="input.PlotVisuSelect=='Boxplot'",
+                                 radioButtons("ScaleBoxplot","Scales",c("Fixed"="fixed","Free"="free"),inline=TRUE),
                                  checkboxInput("CheckAddPointsBox","Add points",value=TRUE)
                 ),
                 
@@ -419,7 +422,24 @@ body <- dashboardBody(
                                  radioButtons(inputId = "SensPlotVisu",label = h6(strong("Orientation")),choices = c("Vertical" = "Vertical", "Horizontal" = "Horizontal"),selected = "Vertical",inline = TRUE)
                 )
                 
+              ),
+              box(title = "Export",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
+                  ##################
+                  ## BARPLOT
+                  ##################
+                  conditionalPanel(condition="input.PlotVisuSelect=='Barplot'",
+                                   radioButtons("positionBarPlot","Position",c("Grouped"="fill","Stacked"="dodge"),inline=TRUE)
+                  ),
+                  
+                  selectInput("Exp_format_Visu",h5(strong("Export format")),c("png"="png","pdf"="pdf","eps"="eps","svg"="svg"), multiple = FALSE),
+                  fluidRow(
+                    column(width=6,numericInput("heightVisuExport", "Height (in px)",min=100,max=NA,value = 500,step =1)),
+                    column(width=6,numericInput("widthVisuExport", "Width (in px)",min=100,max=NA,value = 500,step =1))
+                  ),
+                  downloadButton("exportVisu", "Export")
+                  
               )
+              
             )
           )
   ),

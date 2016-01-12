@@ -3,6 +3,7 @@ if (!require(rNVD3)) {
   install.packages('rNVD3')
   library(rNVD3)
 }
+library(plotly)
 if (!require(psych)) {
   install.packages('psych')
   library(psych)
@@ -155,6 +156,7 @@ shinyServer(function(input, output,session) {
     counts = NULL
     CheckTarget = FALSE
     normFactors = NULL
+    CT_noNorm = NULL
     data = dataInput()$data
     target = dataInputTarget()
     
@@ -167,8 +169,9 @@ shinyServer(function(input, output,session) {
       counts = tmp$counts
       CheckTarget = tmp$CheckTarget
       normFactors = tmp$normFactors
+      CT_noNorm = tmp$CT_noNorm
     }
-    return(list(counts=counts,CheckTarget=CheckTarget,normFactors=normFactors))
+    return(list(counts=counts,CheckTarget=CheckTarget,normFactors=normFactors,CT_noNorm=CT_noNorm))
   })
 
 
@@ -436,14 +439,14 @@ shinyServer(function(input, output,session) {
 
   ## Export in .csv
   output$ExportCounts <- downloadHandler(
-    filename = function() { 'NomrCounts.csv' },
-    content = function(file){write.csv(dataMergeCounts()$counts, file, sep='\t')}
+    filename = function() { 'NormCounts.csv' },
+    content = function(file){write.csv(dataMergeCounts()$counts, file)}
   )
 
   ## Export in .csv
   output$ExportRelative <- downloadHandler(
     filename = function() { 'RelativeAb.csv' },
-    content = function(file){write.csv(dataMergeCounts()$counts/colSums(dataMergeCounts()$counts), file,, sep='\t')}
+    content = function(file){write.csv(dataMergeCounts()$counts/colSums(dataMergeCounts()$counts), file)}
   )
 
 
@@ -805,11 +808,12 @@ shinyServer(function(input, output,session) {
   ResDiffAnal <-eventReactive(input$RunDESeq,{
     
     counts = dataMergeCounts()$counts
+    CT_noNorm = dataMergeCounts()$CT_noNorm
     normFactors = dataMergeCounts()$normFactors
     target = dataInputTarget()
     design = GetDesign(input)
    
-    Get_dds_object(input,counts,target,design,normFactors)
+    Get_dds_object(input,counts,target,design,normFactors,CT_noNorm)
 
     
   })
@@ -983,6 +987,33 @@ output$exportPDFVisu <- downloadHandler(
     }
   )
 
+#### Export Visu
+output$exportVisu <- downloadHandler(
+  filename <- function() { paste(input$PlotVisuSelect,paste('meta16S',input$Exp_format_Visu,sep="."),sep="_") },
+  content <- function(file) {
+    BaseContrast = read.table(namesfile,header=TRUE)
+    taxo = input$TaxoSelect
+    
+    if(input$Exp_format_Visu=="png") png(file, width = input$widthVisuExport, height = input$heightVisuExport)
+    if(input$Exp_format_Visu=="pdf") pdf(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96)
+    if(input$Exp_format_Visu=="eps") postscript(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96)
+    if(input$Exp_format_Visu=="svg") svg(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96)
+
+    if(input$PlotVisuSelect=="Barplot") print(Plot_Visu_Barplot(input,ResDiffAnal())$gg)
+    if(input$PlotVisuSelect=="Heatmap"){
+      if(input$HeatMapType=="Counts") print(Plot_Visu_Heatmap(input,ResDiffAnal(),export=TRUE))
+      if(input$HeatMapType=="Log2FC") print(Plot_Visu_Heatmap_FC(input,BaseContrast,ResDiffAnal(),export=TRUE))
+    } 
+    
+    if(input$PlotVisuSelect=="Boxplot") print(Plot_Visu_Boxplot(input,ResDiffAnal()))
+    if(input$PlotVisuSelect=="Diversity") print(Plot_Visu_Diversity(input,ResDiffAnal(),type="point"))
+    if(input$PlotVisuSelect=="Rarefaction") print( Plot_Visu_Rarefaction(input,ResDiffAnal(),ranges$x,ranges$y,ylab=taxo))
+    dev.off()
+  }
+)
+
+
+
 #####################################################
 ##
 ##                DIFF TABLES
@@ -1139,11 +1170,15 @@ output$RunButton <- renderUI({
 #####################################################
 
 
-  output$PlotVisu <- renderChart({
+  output$PlotVisuBar <- renderChart({
     resDiff = ResDiffAnal()
-    if(!is.null(resDiff$dds)) Plot_Visu_Barplot(input,resDiff)
-  })
+    if(!is.null(resDiff$dds)) Plot_Visu_Barplot(input,resDiff)$plotd3
+  },env=new.env())
 
+# output$PlotVisu <- renderPlotly({
+#   resDiff = ResDiffAnal()
+#   if(!is.null(resDiff$dds)) Plot_Visu_Barplot(input,resDiff)
+# })
   
   output$heatmap <- renderD3heatmap({
     resDiff = ResDiffAnal()
@@ -1155,7 +1190,7 @@ output$RunButton <- renderUI({
       if(input$HeatMapType=="Log2FC") resplot = Plot_Visu_Heatmap_FC(input,BaseContrast,resDiff)
     }
     return(resplot)
-  })
+  },env=new.env())
   
 
 
@@ -1169,6 +1204,27 @@ output$RunButton <- renderUI({
     resDiff = ResDiffAnal()
     if(!is.null(resDiff$dds)) Plot_Visu_Diversity(input,resDiff,type="point")
   })
+  
+  ranges <- reactiveValues(x = NULL, y = NULL)
+  
+  output$RarefactionPlot <- renderPlot({
+    resDiff = ResDiffAnal()
+    taxo = input$TaxoSelect
+    if(!is.null(resDiff)) Plot_Visu_Rarefaction(input,resDiff,ranges$x,ranges$y,ylab=taxo)
+  }, height = reactive(input$heightVisu))
+  
+  observeEvent(input$RarefactionPlot_dblclick, {
+    brush <- input$RarefactionPlot_brush
+    if (!is.null(brush)) {
+      ranges$x <- c(brush$xmin, brush$xmax)
+      ranges$y <- c(brush$ymin, brush$ymax)
+      
+    } else {
+      ranges$x <- NULL
+      ranges$y <- NULL
+    }
+  })
+
 
 
   output$SelectVarBoxDiv <- renderUI({
@@ -1185,7 +1241,7 @@ output$RunButton <- renderUI({
   output$plotVisu <- renderUI({
     
     res=NULL
-    if(input$PlotVisuSelect=="Barplot") res =  showOutput("PlotVisu")
+    if(input$PlotVisuSelect=="Barplot") res =  showOutput("PlotVisuBar")
     if(input$PlotVisuSelect=="Heatmap") res =  d3heatmapOutput("heatmap", height = input$heightVisu+10)
     if(input$PlotVisuSelect=="Boxplot") res =  plotOutput("Boxplot", height = input$heightVisu+10)
     if(input$PlotVisuSelect=="Diversity") res =  plotOutput("DiversityPlot", height = input$heightVisu+10)
@@ -1200,25 +1256,7 @@ output$RunButton <- renderUI({
 #     if(!is.null(resDiff$dds)) Plot_Visu_Diversity(input,resDiff,type="box")
 #   })
 
-  ranges <- reactiveValues(x = NULL, y = NULL)
 
-  output$RarefactionPlot <- renderPlot({
-    resDiff = ResDiffAnal()
-    taxo = input$TaxoSelect
-    if(!is.null(resDiff)) Plot_Visu_Rarefaction(input,resDiff,ranges$x,ranges$y,ylab=taxo)
-  }, height = reactive(input$heightVisu))
-
-  observeEvent(input$RarefactionPlot_dblclick, {
-    brush <- input$RarefactionPlot_brush
-    if (!is.null(brush)) {
-      ranges$x <- c(brush$xmin, brush$xmax)
-      ranges$y <- c(brush$ymin, brush$ymax)
-      
-    } else {
-      ranges$x <- NULL
-      ranges$y <- NULL
-    }
-  })
 
 
   output$TaxoToPlotVisu <- renderUI({
