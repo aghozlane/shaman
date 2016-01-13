@@ -1,4 +1,4 @@
-if (!require("Rccpp")){
+if (!require("Rcpp")){
   install.packages("Rcpp")
 }
 if(!require(shinydashboard)){
