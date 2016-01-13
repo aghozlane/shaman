@@ -61,7 +61,7 @@ sidebar <- dashboardSidebar(
 body <- dashboardBody(
   tabItems(
     tabItem(tabName = "Home",
-            tabBox(title="Welcome to Meta16S", id="tabset1", height = "900px", width = 12,
+            tabBox(title="Welcome to Meta16S", id="tabset1", height = "700px", width = 12,
             tabPanel("About", p("Meta16S is a web interface for the analysis of metagenomic data including the normalization,
 the differential analysis and mutiple visualization.",style = "font-family: 'times'; font-si16pt"),
                      p("Meta16S is based on DESeq2 R package", a("[Anders and Huber 2010]", href="http://www.ncbi.nlm.nih.gov/pubmed/20979621"), "for the analysis of metagenomic data, as suggested in", a("[McMurdie and Holmes 2014]",href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3974642/"),
@@ -78,7 +78,7 @@ The PCOA is performed with the", a("ade4 R package",href="http://pbil.univ-lyon1
                     h3("Acknowledgements"),
                     p("Thanks to the following people for patches and other suggestions for improvements:"),
                     p(a("Christophe Malabat",href="mailto:christophe.malabat@pasteur.fr"))),
-            tabPanel("Citing Meta16S",p("No papers about Meta16s have been published yet, but a manuscript is in preparation."),
+            tabPanel("Citing Meta16S",p("No papers about Meta16s have been published yet, but a manuscript is in preparation.",style = "font-family: 'times'; font-si16pt"),
                     p("For now, if you have any comments, questions or suggestions, or want to use meta16s please contact", a("Dr. Marie-Agnès Dillies", href="mailto:marie-agnes.dillies@pasteur.fr"),".", style = "font-family: 'times'; font-si16pt; color:red")),
             img(src = "logo.jpg", height = 90, width = 600)
             )),
