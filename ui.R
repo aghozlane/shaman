@@ -1,8 +1,8 @@
-library(shinydashboard)
-# if (!require(rNVD3)) {
-#   install.packages('rNVD3')
-#   library(rNVD3)
-# }
+if(!require(shinydashboard)){
+  install.packages('shinydashboard')
+  library(shinydashboard)
+}
+
 if (!require(psych)) {
   install.packages('psych')
   library(psych)
@@ -69,8 +69,9 @@ the differential analysis and mutiple visualization.",style = "font-family: 'tim
 Resulting p-values are adjusted according to the Benjamini and Hochberg procedure [Benjamini and Hochberg 1995].
 The PCOA is performed with the", a("ade4 R package",href="http://pbil.univ-lyon1.fr/ade4/"), "and plots are generated with", a("ggplot2",href="http://ggplot2.org/"), "or", a("D3.js packages",href="http://d3js.org/"), ".", style = "font-family: 'times'; font-si16pt")),
             tabPanel("Authors", h3("The main contributors to Meta16s:"),
-                     p(a("Stevenn Volant", href="mailto:stevenn.volant"), "(Initiator, coding, testing, documentation, evaluation)"),
-                     p(a("Amine Ghozlane",href="mailto:amine.ghozlane@pasteur.fr"), "(Coding, testing, documentation, feature suggestions)"),
+                     p(a("Stevenn Volant", href="mailto:stevenn.volant@pasteur.fr"), "(Initiator, coding, testing, documentation, evaluation)"),
+                     p(a("Amine Ghozlane",href="mailto:amine.ghozlane@pasteur.fr"), "(Coding, testing, documentation, evaluation)"),
+                     p(a("Hugo Varet",href="mailto:hugo.varet@pasteur.fr"), "(Coding, testing, feature suggestions)"),
                      p(a("Pierre Lechat",href="mailto:pierre.lechat@pasteur.fr"), "(Coding, testing, feature suggestions)"),
                     p(a("Marie-Agnès Dillies",href="mailto:marie-agnes.dillies@pasteur.fr"), "(Evaluation)"),
                     h3("Acknowledgements"),

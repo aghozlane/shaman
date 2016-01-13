@@ -1,9 +1,18 @@
-library(shinydashboard)
-if (!require(rNVD3)) {
-  install.packages('rNVD3')
-  library(rNVD3)
+if (!require("Rccpp")){
+  install.packages("Rcpp")
 }
-library(plotly)
+if(!require(shinydashboard)){
+  install.packages('shinydashboard')
+  library(shinydashboard)
+}
+if(!require(rjson)){
+  install.packages('rjson')
+}
+if(!require(devtools)){
+  install.packages('devtools')
+}
+
+#library(plotly)
 if (!require(psych)) {
   install.packages('psych')
   library(psych)
@@ -31,6 +40,13 @@ if (!require(d3heatmap)) {
 if (!require(biom)) {
   install.packages('biom')
   library(biom)
+}
+if (!require(devtools)) {
+  install.packages('devtools')
+}
+if (!require(rNVD3)) {
+  library(devtools)
+  install_github('rNVD3', 'ramnathv')
 }
 source("internal.R")
 
