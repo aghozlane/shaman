@@ -260,7 +260,6 @@ CheckCountsTable <- function(counts)
     Interaction = input$Interaction2
     alltmp = c(InterVar,Interaction)
     design = as.formula(paste("~", paste0(alltmp, collapse= "+")))
-
     return(design)
   }
   
@@ -292,7 +291,7 @@ CheckCountsTable <- function(counts)
       if(input$DiagPlot=="barplotNul") res = barPlotNul(input,counts, group = group, col=colors)
       if(input$DiagPlot=="densityPlot") res = densityPlotTot(input,counts, group = group, col=colors)
       if(input$DiagPlot=="MajTax") res = majTaxPlot(input,counts, group = group, col=colors)
-      if(input$DiagPlot=="SERE") res = SEREplot(input,counts)
+      #if(input$DiagPlot=="SERE") res = SEREplot(input,counts)
       #if(input$DiagPlot=="Sfactors") diagSFactors(input,dds,frame=1) 
       if(input$DiagPlot=="SfactorsVStot") res = diagSFactors(input,dds,normFactors,CT_noNorm,frame=2) 
       if(input$DiagPlot=="pcaPlot") res = PCAPlot_meta(input,dds, group,  type.trans = input$TransType, col = colors)
@@ -343,6 +342,8 @@ CheckCountsTable <- function(counts)
   HCPlot <- function (input,dds,group,type.trans,col = c("lightblue", "orange", "MediumVioletRed", "SpringGreen")) 
   {
     
+    res = NULL
+    
     ## Get the counts
     counts = as.data.frame(round(counts(dds, normalized = TRUE)))
     if (type.trans == "VST") counts.trans <- assay(varianceStabilizingTransformation(dds))
@@ -353,27 +354,29 @@ CheckCountsTable <- function(counts)
     nb = length(unique((group)))
     
     ## Get the dendrogram
-    hc <- hclust(dist(t(counts.trans)), method = "ward.D")
+    if(input$DistClust!="sere") dist = vegdist(t(counts), method = input$DistClust)
+    if(input$DistClust=="sere") dist = as.dist(SEREcoef(counts))
+    hc <- hclust(dist, method = "ward.D")
+    
     dend = as.dendrogram(hc)
     
     ## Get the type of dendrogram
-    type <- switch(input$typeHculst,
-                   "fan"="fan",
-                   "hori"= "hori")
+    type <- input$typeHculst
     
     dend <- set(dend, "labels_cex", input$cexLabelDiag)
     if(input$colorHC) labels_colors(dend)<-rainbow(nb)[as.integer(as.factor(group))][order.dendrogram(dend)]
     
     if(type=="hori") 
     { 
-      par(mar = c(8,4,4,2))
-      plot(dend, main = "Cluster dendrogram")
+      par(cex=input$cexTitleDiag,mar = c(0.3,2,0.3,2))
+      res = plot(dend, main = "Cluster dendrogram",xlab = paste(input$DistClust,"distance, Ward criterion",sep=" "),cex=input$cexLabelDiag)
     }  
     if(type!="hori")
     {
-      par(mar = c(0.3,2,0.3,2))
-      circlize_dendrogram(dend, labels_track_height = 0.2, dend_track_height = .3, main = "Cluster dendrogram")
+      par(cex=input$cexTitleDiag,mar = c(0.3,2,0.3,2))
+      res = circlize_dendrogram(dend, labels_track_height = NULL, dend_track_height = .3, main = "Cluster dendrogram",xlab = paste(input$DistClust,"distance, Ward criterion",sep=" "))
     }
+    return(res)
   }
   
   
@@ -428,7 +431,7 @@ CheckCountsTable <- function(counts)
   barplotTot <- function(input,counts, group, cex.names = 1, col = c("lightblue","orange", "MediumVioletRed", "SpringGreen")) 
   {
     ncol1 <- ncol(group) == 1
-    par(cex=input$cexLabelDiag,mar=c(12,5,4,5))
+    par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
     barplot(colSums(counts), cex.names = cex.names, main = "Total mapped read count per sample", ylab = "Total mapped read count", 
             ylim = c(0, max(colSums(counts)) * 1.2), density = if (ncol1) {NULL}
             else {15}, 
@@ -448,7 +451,7 @@ CheckCountsTable <- function(counts)
     percentage.allNull <- (nrow(counts) - nrow(removeNulCounts(counts))) * 100/nrow(counts)
     ncol1 <- ncol(group) == 1
     
-    par(cex=input$cexLabelDiag,mar=c(12,5,4,5))
+    par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
 
     barplot(percentage, las = 2, col = col[as.integer(group[,1])], 
             density = if (ncol1) {NULL}
@@ -471,7 +474,7 @@ CheckCountsTable <- function(counts)
     
     counts <- removeNulCounts(counts)
     ncol1 <- ncol(group) == 1
-    par(cex=input$cexLabelDiag,mar=c(8,5,4,5))
+    par(cex=input$cexTitleDiag,mar=c(8,5,4,5))
     plot(density(log2(counts[, 1] + 1)), las = 1, lwd = 2, main = "Density of counts distribution", 
          xlab = expression(log[2] ~ (raw ~ count + 1)), 
          ylim = c(0, max(apply(counts, 2, function(x) {max(density(log2(x + 1))$y)})) * 1.05), 
@@ -514,7 +517,7 @@ CheckCountsTable <- function(counts)
     maj <- apply(p, 2, max)
     seqname <- rownames(p)[apply(p, 2, which.max)]
     ncol1 <- ncol(group) == 1
-
+    par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
     x <- barplot(maj, col = col[as.integer(group[, 1])], main = "Proportion of mapped reads from\nmost expressed sequence",
                  ylim = c(0, max(maj) * 1.2), cex.main = 1, 
                  cex.names = cex.names, las = 2, ylab = "Proportion of mapped reads", 
@@ -532,14 +535,13 @@ CheckCountsTable <- function(counts)
   
 
   ## plot SERE Coefs
-  SEREplot<-function(input,counts) 
-  {
-    sere = SEREcoef(counts)
-    print(sere)
-    hc <- hclust(as.dist(sere), method = "ward.D")
-    plot(hc, las = 2, hang = -1, xlab = "SERE distance, Ward criterion",main = "Cluster dendrogram\non SERE values")
-    
-  }
+#   SEREplot<-function(input,counts) 
+#   {
+#     sere = SEREcoef(counts)
+#     hc <- hclust(as.dist(sere), method = "ward.D")
+#     plot(hc, las = 2, hang = -1, xlab = "SERE distance, Ward criterion",main = "Cluster dendrogram\non SERE values")
+#     
+#   }
   
   
   ## Get the SERE COEF
@@ -604,9 +606,11 @@ CheckCountsTable <- function(counts)
     
     if(frame==2)
     {
-      plot(normFactors, colSums(counts), pch = 19, las = 1, 
+      par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
+      plot(normFactors, colSums(counts), pch = 19, las = 1,cex = ifelse(input$addLabelSFact,0,input$cexLabelDiag),
            ylab = "Total number of reads", xlab = "Size factors", 
            main = "Diagnostic: size factors vs total number of reads")
+      if(input$addLabelSFact) text(normFactors,colSums(counts),labels = samples,cex=input$cexLabelDiag)
       abline(lm(colSums(counts) ~ normFactors + 0), lty = 2, col = "grey")
     }
   }
@@ -653,14 +657,14 @@ CheckCountsTable <- function(counts)
       counts.norm = counts.norm[,ind_kept]
   
       ## Get the distance
-      dist.counts.norm = vegdist(t(counts.norm), method = input$DistPCOA)
-  
+      if(input$DistClust!="sere") dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
+      if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts.norm))
+      
       ## Do PCoA
       pco.counts.norm = dudi.pco(d = dist.counts.norm, scannf = FALSE,nf=3)
       
       ## Get eigen values
       eigen=(pco.counts.norm$eig/sum(pco.counts.norm$eig))*100
-      print(eigen)
       
       ## xlim and ylim of the plot
       min = min(pco.counts.norm$li)
@@ -686,9 +690,10 @@ CheckCountsTable <- function(counts)
       # to reactivate
       #pco.counts.norm$li = pco.counts.norm$li[ind_kept,]
       if (plot == "pcoa"){
+        par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
         ## Plot axis, label and circles
         plot(pco.counts.norm$li[1:2], xlab=paste("PC1 : ",round(eigen[1],1),"%") , ylab=paste("PC2 : ",round(eigen[2],1),"%"),
-             xlim=c(min+0.25*min,max+0.25*max), ylim=c(min-0.1,max+0.1), cex.axis=1, cex.lab=1,lwd=2, type="n")
+             xlim=c(min+0.25*min,max+0.25*max), ylim=c(min-0.1,max+0.1), cex.axis=1, cex.lab=1,lwd=2, type="n",main='Principal Coordinates Analysis ')
         # Set different shapes
         if(input$labelPCOA == "Group"){
           if(!is.null(cval)){
@@ -698,7 +703,7 @@ CheckCountsTable <- function(counts)
             s.class(dfxy = pco.counts.norm$li, fac = group, col = col, label = levels(group),
                     add.plot = TRUE, cpoint = 0, cell=input$cexcircle, clabel=input$cexLabelDiag,  cstar = input$cexstar)
           }else s.class(dfxy = pco.counts.norm$li, fac = group, col = col, label = levels(group),
-                        add.plot = TRUE, cpoint = input$cexpoint, cell=input$cexcircle, clabel=input$cexLabelDiag,  cstar = input$cexstar)
+                        add.plot = TRUE, cpoint = input$cexTitleDiag, cell=input$cexcircle, clabel=input$cexLabelDiag,  cstar = input$cexstar)
         }  
         else{
           s.label(pco.counts.norm$li, clabel = input$cexLabelDiag,boxes=FALSE, add.plot = TRUE)
@@ -729,15 +734,15 @@ CheckCountsTable <- function(counts)
       prp <- round(prp, 2)
       ncol1 <- ncol(group) == 1
       
-      par(mfrow = c(1, 2))
+      
       
       abs = range(pca$x[, 1])
       abs = abs(abs[2] - abs[1])/25
       ord = range(pca$x[, 2])
       ord = abs(ord[2] - ord[1])/25
       
-      par(mar=c(8,5,4,5))
-      plot(pca$x[, 1], pca$x[, 2], las = 1, cex = 2, col = col[as.integer(group[,1])], 
+      par(mfrow = c(1, 2),cex=input$cexTitleDiag,mar=c(6,6,4,5))
+      plot(pca$x[, 1], pca$x[, 2], las = 1, cex = cex=input$cexTitleDiag, col = col[as.integer(group[,1])], 
            pch = if (ncol1) {16}
            else {c(16:18, 25)[as.integer(group[, 2])]},
            xlab = paste0("PC1 (", prp[1], "%)"),
@@ -745,12 +750,12 @@ CheckCountsTable <- function(counts)
            main = "Principal Component Analysis",
             )
       abline(h = 0, v = 0, lty = 2, col = "lightgray")
-      text(pca$x[, 1] - ifelse(pca$x[, 1] > 0, abs, -abs), pca$x[,2] - ifelse(pca$x[, 2] > 0, ord, -ord), colnames(counts.trans), col = col[as.integer(group[, 1])])
+      text(pca$x[, 1] - ifelse(pca$x[, 1] > 0, abs, -abs), pca$x[,2] - ifelse(pca$x[, 2] > 0, ord, -ord), colnames(counts.trans), col = col[as.integer(group[, 1])],cex=input$cexLabelDiag)
       abs = range(pca$x[, 1])
       abs = abs(abs[2] - abs[1])/25
       ord = range(pca$x[, 3])
       ord = abs(ord[2] - ord[1])/25
-      plot(pca$x[, 1], pca$x[, 3], las = 1, cex = 2, col = col[as.integer(group[, 1])], 
+      plot(pca$x[, 1], pca$x[, 3], las = 1, cex = cex=input$cexTitleDiag, col = col[as.integer(group[, 1])], 
            pch = if (ncol1) {16}
            else {c(16:18, 25)[as.integer(group[, 2])]}, 
            xlab = paste0("PC1 (", prp[1], "%)"), 
@@ -1269,7 +1274,7 @@ CheckCountsTable <- function(counts)
                               dispGeneEst = mcols(dds)$dispGeneEst, dispFit = mcols(dds)$dispFit, 
                               dispMAP = mcols(dds)$dispMAP, dispersion = mcols(dds)$dispersion, 
                               betaConv = mcols(dds)$betaConv, maxCooks = mcols(dds)$maxCooks)
-      if (is.null(cooksCutoff)) {
+      if (is.null(cooksCutoff)){
         m <- nrow(attr(dds, "modelMatrix"))
         p <- ncol(attr(dds, "modelMatrix"))
         cooksCutoff <- qf(0.99, p, m - p)
@@ -1283,11 +1288,11 @@ CheckCountsTable <- function(counts)
       down.name <- down.name[order(down.name$padj), ]
 
       name <- gsub(" ", "", name)
-#       keep <- c("FC", "log2FoldChange", "padj")
+      keep <- c("Id","baseMean","FC","log2FoldChange","padj")
 #       complete.complete[, paste(name, keep, sep = ".")] <- complete.name[, keep]
     }
     #return(list(complete=complete.name,up=up.name,down=down.name))
-    return(list(complete=complete.name[,c("Id","baseMean","FC","log2FoldChange","padj")],up=up.name[,c("Id","baseMean","FC","log2FoldChange","padj")],down=down.name[,c("Id","baseMean","FC","log2FoldChange","padj")]))
+    return(list(complete=complete.name[,keep],up=up.name[,keep],down=down.name[,keep]))
   }
   
   

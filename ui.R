@@ -69,7 +69,7 @@ the differential analysis and mutiple visualization.",style = "font-family: 'tim
 Resulting p-values are adjusted according to the Benjamini and Hochberg procedure [Benjamini and Hochberg 1995].
 The PCOA is performed with the", a("ade4 R package",href="http://pbil.univ-lyon1.fr/ade4/"), "and plots are generated with", a("ggplot2",href="http://ggplot2.org/"), "or", a("D3.js packages",href="http://d3js.org/"), ".", style = "font-family: 'times'; font-si16pt")),
             tabPanel("Authors", h3("The main contributors to Meta16s:"),
-                     p(a("Stevenn Volant", href="mailto:stevenn.volant"), "(Initiator, coding, testing, documentation, evaluation)"),
+                     p(a("Stevenn Volant", href="mailto:stevenn.volant@pasteur.fr"), "(Initiator, coding, testing, documentation, evaluation)"),
                      p(a("Amine Ghozlane",href="mailto:amine.ghozlane@pasteur.fr"), "(Coding, testing, documentation, feature suggestions)"),
                      p(a("Pierre Lechat",href="mailto:pierre.lechat@pasteur.fr"), "(Coding, testing, feature suggestions)"),
                     p(a("Marie-Agnès Dillies",href="mailto:marie-agnes.dillies@pasteur.fr"), "(Evaluation)"),
@@ -200,9 +200,9 @@ The PCOA is performed with the", a("ade4 R package",href="http://pbil.univ-lyon1
     tabItem(tabName = "DiagPlotTab",
             fluidRow(
               column(width=9,
-                box(title = "Plot",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
-                  plotOutput("PlotDiag")
-                ),
+                     
+                plotOutput("PlotDiag",height="100%"),
+                br(),
                 conditionalPanel(condition="input.DiagPlot=='SfactorsVStot'",
                   box(title = "Size factors",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
                     dataTableOutput("SizeFactTable")
@@ -211,12 +211,12 @@ The PCOA is performed with the", a("ade4 R package",href="http://pbil.univ-lyon1
                   
                 conditionalPanel(condition="input.DiagPlot=='pcaPlot'",
                                  box(title = "Eigen values",  width = 6, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
-                                    plotOutput("PlotEigen")
+                                    plotOutput("PlotEigen",height="100%")
                                  )
                 ),
                 conditionalPanel(condition="input.DiagPlot=='pcoaPlot'",
                                  box(title = "Eigen values",  width = 6, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
-                                     plotOutput("PlotpcoaEigen")
+                                     plotOutput("PlotpcoaEigen",height="100%")
                                  )
                 )
                 
@@ -233,11 +233,14 @@ The PCOA is performed with the", a("ade4 R package",href="http://pbil.univ-lyon1
                     conditionalPanel(condition="input.DiagPlot!='Sfactors' && input.DiagPlot!='SfactorsVStot' ",uiOutput("VarIntDiag")),
                     conditionalPanel(condition="input.DiagPlot=='pcoaPlot'",
                                      h5(strong("Select the modalities")),
-                                     uiOutput("ModMat"),
-                                     selectInput("DistPCOA","Distance",c("euclidean", "canberra", "bray", "kulczynski", "jaccard", 
-                                                              "gower", "altGower", "morisita", "horn","mountford","raup","binomial",
-                                                              "chao","cao","mahalanobis"),selected="jaccard")
+                                     uiOutput("ModMat")
+                    ),
+                    conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='SERE' || input.DiagPlot=='clustPlot' ",
+                      selectInput("DistClust","Distance",c("euclidean", "SERE"="sere", "canberra", "bray", "kulczynski", "jaccard", 
+                                                         "gower", "altGower", "morisita", "horn","mountford","raup","binomial",
+                                                         "chao","cao","mahalanobis"),selected="jaccard")
                     )
+                    
 #                 conditionalPanel(condition="input.RadioPlotBi=='Nuage'",selectInput("ColorBiplot", "Couleur",choices=c("Bleue" = 'blue',"Rouge"='red',"Vert"='green', "Noir"='black'),width="50%")),
 #                 sliderInput("TransAlphaBi", "Transparence",min=1, max=100, value=50, step=1),
 #                 conditionalPanel(condition="input.RadioPlotBi!='Nuage'", radioButtons("SensGraphBi","Sens du graph",choices=c("Vertical"="Vert","Horizontal"="Hori"))),
@@ -249,6 +252,8 @@ The PCOA is performed with the", a("ade4 R package",href="http://pbil.univ-lyon1
 #                                      h6(strong("Layout")),
 #                                      numericInput("NbcolSfactors", h6("Columns"),min=1,value = NA)
 #                     ),
+                  sliderInput("heightDiag", "Height",min=100,max=1500,value = 500,step =10),
+
                   conditionalPanel(condition="input.DiagPlot=='clustPlot'",
                                    h6(strong("Layout")),
                                    selectInput("typeHculst", h6("Type"),c("Horizontal"="hori","Fan"="fan")),
@@ -261,8 +266,16 @@ The PCOA is performed with the", a("ade4 R package",href="http://pbil.univ-lyon1
                                    sliderInput("cexstar", "Star height",min=0,max=1,value = 0.95,step =0.1)
                                    
                   ),
-                  sliderInput("cexLabelDiag", "Label size",min=0,max=5,value = 1,step =0.1)
-#                   sliderInput("heightDiag", "height",min=100,max=1500,value = 500,step =10),
+                  conditionalPanel(condition="input.DiagPlot=='SfactorsVStot'",
+                    checkboxInput("addLabelSFact","Add label",FALSE)
+                  ),
+
+                  fluidRow(
+                    column(width=12, p(strong("Size"))),
+                    column(width=6,sliderInput("cexTitleDiag", h6("Axis"),min=0,max=5,value = 1,step =0.1)),
+                    conditionalPanel(condition="input.DiagPlot=='SfactorsVStot' || input.DiagPlot=='pcaPlot'",column(width=6,sliderInput("cexLabelDiag", h6("Points"),min=0,max=5,value = 1,step =0.1)))
+                  )
+
 #                   sliderInput("widthDiag", "width",min=100,max=1500,value = 1000,step =10)
                  
 

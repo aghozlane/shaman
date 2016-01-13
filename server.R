@@ -3,7 +3,6 @@ if (!require(rNVD3)) {
   install.packages('rNVD3')
   library(rNVD3)
 }
-library(plotly)
 if (!require(psych)) {
   install.packages('psych')
   library(psych)
@@ -152,6 +151,7 @@ shinyServer(function(input, output,session) {
 
   ## Merge counts data
   dataMergeCounts <-reactive({ 
+    input$RunDESeq
     
     counts = NULL
     CheckTarget = FALSE
@@ -159,7 +159,6 @@ shinyServer(function(input, output,session) {
     CT_noNorm = NULL
     data = dataInput()$data
     target = dataInputTarget()
-    
     taxo = input$TaxoSelect
     
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target)) 
@@ -420,7 +419,7 @@ shinyServer(function(input, output,session) {
     ))
 
 
-  ## Box for target visualisation
+  ## Box for merged counts
   output$BoxCountsMerge <- renderUI({
     
     counts = dataMergeCounts()$counts
@@ -562,7 +561,9 @@ shinyServer(function(input, output,session) {
     names = resultsNames(dds)
     
     BaseContrast(input,names,namesfile)
-    tmp = read.table(namesfile,header=TRUE)
+    filesize = file.info(namesfile)[,"size"]
+    if(is.na(filesize)){filesize=0}
+    if(filesize!=0) tmp = read.table(namesfile,header=TRUE)
     Contrast = colnames(as.matrix(tmp))
     updateSelectInput(session, "ContrastList","Contrasts",Contrast)
     updateSelectInput(session, "ContrastList_table","Contrasts",Contrast)
@@ -891,19 +892,21 @@ shinyServer(function(input, output,session) {
     
     resDiff = isolate(ResDiffAnal())
     Plot_diag(input,resDiff)
-  })
+  },height = reactive(input$heightDiag))
+
+
 
   output$PlotpcoaEigen <- renderPlot({
     
     resDiff = ResDiffAnal()
     Plot_diag_pcoaEigen(input,resDiff)
-  })
+  },height = 400)
 
   output$PlotEigen <- renderPlot({
     
     resDiff = ResDiffAnal()
     Plot_diag_Eigen(input,resDiff)
-  })
+  },height = 400)
 
   SizeFactor_table <-reactive({ 
     res = ResDiffAnal()
@@ -967,12 +970,17 @@ output$exportPDFVisu <- downloadHandler(
   filename <- function() { paste("test",'meta16S.ps',sep="_")},
   content <- function(file) {
     resDiff = ResDiffAnal()
-    BaseContrast = read.table(namesfile,header=TRUE)
-    #ggsave(filename = filename, Plot_Visu_Heatmap_FC(input,BaseContrast,resDiff),width = input$widthHeat, height = input$heightHeat)
-    postscript(file, width = input$widthHeat, height = input$heightHeat)
-    if(input$HeatMapType=="Counts")  Plot_Visu_Heatmap(input,resDiff)
-    if(input$HeatMapType=="Log2FC")     Plot_Visu_Heatmap_FC(input,BaseContrast,resDiff)
+    filesize = file.info(namesfile)[,"size"]
+    if(is.na(filesize)){filesize=0}
+    if(filesize!=0)
+    {
+      BaseContrast = read.table(namesfile,header=TRUE)
+      #ggsave(filename = filename, Plot_Visu_Heatmap_FC(input,BaseContrast,resDiff),width = input$widthHeat, height = input$heightHeat)
+      postscript(file, width = input$widthHeat, height = input$heightHeat)
+      if(input$HeatMapType=="Counts")  Plot_Visu_Heatmap(input,resDiff)
+      if(input$HeatMapType=="Log2FC")     Plot_Visu_Heatmap_FC(input,BaseContrast,resDiff)
     dev.off()
+    }
   }
 )
   
@@ -991,24 +999,29 @@ output$exportPDFVisu <- downloadHandler(
 output$exportVisu <- downloadHandler(
   filename <- function() { paste(input$PlotVisuSelect,paste('meta16S',input$Exp_format_Visu,sep="."),sep="_") },
   content <- function(file) {
-    BaseContrast = read.table(namesfile,header=TRUE)
-    taxo = input$TaxoSelect
+    filesize = file.info(namesfile)[,"size"]
+    if(is.na(filesize)){filesize=0}
+    if(filesize!=0)
+    {
+      BaseContrast = read.table(namesfile,header=TRUE)
+      taxo = input$TaxoSelect
     
-    if(input$Exp_format_Visu=="png") png(file, width = input$widthVisuExport, height = input$heightVisuExport)
-    if(input$Exp_format_Visu=="pdf") pdf(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96)
-    if(input$Exp_format_Visu=="eps") postscript(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96)
-    if(input$Exp_format_Visu=="svg") svg(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96)
+      if(input$Exp_format_Visu=="png") png(file, width = input$widthVisuExport, height = input$heightVisuExport)
+      if(input$Exp_format_Visu=="pdf") pdf(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96)
+      if(input$Exp_format_Visu=="eps") postscript(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96)
+      if(input$Exp_format_Visu=="svg") svg(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96)
 
-    if(input$PlotVisuSelect=="Barplot") print(Plot_Visu_Barplot(input,ResDiffAnal())$gg)
-    if(input$PlotVisuSelect=="Heatmap"){
-      if(input$HeatMapType=="Counts") print(Plot_Visu_Heatmap(input,ResDiffAnal(),export=TRUE))
-      if(input$HeatMapType=="Log2FC") print(Plot_Visu_Heatmap_FC(input,BaseContrast,ResDiffAnal(),export=TRUE))
-    } 
+      if(input$PlotVisuSelect=="Barplot") print(Plot_Visu_Barplot(input,ResDiffAnal())$gg)
+      if(input$PlotVisuSelect=="Heatmap"){
+        if(input$HeatMapType=="Counts") print(Plot_Visu_Heatmap(input,ResDiffAnal(),export=TRUE))
+        if(input$HeatMapType=="Log2FC") print(Plot_Visu_Heatmap_FC(input,BaseContrast,ResDiffAnal(),export=TRUE))
+      } 
     
-    if(input$PlotVisuSelect=="Boxplot") print(Plot_Visu_Boxplot(input,ResDiffAnal()))
-    if(input$PlotVisuSelect=="Diversity") print(Plot_Visu_Diversity(input,ResDiffAnal(),type="point"))
-    if(input$PlotVisuSelect=="Rarefaction") print( Plot_Visu_Rarefaction(input,ResDiffAnal(),ranges$x,ranges$y,ylab=taxo))
-    dev.off()
+      if(input$PlotVisuSelect=="Boxplot") print(Plot_Visu_Boxplot(input,ResDiffAnal()))
+      if(input$PlotVisuSelect=="Diversity") print(Plot_Visu_Diversity(input,ResDiffAnal(),type="point"))
+      if(input$PlotVisuSelect=="Rarefaction") print( Plot_Visu_Rarefaction(input,ResDiffAnal(),ranges$x,ranges$y,ylab=taxo))
+      dev.off()
+    }
   }
 )
 
@@ -1182,12 +1195,17 @@ output$RunButton <- renderUI({
   
   output$heatmap <- renderD3heatmap({
     resDiff = ResDiffAnal()
-    BaseContrast = read.table(namesfile,header=TRUE)
+    filesize = file.info(namesfile)[,"size"]
+    if(is.na(filesize)){filesize=0}
     resplot = NULL
     if(!is.null(resDiff$dds))
     { 
       if(input$HeatMapType=="Counts") resplot = Plot_Visu_Heatmap(input,resDiff)
-      if(input$HeatMapType=="Log2FC") resplot = Plot_Visu_Heatmap_FC(input,BaseContrast,resDiff)
+      if(input$HeatMapType=="Log2FC" && filesize!=0)
+      { 
+        BaseContrast = read.table(namesfile,header=TRUE)
+        resplot = Plot_Visu_Heatmap_FC(input,BaseContrast,resDiff)
+      }
     }
     return(resplot)
   },env=new.env())
@@ -1265,7 +1283,6 @@ output$RunButton <- renderUI({
     taxo = input$TaxoSelect
     resDiff = ResDiffAnal()
     res = NULL
-    BaseContrast = read.table(namesfile,header=TRUE)
     
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="...") 
     {
@@ -1278,13 +1295,18 @@ output$RunButton <- renderUI({
       if(input$SelectSpecifTaxo=='Most')  res = selectizeInput("selectTaxoPlot",h6(strong(paste("Select the",input$TaxoSelect, "to plot"))),Available_taxo, selected = selTaxo,multiple = TRUE)
       if(input$SelectSpecifTaxo=="Diff")
       {
-
-        SelContrast = input$ContrastList_table_Visu
-        padj = Get_log2FC_padj(input,BaseContrast,resDiff, info = NULL)$padj
-        cont = which(colnames(padj)%in%SelContrast)
-        padj = padj[,cont] 
-        selTaxo = names(padj[which(padj<=input$AlphaVal)])
-        res = selectizeInput("selectTaxoPlot",h6(strong(paste("Select the",input$TaxoSelect, "to plot"))),Available_taxo, selected = selTaxo,multiple = TRUE,options = list(minItems = 2))
+        filesize = file.info(namesfile)[,"size"]
+        if(is.na(filesize)){filesize=0}
+        if(filesize!=0)
+        { 
+          BaseContrast = read.table(namesfile,header=TRUE)
+          SelContrast = input$ContrastList_table_Visu
+          padj = Get_log2FC_padj(input,BaseContrast,resDiff, info = NULL)$padj
+          cont = which(colnames(padj)%in%SelContrast)
+          padj = padj[,cont] 
+          selTaxo = names(padj[which(padj<=input$AlphaVal)])
+          res = selectizeInput("selectTaxoPlot",h6(strong(paste("Select the",input$TaxoSelect, "to plot"))),Available_taxo, selected = selTaxo,multiple = TRUE,options = list(minItems = 2))
+        }    
       }      
       if(input$SelectSpecifTaxo=="All") res = selectizeInput("selectTaxoPlot",h6(strong(paste("Select the",input$TaxoSelect, "to plot"))),Available_taxo, selected = Available_taxo,multiple = TRUE)
     }
