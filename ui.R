@@ -74,12 +74,13 @@ The PCOA is performed with the", a("ade4 R package",href="http://pbil.univ-lyon1
                      p(a("Hugo Varet",href="mailto:hugo.varet@pasteur.fr"), "(Coding, testing, feature suggestions)"),
                      p(a("Pierre Lechat",href="mailto:pierre.lechat@pasteur.fr"), "(Coding, testing, feature suggestions)"),
                     p(a("Marie-Agnès Dillies",href="mailto:marie-agnes.dillies@pasteur.fr"), "(Evaluation)"),
+                    p(a("Sean Kennedy",href="mailto:sean.kennedy@pasteur.fr"), "(Evaluation)"),
                     h3("Acknowledgements"),
                     p("Thanks to the following people for patches and other suggestions for improvements:"),
                     p(a("Christophe Malabat",href="mailto:christophe.malabat@pasteur.fr"))),
             tabPanel("Citing Meta16S",p("No papers about Meta16s have been published yet, but a manuscript is in preparation."),
                     p("For now, if you have any comments, questions or suggestions, or want to use meta16s please contact", a("Dr. Marie-Agnès Dillies", href="mailto:marie-agnes.dillies@pasteur.fr"),".", style = "font-family: 'times'; font-si16pt; color:red")),
-            img(src = "logo-C3BI-institut-pasteur.jpg", height = 100, width = 400)
+            img(src = "logo.jpg", height = 90, width = 600)
             )),
     tabItem(tabName = "Tutorial",
             h2("How to !")
