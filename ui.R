@@ -114,21 +114,21 @@ body <- dashboardBody(
     
     tabItem(tabName = "Home",
             
-            tabBox(title="Welcome to Meta16S", id="tabset1", height = "700", width = 12,
+            tabBox(title="Welcome to SHAMAN", id="tabset1", height = "700", width = 12,
                    
-                   tabPanel("About", p("Meta16S is a web interface for the analysis of metagenomic data including the normalization,
+                   tabPanel("About", p("SHAMAN is a web interface for the analysis of metagenomic data including the normalization,
                                        
                                        the differential analysis and mutiple visualization.",style = "font-family: 'times'; font-si16pt"),
                             
-                            p("Meta16S is based on DESeq2 R package", a("[Anders and Huber 2010]", href="http://www.ncbi.nlm.nih.gov/pubmed/20979621"), "for the analysis of metagenomic data, as suggested in", a("[McMurdie and Holmes 2014]",href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3974642/"),
+                            p("SHAMAN is based on DESeq2 R package", a("[Anders and Huber 2010]", href="http://www.ncbi.nlm.nih.gov/pubmed/20979621"), "for the analysis of metagenomic data, as suggested in", a("[McMurdie and Holmes 2014]",href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3974642/"),
                               
-                              ". Meta16S robustly identifies the differential abundant genera with the Generalized Linear Model implemented in DESeq2", a("[Love 2014]", href="http://www.ncbi.nlm.nih.gov/pubmed/25516281"),".
+                              ". SHAMAN robustly identifies the differential abundant genera with the Generalized Linear Model implemented in DESeq2", a("[Love 2014]", href="http://www.ncbi.nlm.nih.gov/pubmed/25516281"),".
                               
                               Resulting p-values are adjusted according to the Benjamini and Hochberg procedure [Benjamini and Hochberg 1995].
                               
                               The PCOA is performed with the", a("ade4 R package",href="http://pbil.univ-lyon1.fr/ade4/"), "and plots are generated with", a("ggplot2",href="http://ggplot2.org/"), "or", a("D3.js packages",href="http://d3js.org/"), ".", style = "font-family: 'times'; font-si16pt")),
                    
-                   tabPanel("Authors", h3("The main contributors to Meta16s:"),
+                   tabPanel("Authors", h3("The main contributors to SHAMAN:"),
                             
                             p(a("Stevenn Volant", href="mailto:stevenn.volant@pasteur.fr"), "(Initiator, coding, testing, documentation, evaluation)"),
                             
@@ -148,9 +148,9 @@ body <- dashboardBody(
                             
                             p(a("Christophe Malabat",href="mailto:christophe.malabat@pasteur.fr"))),
                    
-                   tabPanel("Citing Meta16S",p("No papers about Meta16s have been published yet, but a manuscript is in preparation.",style = "font-family: 'times'; font-si16pt"),
+                   tabPanel("Citing SHAMAN",p("No papers about SHAMAN have been published yet, but a manuscript is in preparation.",style = "font-family: 'times'; font-si16pt"),
                             
-                            p("For now, if you have any comments, questions or suggestions, or want to use meta16s please contact", a("Dr. Marie-Agnès Dillies", href="mailto:marie-agnes.dillies@pasteur.fr"),".", style = "font-family: 'times'; font-si16pt; color:red"))
+                            p("For now, if you have any comments, questions or suggestions, or want to use SHAMAN please contact", a("Dr. Marie-Agnès Dillies", href="mailto:marie-agnes.dillies@pasteur.fr"),".", style = "font-family: 'times'; font-si16pt; color:red"))
             ),
                    img(src = "logo.jpg", height = 90, width = 600,align="right")
     ),      
@@ -267,7 +267,7 @@ body <- dashboardBody(
                 ),
                 fluidRow(
                 column(width=8,
-                       uiOutput("contrastBox"),
+#                        uiOutput("contrastBox"),
                        uiOutput("contrastBoxAdvanced")
                        ),
                 column(width=4,
@@ -562,7 +562,7 @@ body <- dashboardBody(
  
          fluidRow(
             column(width=3,tableOutput("krona") )
- #includeHTML("file:///home/aghozlan/workspace/META16S_App/www/text.krona.html")
+ #includeHTML("file:///home/aghozlan/workspace/SHAMAN_App/www/text.krona.html")
           )  
   )       
               
@@ -829,7 +829,7 @@ body <- dashboardBody(
 
 # Put them together into a dashboardPage
 dashboardPage(skin="blue",
-  dashboardHeader(title = "Meta16S"),
+  dashboardHeader(title = "SHAMAN"),
   sidebar,
   body
 )

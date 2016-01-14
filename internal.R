@@ -268,8 +268,7 @@ CheckCountsTable <- function(counts)
   ## Diagnostic Plots
   Plot_diag <- function(input,resDiff)
   {
-    #colors = c("dodgerblue","firebrick1","MediumVioletRed","SpringGreen")
-    colors = c("SpringGreen","dodgerblue","black","firebrick1")
+    
     VarInt = input$VarInt
     dds = resDiff$dds
     counts = resDiff$counts
@@ -282,10 +281,8 @@ CheckCountsTable <- function(counts)
     
     if(ncol(group)>0 && nrow(counts)>0)
     { 
-      ## If more than 4 levels for one factor
-      if(length(VarInt)>1)  maxFact =max(sapply(group,FUN=function(x) length(levels(x))))
-      else maxFact = length(levels(group))
-      if(maxFact>=4) colors = rainbow(maxFact) 
+      colors = rep(c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c","#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5","#8c564b",
+                     "#c49c94","#e377c2","#f7b6d2","#7f7f7f", "#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"),ceiling(nrow(target)/20))
       
       if(input$DiagPlot=="barplotTot") res = barplotTot(input,counts,group = group, col=colors)
       if(input$DiagPlot=="barplotNul") res = barPlotNul(input,counts, group = group, col=colors)
@@ -295,7 +292,7 @@ CheckCountsTable <- function(counts)
       #if(input$DiagPlot=="Sfactors") diagSFactors(input,dds,frame=1) 
       if(input$DiagPlot=="SfactorsVStot") res = diagSFactors(input,dds,normFactors,CT_noNorm,frame=2) 
       if(input$DiagPlot=="pcaPlot") res = PCAPlot_meta(input,dds, group,  type.trans = input$TransType, col = colors)
-      if(input$DiagPlot=="pcoaPlot") res = PCoAPlot_meta(input,dds, group) 
+      if(input$DiagPlot=="pcoaPlot") res = PCoAPlot_meta(input,dds, group, col = colors) 
       if(input$DiagPlot=="clustPlot") res = HCPlot(input,dds,group,type.trans=input$TransType)
     }
     
@@ -430,15 +427,16 @@ CheckCountsTable <- function(counts)
   ## barplot total
   barplotTot <- function(input,counts, group, cex.names = 1, col = c("lightblue","orange", "MediumVioletRed", "SpringGreen")) 
   {
+
     ncol1 <- ncol(group) == 1
     par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
     barplot(colSums(counts), cex.names = cex.names, main = "Total mapped read count per sample", ylab = "Total mapped read count", 
             ylim = c(0, max(colSums(counts)) * 1.2), density = if (ncol1) {NULL}
             else {15}, 
             angle = if (ncol1) {NULL}
-            else {c(-45, 0, 45, 90)[as.integer(group[, 2])]}, col = col[as.integer(group[, 1])], las = 2)
+            else {seq(0,160,length.out =nlevels(group[, 2]))[as.integer(group[, 2])]}, col = col[as.integer(group[, 1])], las = 2)
     legend("topright", levels(group[, 1]), fill = col[1:nlevels(group[,1])], bty = "n")
-    if (!ncol1)  legend("topleft", levels(group[, 2]), density = 15,col = 1, angle = c(-45, 0, 45, 90)[1:nlevels(group[, 2])], bty = "n")
+    if (!ncol1)  legend("topleft", levels(group[, 2]), density = 15,col = 1, angle = seq(0,160,length.out =nlevels(group[, 2]))[1:nlevels(group[, 2])], bty = "n")
   
   }
 
@@ -457,14 +455,14 @@ CheckCountsTable <- function(counts)
             density = if (ncol1) {NULL}
             else {15}, 
             angle = if (ncol1) {NULL}
-            else {c(-45, 0, 45, 90)[as.integer(group[, 2])]},
+            else {seq(0,160,length.out =nlevels(group[, 2]))[as.integer(group[, 2])]},
             cex.names = cex.names, ylab = "Proportion of null counts", 
             main = "Proportion of null counts per sample", 
             ylim = c(0, 1.2 * ifelse(max(percentage) == 0, 1, max(percentage))))
     
     abline(h = percentage.allNull, lty = 2, lwd = 2)
     legend("topright", levels(group[, 1]), fill = col[1:nlevels(group[,1])], bty = "n")
-    if (!ncol1) legend("topleft", levels(group[, 2]), density = 15, col = 1, angle = c(-45, 0, 45, 90)[1:nlevels(group[, 2])], bty = "n")
+    if (!ncol1) legend("topleft", levels(group[, 2]), density = 15, col = 1, angle = seq(0,160,length.out =nlevels(group[, 2]))[1:nlevels(group[, 2])], bty = "n")
   }
 
 
@@ -524,11 +522,11 @@ CheckCountsTable <- function(counts)
                  density = if (ncol1) {NULL}
                  else {15}, 
                  angle = if (ncol1) {NULL}
-                 else {c(-45, 0, 45, 90)[as.integer(group[, 2])]})
+                 else {seq(0,160,length.out =nlevels(group[, 2]))[as.integer(group[, 2])]})
     
     legend("topright", levels(group[, 1]), fill = col[1:nlevels(group[,1])], bty = "n")
     if (!ncol1) legend("topleft", levels(group[, 2]), density = 15, col = 1, 
-                       angle = c(-45, 0, 45, 90)[1:nlevels(group[, 2])], bty = "n")
+                       angle = seq(0,160,length.out =nlevels(group[, 2]))[1:nlevels(group[, 2])], bty = "n")
     
     for (i in 1:length(seqname)) text(x[i], maj[i]/2, seqname[i], cex=input$cexLabelDiag, srt = 90, adj = 0)
   }
@@ -1098,10 +1096,13 @@ CheckCountsTable <- function(counts)
       gamma <- TaxoNumber(counts_tmp_combined, targetInt$AllVar)
       beta = gamma/alpha - 1
       nb = length(alpha)
-      dataTmp = data.frame(value=c(alpha,beta,gamma),
-                           diversity = c(rep("Alpha",nb),rep("Beta",nb),rep("Gamma",nb)),
-                           Var = as.character(rep(names(alpha),3)),
-                           X = as.character(rep(targetInt[,VarIntBoxDiv],3)))
+#       dataTmp = data.frame(value=c(alpha,beta,gamma),
+#                            diversity = c(rep("Alpha",nb),rep("Beta",nb),rep("Gamma",nb)),
+#                            Var = as.character(rep(names(alpha),3)),
+#                            X = as.character(rep(targetInt[,VarIntBoxDiv],3)))
+dataTmp = data.frame(value=c(alpha,beta,gamma),
+                     diversity = c(rep("Alpha",nb),rep("Beta",nb),rep("Gamma",nb)),
+                     Var = as.character(rep(names(alpha),3)))
      
       ## Merge targetInt et dataTmp par rapport à Var
 #       VectX = c()

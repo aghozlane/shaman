@@ -113,7 +113,7 @@ shinyServer(function(input, output,session) {
   ## Create base for contrast
   rand = floor(runif(1,0,1e9))
   namesfile = tempfile(pattern = "BaseContrast", tmpdir = tempdir(), fileext = "")
-  #paste("/srv/shiny-server/sample-apps/meta16s/BaseContrast_",rand,".txt",sep="")
+  #paste("/srv/shiny-server/sample-apps/SHAMAN/BaseContrast_",rand,".txt",sep="")
   file.create(namesfile,showWarnings=FALSE)
 
   #namesfile = "www/All_Contrast.txt"
@@ -788,7 +788,7 @@ shinyServer(function(input, output,session) {
     
     if(!is.null(resDiff))
     { 
-      box(title="Contrasts (advanced user)",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
+      box(title="Contrasts (advanced user)",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = FALSE,
           fluidRow(
             column(width=12,
                    fileInput('fileContrast', h6(strong('Select a file of contrasts')),width="60%")
@@ -888,7 +888,7 @@ shinyServer(function(input, output,session) {
   ## Run DESeq2 via RunDESeq button
   observeEvent(input$RunDESeq,{  
     
-    ResDiffAnal()
+    withProgress(message="Analysis in progress...",ResDiffAnal())
     
   })
 
@@ -1011,7 +1011,7 @@ shinyServer(function(input, output,session) {
 
   #### Export Diag
   output$exportdiag <- downloadHandler(
-    filename <- function() { paste(input$DiagPlot,paste('meta16S',input$Exp_format,sep="."),sep="_") },
+    filename <- function() { paste(input$DiagPlot,paste('SHAMAN',input$Exp_format,sep="."),sep="_") },
     content <- function(file) {
       if(input$Exp_format=="png") png(file, width = input$widthDiagExport, height = input$heightDiagExport)
       if(input$Exp_format=="pdf") pdf(file, width = input$widthDiagExport/96, height = input$heightDiagExport/96)
@@ -1032,7 +1032,7 @@ shinyServer(function(input, output,session) {
   ## PDF  
 ## PDF  
 output$exportPDFVisu <- downloadHandler(
-  filename <- function() { paste("test",'meta16S.ps',sep="_")},
+  filename <- function() { paste("test",'SHAMAN.ps',sep="_")},
   content <- function(file) {
     resDiff = ResDiffAnal()
     filesize = file.info(namesfile)[,"size"]
@@ -1052,7 +1052,7 @@ output$exportPDFVisu <- downloadHandler(
   
   ## PNG
   output$exportPNGVisu <- downloadHandler(
-    filename <- function() { paste("test",'meta16S.png',sep="_") },
+    filename <- function() { paste("test",'SHAMAN.png',sep="_") },
     content <- function(file) {
       png(file, width = 600, height = 400)
       Plot_Visu(input,ResDiffAnal())
@@ -1062,7 +1062,7 @@ output$exportPDFVisu <- downloadHandler(
 
 #### Export Visu
 output$exportVisu <- downloadHandler(
-  filename <- function() { paste(input$PlotVisuSelect,paste('meta16S',input$Exp_format_Visu,sep="."),sep="_") },
+  filename <- function() { paste(input$PlotVisuSelect,paste('SHAMAN',input$Exp_format_Visu,sep="."),sep="_") },
   content <- function(file) {
     filesize = file.info(namesfile)[,"size"]
     if(is.na(filesize)){filesize=0}
@@ -1198,7 +1198,7 @@ output$exportVisu <- downloadHandler(
 
 #### Export diff table
 output$exportDiffTable <- downloadHandler(
-  filename = function() {paste(input$WhichExportTable,input$ContrastList_table,'meta16S.csv',sep="_")},
+  filename = function() {paste(input$WhichExportTable,input$ContrastList_table,'SHAMAN.csv',sep="_")},
   content = function(file){
     switch(input$WhichExportTable,
            "Complete" = write.csv(dataDiff()$complete, file),
@@ -1250,7 +1250,7 @@ output$RunButton <- renderUI({
 
   output$PlotVisuBar <- renderChart({
     resDiff = ResDiffAnal()
-    if(!is.null(resDiff$dds)) Plot_Visu_Barplot(input,resDiff)$plotd3
+    if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Barplot(input,resDiff)$plotd3)
   },env=new.env())
 
 # output$PlotVisu <- renderPlotly({
@@ -1265,11 +1265,11 @@ output$RunButton <- renderUI({
     resplot = NULL
     if(!is.null(resDiff$dds))
     { 
-      if(input$HeatMapType=="Counts") resplot = Plot_Visu_Heatmap(input,resDiff)
+      if(input$HeatMapType=="Counts") resplot = withProgress(message="Loading...",Plot_Visu_Heatmap(input,resDiff))
       if(input$HeatMapType=="Log2FC" && filesize!=0)
       { 
         BaseContrast = read.table(namesfile,header=TRUE)
-        resplot = Plot_Visu_Heatmap_FC(input,BaseContrast,resDiff)
+        resplot = withProgress(message="Loading...",Plot_Visu_Heatmap_FC(input,BaseContrast,resDiff))
       }
     }
     return(resplot)
@@ -1279,13 +1279,13 @@ output$RunButton <- renderUI({
 
   output$Boxplot <- renderPlot({
     resDiff = ResDiffAnal()
-    if(!is.null(resDiff$dds)) Plot_Visu_Boxplot(input,resDiff)
+    if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Boxplot(input,resDiff))
   },height=reactive(input$heightVisu))
 
 
   output$DiversityPlot <- renderPlot({
     resDiff = ResDiffAnal()
-    if(!is.null(resDiff$dds)) Plot_Visu_Diversity(input,resDiff,type="point")
+    if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Diversity(input,resDiff,type="point"))
   })
   
   ranges <- reactiveValues(x = NULL, y = NULL)
@@ -1293,7 +1293,7 @@ output$RunButton <- renderUI({
   output$RarefactionPlot <- renderPlot({
     resDiff = ResDiffAnal()
     taxo = input$TaxoSelect
-    if(!is.null(resDiff)) Plot_Visu_Rarefaction(input,resDiff,ranges$x,ranges$y,ylab=taxo)
+    if(!is.null(resDiff)) withProgress(message="Loading...",Plot_Visu_Rarefaction(input,resDiff,ranges$x,ranges$y,ylab=taxo))
   }, height = reactive(input$heightVisu))
   
   observeEvent(input$RarefactionPlot_dblclick, {
@@ -1402,7 +1402,7 @@ output$RunButton <- renderUI({
       print(data$counts)
     krona_table=tempfile(pattern = "krona", tmpdir = tempdir(), fileext = "")
     url=paste(krona_table, ".html", sep="")
-    #system(paste("export PERL5LIB=/home/aghozlan/workspace/META16S_App/KronaTools-2.6/lib:$PERL5LIB; /home/aghozlan/workspace/META10S_App/krona_bin/bin/ktImportText", krona_table))
+    #system(paste("export PERL5LIB=/home/aghozlan/workspace/SHAMAN_App/KronaTools-2.6/lib:$PERL5LIB; /home/aghozlan/workspace/META10S_App/krona_bin/bin/ktImportText", krona_table))
     system(paste("ktImportText", krona_table))
     refs <- paste0("<a href='",  url, "' target='_blank'>krona</a>")
     
