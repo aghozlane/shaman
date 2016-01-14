@@ -1,86 +1,167 @@
-library(shinydashboard)
-# if (!require(rNVD3)) {
-#   install.packages('rNVD3')
-#   library(rNVD3)
-# }
+if(!require(shinydashboard)){
+  install.packages('shinydashboard')
+  library(shinydashboard)
+}
+
 if (!require(psych)) {
   install.packages('psych')
+  
   library(psych)
+  
 }
+
 if (!require(ggplot2)) {
+  
   install.packages('ggplot2')
+  
   library(ggplot2)
+  
 }
+
 if (!require(vegan)) {
+  
   install.packages('vegan')
+  
   library(vegan)
+  
 }
+
 if (!require(dendextend)) {
+  
   install.packages('dendextend')
+  
   library(dendextend)
+  
 }
+
 if (!require(circlize)) {
+  
   install.packages('circlize')
+  
   library(circlize)
+  
 }
+
 if (!require(biom)) {
+  
   install.packages('biom')
+  
   library(biom)
+  
 }
+
 if (!require(DT)) {
+  
   install.packages('DT')
+  
   library(DT)
+  
 }
+
 if (!require(RColorBrewer)) {
+  
   install.packages('RColorBrewer')
+  
   library(RColorBrewer)
+  
 }
+
 if (!require(gplots)) {
+  
   install.packages('gplots')
+  
   library(gplots)
+  
 }
+
 if (!require(DESeq2)) {
+  
   source("https://bioconductor.org/biocLite.R")
+  
   biocLite("DESeq2")
+  
   library(DESeq2)
+  
 }
+
 if (!require(ade4)) {
+  
   install.packages('ade4')
+  
   library(ade4)
-	}
+  
+}
 
 sidebar <- dashboardSidebar(
+  
   sidebarMenu(
+    
     menuItem("Home", tabName = "Home", icon = icon("home")),
+    
     menuItem("Tutorial", tabName = "Tutorial", icon = icon("book")),
+    
     menuItem("Upload your data", tabName = "Upload", icon = icon("upload")),
+    
     menuItemOutput("dymMenu")
+    
   )
+  
 )
 
 body <- dashboardBody(
+  
   tabItems(
+    
     tabItem(tabName = "Home",
-            tabBox(title="Welcome to Meta16S", id="tabset1", height = "900px", width = 12,
-            tabPanel("About", p("Meta16S is a web interface for the analysis of metagenomic data including the normalization,
-the differential analysis and mutiple visualization.",style = "font-family: 'times'; font-si16pt"),
-                     p("Meta16S is based on DESeq2 R package", a("[Anders and Huber 2010]", href="http://www.ncbi.nlm.nih.gov/pubmed/20979621"), "for the analysis of metagenomic data, as suggested in", a("[McMurdie and Holmes 2014]",href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3974642/"),
-                       ". Meta16S robustly identifies the differential abundant genera with the Generalized Linear Model implemented in DESeq2", a("[Love 2014]", href="http://www.ncbi.nlm.nih.gov/pubmed/25516281"),".
-Resulting p-values are adjusted according to the Benjamini and Hochberg procedure [Benjamini and Hochberg 1995].
-The PCOA is performed with the", a("ade4 R package",href="http://pbil.univ-lyon1.fr/ade4/"), "and plots are generated with", a("ggplot2",href="http://ggplot2.org/"), "or", a("D3.js packages",href="http://d3js.org/"), ".", style = "font-family: 'times'; font-si16pt")),
-            tabPanel("Authors", h3("The main contributors to Meta16s:"),
-                     p(a("Stevenn Volant", href="mailto:stevenn.volant"), "(Initiator, coding, testing, documentation, evaluation)"),
-                     p(a("Amine Ghozlane",href="mailto:amine.ghozlane@pasteur.fr"), "(Coding, testing, documentation, feature suggestions)"),
-                     p(a("Pierre Lechat",href="mailto:pierre.lechat@pasteur.fr"), "(Coding, testing, feature suggestions)"),
-                    p(a("Marie-Agnès Dillies",href="mailto:marie-agnes.dillies@pasteur.fr"), "(Evaluation)"),
-                    h3("Acknowledgements"),
-                    p("Thanks to the following people for patches and other suggestions for improvements:"),
-                    p(a("Christophe Malabat",href="mailto:christophe.malabat@pasteur.fr"))),
-            tabPanel("Citing Meta16S",p("No papers about Meta16s have been published yet, but a manuscript is in preparation."),
-                    p("For now, if you have any comments, questions or suggestions, or want to use meta16s please contact", a("Dr. Marie-Agnès Dillies", href="mailto:marie-agnes.dillies@pasteur.fr"),".", style = "font-family: 'times'; font-si16pt; color:red")))),
+            
+            tabBox(title="Welcome to Meta16S", id="tabset1", height = "700", width = 12,
+                   
+                   tabPanel("About", p("Meta16S is a web interface for the analysis of metagenomic data including the normalization,
+                                       
+                                       the differential analysis and mutiple visualization.",style = "font-family: 'times'; font-si16pt"),
+                            
+                            p("Meta16S is based on DESeq2 R package", a("[Anders and Huber 2010]", href="http://www.ncbi.nlm.nih.gov/pubmed/20979621"), "for the analysis of metagenomic data, as suggested in", a("[McMurdie and Holmes 2014]",href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3974642/"),
+                              
+                              ". Meta16S robustly identifies the differential abundant genera with the Generalized Linear Model implemented in DESeq2", a("[Love 2014]", href="http://www.ncbi.nlm.nih.gov/pubmed/25516281"),".
+                              
+                              Resulting p-values are adjusted according to the Benjamini and Hochberg procedure [Benjamini and Hochberg 1995].
+                              
+                              The PCOA is performed with the", a("ade4 R package",href="http://pbil.univ-lyon1.fr/ade4/"), "and plots are generated with", a("ggplot2",href="http://ggplot2.org/"), "or", a("D3.js packages",href="http://d3js.org/"), ".", style = "font-family: 'times'; font-si16pt")),
+                   
+                   tabPanel("Authors", h3("The main contributors to Meta16s:"),
+                            
+                            p(a("Stevenn Volant", href="mailto:stevenn.volant@pasteur.fr"), "(Initiator, coding, testing, documentation, evaluation)"),
+                            
+                            p(a("Amine Ghozlane",href="mailto:amine.ghozlane@pasteur.fr"), "(Coding, testing, documentation, evaluation)"),
+                            
+                            p(a("Hugo Varet",href="mailto:hugo.varet@pasteur.fr"), "(Coding, testing, feature suggestions)"),
+                            
+                            p(a("Pierre Lechat",href="mailto:pierre.lechat@pasteur.fr"), "(Coding, testing, feature suggestions)"),
+                            
+                            p(a("Marie-Agnès Dillies",href="mailto:marie-agnes.dillies@pasteur.fr"), "(Evaluation)"),
+                            
+                            p(a("Sean Kennedy",href="mailto:sean.kennedy@pasteur.fr"), "(Evaluation)"),
+                            
+                            h3("Acknowledgements"),
+                            
+                            p("Thanks to the following people for patches and other suggestions for improvements:"),
+                            
+                            p(a("Christophe Malabat",href="mailto:christophe.malabat@pasteur.fr"))),
+                   
+                   tabPanel("Citing Meta16S",p("No papers about Meta16s have been published yet, but a manuscript is in preparation.",style = "font-family: 'times'; font-si16pt"),
+                            
+                            p("For now, if you have any comments, questions or suggestions, or want to use meta16s please contact", a("Dr. Marie-Agnès Dillies", href="mailto:marie-agnes.dillies@pasteur.fr"),".", style = "font-family: 'times'; font-si16pt; color:red"))
+            ),
+                   img(src = "logo.jpg", height = 90, width = 600,align="right")
+    ),      
+
+    
     tabItem(tabName = "Tutorial",
+            
             h2("How to !")
+            
     ),
+    
     tabItem(tabName = "Upload",
             tags$style(type='text/css', ".well { max-width: 20em; }"),
             fluidRow(
@@ -200,9 +281,9 @@ The PCOA is performed with the", a("ade4 R package",href="http://pbil.univ-lyon1
     tabItem(tabName = "DiagPlotTab",
             fluidRow(
               column(width=9,
-                box(title = "Plot",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
-                  plotOutput("PlotDiag")
-                ),
+                     
+                plotOutput("PlotDiag",height="100%"),
+                br(),
                 conditionalPanel(condition="input.DiagPlot=='SfactorsVStot'",
                   box(title = "Size factors",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
                     dataTableOutput("SizeFactTable")
@@ -211,12 +292,12 @@ The PCOA is performed with the", a("ade4 R package",href="http://pbil.univ-lyon1
                   
                 conditionalPanel(condition="input.DiagPlot=='pcaPlot'",
                                  box(title = "Eigen values",  width = 6, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
-                                    plotOutput("PlotEigen")
+                                    plotOutput("PlotEigen",height="100%")
                                  )
                 ),
                 conditionalPanel(condition="input.DiagPlot=='pcoaPlot'",
                                  box(title = "Eigen values",  width = 6, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
-                                     plotOutput("PlotpcoaEigen")
+                                     plotOutput("PlotpcoaEigen",height="100%")
                                  )
                 )
                 
@@ -233,11 +314,14 @@ The PCOA is performed with the", a("ade4 R package",href="http://pbil.univ-lyon1
                     conditionalPanel(condition="input.DiagPlot!='Sfactors' && input.DiagPlot!='SfactorsVStot' ",uiOutput("VarIntDiag")),
                     conditionalPanel(condition="input.DiagPlot=='pcoaPlot'",
                                      h5(strong("Select the modalities")),
-                                     uiOutput("ModMat"),
-                                     selectInput("DistPCOA","Distance",c("euclidean", "canberra", "bray", "kulczynski", "jaccard", 
-                                                              "gower", "altGower", "morisita", "horn","mountford","raup","binomial",
-                                                              "chao","cao","mahalanobis"),selected="jaccard")
+                                     uiOutput("ModMat")
+                    ),
+                    conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='SERE' || input.DiagPlot=='clustPlot' ",
+                      selectInput("DistClust","Distance",c("euclidean", "SERE"="sere", "canberra", "bray", "kulczynski", "jaccard", 
+                                                         "gower", "altGower", "morisita", "horn","mountford","raup","binomial",
+                                                         "chao","cao","mahalanobis"),selected="jaccard")
                     )
+                    
 #                 conditionalPanel(condition="input.RadioPlotBi=='Nuage'",selectInput("ColorBiplot", "Couleur",choices=c("Bleue" = 'blue',"Rouge"='red',"Vert"='green', "Noir"='black'),width="50%")),
 #                 sliderInput("TransAlphaBi", "Transparence",min=1, max=100, value=50, step=1),
 #                 conditionalPanel(condition="input.RadioPlotBi!='Nuage'", radioButtons("SensGraphBi","Sens du graph",choices=c("Vertical"="Vert","Horizontal"="Hori"))),
@@ -249,6 +333,8 @@ The PCOA is performed with the", a("ade4 R package",href="http://pbil.univ-lyon1
 #                                      h6(strong("Layout")),
 #                                      numericInput("NbcolSfactors", h6("Columns"),min=1,value = NA)
 #                     ),
+                  sliderInput("heightDiag", "Height",min=100,max=1500,value = 500,step =10),
+
                   conditionalPanel(condition="input.DiagPlot=='clustPlot'",
                                    h6(strong("Layout")),
                                    selectInput("typeHculst", h6("Type"),c("Horizontal"="hori","Fan"="fan")),
@@ -261,8 +347,17 @@ The PCOA is performed with the", a("ade4 R package",href="http://pbil.univ-lyon1
                                    sliderInput("cexstar", "Star height",min=0,max=1,value = 0.95,step =0.1)
                                    
                   ),
-                  sliderInput("cexLabelDiag", "Label size",min=0,max=5,value = 1,step =0.1)
-#                   sliderInput("heightDiag", "height",min=100,max=1500,value = 500,step =10),
+                  conditionalPanel(condition="input.DiagPlot=='SfactorsVStot'",
+                    checkboxInput("addLabelSFact","Add label",FALSE)
+                  ),
+
+                  fluidRow(
+                    column(width=12, p(strong("Size"))),
+                    column(width=6,sliderInput("cexTitleDiag", h6("Axis"),min=0,max=5,value = 1,step =0.1)),
+                    conditionalPanel(condition="input.DiagPlot=='SfactorsVStot' || input.DiagPlot=='pcaPlot'",column(width=6,sliderInput("cexLabelDiag", h6("Points"),min=0,max=5,value = 1,step =0.1)))
+                    
+                  )
+
 #                   sliderInput("widthDiag", "width",min=100,max=1500,value = 1000,step =10)
                  
 

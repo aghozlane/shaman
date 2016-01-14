@@ -1,56 +1,101 @@
 if (!require("Rcpp")){
+  
   install.packages("Rcpp")
+  
 }
+
 if(!require(shinydashboard)){
+  
   install.packages('shinydashboard')
+  
   library(shinydashboard)
+  
 }
+
 if(!require(rjson)){
+  
   install.packages('rjson')
+  
 }
+
 if(!require(devtools)){
+  
   install.packages('devtools')
+  
 }
-<<<<<<< HEAD
-=======
 
 #library(plotly)
->>>>>>> 84440282f7e33f02d6a643f231ab33bf935f89c1
+
 if (!require(psych)) {
+  
   install.packages('psych')
+  
   library(psych)
+  
 }
+
 if (!require(ggplot2)) {
+  
   install.packages('ggplot2')
+  
   library(ggplot2)
+  
 }
+
 if (!require(vegan)) {
+  
   install.packages('vegan')
+  
   library(vegan)
+  
 }
+
 if (!require(dendextend)) {
+  
   install.packages('dendextend')
+  
   library(dendextend)
+  
 }
+
 if (!require(circlize)) {
+  
   install.packages('circlize')
+  
   library(circlize)
+  
 }
+
 if (!require(d3heatmap)) {
+  
   install.packages('d3heatmap')
+  
   library(d3heatmap)
+  
 }
+
 if (!require(biom)) {
+  
   install.packages('biom')
+  
   library(biom)
+  
 }
+
 if (!require(devtools)) {
+  
   install.packages('devtools')
+  
 }
+
 if (!require(rNVD3)) {
+  
   library(devtools)
+  
   install_github('rNVD3', 'ramnathv')
+  
 }
+
 source("internal.R")
 
 renderDataTable <- DT::renderDataTable
@@ -926,7 +971,7 @@ shinyServer(function(input, output,session) {
     
     resDiff = ResDiffAnal()
     Plot_diag_Eigen(input,resDiff)
-  },height = 400)
+  },height =400)
 
   SizeFactor_table <-reactive({ 
     res = ResDiffAnal()

@@ -374,7 +374,7 @@ CheckCountsTable <- function(counts)
     if(type!="hori")
     {
       par(cex=input$cexTitleDiag,mar = c(0.3,2,0.3,2))
-      res = circlize_dendrogram(dend, labels_track_height = NULL, dend_track_height = .3, main = "Cluster dendrogram",xlab = paste(input$DistClust,"distance, Ward criterion",sep=" "))
+      res = circlize_dendrogram(dend, labels_track_height = 0.2, dend_track_height = .3, main = "Cluster dendrogram",xlab = paste(input$DistClust,"distance, Ward criterion",sep=" "))
     }
     return(res)
   }
@@ -742,7 +742,7 @@ CheckCountsTable <- function(counts)
       ord = abs(ord[2] - ord[1])/25
       
       par(mfrow = c(1, 2),cex=input$cexTitleDiag,mar=c(6,6,4,5))
-      plot(pca$x[, 1], pca$x[, 2], las = 1, cex = cex=input$cexTitleDiag, col = col[as.integer(group[,1])], 
+      plot(pca$x[, 1], pca$x[, 2], las = 1, cex = input$cexTitleDiag, col = col[as.integer(group[,1])], 
            pch = if (ncol1) {16}
            else {c(16:18, 25)[as.integer(group[, 2])]},
            xlab = paste0("PC1 (", prp[1], "%)"),
@@ -755,7 +755,7 @@ CheckCountsTable <- function(counts)
       abs = abs(abs[2] - abs[1])/25
       ord = range(pca$x[, 3])
       ord = abs(ord[2] - ord[1])/25
-      plot(pca$x[, 1], pca$x[, 3], las = 1, cex = cex=input$cexTitleDiag, col = col[as.integer(group[, 1])], 
+      plot(pca$x[, 1], pca$x[, 3], las = 1, cex = input$cexTitleDiag, col = col[as.integer(group[, 1])], 
            pch = if (ncol1) {16}
            else {c(16:18, 25)[as.integer(group[, 2])]}, 
            xlab = paste0("PC1 (", prp[1], "%)"), 
