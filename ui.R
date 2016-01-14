@@ -102,7 +102,9 @@ sidebar <- dashboardSidebar(
     
     menuItem("Upload your data", tabName = "Upload", icon = icon("upload")),
     
-    menuItemOutput("dymMenu")
+    menuItemOutput("dymMenu"),
+    
+    img(src = "logo.jpg", height = 30, width = 200,style="position:absolute;bottom:0;margin:0 0 5px 10px;")
     
   )
   
@@ -146,13 +148,14 @@ body <- dashboardBody(
                             
                             p("Thanks to the following people for patches and other suggestions for improvements:"),
                             
-                            p(a("Christophe Malabat",href="mailto:christophe.malabat@pasteur.fr"))),
+                            p(a("Christophe Malabat",href="mailto:christophe.malabat@pasteur.fr"),a(", Anna Zhukova",href="mailto:anna.zhukova@pasteur.fr"))
+                          ),
                    
                    tabPanel("Citing SHAMAN",p("No papers about SHAMAN have been published yet, but a manuscript is in preparation.",style = "font-family: 'times'; font-si16pt"),
                             
                             p("For now, if you have any comments, questions or suggestions, or want to use SHAMAN please contact", a("Dr. Marie-Agnès Dillies", href="mailto:marie-agnes.dillies@pasteur.fr"),".", style = "font-family: 'times'; font-si16pt; color:red"))
-            ),
-                   img(src = "logo.jpg", height = 90, width = 600,align="right")
+            )
+                   
     ),      
 
     
@@ -825,12 +828,15 @@ body <- dashboardBody(
     
   )
 
-
+  ## Logo SHAMAN
+  dbHeader <- dashboardHeader(title = "SHAMAN")
+  dbHeader$children[[2]]$children <-  tags$a(tags$img(src='akuaku.png',height='40',width='50',style="margin:5px 0 5px 0;",align='left'), tags$h3("SHAMAN",style="font-family:Purisa; margin:15px 25px 5px 0;color:white;"))
+  
 # Put them together into a dashboardPage
-dashboardPage(skin="blue",
-  dashboardHeader(title = "SHAMAN"),
-  sidebar,
-  body
-)
+  dashboardPage(skin="blue",
+    dbHeader,
+    sidebar,
+    body
+  )
 
 
