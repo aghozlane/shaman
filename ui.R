@@ -306,8 +306,7 @@ body <- dashboardBody(
                 box(title = "Select your plot",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = FALSE,collapsed= FALSE,
                   selectInput("DiagPlot","",c("Total barplot"="barplotTot","Nul barplot"="barplotNul",
                                               "Maj. taxonomy"="MajTax", "Density"="densityPlot", 
-                                              "Size factors VS total"="SfactorsVStot", "PCA"="pcaPlot", "PCoA"="pcoaPlot","Clustering" = "clustPlot",
-                                              "SERE" = "SERE"))
+                                              "Size factors VS total"="SfactorsVStot", "PCA"="pcaPlot", "PCoA"="pcoaPlot","Clustering" = "clustPlot"))
                     ),
                 box(title = "Options",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
                     

@@ -365,12 +365,12 @@ CheckCountsTable <- function(counts)
     
     if(type=="hori") 
     { 
-      par(cex=input$cexTitleDiag,mar = c(0.3,2,0.3,2))
+      par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
       res = plot(dend, main = "Cluster dendrogram",xlab = paste(input$DistClust,"distance, Ward criterion",sep=" "),cex=input$cexLabelDiag)
     }  
     if(type!="hori")
     {
-      par(cex=input$cexTitleDiag,mar = c(0.3,2,0.3,2))
+      par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
       res = circlize_dendrogram(dend, labels_track_height = 0.2, dend_track_height = .3, main = "Cluster dendrogram",xlab = paste(input$DistClust,"distance, Ward criterion",sep=" "))
     }
     return(res)
@@ -475,19 +475,19 @@ CheckCountsTable <- function(counts)
     par(cex=input$cexTitleDiag,mar=c(8,5,4,5))
     plot(density(log2(counts[, 1] + 1)), las = 1, lwd = 2, main = "Density of counts distribution", 
          xlab = expression(log[2] ~ (raw ~ count + 1)), 
-         ylim = c(0, max(apply(counts, 2, function(x) {max(density(log2(x + 1))$y)})) * 1.05), 
+         ylim = c(-0.2, max(apply(counts, 2, function(x) {max(density(log2(x + 1))$y)})) * 1.05), 
          lty = if (ncol1) {1}
-         else{c(1, 2, 3, 4)[as.integer(group[, 2])[1]]}, 
+         else{rep(seq(1:6),ceiling(nlevels(group[, 2])/6))[as.integer(group[, 2])[1]]}, 
          col = col[as.integer(group[, 1])[1]])
     
     for (i in 2:ncol(counts)) 
     {
       lines(density(log2(counts[, i] + 1)), col = col[as.integer(group[,1])[i]], lwd = 2, 
             lty = if (ncol1) {1}
-            else {c(1, 2, 3, 4)[as.integer(group[, 2])[i]]})
+            else{rep(seq(1:6),ceiling(nlevels(group[, 2])/6))[as.integer(group[, 2])[i]]})
     }
     legend("topright", levels(group[, 1]), lty = 1, col = col[1:nlevels(group[,1])], lwd = 2, bty = "n")
-    if (!ncol1) legend("topleft", levels(group[, 2]), lty = c(1, 2, 3, 4)[1:nlevels(group[, 2])], col = 1, lwd = 2, bty = "n")
+    if (!ncol1) legend("topleft", levels(group[, 2]), lty = rep(seq(1:6),ceiling(nlevels(group[, 2])/6))[1:nlevels(group[, 2])], col = 1, lwd = 2, bty = "n")
     
   }
 

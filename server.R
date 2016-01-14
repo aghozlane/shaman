@@ -410,7 +410,7 @@ shinyServer(function(input, output,session) {
     if(!is.null(target)) 
     {
       namesTarget = colnames(target)[2:ncol(target)]
-      selectInput("InterestVar",h6(strong("Select the variables")),namesTarget,selected=namesTarget,multiple=TRUE)
+      selectInput("InterestVar",h6(strong("Select the variables")),namesTarget,selected=namesTarget[1],multiple=TRUE)
     }
   
   })
@@ -943,11 +943,13 @@ shinyServer(function(input, output,session) {
   
   output$VarIntDiag <- renderUI({
     
-    int = input$InterestVar
-    if(length(int)>=2) intSel = int[c(1,2)]
-    else intSel = int[1]
+    target=dataInputTarget()
     
-    selectizeInput("VarInt",h6(strong("Select the variables of interest (max 2)")),int, selected = intSel,multiple = TRUE,options = list(maxItems = 2))
+    if(!is.null(target)) 
+    {
+      namesTarget = colnames(target)[2:ncol(target)]
+      selectizeInput("VarInt",h6(strong("Select the variables of interest (max 2)")),namesTarget, selected = namesTarget[1],multiple = TRUE,options = list(maxItems = 2))
+    }
     
   })
   
@@ -1382,11 +1384,17 @@ output$RunButton <- renderUI({
   
   output$VarIntVisu <- renderUI({
     
-    int = input$InterestVar
-    if(length(int)>=2) intSel = int[c(1,2)]
-    else intSel = int[1]
-    
-    selectizeInput("VisuVarInt",h6(strong("Select the variables of interest")),int, selected = intSel,multiple = TRUE)
+#     int = input$InterestVar
+#     if(length(int)>=2) intSel = int[c(1,2)]
+#     else intSel = int[1]
+        
+      target=dataInputTarget()
+      
+      if(!is.null(target)) 
+      {
+        namesTarget = colnames(target)[2:ncol(target)]
+        selectizeInput("VisuVarInt",h6(strong("Select the variables of interest")),namesTarget, selected = namesTarget[1],multiple = TRUE)
+      }
     
   })
   #####################################################
