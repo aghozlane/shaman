@@ -1328,7 +1328,7 @@ output$RunButton <- renderUI({
     res=NULL
     if(input$PlotVisuSelect=="Barplot") res =  showOutput("PlotVisuBar")
     if(input$PlotVisuSelect=="Heatmap") res =  d3heatmapOutput("heatmap", height = input$heightVisu+10)
-    if(input$PlotVisuSelect=="Boxplot") res =  plotOutput("Boxplot", height = input$heightVisu+10)
+    if(input$PlotVisuSelect=="Boxplot") res = plotOutput("Boxplot", height = input$heightVisu+10)
     if(input$PlotVisuSelect=="Diversity") res =  plotOutput("DiversityPlot", height = input$heightVisu+10)
     if(input$PlotVisuSelect=="Rarefaction") res = plotOutput("RarefactionPlot",dblclick = "RarefactionPlot_dblclick",brush = brushOpts(id = "RarefactionPlot_brush",resetOnNew = TRUE), height = input$heightVisu+10)
     

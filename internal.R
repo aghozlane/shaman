@@ -1011,6 +1011,7 @@ CheckCountsTable <- function(counts)
     VarInt = input$VisuVarInt
     ind_taxo = input$selectTaxoPlot
     
+    GetDataToPlot(resDiff,VarInt,ind_taxo,aggregate=FALSE)
     tmp_merge = GetDataToPlot(resDiff,VarInt,ind_taxo,aggregate=FALSE)
     counts_tmp_combined = tmp_merge$counts
 
@@ -1333,7 +1334,7 @@ dataTmp = data.frame(value=c(alpha,beta,gamma),
       rownames(log2FC) = rownames(result[[SelContrast[1]]])
       rownames(padj) = rownames(result[[SelContrast[1]]])
 
-    return(list(log2FC=log2FC,padj=padj))
+    return(list(log2FC=as.data.frame(log2FC),padj=padj))
   }
   
   
@@ -1342,11 +1343,12 @@ dataTmp = data.frame(value=c(alpha,beta,gamma),
     res = NULL
     SelContrast = input$ContrastList_table_FC
     log2FC = Get_log2FC_padj(input,BaseContrast,resDiff, info = NULL)$log2FC
-    cont = which(SelContrast%in%colnames(log2FC))
-    log2FC = log2FC[,cont] 
+
     
-    if(!is.null(log2FC))
+    if(!is.null(log2FC) && length(SelContrast)>=2)
     { 
+      cont = which(colnames(log2FC)%in%SelContrast)
+      log2FC = log2FC[,SelContrast] 
       ind_taxo = input$selectTaxoPlot
       ind = rownames(log2FC)%in%ind_taxo
       log2FC = log2FC[ind,]
