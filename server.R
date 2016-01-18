@@ -410,7 +410,7 @@ shinyServer(function(input, output,session) {
     if(!is.null(target)) 
     {
       namesTarget = colnames(target)[2:ncol(target)]
-      selectInput("InterestVar",h6(strong("Select the variables")),namesTarget,selected=namesTarget[1],multiple=TRUE)
+      selectInput("InterestVar",h6(strong("Select the variables")),namesTarget,selected=namesTarget,multiple=TRUE)
     }
   
   })
@@ -512,55 +512,6 @@ shinyServer(function(input, output,session) {
     filename = function() { 'RelativeAb.csv' },
     content = function(file){write.csv(dataMergeCounts()$counts/colSums(dataMergeCounts()$counts), file)}
   )
-
-
-#################################################
-##        FOR PIERRE
-#################################################
-#   
-#   ## Merge counts data
-#   dataMergeCounts_pierre <-reactive({ 
-#     resDiff = ResDiffAnal()
-#     dds = resDiff$dds
-#     counts = round(counts(dds, normalized = TRUE))
-#     
-#     VarInt = input$VisuVarIntBoxP
-#     ind_taxo = rownames(counts)
-#     
-#     tmp_merge = GetDataToPlot(resDiff,VarInt,ind_taxo,aggregate=TRUE)
-#     counts_tmp_combined = tmp_merge$counts
-#     
-#     return(counts_tmp_combined)
-#   })
-# 
-# 
-# 
-# 
-# output$CountsMerge_pierre <- renderDataTable(
-#   dataMergeCounts_pierre(),
-#   options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-#                  pageLength = 10,scrollX=TRUE
-#   ))
-# 
-# 
-# ## Box for target visualisation
-# output$BoxCountsMerge_pierre <- renderUI({
-#     box(title="Counts table",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
-#         dataTableOutput("CountsMerge_pierre"),
-#         downloadButton('ExportPloted', 'Export')
-#     )
-# })
-# 
-# 
-# ## Export in .csv
-# output$ExportPloted <- downloadHandler(
-#   filename = function() { 'CountsMerge.csv' },
-#   content = function(file){write.csv(dataMergeCounts_pierre(), file, sep='\t')}
-# )
-
-#################################################
-##       END FOR PIERRE
-#################################################
 
 
   ## Box for target visualisation
