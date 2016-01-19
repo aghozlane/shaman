@@ -117,9 +117,9 @@ body <- dashboardBody(
     
     tabItem(tabName = "Home",
             
-            tabBox(title="Welcome to SHAMAN", id="tabset1", height = "700", width = 12,
+            tabBox(title="Welcome to SHAMAN", id="tabset1", width = 12,
                    
-                   tabPanel("About", p("SHAMAN is a web interface for the analysis of metagenomic data including the normalization,
+                   tabPanel("About", p("SHAMAN is a SHiny application for Metagenomic ANalysis including the normalization,
                                        
                                        the differential analysis and mutiple visualization.",style = "font-family: 'times'; font-si16pt"),
                             
@@ -149,7 +149,7 @@ body <- dashboardBody(
                             
                             p("Thanks to the following people for patches and other suggestions for improvements:"),
                             
-                            p(a("Christophe Malabat",href="mailto:christophe.malabat@pasteur.fr"),a(", Anna Zhukova",href="mailto:anna.zhukova@pasteur.fr"))
+                            p(a("Christophe Malabat",href="mailto:christophe.malabat@pasteur.fr"),a("Julien Tap",href="mailto:julien.tap@danone.com"),a(", Anna Zhukova",href="mailto:anna.zhukova@pasteur.fr"), a(", Rachel Torchet",href="mailto:rachel.torchet@pasteur.fr"))
                           ),
                    
                    tabPanel("Citing SHAMAN",p("No papers about SHAMAN have been published yet, but a manuscript is in preparation.",style = "font-family: 'times'; font-si16pt"),
@@ -161,9 +161,56 @@ body <- dashboardBody(
 
     
     tabItem(tabName = "Tutorial",
-            
-            h2("How to !")
-            
+            tabBox(title="How to use SHAMAN", id="tabset1", width = 12,
+                   
+            tabPanel("Introduction",
+            p(" You can test SHAMAN with the dataset from", a("[Tap et al. 2015]",href="http://www.ncbi.nlm.nih.gov/pubmed/26235304"),
+              ", which is available", a("here",target="_blank",href="Alimintest.zip"),"."),
+            p("The zip archive contains 4 different files :", br(),
+              "- the otu count matrix : Alimintest_otu_table.csv,", br(),
+              "- the otu annotation table : Alimintest_otu_table.csv,", br(),
+              "- the experimental design : Alimintest_target.csv,", br(),
+              "- the contrast table : Alimintest_contrasts.csv."),
+            p("Two groups of person follow two  strict diet periods that involve the intake of 40g following 10g of fiber per day, or 10g of fiber after a 40g fiber intake period :"),
+            img(src = "tutorial/FigS1.png",height = 400, width = 700),
+            p("The 16S rRNA (V3 - V4 regions) from fece samples was sequenced at time stamp : 2, 3, 4 and 5.", br(),
+              "The analysis will consider the different impact of the different fiber intake and the comparison to patient metabolic data.")),
+            tabPanel("1-Load 16S data",
+            p("The first step consist to load the count matrix and the annotation table as follow :"),
+            p("- Select 'Upload your data'", br(),
+              "- Load the counts table :",br(), img(src = "tutorial/tutorial_upload1.png"),br(),
+              "- Load the annotation table :", br(), img(src = "tutorial/tutorial_upload2.png"),br(),
+              "- When successfully loaded, the tables are accessible as bellow :",br(),
+              img(src = "tutorial/tutorial_upload3.png"),img(src = "tutorial/tutorial_upload4.png"))),
+            tabPanel("2-Differential analysis",
+            p("The second step consist to load the experimental design and the contrast table as follow :"),
+            p("- Select 'Run differential analysis'",br(),
+              "- Load the target file :",br(),img(src = "tutorial/tutorial_target.png"),br(),
+              "- Identify the taxonomy level where the analysis will be performed :",br(),img(src = "tutorial/tutorial_target1.png"),br(),
+              "- Identify the interactions :",br(),img(src = "tutorial/tutorial_target2.png"),br(),
+              "- Run the analysis :",br(),img(src = "tutorial/tutorial_target3.png"),br(),
+              "- When successfully loaded, the tables are accessible as bellow :",br(),img(src = "tutorial/tutorial_target4.png")),
+            p("- Finaly, load the contrast file :",br(),img(src = "tutorial/tutorial_contraste.png"),br(),
+              "- Contrasts can be visualized as follow :",br(),img(src = "tutorial/tutorial_contraste1.png"))),
+            tabPanel("3-Diagnostic plots",
+            p("'Diagnostic plots' section provides several visualization to control the analysis",br(),
+              "- Total mapped read count",br(),img(src="tutorial/tutorial_total_barplot.png"),br(),
+              "- Nul barplot count",br(),img(src="tutorial/tutorial_nul_barplot.png"),br(),
+              "- Maj taxonomy count",br(),img(src="tutorial/tutorial_maj_taxonomy.png"),br(),
+              "- Density of counts",br(),img(src="tutorial/tutorial_density.png"),br(),
+              "- Size factors vs total number of reads",br(),img(src="tutorial/tutorial_size_factor.png"),br(),
+              "- PCA",br(),img(src="tutorial/tutorial_pca.png"),br(),
+              "- PCOA",br(),img(src="tutorial/tutorial_pcoa.png"),br(),
+              "- Clustering",br(),img(src="tutorial/tutorial_clustering.png"))),
+            tabPanel("4-Differential analysis results",
+            img(src = "tutorial/tutorial_table.png")),
+            tabPanel("5-Visualization",
+                     p("'Diagnostic plots' section provides several visualization to control the analysis",br(),
+                     "- Barplot",br(),img(src="tutorial/tutorial_barplot.png"),br(),
+                     "- Heatmap",br(),img(src="tutorial/tutorial_heatmap.png"),br(),
+                     "- Boxplot",br(),img(src="tutorial/tutorial_boxplot.png"),br(),
+                     "- Diversity",br(),img(src="tutorial/tutorial_diversity.png"),br(),
+                     "- Rarefaction",br(),img(src="tutorial/tutorial_rarefaction.png"))))
     ),
     
     tabItem(tabName = "Upload",
