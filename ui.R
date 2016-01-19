@@ -105,7 +105,7 @@ sidebar <- dashboardSidebar(
     
     menuItemOutput("dymMenu"),
     
-    img(src = "logo.jpg", height = 75.4, width = 200,style="position:absolute;bottom:0;margin:0 0 15px 10px;")
+    img(src = "logo.jpg", height = 49, width = 220,style="position:absolute;bottom:0;margin:0 0 15px 10px;")
     
   )
   
