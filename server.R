@@ -575,7 +575,7 @@ shinyServer(function(input, output,session) {
     resDiff = ResDiffAnal()
     dds = resDiff$dds
     names = resultsNames(dds)
-    
+
     BaseContrast(input,names,namesfile)
     filesize = file.info(namesfile)[,"size"]
     if(is.na(filesize)){filesize=0}
@@ -592,7 +592,7 @@ shinyServer(function(input, output,session) {
     
     AddCont()
     
-  })
+  },priority=1)
 
 
   ## Add contrast function
@@ -673,30 +673,46 @@ shinyServer(function(input, output,session) {
     
     RemoveCont()
     
+  },priority=1)
+
+  ## Remove all contrasts
+  RemoveAllCont <-eventReactive(input$RunDESeq,{
+    
+      file.create(namesfile,showWarnings=FALSE)
+      updateSelectInput(session, "ContrastList","Contrasts",NULL)
+      updateSelectInput(session, "ContrastList_table","Contrasts",NULL)
+      updateSelectInput(session, "ContrastList_table_Visu","For which contrasts",NULL)
+      updateSelectInput(session, "ContrastList_table_FC","Contrasts (Min = 2)",NULL)
+  })
+
+  ## Remove all contrast
+  observeEvent(input$RunDESeq,{  
+    
+    RemoveAllCont()
+    
   })
 
 
-  # Infobox Contrast
-  output$InfoContrast <- renderInfoBox({
+
+# Infobox Contrast
+output$InfoContrast <- renderInfoBox({
+  input$AddContrast
+  input$RemoveContrast
+  input$fileContrast
+  
+  res = infoBox("Contrasts", subtitle = h6("At least one contrast (non null) must be defined"), icon = icon("warning"),color = "light-blue",width=NULL,fill=TRUE)
+  test = FALSE
+  filesize = isolate(file.info(namesfile)[,"size"])
+  
+  if(is.na(filesize)){filesize=0}
+  if(filesize!=0) 
+  {
+    tmp = read.table(namesfile,header=TRUE)
+    if(any(as.vector(tmp)!=0)) test = TRUE
+  }
+  
+  if(test) res = infoBox("Contrasts", subtitle = h6("Contrasts OK"), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
     
-    test = FALSE
-    res = infoBox("Contrasts", subtitle = h6("At least one contrast (non null) must be defined"), icon = icon("warning"),color = "light-blue",width=NULL,fill=TRUE)
-    input$AddContrast
-    input$RemoveContrast
-    input$fileContrast
-    
-    filesize = isolate(file.info(namesfile)[,"size"])
-    if(is.na(filesize)){filesize=0}
-    if(filesize!=0) 
-    {
-      tmp = read.table(namesfile,header=TRUE)
-      if(any(as.vector(tmp)!=0)) test = TRUE
-    }
-    
-    if(test) 
-    {
-      res = infoBox("Contrasts", subtitle = h6("Contrasts OK"), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
-    }
     return(res)
   })
 
@@ -1087,6 +1103,10 @@ output$exportVisu <- downloadHandler(
 
   ## Get the diff table
   dataDiff <-reactive({ 
+    input$AddContrast
+    input$RemoveContrast
+    input$fileContrast
+    input$RunDESeq
     
     resDiff = ResDiffAnal()
     filesize = file.info(namesfile)[,"size"]
@@ -1320,9 +1340,15 @@ output$RunButton <- renderUI({
           BaseContrast = read.table(namesfile,header=TRUE)
           SelContrast = input$ContrastList_table_Visu
           padj = Get_log2FC_padj(input,BaseContrast,resDiff, info = NULL)$padj
-          cont = which(colnames(padj)%in%SelContrast)
-          padj = padj[,cont] 
-          selTaxo = names(padj[which(padj<=input$AlphaVal)])
+          Feature_names = rownames(padj)
+          if(ncol(as.matrix(padj))>1)
+          { 
+            cont = which(colnames(padj)%in%SelContrast)
+            padj = padj[,cont] 
+          }
+          ind = which(padj<=input$AlphaVal)
+          if(length(ind)>0) selTaxo = Feature_names[ind]
+          else selTaxo = NULL
           res = selectizeInput("selectTaxoPlot",h6(strong(paste("Select the",input$TaxoSelect, "to plot"))),Available_taxo, selected = selTaxo,multiple = TRUE,options = list(minItems = 2))
         }    
       }      

@@ -214,10 +214,7 @@ body <- dashboardBody(
                      "- Heatmap",br(),img(src="tutorial/tutorial_heatmap.png"),br(),
                      "- Boxplot",br(),img(src="tutorial/tutorial_boxplot.png"),br(),
                      "- Diversity",br(),img(src="tutorial/tutorial_diversity.png"),br(),
-                     "- Rarefaction",br(),img(src="tutorial/tutorial_rarefaction.png"))),
-            tabPanel("6-Visualization - Perspective",
-                     p("'Tree abondance' provides visualization of both differential Genus abondance between differents conditions and the position in the taxonomic tree"),
-                     includeHTML("www/treeAbondance/index.html")))
+                     "- Rarefaction",br(),img(src="tutorial/tutorial_rarefaction.png"))))
     ),
     
     tabItem(tabName = "Upload",
