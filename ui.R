@@ -105,7 +105,7 @@ sidebar <- dashboardSidebar(
     
     menuItemOutput("dymMenu"),
     
-    img(src = "logo.jpg", height = 75.4, width = 200,style="position:absolute;bottom:0;margin:0 0 15px 10px;")
+    img(src = "logo.jpg", height = 49, width = 220,style="position:absolute;bottom:0;margin:0 0 15px 10px;")
     
   )
   
@@ -129,7 +129,11 @@ body <- dashboardBody(
                               
                               Resulting p-values are adjusted according to the Benjamini and Hochberg procedure [Benjamini and Hochberg 1995].
                               
-                              The PCOA is performed with the", a("ade4 R package",href="http://pbil.univ-lyon1.fr/ade4/"), "and plots are generated with", a("ggplot2",href="http://ggplot2.org/"), "or", a("D3.js packages",href="http://d3js.org/"), ".", style = "font-family: 'times'; font-si16pt")),
+                              The PCOA is performed with the", a("ade4 R package",href="http://pbil.univ-lyon1.fr/ade4/"), "and plots are generated with", a("ggplot2",href="http://ggplot2.org/"), "or", a("D3.js packages",href="http://d3js.org/"), ".", style = "font-family: 'times'; font-si16pt"),
+                            p("Hereafter is the global workflow of the SHAMAN application:"),
+                            img(src = "Workflow.png",height = 526, width = 700)
+                            
+                            ),
                    
                    tabPanel("Authors", h3("The main contributors to SHAMAN:"),
                             
@@ -149,7 +153,7 @@ body <- dashboardBody(
                             
                             p("Thanks to the following people for patches and other suggestions for improvements:"),
                             
-                            p(a("Christophe Malabat",href="mailto:christophe.malabat@pasteur.fr"),a("Julien Tap",href="mailto:julien.tap@danone.com"),a(", Anna Zhukova",href="mailto:anna.zhukova@pasteur.fr"), a(", Rachel Torchet",href="mailto:rachel.torchet@pasteur.fr"))
+                            p(a("Christophe Malabat",href="mailto:christophe.malabat@pasteur.fr"),a(", Julien Tap",href="mailto:julien.tap@danone.com"),a(", Anna Zhukova",href="mailto:anna.zhukova@pasteur.fr"), a(", Rachel Torchet",href="mailto:rachel.torchet@pasteur.fr"))
                           ),
                    
                    tabPanel("Citing SHAMAN",p("No papers about SHAMAN have been published yet, but a manuscript is in preparation.",style = "font-family: 'times'; font-si16pt"),
