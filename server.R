@@ -641,7 +641,7 @@ shinyServer(function(input, output,session) {
  observeEvent(input$fileContrast,{ 
     
    AddContFromFile()
-  })
+  },priority=1)
 
 
   ## Remove contrast function
