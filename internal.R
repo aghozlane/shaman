@@ -249,7 +249,7 @@ CheckCountsTable <- function(counts)
     #normalizationFactors(dds) <- normFactors
     sizeFactors(dds)<- normFactors
     dds <- estimateDispersions(dds, fitType=input$fitType)
-    dds <- nbinomWaldTest(dds)
+    dds <- nbinomWaldTest(dds, betaPrior=TRUE, modelMatrixType="expanded")
     return(list(dds = dds,counts=counts,target=target,design=design,normFactors = normFactorsOTU,CT_noNorm=CT_noNorm))
   }
 
