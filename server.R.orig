@@ -1,101 +1,56 @@
 if (!require("Rcpp")){
-  
   install.packages("Rcpp")
-  
 }
-
 if(!require(shinydashboard)){
-  
   install.packages('shinydashboard')
-  
   library(shinydashboard)
-  
 }
-
 if(!require(rjson)){
-  
   install.packages('rjson')
-  
 }
-
 if(!require(devtools)){
-  
   install.packages('devtools')
-  
 }
+<<<<<<< HEAD
+=======
 
 #library(plotly)
-
+>>>>>>> 84440282f7e33f02d6a643f231ab33bf935f89c1
 if (!require(psych)) {
-  
   install.packages('psych')
-  
   library(psych)
-  
 }
-
 if (!require(ggplot2)) {
-  
   install.packages('ggplot2')
-  
   library(ggplot2)
-  
 }
-
 if (!require(vegan)) {
-  
   install.packages('vegan')
-  
   library(vegan)
-  
 }
-
 if (!require(dendextend)) {
-  
   install.packages('dendextend')
-  
   library(dendextend)
-  
 }
-
 if (!require(circlize)) {
-  
   install.packages('circlize')
-  
   library(circlize)
-  
 }
-
 if (!require(d3heatmap)) {
-  
   install.packages('d3heatmap')
-  
   library(d3heatmap)
-  
 }
-
 if (!require(biom)) {
-  
   install.packages('biom')
-  
   library(biom)
-  
 }
-
 if (!require(devtools)) {
-  
   install.packages('devtools')
-  
 }
-
 if (!require(rNVD3)) {
-  
   library(devtools)
-  
   install_github('rNVD3', 'ramnathv')
-  
 }
-
 source("internal.R")
 
 renderDataTable <- DT::renderDataTable
@@ -113,7 +68,7 @@ shinyServer(function(input, output,session) {
   ## Create base for contrast
   rand = floor(runif(1,0,1e9))
   namesfile = tempfile(pattern = "BaseContrast", tmpdir = tempdir(), fileext = "")
-  #paste("/srv/shiny-server/sample-apps/SHAMAN/BaseContrast_",rand,".txt",sep="")
+  #paste("/srv/shiny-server/sample-apps/meta16s/BaseContrast_",rand,".txt",sep="")
   file.create(namesfile,showWarnings=FALSE)
 
   #namesfile = "www/All_Contrast.txt"
@@ -327,7 +282,7 @@ shinyServer(function(input, output,session) {
                  icon = icon("bar-chart-o"), tabName = "AnaStat"
         ),
         menuItem("Visualization",icon = icon("area-chart"), tabName = "Visu"),
-        menuItem("Perspective plots", icon = icon("pie-chart"), tabName = "Krona")
+        menuItem("Krona plot", icon = icon("pie-chart"), tabName = "Krona")
 
       )
      }
@@ -514,6 +469,55 @@ shinyServer(function(input, output,session) {
   )
 
 
+#################################################
+##        FOR PIERRE
+#################################################
+#   
+#   ## Merge counts data
+#   dataMergeCounts_pierre <-reactive({ 
+#     resDiff = ResDiffAnal()
+#     dds = resDiff$dds
+#     counts = round(counts(dds, normalized = TRUE))
+#     
+#     VarInt = input$VisuVarIntBoxP
+#     ind_taxo = rownames(counts)
+#     
+#     tmp_merge = GetDataToPlot(resDiff,VarInt,ind_taxo,aggregate=TRUE)
+#     counts_tmp_combined = tmp_merge$counts
+#     
+#     return(counts_tmp_combined)
+#   })
+# 
+# 
+# 
+# 
+# output$CountsMerge_pierre <- renderDataTable(
+#   dataMergeCounts_pierre(),
+#   options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
+#                  pageLength = 10,scrollX=TRUE
+#   ))
+# 
+# 
+# ## Box for target visualisation
+# output$BoxCountsMerge_pierre <- renderUI({
+#     box(title="Counts table",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
+#         dataTableOutput("CountsMerge_pierre"),
+#         downloadButton('ExportPloted', 'Export')
+#     )
+# })
+# 
+# 
+# ## Export in .csv
+# output$ExportPloted <- downloadHandler(
+#   filename = function() { 'CountsMerge.csv' },
+#   content = function(file){write.csv(dataMergeCounts_pierre(), file, sep='\t')}
+# )
+
+#################################################
+##       END FOR PIERRE
+#################################################
+
+
   ## Box for target visualisation
   output$BoxTarget <- renderUI({
     
@@ -575,7 +579,7 @@ shinyServer(function(input, output,session) {
     resDiff = ResDiffAnal()
     dds = resDiff$dds
     names = resultsNames(dds)
-
+    
     BaseContrast(input,names,namesfile)
     filesize = file.info(namesfile)[,"size"]
     if(is.na(filesize)){filesize=0}
@@ -592,7 +596,7 @@ shinyServer(function(input, output,session) {
     
     AddCont()
     
-  },priority=1)
+  })
 
 
   ## Add contrast function
@@ -641,7 +645,7 @@ shinyServer(function(input, output,session) {
  observeEvent(input$fileContrast,{ 
     
    AddContFromFile()
-  },priority=1)
+  })
 
 
   ## Remove contrast function
@@ -673,46 +677,30 @@ shinyServer(function(input, output,session) {
     
     RemoveCont()
     
-  },priority=1)
-
-  ## Remove all contrasts
-  RemoveAllCont <-eventReactive(input$RunDESeq,{
-    
-      file.create(namesfile,showWarnings=FALSE)
-      updateSelectInput(session, "ContrastList","Contrasts",NULL)
-      updateSelectInput(session, "ContrastList_table","Contrasts",NULL)
-      updateSelectInput(session, "ContrastList_table_Visu","For which contrasts",NULL)
-      updateSelectInput(session, "ContrastList_table_FC","Contrasts (Min = 2)",NULL)
-  })
-
-  ## Remove all contrast
-  observeEvent(input$RunDESeq,{  
-    
-    RemoveAllCont()
-    
   })
 
 
-
-# Infobox Contrast
-output$InfoContrast <- renderInfoBox({
-  input$AddContrast
-  input$RemoveContrast
-  input$fileContrast
-  
-  res = infoBox("Contrasts", subtitle = h6("At least one contrast (non null) must be defined"), icon = icon("warning"),color = "light-blue",width=NULL,fill=TRUE)
-  test = FALSE
-  filesize = isolate(file.info(namesfile)[,"size"])
-  
-  if(is.na(filesize)){filesize=0}
-  if(filesize!=0) 
-  {
-    tmp = read.table(namesfile,header=TRUE)
-    if(any(as.vector(tmp)!=0)) test = TRUE
-  }
-  
-  if(test) res = infoBox("Contrasts", subtitle = h6("Contrasts OK"), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
+  # Infobox Contrast
+  output$InfoContrast <- renderInfoBox({
     
+    test = FALSE
+    res = infoBox("Contrasts", subtitle = h6("At least one contrast (non null) must be defined"), icon = icon("warning"),color = "light-blue",width=NULL,fill=TRUE)
+    input$AddContrast
+    input$RemoveContrast
+    input$fileContrast
+    
+    filesize = isolate(file.info(namesfile)[,"size"])
+    if(is.na(filesize)){filesize=0}
+    if(filesize!=0) 
+    {
+      tmp = read.table(namesfile,header=TRUE)
+      if(any(as.vector(tmp)!=0)) test = TRUE
+    }
+    
+    if(test) 
+    {
+      res = infoBox("Contrasts", subtitle = h6("Contrasts OK"), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
+    }
     return(res)
   })
 
@@ -755,7 +743,7 @@ output$InfoContrast <- renderInfoBox({
     
     if(!is.null(resDiff))
     { 
-      box(title="Contrasts (advanced user)",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = FALSE,
+      box(title="Contrasts (advanced user)",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
           fluidRow(
             column(width=12,
                    fileInput('fileContrast', h6(strong('Select a file of contrasts')),width="60%")
@@ -855,7 +843,7 @@ output$InfoContrast <- renderInfoBox({
   ## Run DESeq2 via RunDESeq button
   observeEvent(input$RunDESeq,{  
     
-    withProgress(message="Analysis in progress...",ResDiffAnal())
+    ResDiffAnal()
     
   })
 
@@ -910,13 +898,11 @@ output$InfoContrast <- renderInfoBox({
   
   output$VarIntDiag <- renderUI({
     
-    target=dataInputTarget()
+    int = input$InterestVar
+    if(length(int)>=2) intSel = int[c(1,2)]
+    else intSel = int[1]
     
-    if(!is.null(target)) 
-    {
-      namesTarget = colnames(target)[2:ncol(target)]
-      selectizeInput("VarInt",h6(strong("Select the variables of interest (max 2)")),namesTarget, selected = namesTarget[1],multiple = TRUE,options = list(maxItems = 2))
-    }
+    selectizeInput("VarInt",h6(strong("Select the variables of interest (max 2)")),int, selected = intSel,multiple = TRUE,options = list(maxItems = 2))
     
   })
   
@@ -940,7 +926,7 @@ output$InfoContrast <- renderInfoBox({
     
     resDiff = ResDiffAnal()
     Plot_diag_Eigen(input,resDiff)
-  },height =400)
+  },height = 400)
 
   SizeFactor_table <-reactive({ 
     res = ResDiffAnal()
@@ -980,7 +966,7 @@ output$InfoContrast <- renderInfoBox({
 
   #### Export Diag
   output$exportdiag <- downloadHandler(
-    filename <- function() { paste(input$DiagPlot,paste('SHAMAN',input$Exp_format,sep="."),sep="_") },
+    filename <- function() { paste(input$DiagPlot,paste('meta16S',input$Exp_format,sep="."),sep="_") },
     content <- function(file) {
       if(input$Exp_format=="png") png(file, width = input$widthDiagExport, height = input$heightDiagExport)
       if(input$Exp_format=="pdf") pdf(file, width = input$widthDiagExport/96, height = input$heightDiagExport/96)
@@ -1001,7 +987,7 @@ output$InfoContrast <- renderInfoBox({
   ## PDF  
 ## PDF  
 output$exportPDFVisu <- downloadHandler(
-  filename <- function() { paste("test",'SHAMAN.ps',sep="_")},
+  filename <- function() { paste("test",'meta16S.ps',sep="_")},
   content <- function(file) {
     resDiff = ResDiffAnal()
     filesize = file.info(namesfile)[,"size"]
@@ -1021,7 +1007,7 @@ output$exportPDFVisu <- downloadHandler(
   
   ## PNG
   output$exportPNGVisu <- downloadHandler(
-    filename <- function() { paste("test",'SHAMAN.png',sep="_") },
+    filename <- function() { paste("test",'meta16S.png',sep="_") },
     content <- function(file) {
       png(file, width = 600, height = 400)
       Plot_Visu(input,ResDiffAnal())
@@ -1031,7 +1017,7 @@ output$exportPDFVisu <- downloadHandler(
 
 #### Export Visu
 output$exportVisu <- downloadHandler(
-  filename <- function() { paste(input$PlotVisuSelect,paste('SHAMAN',input$Exp_format_Visu,sep="."),sep="_") },
+  filename <- function() { paste(input$PlotVisuSelect,paste('meta16S',input$Exp_format_Visu,sep="."),sep="_") },
   content <- function(file) {
     filesize = file.info(namesfile)[,"size"]
     if(is.na(filesize)){filesize=0}
@@ -1103,10 +1089,6 @@ output$exportVisu <- downloadHandler(
 
   ## Get the diff table
   dataDiff <-reactive({ 
-    input$AddContrast
-    input$RemoveContrast
-    input$fileContrast
-    input$RunDESeq
     
     resDiff = ResDiffAnal()
     filesize = file.info(namesfile)[,"size"]
@@ -1171,7 +1153,7 @@ output$exportVisu <- downloadHandler(
 
 #### Export diff table
 output$exportDiffTable <- downloadHandler(
-  filename = function() {paste(input$WhichExportTable,input$ContrastList_table,'SHAMAN.csv',sep="_")},
+  filename = function() {paste(input$WhichExportTable,input$ContrastList_table,'meta16S.csv',sep="_")},
   content = function(file){
     switch(input$WhichExportTable,
            "Complete" = write.csv(dataDiff()$complete, file),
@@ -1223,7 +1205,7 @@ output$RunButton <- renderUI({
 
   output$PlotVisuBar <- renderChart({
     resDiff = ResDiffAnal()
-    if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Barplot(input,resDiff)$plotd3)
+    if(!is.null(resDiff$dds)) Plot_Visu_Barplot(input,resDiff)$plotd3
   },env=new.env())
 
 # output$PlotVisu <- renderPlotly({
@@ -1238,11 +1220,11 @@ output$RunButton <- renderUI({
     resplot = NULL
     if(!is.null(resDiff$dds))
     { 
-      if(input$HeatMapType=="Counts") resplot = withProgress(message="Loading...",Plot_Visu_Heatmap(input,resDiff))
+      if(input$HeatMapType=="Counts") resplot = Plot_Visu_Heatmap(input,resDiff)
       if(input$HeatMapType=="Log2FC" && filesize!=0)
       { 
         BaseContrast = read.table(namesfile,header=TRUE)
-        resplot = withProgress(message="Loading...",Plot_Visu_Heatmap_FC(input,BaseContrast,resDiff))
+        resplot = Plot_Visu_Heatmap_FC(input,BaseContrast,resDiff)
       }
     }
     return(resplot)
@@ -1252,13 +1234,13 @@ output$RunButton <- renderUI({
 
   output$Boxplot <- renderPlot({
     resDiff = ResDiffAnal()
-    if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Boxplot(input,resDiff))
+    if(!is.null(resDiff$dds)) Plot_Visu_Boxplot(input,resDiff)
   },height=reactive(input$heightVisu))
 
 
   output$DiversityPlot <- renderPlot({
     resDiff = ResDiffAnal()
-    if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Diversity(input,resDiff,type="point"))
+    if(!is.null(resDiff$dds)) Plot_Visu_Diversity(input,resDiff,type="point")
   })
   
   ranges <- reactiveValues(x = NULL, y = NULL)
@@ -1266,7 +1248,7 @@ output$RunButton <- renderUI({
   output$RarefactionPlot <- renderPlot({
     resDiff = ResDiffAnal()
     taxo = input$TaxoSelect
-    if(!is.null(resDiff)) withProgress(message="Loading...",Plot_Visu_Rarefaction(input,resDiff,ranges$x,ranges$y,ylab=taxo))
+    if(!is.null(resDiff)) Plot_Visu_Rarefaction(input,resDiff,ranges$x,ranges$y,ylab=taxo)
   }, height = reactive(input$heightVisu))
   
   observeEvent(input$RarefactionPlot_dblclick, {
@@ -1299,7 +1281,7 @@ output$RunButton <- renderUI({
     res=NULL
     if(input$PlotVisuSelect=="Barplot") res =  showOutput("PlotVisuBar")
     if(input$PlotVisuSelect=="Heatmap") res =  d3heatmapOutput("heatmap", height = input$heightVisu+10)
-    if(input$PlotVisuSelect=="Boxplot") res = plotOutput("Boxplot", height = input$heightVisu+10)
+    if(input$PlotVisuSelect=="Boxplot") res =  plotOutput("Boxplot", height = input$heightVisu+10)
     if(input$PlotVisuSelect=="Diversity") res =  plotOutput("DiversityPlot", height = input$heightVisu+10)
     if(input$PlotVisuSelect=="Rarefaction") res = plotOutput("RarefactionPlot",dblclick = "RarefactionPlot_dblclick",brush = brushOpts(id = "RarefactionPlot_brush",resetOnNew = TRUE), height = input$heightVisu+10)
     
@@ -1340,15 +1322,9 @@ output$RunButton <- renderUI({
           BaseContrast = read.table(namesfile,header=TRUE)
           SelContrast = input$ContrastList_table_Visu
           padj = Get_log2FC_padj(input,BaseContrast,resDiff, info = NULL)$padj
-          Feature_names = rownames(padj)
-          if(ncol(as.matrix(padj))>1)
-          { 
-            cont = which(colnames(padj)%in%SelContrast)
-            padj = padj[,cont] 
-          }
-          ind = which(padj<=input$AlphaVal)
-          if(length(ind)>0) selTaxo = Feature_names[ind]
-          else selTaxo = NULL
+          cont = which(colnames(padj)%in%SelContrast)
+          padj = padj[,cont] 
+          selTaxo = names(padj[which(padj<=input$AlphaVal)])
           res = selectizeInput("selectTaxoPlot",h6(strong(paste("Select the",input$TaxoSelect, "to plot"))),Available_taxo, selected = selTaxo,multiple = TRUE,options = list(minItems = 2))
         }    
       }      
@@ -1361,17 +1337,11 @@ output$RunButton <- renderUI({
   
   output$VarIntVisu <- renderUI({
     
-#     int = input$InterestVar
-#     if(length(int)>=2) intSel = int[c(1,2)]
-#     else intSel = int[1]
-        
-      target=dataInputTarget()
-      
-      if(!is.null(target)) 
-      {
-        namesTarget = colnames(target)[2:ncol(target)]
-        selectizeInput("VisuVarInt",h6(strong("Select the variables of interest")),namesTarget, selected = namesTarget[1],multiple = TRUE)
-      }
+    int = input$InterestVar
+    if(length(int)>=2) intSel = int[c(1,2)]
+    else intSel = int[1]
+    
+    selectizeInput("VisuVarInt",h6(strong("Select the variables of interest")),int, selected = intSel,multiple = TRUE)
     
   })
   #####################################################
@@ -1387,7 +1357,7 @@ output$RunButton <- renderUI({
       print(data$counts)
     krona_table=tempfile(pattern = "krona", tmpdir = tempdir(), fileext = "")
     url=paste(krona_table, ".html", sep="")
-    #system(paste("export PERL5LIB=/home/aghozlan/workspace/SHAMAN_App/KronaTools-2.6/lib:$PERL5LIB; /home/aghozlan/workspace/META10S_App/krona_bin/bin/ktImportText", krona_table))
+    #system(paste("export PERL5LIB=/home/aghozlan/workspace/META16S_App/KronaTools-2.6/lib:$PERL5LIB; /home/aghozlan/workspace/META10S_App/krona_bin/bin/ktImportText", krona_table))
     system(paste("ktImportText", krona_table))
     refs <- paste0("<a href='",  url, "' target='_blank'>krona</a>")
     

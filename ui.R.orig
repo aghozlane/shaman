@@ -214,7 +214,16 @@ body <- dashboardBody(
                      "- Heatmap",br(),img(src="tutorial/tutorial_heatmap.png"),br(),
                      "- Boxplot",br(),img(src="tutorial/tutorial_boxplot.png"),br(),
                      "- Diversity",br(),img(src="tutorial/tutorial_diversity.png"),br(),
+<<<<<<< HEAD
                      "- Rarefaction",br(),img(src="tutorial/tutorial_rarefaction.png"))))
+=======
+                     "- Rarefaction",br(),img(src="tutorial/tutorial_rarefaction.png")))
+            ,
+            tabPanel("6-Visualization - Perspective",
+                    p("'Tree abundance' provides visualization of both differential Genus abundance between differents conditions and the position in the taxonomic tree"),
+                     includeHTML("www/treeAbondance/index.html")))
+            
+>>>>>>> dbe2e18f675306efc627dadb8744e72213bdcd18
     ),
     
     tabItem(tabName = "Upload",
@@ -446,7 +455,7 @@ body <- dashboardBody(
                          uiOutput("ExportTableButton")   
                      )
             )
-            ) 
+            )
     ),
   
   #### Data Viz
@@ -615,21 +624,9 @@ body <- dashboardBody(
   tabItem(tabName = "Krona",
  
          fluidRow(
-            column(width=3,
-                   p(strong("Krona plot")),
-                   img(src="Krona.png",height = 200, width = 220),
-                   a(href = "test_krona.html",target="_blank", "Click Here!")
-#                    tableOutput("krona") 
-
-),
-            column(width=3,
-            p(strong("Tree abundance")),
-            img(src="Tree.png",height = 200, width = 220),
-            a(href = "http://genopole.pasteur.fr/SynTView/flash/TreeAbundance",target="_blank", "Click Here!")
-            )
-            )
+            column(width=3,tableOutput("krona") )
  #includeHTML("file:///home/aghozlan/workspace/SHAMAN_App/www/text.krona.html")
-            
+          )  
   )       
               
              )
