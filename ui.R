@@ -75,7 +75,8 @@ body <- dashboardBody(
     tabItem(tabName = "Home",
             div(style="width:100% ; max-width: 1200px",
               tabBox(title="Welcome to SHAMAN", id="tabset1", width=NULL,
-                   tabPanel("About", p("SHAMAN is a SHiny application for Metagenomic ANalysis including the normalization,
+                   tabPanel("About", tags$script(type="text/javascript", language="javascript", src="google-analytics.js"),
+                            p("SHAMAN is a SHiny application for Metagenomic ANalysis including the normalization,
                                        the differential analysis and mutiple visualization.",style = "font-family: 'times'; font-si16pt"),
                             p("SHAMAN is based on DESeq2 R package", a("[Anders and Huber 2010]", href="http://www.ncbi.nlm.nih.gov/pubmed/20979621"), "for the analysis of metagenomic data, as suggested in", a("[McMurdie and Holmes 2014]",href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3974642/"),
                               ". SHAMAN robustly identifies the differential abundant genera with the Generalized Linear Model implemented in DESeq2", a("[Love 2014]", href="http://www.ncbi.nlm.nih.gov/pubmed/25516281"),".
@@ -545,7 +546,7 @@ body <- dashboardBody(
  )
 )
   ## GOOGLE ANALYTIC
- tags$head(includeScript("google-analytics.js"))
+ #tags$head(includeScript("google-analytics.js"))
   ## Logo SHAMAN
   dbHeader <- dashboardHeader(title = "SHAMAN")
   dbHeader$children[[2]]$children <-  tags$a(tags$img(src='akuaku.png',height='40',width='50',style="margin:5px 0 5px 0;",align='left'), tags$h3("SHAMAN",style="font-family:Purisa; margin:15px 25px 5px 0;color:white;"))

@@ -59,6 +59,7 @@ if (!require(devtools)) {
 if (!require(rNVD3)) {
   library(devtools)
   install_github('rNVD3', 'ramnathv')
+  library(rNVD3)
 }
 
 # Allow to upload 50M files
