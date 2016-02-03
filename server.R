@@ -1,101 +1,68 @@
 if (!require("Rcpp")){
-  
   install.packages("Rcpp")
-  
 }
 
 if(!require(shinydashboard)){
-  
   install.packages('shinydashboard')
-  
   library(shinydashboard)
-  
 }
 
 if(!require(rjson)){
-  
   install.packages('rjson')
-  
 }
 
 if(!require(devtools)){
-  
   install.packages('devtools')
-  
 }
 
 #library(plotly)
 
 if (!require(psych)) {
-  
   install.packages('psych')
-  
   library(psych)
-  
 }
 
 if (!require(ggplot2)) {
-  
   install.packages('ggplot2')
-  
   library(ggplot2)
-  
 }
 
 if (!require(vegan)) {
-  
   install.packages('vegan')
-  
   library(vegan)
-  
 }
 
 if (!require(dendextend)) {
-  
   install.packages('dendextend')
-  
   library(dendextend)
-  
 }
 
 if (!require(circlize)) {
-  
   install.packages('circlize')
-  
   library(circlize)
-  
 }
 
 if (!require(d3heatmap)) {
-  
   install.packages('d3heatmap')
-  
   library(d3heatmap)
-  
 }
 
 if (!require(biom)) {
-  
   install.packages('biom')
-  
   library(biom)
-  
 }
 
 if (!require(devtools)) {
-  
   install.packages('devtools')
-  
 }
 
 if (!require(rNVD3)) {
-  
   library(devtools)
-  
   install_github('rNVD3', 'ramnathv')
-  
 }
 
+# Allow to upload 50M files
+options(shiny.maxRequestSize=50*1024^2) 
 source("internal.R")
 
 renderDataTable <- DT::renderDataTable
@@ -246,13 +213,13 @@ shinyServer(function(input, output,session) {
     data = tmp$data
     check = tmp$check
     cond = (!is.null(data$counts) && nrow(data$counts)>0)
-    res =infoBox(h6(strong("Counts table")), subtitle = h6("Load the counts table") ,color = "light-blue",width=NULL,fill=TRUE, icon = icon("upload"))
+    res =infoBox(h6(strong("Count table")), subtitle = h6("Load the count table") ,color = "light-blue",width=NULL,fill=TRUE, icon = icon("upload"))
     
     if(cond)
     {
-      if(!is.null(check$CheckCounts$Warning)) res = infoBox(h6(strong("Counts table")), subtitle = h6(check$CheckCounts$Warning), icon = icon("warning"),color = "orange",width=NULL,fill=TRUE)
-      if(!is.null(check$CheckCounts$Error)) res = infoBox(h6(strong("Counts table")), subtitle = h6(check$CheckCounts$Error), icon = icon("thumbs-o-down"),color = "red",width=NULL,fill=TRUE)
-      if(is.null(check$CheckCounts$Error) && is.null(check$CheckCounts$Warning)) res = infoBox(h6(strong("Counts table")), subtitle = h6(paste("Format of the counts table seems to be OK")), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
+      if(!is.null(check$CheckCounts$Warning)) res = infoBox(h6(strong("Count table")), subtitle = h6(check$CheckCounts$Warning), icon = icon("warning"),color = "orange",width=NULL,fill=TRUE)
+      if(!is.null(check$CheckCounts$Error)) res = infoBox(h6(strong("Count table")), subtitle = h6(check$CheckCounts$Error), icon = icon("thumbs-o-down"),color = "red",width=NULL,fill=TRUE)
+      if(is.null(check$CheckCounts$Error) && is.null(check$CheckCounts$Warning)) res = infoBox(h6(strong("Count table")), subtitle = h6(paste("Format of the count table seems to be OK")), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
     }
     
     return(res)
@@ -367,8 +334,8 @@ shinyServer(function(input, output,session) {
     
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0)
     {
-      tabBox(width = NULL, selected = "Counts table",
-             tabPanel("Counts table",dataTableOutput("DataCounts")),
+      tabBox(width = NULL, selected = "Count table",
+             tabPanel("Count table",dataTableOutput("DataCounts")),
              tabPanel("Taxonomy",dataTableOutput("DataTaxo"))  
       )
     }
@@ -463,7 +430,7 @@ shinyServer(function(input, output,session) {
       #### Ajout fontion check target
       infoBox(h6(strong("Target file")), subtitle = h6("Your target file is OK"), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
     }
-    else infoBox(h6(strong("Target file")), subtitle = h6("Label of the target file must correspond to counts table column names") ,color = "light-blue",width=NULL,fill=TRUE, icon = icon("warning"))
+    else infoBox(h6(strong("Target file")), subtitle = h6("Label of the target file must correspond to count table column names") ,color = "light-blue",width=NULL,fill=TRUE, icon = icon("warning"))
   })
 
 
@@ -492,7 +459,7 @@ shinyServer(function(input, output,session) {
     
     if(!is.null(counts) && taxo != "...")
     {
-      box(title=paste("Counts table (",taxo,")",sep=""),width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
+      box(title=paste("Count table (",taxo,")",sep=""),width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
           dataTableOutput("CountsMerge"),
           downloadButton('ExportCounts', 'Export normalised counts'),
           downloadButton('ExportRelative', 'Export relative abundance')
@@ -853,10 +820,8 @@ output$InfoContrast <- renderInfoBox({
 
 
   ## Run DESeq2 via RunDESeq button
-  observeEvent(input$RunDESeq,{  
-    
+  observeEvent(input$RunDESeq,{
     withProgress(message="Analysis in progress...",ResDiffAnal())
-    
   })
 
   

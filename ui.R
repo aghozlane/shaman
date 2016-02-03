@@ -6,167 +6,104 @@ if(!require(shinydashboard)){
 
 if (!require(psych)) {
   install.packages('psych')
-  
   library(psych)
-  
 }
 
 if (!require(ggplot2)) {
-  
   install.packages('ggplot2')
-  
   library(ggplot2)
-  
 }
 
 if (!require(vegan)) {
-  
   install.packages('vegan')
-  
   library(vegan)
-  
 }
 
 if (!require(dendextend)) {
-  
   install.packages('dendextend')
-  
   library(dendextend)
-  
 }
 
 if (!require(circlize)) {
-  
   install.packages('circlize')
-  
   library(circlize)
-  
 }
 
 if (!require(biom)) {
-  
   install.packages('biom')
-  
   library(biom)
-  
 }
 
 if (!require(DT)) {
-  
   install.packages('DT')
-  
   library(DT)
-  
 }
 
 if (!require(RColorBrewer)) {
-  
   install.packages('RColorBrewer')
-  
   library(RColorBrewer)
-  
 }
 
 if (!require(gplots)) {
-  
   install.packages('gplots')
-  
   library(gplots)
-  
 }
 
 if (!require(DESeq2)) {
-  
   source("https://bioconductor.org/biocLite.R")
-  
   biocLite("DESeq2")
-  
   library(DESeq2)
-  
 }
 
 if (!require(ade4)) {
-  
   install.packages('ade4')
-  
   library(ade4)
-  
 }
 
 sidebar <- dashboardSidebar(
-  
   sidebarMenu(
-    
     menuItem("Home", tabName = "Home", icon = icon("home")),
-    
     menuItem("Tutorial", tabName = "Tutorial", icon = icon("book")),
-    
     menuItem("Upload your data", tabName = "Upload", icon = icon("upload")),
-    
     menuItemOutput("dymMenu"),
-    
     img(src = "logo.jpg", height = 49, width = 220,style="position:absolute;bottom:0;margin:0 0 15px 10px;")
-    
   )
-  
 )
 
 body <- dashboardBody(
-  
   tabItems(
-    
     tabItem(tabName = "Home",
-            
-            tabBox(title="Welcome to SHAMAN", id="tabset1", width = 12,
-                   
+            div(style="width:100% ; max-width: 1200px",
+              tabBox(title="Welcome to SHAMAN", id="tabset1", width=NULL,
                    tabPanel("About", p("SHAMAN is a SHiny application for Metagenomic ANalysis including the normalization,
-                                       
                                        the differential analysis and mutiple visualization.",style = "font-family: 'times'; font-si16pt"),
-                            
                             p("SHAMAN is based on DESeq2 R package", a("[Anders and Huber 2010]", href="http://www.ncbi.nlm.nih.gov/pubmed/20979621"), "for the analysis of metagenomic data, as suggested in", a("[McMurdie and Holmes 2014]",href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3974642/"),
-                              
                               ". SHAMAN robustly identifies the differential abundant genera with the Generalized Linear Model implemented in DESeq2", a("[Love 2014]", href="http://www.ncbi.nlm.nih.gov/pubmed/25516281"),".
-                              
                               Resulting p-values are adjusted according to the Benjamini and Hochberg procedure [Benjamini and Hochberg 1995].
-                              
-                              The PCOA is performed with the", a("ade4 R package",href="http://pbil.univ-lyon1.fr/ade4/"), "and plots are generated with", a("ggplot2",href="http://ggplot2.org/"), "or", a("D3.js packages",href="http://d3js.org/"), ".", style = "font-family: 'times'; font-si16pt"),
+                              The PCOA is performed with the", a("ade4 R package",href="http://pbil.univ-lyon1.fr/ade4/"), "and plots are generated with", a("ggplot2",href="http://ggplot2.org/"), "or", a("D3.js packages",href="http://d3js.org/"), ".
+                              A presentation about SHAMAN is available", a("here",target="_blank",href="shaman_presentation.pdf"),style = "font-family: 'times'; font-si16pt"),
                             p("Hereafter is the global workflow of the SHAMAN application:"),
-                            img(src = "Workflow.png",height = 526, width = 700)
-                            
+                            img(src = "Workflow.png",width = "100%",style="max-width: 1000px")
                             ),
-                   
                    tabPanel("Authors", h3("The main contributors to SHAMAN:"),
-                            
                             p(a("Stevenn Volant", href="mailto:stevenn.volant@pasteur.fr"), "(Initiator, coding, testing, documentation, evaluation)"),
-                            
                             p(a("Amine Ghozlane",href="mailto:amine.ghozlane@pasteur.fr"), "(Coding, testing, documentation, evaluation)"),
-                            
                             p(a("Hugo Varet",href="mailto:hugo.varet@pasteur.fr"), "(Coding, testing, feature suggestions)"),
-                            
                             p(a("Pierre Lechat",href="mailto:pierre.lechat@pasteur.fr"), "(Coding, testing, feature suggestions)"),
-                            
                             p(a("Marie-Agnès Dillies",href="mailto:marie-agnes.dillies@pasteur.fr"), "(Evaluation)"),
-                            
                             p(a("Sean Kennedy",href="mailto:sean.kennedy@pasteur.fr"), "(Evaluation)"),
-                            
                             h3("Acknowledgements"),
-                            
                             p("Thanks to the following people for patches and other suggestions for improvements:"),
-                            
                             p(a("Christophe Malabat",href="mailto:christophe.malabat@pasteur.fr"),a(", Julien Tap",href="mailto:julien.tap@danone.com"),a(", Anna Zhukova",href="mailto:anna.zhukova@pasteur.fr"), a(", Rachel Torchet",href="mailto:rachel.torchet@pasteur.fr"))
                           ),
-                   
                    tabPanel("Citing SHAMAN",p("No papers about SHAMAN have been published yet, but a manuscript is in preparation.",style = "font-family: 'times'; font-si16pt"),
-                            
-                            p("For now, if you have any comments, questions or suggestions, or want to use SHAMAN please contact", a("Dr. Marie-Agnès Dillies", href="mailto:marie-agnes.dillies@pasteur.fr"),".", style = "font-family: 'times'; font-si16pt; color:red"))
-            )
-                   
-    ),      
+                            p("For now, if you have any comments, questions or suggestions, or want to use SHAMAN please contact authors", a("here", href="mailto:shaman@pasteur.fr"),".", style = "font-family: 'times'; font-si16pt; color:red")
+            )))
+    ),
 
-    
     tabItem(tabName = "Tutorial",
-            tabBox(title="How to use SHAMAN", id="tabset1", width = 12,
-                   
+            div(style="width:100% ; max-width: 1200px",
+            tabBox(title="How to use SHAMAN", id="tabset1", width =NULL,
             tabPanel("Introduction",
             p(" You can test SHAMAN with the dataset from", a("[Tap et al. 2015]",href="http://www.ncbi.nlm.nih.gov/pubmed/26235304"),
               ", which is available", a("here",target="_blank",href="Alimintest.zip"),"."),
@@ -175,46 +112,46 @@ body <- dashboardBody(
               "- the otu annotation table : Alimintest_otu_table.csv,", br(),
               "- the experimental design : Alimintest_target.csv,", br(),
               "- the contrast table : Alimintest_contrasts.csv."),
-            p("Two groups of person follow two  strict diet periods that involve the intake of 40g following 10g of fiber per day, or 10g of fiber after a 40g fiber intake period :"),
-            img(src = "tutorial/FigS1.png",height = 400, width = 700),
+            p("Two groups of person follow two  strict diet periods that involve the intake of 40g following 10g of fiber per day, or 10g of fiber after a 40g fiber intake period:"),
+            img(src = "tutorial/FigS1.png",width = "100%",style="max-width: 900px"),
             p("The 16S rRNA (V3 - V4 regions) from fece samples was sequenced at time stamp : 2, 3, 4 and 5.", br(),
               "The analysis will consider the different impact of the different fiber intake and the comparison to patient metabolic data.")),
             tabPanel("1-Load 16S data",
-            p("The first step consist to load the count matrix and the annotation table as follow :"),
+            p("The first step consists to load the count matrix and the annotation table as follow :"),
             p("- Select 'Upload your data'", br(),
-              "- Load the counts table :",br(), img(src = "tutorial/tutorial_upload1.png"),br(),
-              "- Load the annotation table :", br(), img(src = "tutorial/tutorial_upload2.png"),br(),
+              "- Load the count table :",br(), img(src = "tutorial/tutorial_upload1.png",width = "100%",style="max-width: 900px"),hr(),
+              "- Load the annotation table :", br(), img(src = "tutorial/tutorial_upload2.png",width = "100%",style="max-width: 900px"),hr(),
               "- When successfully loaded, the tables are accessible as bellow :",br(),
-              img(src = "tutorial/tutorial_upload3.png"),img(src = "tutorial/tutorial_upload4.png"))),
+              img(src = "tutorial/tutorial_upload3.png",width = "100%",style="max-width: 600px"),img(src = "tutorial/tutorial_upload4.png",width = "100%",style="max-width: 600px"))),
             tabPanel("2-Differential analysis",
-            p("The second step consist to load the experimental design and the contrast table as follow :"),
+            p("The second step consists to load the experimental design and the contrast table as follow :"),
             p("- Select 'Run differential analysis'",br(),
-              "- Load the target file :",br(),img(src = "tutorial/tutorial_target.png"),br(),
-              "- Identify the taxonomy level where the analysis will be performed :",br(),img(src = "tutorial/tutorial_target1.png"),br(),
-              "- Identify the interactions :",br(),img(src = "tutorial/tutorial_target2.png"),br(),
-              "- Run the analysis :",br(),img(src = "tutorial/tutorial_target3.png"),br(),
-              "- When successfully loaded, the tables are accessible as bellow :",br(),img(src = "tutorial/tutorial_target4.png")),
-            p("- Finaly, load the contrast file :",br(),img(src = "tutorial/tutorial_contraste.png"),br(),
-              "- Contrasts can be visualized as follow :",br(),img(src = "tutorial/tutorial_contraste1.png"))),
+              "- Load the target file :",br(),img(src = "tutorial/tutorial_target.png",width = "100%",style="max-width: 800px"),hr(),
+              "- Identify the taxonomy level where the analysis will be performed :",br(),img(src = "tutorial/tutorial_target1.png",width = "100%",style="max-width: 800px"),hr(),
+              "- Identify the interactions :",br(),img(src = "tutorial/tutorial_target2.png",width = "100%",style="max-width: 800px"),hr(),
+              "- Run the analysis :",br(),img(src = "tutorial/tutorial_target3.png",width = "100%",style="max-width: 800px"),hr(),
+              "- When successfully loaded, the tables are accessible as bellow :",br(),img(src = "tutorial/tutorial_target4.png",width = "100%",style="max-width: 800px")),hr(),
+            p("- Finally, load the contrast file :",br(),img(src = "tutorial/tutorial_contraste.png",width = "100%",style="max-width: 800px"),hr(),
+              "- Contrasts can be visualized as follow :",br(),img(src = "tutorial/tutorial_contraste1.png",width = "100%",style="max-width: 400px"))),
             tabPanel("3-Diagnostic plots",
-            p("'Diagnostic plots' section provides several visualization to control the analysis",br(),
-              "- Total mapped read count",br(),img(src="tutorial/tutorial_total_barplot.png"),br(),
-              "- Nul barplot count",br(),img(src="tutorial/tutorial_nul_barplot.png"),br(),
-              "- Maj taxonomy count",br(),img(src="tutorial/tutorial_maj_taxonomy.png"),br(),
-              "- Density of counts",br(),img(src="tutorial/tutorial_density.png"),br(),
-              "- Size factors vs total number of reads",br(),img(src="tutorial/tutorial_size_factor.png"),br(),
-              "- PCA",br(),img(src="tutorial/tutorial_pca.png"),br(),
-              "- PCOA",br(),img(src="tutorial/tutorial_pcoa.png"),br(),
-              "- Clustering",br(),img(src="tutorial/tutorial_clustering.png"))),
+            p("'Diagnostic plots' section provides several visualizations to control the analysis",br(),
+              "- Total mapped read count",br(),img(src="tutorial/tutorial_total_barplot.png",width = "100%",style="max-width: 900px"),hr(),
+              "- Nul barplot count",br(),img(src="tutorial/tutorial_nul_barplot.png",width = "100%",style="max-width: 900px"),hr(),
+              "- Maj taxonomy count",br(),img(src="tutorial/tutorial_maj_taxonomy.png",width = "100%",style="max-width: 900px"),hr(),
+              "- Density of counts",br(),img(src="tutorial/tutorial_density.png",width = "100%",style="max-width: 900px"),hr(),
+              "- Size factors vs total number of reads",br(),img(src="tutorial/tutorial_size_factor.png",width = "100%",style="max-width: 900px"),hr(),
+              "- PCA",br(),img(src="tutorial/tutorial_pca.png",width = "100%",style="max-width: 900px"),hr(),
+              "- PCOA",br(),img(src="tutorial/tutorial_pcoa.png",width = "100%",style="max-width: 900px"),hr(),
+              "- Clustering",br(),img(src="tutorial/tutorial_clustering.png",width = "100%",style="max-width: 900px"))),
             tabPanel("4-Differential analysis results",
-            img(src = "tutorial/tutorial_table.png")),
+            img(src = "tutorial/tutorial_table.png",width = "100%",style="max-width: 900px")),
             tabPanel("5-Visualization",
                      p("'Diagnostic plots' section provides several visualization to control the analysis",br(),
-                     "- Barplot",br(),img(src="tutorial/tutorial_barplot.png"),br(),
-                     "- Heatmap",br(),img(src="tutorial/tutorial_heatmap.png"),br(),
-                     "- Boxplot",br(),img(src="tutorial/tutorial_boxplot.png"),br(),
-                     "- Diversity",br(),img(src="tutorial/tutorial_diversity.png"),br(),
-                     "- Rarefaction",br(),img(src="tutorial/tutorial_rarefaction.png"))))
+                     "- Barplot",br(),img(src="tutorial/tutorial_barplot.png",width = "100%",style="max-width: 900px"),hr(),
+                     "- Heatmap",br(),img(src="tutorial/tutorial_heatmap.png",width = "100%",style="max-width: 900px"),hr(),
+                     "- Boxplot",br(),img(src="tutorial/tutorial_boxplot.png",width = "100%",style="max-width: 900px"),hr(),
+                     "- Diversity",br(),img(src="tutorial/tutorial_diversity.png",width = "100%",style="max-width: 900px"),hr(),
+                     "- Rarefaction",br(),img(src="tutorial/tutorial_rarefaction.png",width = "100%",style="max-width: 900px")))))
     ),
     
     tabItem(tabName = "Upload",
@@ -227,10 +164,10 @@ body <- dashboardBody(
             br(),
              fluidRow(
                 box(title="Select your file format",width = 3,status = "success", solidHeader = TRUE,collapsible = FALSE,
-                  selectInput("FileFormat","",c("Counts table & taxonomy"="fileCounts","BIOM file"="fileBiom"),selected="fileCounts")
+                  selectInput("FileFormat","",c("Count table & taxonomy"="fileCounts","BIOM file"="fileBiom"),selected="fileCounts")
                 ),
                 conditionalPanel(condition="input.FileFormat=='fileCounts'",
-                  box(title="Load the counts table",width = 3,height = "250px", status = "primary", solidHeader = TRUE,collapsible = FALSE,
+                  box(title="Load the count table",width = 3,height = "250px", status = "primary", solidHeader = TRUE,collapsible = FALSE,
                     fileInput('fileCounts', h6(strong('Select your file')),width="100%")
                   ),
                   
@@ -327,11 +264,10 @@ body <- dashboardBody(
                        ),
                 column(width=4,
                        uiOutput("contrastDefined")
-                )  
-                ) 
+                )
+                )
               )
             )
-            
     ),
     tabItem(tabName = "DiagPlotTab",
             fluidRow(
@@ -461,18 +397,14 @@ body <- dashboardBody(
               box(title = "Select your plot",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = FALSE,collapsed= FALSE,
                   selectizeInput("PlotVisuSelect","",c("Barplot"="Barplot","Heatmap"="Heatmap","Boxplot"="Boxplot","Diversity"="Diversity","Rarefaction"="Rarefaction"),selected = "Barplot")
               ),
-              
-              
-              
+
+
               ########################################################################
               ###
               ###               Options Visualization
               ###
               ########################################################################
-              
-              
               box(title = "Options",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
-                  
                   conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction'",
                                     uiOutput("VarIntVisu")
                   ),
@@ -486,8 +418,6 @@ body <- dashboardBody(
                                    uiOutput("TaxoToPlotVisu")
                   ),
 
-                  
-                  
                 ##################
                 ## BARPLOT
                 ##################
@@ -528,20 +458,15 @@ body <- dashboardBody(
                                  uiOutput("SelectVarBoxDiv")
                 )
               ),
-              
-              
+
+
               ########################################################################
               ###
               ###               Appearance Visualization
               ###
               ########################################################################
-              
-              
               box(title = "Appearance",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
                 sliderInput("heightVisu", h6(strong("Height")),min=100,max=4000,value = 800),
-
-
-                
                 ##################
                 ## BOXPLOT
                 ##################
@@ -549,7 +474,6 @@ body <- dashboardBody(
                                  radioButtons("ScaleBoxplot","Scales",c("Fixed"="fixed","Free"="free"),inline=TRUE),
                                  checkboxInput("CheckAddPointsBox","Add points",value=TRUE)
                 ),
-                
                 ##################
                 ## DIVERSITY
                 ##################
@@ -557,7 +481,6 @@ body <- dashboardBody(
                                  sliderInput("sizePointGlobal", h6(strong("Points size")),min=0.5,max=10,value =3,step=0.5),
                                  checkboxInput("SplitVisuGlobal","Split diversity",value=FALSE)
                 ),
-                
                 ##################
                 ## HEATMAP
                 ##################
@@ -571,21 +494,17 @@ body <- dashboardBody(
                                    column(width=6,sliderInput("LabelOrientHeatmap", h6("Orientation"),min=0,max=90,value = 0,step = 5)),
                                    column(width=6,sliderInput("LabelColOffsetHeatmap", h6("Column offset"),min=0,max=4,value = 0,step = 0.5)),
                                    column(width=6,sliderInput("LabelRowOffsetHeatmap", h6("Row offset"),min=0,max=4,value = 0,step = 0.5)),
-                                   
                                    column(width=12,h6(strong("Margins options"))),
                                    column(width=6,sliderInput("rightMargin", h6("Right"),min=0,max=20,value = 6,step = 1)),
                                    column(width=6,sliderInput("lowerMargin", h6("Lower"),min=0,max=20,value = 6,step = 1))
                                  )
-                ),              
-                
+                ),
                 ##################
                 ## ALL
                 ##################
-
                 conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction'",
                                  radioButtons(inputId = "SensPlotVisu",label = h6(strong("Orientation")),choices = c("Vertical" = "Vertical", "Horizontal" = "Horizontal"),selected = "Vertical",inline = TRUE)
                 )
-                
               ),
               box(title = "Export",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
                   ##################
@@ -594,26 +513,19 @@ body <- dashboardBody(
                   conditionalPanel(condition="input.PlotVisuSelect=='Barplot'",
                                    radioButtons("positionBarPlot","Position",c("Grouped"="fill","Stacked"="dodge"),inline=TRUE)
                   ),
-                  
                   selectInput("Exp_format_Visu",h5(strong("Export format")),c("png"="png","pdf"="pdf","eps"="eps","svg"="svg"), multiple = FALSE),
                   fluidRow(
                     column(width=6,numericInput("heightVisuExport", "Height (in px)",min=100,max=NA,value = 500,step =1)),
                     column(width=6,numericInput("widthVisuExport", "Width (in px)",min=100,max=NA,value = 500,step =1))
                   ),
                   downloadButton("exportVisu", "Export")
-                  
               )
-              
             )
           )
   ),
-  
-
-
 
   #### Krona plot
   tabItem(tabName = "Krona",
- 
          fluidRow(
             column(width=3,
                    p(strong("Krona plot")),
@@ -627,17 +539,13 @@ body <- dashboardBody(
             img(src="Tree.png",height = 200, width = 220),
             a(href = "http://genopole.pasteur.fr/SynTView/flash/TreeAbundance",target="_blank", "Click Here!")
             )
-            )
+        )
  #includeHTML("file:///home/aghozlan/workspace/SHAMAN_App/www/text.krona.html")
-            
-  )       
-              
-             )
-     
-    
-    
   )
-
+ )
+)
+  ## GOOGLE ANALYTIC
+ tags$head(includeScript("google-analytics.js"))
   ## Logo SHAMAN
   dbHeader <- dashboardHeader(title = "SHAMAN")
   dbHeader$children[[2]]$children <-  tags$a(tags$img(src='akuaku.png',height='40',width='50',style="margin:5px 0 5px 0;",align='left'), tags$h3("SHAMAN",style="font-family:Purisa; margin:15px 25px 5px 0;color:white;"))
