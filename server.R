@@ -62,6 +62,11 @@ if (!require(rNVD3)) {
   library(rNVD3)
 }
 
+if (!require(genefilter)) {
+  install.packages('genefilter')
+  library(genefilter)
+}
+
 # Allow to upload 50M files
 options(shiny.maxRequestSize=50*1024^2) 
 source("internal.R")

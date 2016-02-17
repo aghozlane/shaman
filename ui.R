@@ -1,4 +1,3 @@
-
 if(!require(shinydashboard)){
   install.packages('shinydashboard')
   library(shinydashboard)
@@ -60,6 +59,11 @@ if (!require(ade4)) {
   library(ade4)
 }
 
+if (!require(genefilter)) {
+  install.packages('genefilter')
+  library(genefilter)
+}
+
 sidebar <- dashboardSidebar(
   sidebarMenu(
     menuItem("Home", tabName = "Home", icon = icon("home")),
@@ -84,7 +88,7 @@ body <- dashboardBody(
                               The PCOA is performed with the", a("ade4 R package",href="http://pbil.univ-lyon1.fr/ade4/"), "and plots are generated with", a("ggplot2",href="http://ggplot2.org/"), "or", a("D3.js packages",href="http://d3js.org/"), ".
                               A presentation about SHAMAN is available", a("here",target="_blank",href="shaman_presentation.pdf"),style = "font-family: 'times'; font-si16pt"),
                             p("Hereafter is the global workflow of the SHAMAN application:"),
-                            img(src = "Workflow.png",width = "100%",style="max-width: 1000px")
+                            div(img(src = "Workflow.png",width = "100%",style="max-width: 600px"),Align="center")
                             ),
                    tabPanel("Authors", h3("The main contributors to SHAMAN:"),
                             p(a("Stevenn Volant", href="mailto:stevenn.volant@pasteur.fr"), "(Initiator, coding, testing, documentation, evaluation)"),

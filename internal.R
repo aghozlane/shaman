@@ -1,6 +1,4 @@
 
-
-
 ## Function for the rdp format
 getval <- function(annotation_rdp, interest, threshold_annot){
   annotation_rdp = unlist(strsplit(annotation_rdp,"\t"))
