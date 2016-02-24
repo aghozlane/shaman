@@ -1359,7 +1359,28 @@ output$RunButton <- renderUI({
           else selTaxo = NULL
           res = selectizeInput("selectTaxoPlot",h6(strong(paste("Select the",input$TaxoSelect, "to plot"))),Available_taxo, selected = selTaxo,multiple = TRUE,options = list(minItems = 2))
         }    
-      }      
+      }
+      if(input$SelectSpecifTaxo=="NoDiff")
+      {
+        filesize = file.info(namesfile)[,"size"]
+        if(is.na(filesize)){filesize=0}
+        if(filesize!=0)
+        { 
+          BaseContrast = read.table(namesfile,header=TRUE)
+          SelContrast = input$ContrastList_table_Visu
+          padj = Get_log2FC_padj(input,BaseContrast,resDiff, info = NULL)$padj
+          Feature_names = rownames(padj)
+          if(ncol(as.matrix(padj))>1)
+          { 
+            cont = which(colnames(padj)%in%SelContrast)
+            padj = padj[,cont] 
+          }
+          ind = which(padj>input$AlphaVal)
+          if(length(ind)>0) selTaxo = Feature_names[ind]
+          else selTaxo = NULL
+          res = selectizeInput("selectTaxoPlot",h6(strong(paste("Select the",input$TaxoSelect, "to plot"))),Available_taxo, selected = selTaxo,multiple = TRUE,options = list(minItems = 2))
+        }    
+      }
       if(input$SelectSpecifTaxo=="All") res = selectizeInput("selectTaxoPlot",h6(strong(paste("Select the",input$TaxoSelect, "to plot"))),Available_taxo, selected = Available_taxo,multiple = TRUE)
     }
     return(res)
