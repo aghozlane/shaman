@@ -119,9 +119,15 @@ shinyServer(function(input, output,session) {
     if(input$TypeTaxo=="Table") 
     {
       data = read.csv(inFile$datapath,sep="\t",header=TRUE)
-    
+      
       ## Rownames
-      if(!TRUE%in%duplicated(data[,1])) rownames(data)=data[,1];data=data[,-1]
+      if(!TRUE%in%duplicated(data[,1])){ 
+        DataNames=data[,1]
+        colNames=colnames(data)[-1]
+        data=as.matrix(data[,-1])
+        rownames(data)=DataNames
+        colnames(data) = colNames
+        }
     }
     
     if(input$TypeTaxo=="RDP") 
