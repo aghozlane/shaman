@@ -80,7 +80,7 @@ CheckCountsTable <- function(counts)
     return(list(Error=Error,Warning=Warning,counts=counts))
   }
   
-  CheckTaxoTable <- function(taxo)
+  CheckTaxoTable <- function(taxo,counts)
   {
     Error = NULL
     Warning = NULL
@@ -94,6 +94,9 @@ CheckCountsTable <- function(counts)
       nb = length(level)
       if(nb==1 && level=="NA"){ Error = "At least one column contains only NA"}
     }
+    
+    ## Annotated features without counts
+    if(!any(rownames(taxo)%in%rownames(counts))){ Error = "Some annotated features are not in the count table"}
     
     return(list(Error=Error,Warning=Warning))
   }
@@ -121,7 +124,7 @@ CheckCountsTable <- function(counts)
     
     ## Taxonomy table
     taxo = as.data.frame(observation_metadata(dataBIOM))
-    CheckTaxo = CheckTaxoTable(taxo)
+    CheckTaxo = CheckTaxoTable(taxo,counts)
     
     ## Pourcentage of annotation
     tmp = PercentAnnot(counts,taxo)
@@ -140,7 +143,7 @@ CheckCountsTable <- function(counts)
     
     ## Taxonomy table
     taxo = as.data.frame(dataT)
-    CheckTaxo = CheckTaxoTable(taxo)
+    CheckTaxo = CheckTaxoTable(taxo,counts)
     
     ## Pourcentage of annotation
     tmp = PercentAnnot(counts,taxo)
@@ -868,7 +871,7 @@ CheckCountsTable <- function(counts)
         ## Be careful transposition !
         if(aggregate && nrow(counts_tmp)>0 && nrow(targetInt)>0)
         { 
-          counts_tmp_combined = aggregate(t(counts_tmp),by=list(targetInt$AllVar),sum)
+          counts_tmp_combined = aggregate(t(counts_tmp),by=list(targetInt$AllVar),mean)
           rownames(counts_tmp_combined) = counts_tmp_combined$Group.1
           namesCounts = counts_tmp_combined$Group.1
           counts_tmp_combined = as.matrix(counts_tmp_combined[,-1])
