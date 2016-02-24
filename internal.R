@@ -1,4 +1,29 @@
 
+
+## Modified version of expand.grid
+expand.grid2.list <- function(listInput)
+{
+  n = length(listInput)
+  if(is.list(listInput) && n>1)
+  {
+    l1 = listInput[[1]]
+    l2 = listInput[[2]]
+    res = c()
+    
+    for(i in l1){
+      for(j in l2){ 
+        res = rbind(res,paste(i,j,sep = "-"))
+      }
+    }
+    listInput[[1]] = res
+    listInput = listInput[-2]
+    if(length(listInput)>1 && is.list(listInput)) res = expand.grid2.list(listInput)
+  }
+  else res = listInput
+  return(res)
+}
+
+
 ## Function for the rdp format
 getval <- function(annotation_rdp, interest, threshold_annot){
   annotation_rdp = unlist(strsplit(annotation_rdp,"\t"))
@@ -167,11 +192,13 @@ CheckCountsTable <- function(counts)
   ## Get the counts for the selected taxonomy
   GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
   {
+    ## Init
     counts= NULL
     CheckTarget = FALSE
     CT_noNorm = NULL
     normFactors = NULL
-    
+    FeatureSize = NULL
+
     ## Counts and taxo tables
     CT = dataInput$counts
     taxo = dataInput$taxo
@@ -180,6 +207,9 @@ CheckCountsTable <- function(counts)
     labels = target[,1]
     ind = which(colnames(CT)%in%labels)
     
+    ## Get the feature size for the normalisation
+    Size_indcol = which(toupper(colnames(CT))%in%"SIZE")
+    if(length(Size_indcol)==1) FeatureSize = CT[,Size_indcol]
     
     if(length(ind)==length(labels))
     { 
@@ -188,16 +218,17 @@ CheckCountsTable <- function(counts)
       ## Order CT according to the target
       CT = OrderCounts(counts=CT,labels=labels)$CountsOrder
       CT_noNorm = CT
-#       ind0 = which(rowSums(CT)==0)
-#       if(length(ind0)>0) CT = CT[-ind0,]
+      RowProd = sum(apply(CT_noNorm,1,prod))
       
       ## Counts normalisation
-
       dds <- DESeqDataSetFromMatrix(countData=CT, colData=target, design=design)
-      dds <- estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)))
+      
+      ## Normalisation with or without 0
+      if(input$AccountForNA || RowProd==0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT))
+      if(!input$AccountForNA && RowProd!=0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)))
+       
       normFactors = sizeFactors(dds)
-
-      CT = as.data.frame(round(counts(dds, normalized = TRUE)))
+        
       ordOTU = order(rownames(taxo))
       indOTU_annot = which(rownames(CT)%in%rownames(taxo))
       counts_annot = CT[indOTU_annot[ordOTU],]
@@ -217,7 +248,17 @@ CheckCountsTable <- function(counts)
     }
     return(list(counts=counts,CheckTarget=CheckTarget,normFactors=normFactors, CT_noNorm=CT_noNorm))
   }
-
+  
+  ## Get the geometric mean of the counts (0 are replaced by NA values)
+  GeoMeansCT <- function(CT)
+  {
+    CT=as.matrix(CT)
+    CT[which(CT<1)]=NA
+    gm = apply(CT,1,geometric.mean,na.rm=TRUE)
+    return(gm)
+  }
+  
+  
   ## Order the counts 
   OrderCounts <- function(counts,normFactors=NULL,labels)
   {
@@ -226,7 +267,6 @@ CheckCountsTable <- function(counts)
     normFactorsOrder = normFactors
     for(i in 1:n)
     {
-      
       ind = which(labels[i]==colnames(counts))
       CountsOrder[,i] = counts[,ind]
       if(!is.null(normFactors)) normFactorsOrder[i] = normFactors[ind]
@@ -239,16 +279,12 @@ CheckCountsTable <- function(counts)
   ## Get the dds object of DESeq2
   Get_dds_object <- function(input,counts,target,design,normFactorsOTU,CT_noNorm)
   {
-    
     dds <- DESeqDataSetFromMatrix(countData=counts, colData=target, design=design)
-    normFactors = rep(1,nrow(target))
-    ## Size factor estimation
-    #dds <- estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)))
-    #normalizationFactors(dds) <- normFactors
-    sizeFactors(dds)<- normFactors
+    sizeFactors(dds) = normFactorsOTU
     dds <- estimateDispersions(dds, fitType=input$fitType)
     dds <- nbinomWaldTest(dds)
-    return(list(dds = dds,counts=counts,target=target,design=design,normFactors = normFactorsOTU,CT_noNorm=CT_noNorm))
+    countsNorm = counts(dds, normalized = TRUE)
+    return(list(dds = dds,raw_counts=counts,countsNorm=countsNorm,target=target,design=design,normFactors = normFactorsOTU,CT_noNorm=CT_noNorm))
   }
 
   ## Get the design according to the input
@@ -269,7 +305,8 @@ CheckCountsTable <- function(counts)
     
     VarInt = input$VarInt
     dds = resDiff$dds
-    counts = resDiff$counts
+    counts = resDiff$raw_counts
+    if(input$CountsType=="norm") counts = resDiff$countsNorm
     target = resDiff$target
     normFactors = resDiff$normFactors
     CT_noNorm = resDiff$CT_noNorm
@@ -285,64 +322,26 @@ CheckCountsTable <- function(counts)
       if(input$DiagPlot=="barplotTot") res = barplotTot(input,counts,group = group, col=colors)
       if(input$DiagPlot=="barplotNul") res = barPlotNul(input,counts, group = group, col=colors)
       if(input$DiagPlot=="densityPlot") res = densityPlotTot(input,counts, group = group, col=colors)
+      if(input$DiagPlot=="DispPlot") res = plotDispEsts(dds)
       if(input$DiagPlot=="MajTax") res = majTaxPlot(input,counts, group = group, col=colors)
-      #if(input$DiagPlot=="SERE") res = SEREplot(input,counts)
-      #if(input$DiagPlot=="Sfactors") diagSFactors(input,dds,frame=1) 
-      if(input$DiagPlot=="SfactorsVStot") res = diagSFactors(input,dds,normFactors,CT_noNorm,frame=2) 
+      if(input$DiagPlot=="SfactorsVStot") res = diagSFactors(input,normFactors,resDiff$raw_counts) 
       if(input$DiagPlot=="pcaPlot") res = PCAPlot_meta(input,dds, group,  type.trans = input$TransType, col = colors)
       if(input$DiagPlot=="pcoaPlot") res = PCoAPlot_meta(input,dds, group, col = colors) 
-      if(input$DiagPlot=="clustPlot") res = HCPlot(input,dds,group,type.trans=input$TransType)
+      if(input$DiagPlot=="clustPlot") res = HCPlot(input,dds,group,type.trans=input$TransType,counts,col=colors)
     }
     
     return(res)
   }
 
   
-#   HCPlot <- function (input,dds,group,type.trans,col = c("lightblue", "orange", "MediumVioletRed", "SpringGreen")) 
-#   {
-#     counts = as.data.frame(round(counts(dds, normalized = TRUE)))
-#     if (type.trans == "VST") counts.trans <- assay(varianceStabilizingTransformation(dds))
-#     if (type.trans == "rlog") counts.trans <- assay(rlogTransformation(dds))
-#     
-#     hc <- hclust(dist(t(counts.trans)), method = "ward.D")
-#     
-#     type <- switch(input$typeHculst,
-#                   "radial"="radial",
-#                   "fan"="fan",
-#                   "triangle"="cladogram",,
-#                   "hori"= "hori",
-#                   "verti"=NULL)
-#     
-#     par(cex=input$cexLabelDiag,mar=c(12,5,8,5))
-#     if(input$colorHC && type=="hori") 
-#     {
-#       hc = dendrapply(as.dendrogram(hc),colLabdendo,group) 
-#       plot(hc, xlab = "Euclidean distance, Ward criterion", main = "Cluster dendrogram")
-#     }
-#     
-#     if(!input$colorHC && type=="hori") 
-#     {
-#       plot(hc, xlab = "Euclidean distance, Ward criterion", main = "Cluster dendrogram",hang=-1)
-#     }
-#     
-#     if(type!="hori") 
-#     { 
-#       group = apply(group,1,paste, collapse = "-")
-#       nb = length(unique(group))
-#       plot(as.phylo(hc), type= type,label.offset = 1, tip.color = ifelse(input$colorHC, rainbow(nb)[as.integer(as.factor(group))], rep(1,nb)))
-#     }
-#     dev.off() 
-#   }
-  
-  HCPlot <- function (input,dds,group,type.trans,col = c("lightblue", "orange", "MediumVioletRed", "SpringGreen")) 
+  HCPlot <- function (input,dds,group,type.trans,counts,col = c("lightblue", "orange", "MediumVioletRed", "SpringGreen")) 
   {
     
     res = NULL
     
     ## Get the counts
-    counts = as.data.frame(round(counts(dds, normalized = TRUE)))
-    if (type.trans == "VST") counts.trans <- assay(varianceStabilizingTransformation(dds))
-    if (type.trans == "rlog") counts.trans <- assay(rlogTransformation(dds))
+    if (input$DistClust == "euclidean" && type.trans == "VST") counts <- assay(varianceStabilizingTransformation(dds))
+    if (input$DistClust == "euclidean" && type.trans == "rlog") counts <- assay(rlogTransformation(dds))
     
     ## Get the group of leaf
     group = apply(group,1,paste, collapse = "-")    
@@ -359,8 +358,7 @@ CheckCountsTable <- function(counts)
     type <- input$typeHculst
     
     dend <- set(dend, "labels_cex", input$cexLabelDiag)
-    if(input$colorHC) labels_colors(dend)<-rainbow(nb)[as.integer(as.factor(group))][order.dendrogram(dend)]
-    
+    if(input$colorHC) labels_colors(dend)<-col[as.integer(as.factor(group))][order.dendrogram(dend)]
     if(type=="hori") 
     { 
       par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
@@ -473,7 +471,7 @@ CheckCountsTable <- function(counts)
     par(cex=input$cexTitleDiag,mar=c(8,5,4,5))
     plot(density(log2(counts[, 1] + 1)), las = 1, lwd = 2, main = "Density of counts distribution", 
          xlab = expression(log[2] ~ (raw ~ count + 1)), 
-         ylim = c(-0.2, max(apply(counts, 2, function(x) {max(density(log2(x + 1))$y)})) * 1.05), 
+         ylim = c(0, max(apply(counts, 2, function(x) {max(density(log2(x + 1))$y)})) * 1.05), 
          lty = if (ncol1) {1}
          else{rep(seq(1:6),ceiling(nlevels(group[, 2])/6))[as.integer(group[, 2])[1]]}, 
          col = col[as.integer(group[, 1])[1]])
@@ -574,41 +572,16 @@ CheckCountsTable <- function(counts)
 
 
   ## Plots of size factors
-  diagSFactors<-function (input,dds,normFactors,CT_noNorm,frame=1) 
+  diagSFactors<-function (input,normFactors,counts) 
   {
-    counts = CT_noNorm
     geomeans <- exp(rowMeans(log(counts)))
     samples <- colnames(counts)
-#     counts.trans <- log2(counts/geomeans)
-#     xmin <- min(counts.trans[is.finite(counts.trans)], na.rm = TRUE)
-#     xmax <- max(counts.trans[is.finite(counts.trans)], na.rm = TRUE)
-#     
-# #     if(!is.na(input$NbcolSfactors)) parCols = as.numeric(input$NbcolSfactors)
-# #     else parCols = ceiling(ncol(counts.trans)/3)
-# #     
-# #     parRows = ceiling(ncol(counts.trans)/parCols)
-# 
-#     if(frame==1)
-#     {
-#       par(mfrow=c(parRows,parCols))
-#       for (j in 1:ncol(dds)) {
-#         hist(log2(counts[, j]/geomeans), nclass = 100, 
-#              xlab = expression(log[2] ~ (counts/geometric ~ mean)), las = 1, xlim = c(xmin, xmax), 
-#              main = paste("Size factors diagnostic - Sample ",samples[j], sep = ""), col = "skyblue")
-#         
-#         abline(v = log2(normFactors[j]), col = "red", lwd = 1.5)
-#       }
-#     }
-    
-    if(frame==2)
-    {
       par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
       plot(normFactors, colSums(counts), pch = 19, las = 1,cex = ifelse(input$addLabelSFact,0,input$cexLabelDiag),
            ylab = "Total number of reads", xlab = "Size factors", 
            main = "Diagnostic: size factors vs total number of reads")
       if(input$addLabelSFact) text(normFactors,colSums(counts),labels = samples,cex=input$cexLabelDiag)
       abline(lm(colSums(counts) ~ normFactors + 0), lty = 2, col = "grey")
-    }
   }
 
   
@@ -647,8 +620,8 @@ CheckCountsTable <- function(counts)
     if(nlevels(group)!=0)
     { 
       ## Get the norm data
-      counts.norm = as.data.frame(round(counts(dds, normalized = TRUE)))
-      
+      counts.norm = as.data.frame(round(counts(dds)))
+      if(input$CountsType=="norm") counts.norm = as.data.frame(round(counts(dds, normalized = TRUE)))
       # was removed
       counts.norm = counts.norm[,ind_kept]
   
@@ -699,7 +672,7 @@ CheckCountsTable <- function(counts)
             s.class(dfxy = pco.counts.norm$li, fac = group, col = col, label = levels(group),
                     add.plot = TRUE, cpoint = 0, cell=input$cexcircle, clabel=input$cexLabelDiag,  cstar = input$cexstar)
           }else s.class(dfxy = pco.counts.norm$li, fac = group, col = col, label = levels(group),
-                        add.plot = TRUE, cpoint = input$cexTitleDiag, cell=input$cexcircle, clabel=input$cexLabelDiag,  cstar = input$cexstar)
+                        add.plot = TRUE, cpoint = input$cexpoint, cell=input$cexcircle, clabel=input$cexLabelDiag,  cstar = input$cexstar)
         }  
         else{
           s.label(pco.counts.norm$li, clabel = input$cexLabelDiag,boxes=FALSE, add.plot = TRUE)
@@ -713,55 +686,82 @@ CheckCountsTable <- function(counts)
   }
   
   ### PCA
-  PCAPlot_meta <-function (input,dds, group, n = min(500, nrow(counts(dds))), type.trans = c("VST", "rlog"), 
+  PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), type.trans = c("VST", "rlog"), 
                            col = c("lightblue", "orange", "MediumVioletRed", "SpringGreen"),plot="pca") 
   {
-    type.trans <- type.trans[1]
+    ## Var of interest
+    VarInt  = input$VarInt
     
-    if (type.trans == "VST") counts.trans <- assay(varianceStabilizingTransformation(dds))
-    else counts.trans <- assay(rlogTransformation(dds))
+    group = as.character(apply(group_init,1,paste, collapse = "-"))
+    group_init = group
     
-    rv = apply(counts.trans, 1, var, na.rm = TRUE)
-    pca = prcomp(t(counts.trans[order(rv, decreasing = TRUE),][1:n, ]))
-    
-    if(plot=="pca")
+    ## Keep only some sample 
+    val = c()
+    for(i in 1:length(VarInt))
     { 
-      prp <- pca$sdev^2 * 100/sum(pca$sdev^2)
-      prp <- round(prp, 2)
-      ncol1 <- ncol(group) == 1
-      
-      
-      
-      abs = range(pca$x[, 1])
-      abs = abs(abs[2] - abs[1])/25
-      ord = range(pca$x[, 2])
-      ord = abs(ord[2] - ord[1])/25
-      
-      par(mfrow = c(1, 2),cex=input$cexTitleDiag,mar=c(6,6,4,5))
-      plot(pca$x[, 1], pca$x[, 2], las = 1, cex = input$cexTitleDiag, col = col[as.integer(group[,1])], 
-           pch = if (ncol1) {16}
-           else {c(16:18, 25)[as.integer(group[, 2])]},
-           xlab = paste0("PC1 (", prp[1], "%)"),
-           ylab = paste0("PC2 (", prp[2], "%)"), 
-           main = "Principal Component Analysis",
-            )
-      abline(h = 0, v = 0, lty = 2, col = "lightgray")
-      text(pca$x[, 1] - ifelse(pca$x[, 1] > 0, abs, -abs), pca$x[,2] - ifelse(pca$x[, 2] > 0, ord, -ord), colnames(counts.trans), col = col[as.integer(group[, 1])],cex=input$cexLabelDiag)
-      abs = range(pca$x[, 1])
-      abs = abs(abs[2] - abs[1])/25
-      ord = range(pca$x[, 3])
-      ord = abs(ord[2] - ord[1])/25
-      plot(pca$x[, 1], pca$x[, 3], las = 1, cex = input$cexTitleDiag, col = col[as.integer(group[, 1])], 
-           pch = if (ncol1) {16}
-           else {c(16:18, 25)[as.integer(group[, 2])]}, 
-           xlab = paste0("PC1 (", prp[1], "%)"), 
-           ylab = paste0("PC3 (", prp[3], "%)"), 
-           main = "Principal Component Analysis")
-      abline(h = 0, v = 0, lty = 2, col = "lightgray")
-      text(pca$x[, 1] - ifelse(pca$x[, 1] > 0, abs, -abs), pca$x[,3] - ifelse(pca$x[, 3] > 0, ord, -ord), colnames(counts.trans), col = col[as.integer(group[, 1])],cex=input$cexLabelDiag)
+      Tinput = paste("input$","Mod",VarInt[i],sep="")
+      expr=parse(text=Tinput)
+      ## All the modalities for all the var of interest
+      val = c(val,eval(expr))
     }
+    if(length(VarInt)>1) Kval = apply(expand.grid(val,val),1,paste, collapse = "-")
+    else Kval = val
+    ind_kept = which(as.character(group)%in%Kval)
     
-    if(plot=="eigen") barplot(pca$sdev^2, main = "Eigen values of the PCA", names.arg = 1:length(pca$sdev), xlab = "Axes")
+    ## Get the group corresponding to the modalities
+    group = group[ind_kept]
+    nb = length(unique((group)))
+    group = as.factor(group)
+    
+    ## To select the colors
+    indgrp =as.integer(as.factor(group_init))[ind_kept]
+    
+    
+    if(nlevels(group)!=0)
+    { 
+      type.trans <- type.trans[1]
+      
+      if (type.trans == "VST") counts.trans <- assay(varianceStabilizingTransformation(dds))
+      else counts.trans <- assay(rlogTransformation(dds))
+      counts.trans = counts.trans[,ind_kept]
+      
+      rv = apply(counts.trans, 1, var, na.rm = TRUE)
+      pca = prcomp(t(counts.trans[order(rv, decreasing = TRUE),][1:n, ]))
+      
+      if(plot=="pca")
+      { 
+        prp <- pca$sdev^2 * 100/sum(pca$sdev^2)
+        prp <- round(prp, 2)
+        ncol1 <- ncol(group) == 1
+        
+        abs = range(pca$x[, 1])
+        abs = abs(abs[2] - abs[1])/25
+        ord = range(pca$x[, 2])
+        ord = abs(ord[2] - ord[1])/25
+        
+        par(mfrow = c(1, 2),cex=input$cexTitleDiag,mar=c(6,6,4,5))
+        plot(pca$x[, 1], pca$x[, 2], las = 1, cex = input$cexTitleDiag, col = col[indgrp], 
+             pch = 16,
+             xlab = paste0("PC1 (", prp[1], "%)"),
+             ylab = paste0("PC2 (", prp[2], "%)"), 
+             main = "Principal Component Analysis"
+              )
+        abline(h = 0, v = 0, lty = 2, col = "lightgray")
+        text(pca$x[, 1] - ifelse(pca$x[, 1] > 0, abs, -abs), pca$x[,2] - ifelse(pca$x[, 2] > 0, ord, -ord), colnames(counts.trans), col = col[indgrp],cex=input$cexLabelDiag)
+        abs = range(pca$x[, 1])
+        abs = abs(abs[2] - abs[1])/25
+        ord = range(pca$x[, 3])
+        ord = abs(ord[2] - ord[1])/25
+        plot(pca$x[, 1], pca$x[, 3], las = 1, cex = input$cexTitleDiag, col = col[indgrp], 
+             pch = 16,
+             xlab = paste0("PC1 (", prp[1], "%)"), 
+             ylab = paste0("PC3 (", prp[3], "%)"), 
+             main = "Principal Component Analysis")
+        abline(h = 0, v = 0, lty = 2, col = "lightgray")
+        text(pca$x[, 1] - ifelse(pca$x[, 1] > 0, abs, -abs), pca$x[,3] - ifelse(pca$x[, 3] > 0, ord, -ord), colnames(counts.trans), col = col[indgrp],cex=input$cexLabelDiag)
+      }
+      if(plot=="eigen"){eigen = pca$sdev[1:min(7,ncol(counts.trans))]^2; barplot(eigen, xlab="Dimensions", ylab="Eigenvalues (%)", names.arg = 1:min(7,ncol(counts.trans)), col = c(rep("black", 3), rep("grey", 4)), ylim=c(0,max(eigen)+5), cex.axis=1.2, cex.lab=1.4,cex.names=1.2)}
+    }
   }
   
   
@@ -813,55 +813,93 @@ CheckCountsTable <- function(counts)
   ##
   ############################################################
   
-  GetDataToPlot <- function(resDiff,VarInt,ind_taxo,aggregate=TRUE)
+  GetDataToPlot <- function(input,resDiff,VarInt,ind_taxo,aggregate=TRUE)
   {
     dds = resDiff$dds
+    val = c()
+    list.val = list()
     counts = as.data.frame(round(counts(dds, normalized = TRUE)))
     target = resDiff$target
     counts_tmp_combined = NULL
     prop_tmp_combined = NULL
     targetInt = NULL
     namesCounts = NULL
+    levelsMod = NULL
+    prop_all=NULL
     ## Select a subset within the taxonomy level (default is the 12 most abundant)
     nbKept = length(ind_taxo)
     Taxonomy = rownames(counts)
     
     if (length(VarInt)>0 && nbKept>0)
     { 
-      ## Create the variable to plot
-      targetInt = as.data.frame(target[,VarInt])
-      rownames(targetInt)=target[,1]  
-      if(length(VarInt)>1) targetInt$AllVar = apply(targetInt,1,paste, collapse = "-")
-      if(length(VarInt)<=1)  targetInt$AllVar = target[,VarInt]
-      colnames(targetInt) = c(VarInt,"AllVar")
-      ## Create the counts matrix only for the selected subset
-      counts_tmp = counts[Taxonomy%in%ind_taxo,]
-
-      ## Be careful transposition !
-      if(aggregate)
+      ## Get the modalities to keep
+      for(i in 1:length(VarInt))
       { 
-        counts_tmp_combined = aggregate(t(counts_tmp),by=list(targetInt$AllVar),sum)
-        rownames(counts_tmp_combined) = counts_tmp_combined$Group.1
-        namesCounts = counts_tmp_combined$Group.1
-        counts_tmp_combined = as.matrix(counts_tmp_combined[,-1])
+        Tinput = paste("input$","ModVisu",VarInt[i],sep="")
+        expr=parse(text=Tinput)
+        ## All the modalities for all the var of interest
+        val = c(val,eval(expr))
+        list.val[[i]] = eval(expr)
       }
-      if(!aggregate)
-      {  
-        counts_tmp_combined = t(counts_tmp)
-        prop_tmp_combined = counts_tmp_combined/colSums(counts)
-        rownames(counts_tmp_combined) = targetInt$AllVar
-        namesCounts = targetInt$AllVar
-        rownames(prop_tmp_combined) = targetInt$AllVar
+      if (!is.null(val) && !is.null(list.val))
+      {
+        ## Create the variable to plot
+        targetInt = as.data.frame(target[,VarInt])
+        rownames(targetInt)=target[,1]  
+        
+        ## Combining the Varint
+        if(length(VarInt)>1){targetInt$AllVar = apply(targetInt,1,paste, collapse = "-"); targetInt$AllVar = factor(targetInt$AllVar,levels =  expand.grid2.list(list.val))}
+        if(length(VarInt)<=1){targetInt$AllVar = target[,VarInt]; targetInt$AllVar = factor(targetInt$AllVar,levels = val)}
+        
+        colnames(targetInt) = c(VarInt,"AllVar")
+        
+        ## Keep only the selected modalities
+        if(length(VarInt)>1) Kval = apply(expand.grid(val,val),1,paste, collapse = "-")
+        else Kval = val
+        if(!is.null(Kval))
+        {
+          ind_kept = which(targetInt$AllVar%in%Kval)
+          targetInt = targetInt[ind_kept,]
+        }
+        levelsMod = levels(targetInt$AllVar)
+        
+        ## Create the counts matrix only for the selected subset
+        counts_tmp = counts[Taxonomy%in%ind_taxo,]
+        counts_tmp = as.data.frame(counts_tmp[,colnames(counts_tmp)%in%rownames(targetInt)])
+        
+        ## Proportions over all the taxonomies
+        prop_all = t(counts)/rowSums(t(counts))
+        prop_all = as.data.frame(prop_all[,Taxonomy%in%ind_taxo])
+        prop_all = as.matrix(prop_all[rownames(prop_all)%in%rownames(targetInt),])
+        rownames(prop_all) = targetInt$AllVar
+        
+        ## Be careful transposition !
+        if(aggregate && nrow(counts_tmp)>0)
+        { 
+          counts_tmp_combined = aggregate(t(counts_tmp),by=list(targetInt$AllVar),sum)
+          rownames(counts_tmp_combined) = counts_tmp_combined$Group.1
+          namesCounts = counts_tmp_combined$Group.1
+          counts_tmp_combined = as.matrix(counts_tmp_combined[,-1])
+        }
+        if(!aggregate && nrow(counts_tmp)>0)
+        {  
+          counts_tmp_combined = t(counts_tmp)
+          prop_tmp_combined = counts_tmp_combined/colSums(counts_tmp)
+          rownames(counts_tmp_combined) = targetInt$AllVar
+          namesCounts = targetInt$AllVar
+          rownames(prop_tmp_combined) = targetInt$AllVar
+        }
+        
+        ## Ordering the counts
+        MeanCounts = apply(counts_tmp_combined,2,mean)
+        ord = order(MeanCounts,decreasing=TRUE)
+        counts_tmp_combined = as.matrix(counts_tmp_combined[,ord])
+        if(!aggregate) prop_tmp_combined = as.matrix(prop_tmp_combined[,ord])
+        prop_all = as.matrix(prop_all[,ord])
       }
-      
-      ## Ordering the counts
-      MeanCounts = apply(counts_tmp_combined,2,mean)
-      ord = order(MeanCounts,decreasing=TRUE)
-      counts_tmp_combined = as.matrix(counts_tmp_combined[,ord])
-      if(!aggregate) prop_tmp_combined = as.matrix(prop_tmp_combined[,ord])
     }
     
-      return(list(counts = counts_tmp_combined,targetInt=targetInt,prop=prop_tmp_combined,namesCounts=namesCounts))
+      return(list(counts = counts_tmp_combined,targetInt=targetInt,prop=prop_tmp_combined,namesCounts=namesCounts,levelsMod=levelsMod,prop_all=prop_all))
     
     
   }
@@ -879,7 +917,7 @@ CheckCountsTable <- function(counts)
     VarInt = input$VisuVarInt
     ind_taxo = input$selectTaxoPlot
     
-    tmp_combined = GetDataToPlot(resDiff,VarInt,ind_taxo)
+    tmp_combined = GetDataToPlot(input,resDiff,VarInt,ind_taxo)
     counts_tmp_combined = tmp_combined$counts
     nbKept = length(ind_taxo)
     SamplesNames = tmp_combined$namesCounts
@@ -887,7 +925,11 @@ CheckCountsTable <- function(counts)
     if(nbKept>1) namesTax = colnames(counts_tmp_combined)
     if(nbKept==1) namesTax = ind_taxo
     
-    if(!is.null(counts_tmp_combined) && nrow(counts_tmp_combined)>0)
+    dataNull = data.frame(x=c(1,2),y=c(1,2))
+    plotd3 = nvd3Plot(x ~ y , data = dataNull, type = "multiBarChart", id = 'barplotTaxoNyll',height = input$heightVisu,width=input$widthVisu)
+    gg = NULL
+    
+    if(!is.null(counts_tmp_combined) && nrow(counts_tmp_combined)>0 && length(VarInt)>0)
     { 
       
       ## Create the data frame for the plot function
@@ -946,13 +988,6 @@ CheckCountsTable <- function(counts)
         if(input$CountsOrProp=="counts") gg = gg+labs(y="Abundance",x="")
         if(input$SensPlotVisu == "Horizontal") gg = gg + coord_flip()
     } 
-    else{ 
-      ## Pb affichage quand data NULL
-      dataNull = data.frame(x=c(1,2),y=c(1,2))
-      plotd3 = nvd3Plot(x ~ y , data = dataNull, type = "multiBarChart", id = 'barplotTaxoNyll',height = input$heightVisu,width=input$widthVisu)
-      plotd3 = NULL
-      gg = NULL
-    }
     return(list(plotd3=plotd3,gg=gg))
   }
   
@@ -970,12 +1005,12 @@ CheckCountsTable <- function(counts)
   VarInt = input$VisuVarInt
   ind_taxo = input$selectTaxoPlot
   
-  counts_tmp_combined = GetDataToPlot(resDiff,VarInt,ind_taxo)$counts
+  counts_tmp_combined = GetDataToPlot(input,resDiff,VarInt,ind_taxo)$counts
   
   if(!is.null(counts_tmp_combined) && nrow(counts_tmp_combined)>0)
   { 
     ## Transform to log2
-    counts_tmp_combined = log2(GetDataToPlot(resDiff,VarInt,ind_taxo)$counts+1)
+    counts_tmp_combined = log2(GetDataToPlot(input,resDiff,VarInt,ind_taxo)$counts+1)
    
     col <- switch(input$colors,
                   "green-blue"=colorRampPalette(brewer.pal(9,"GnBu"))(200),
@@ -1002,30 +1037,30 @@ CheckCountsTable <- function(counts)
   ######################################################
   
   
-  Plot_Visu_Boxplot <- function(input,resDiff){
+  Plot_Visu_Boxplot <- function(input,resDiff,alpha=0.7){
     
     gg = NULL
+    
+    ## Colors
+    colors = rep(c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c","#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5","#8c564b",
+                   "#c49c94","#e377c2","#f7b6d2","#7f7f7f", "#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"),ceiling(nrow(resDiff$target)/20))
+    
     ## Get Input for BoxPlot
     VarInt = input$VisuVarInt
     ind_taxo = input$selectTaxoPlot
     
-    GetDataToPlot(resDiff,VarInt,ind_taxo,aggregate=FALSE)
-    tmp_merge = GetDataToPlot(resDiff,VarInt,ind_taxo,aggregate=FALSE)
+    
+    tmp_merge = GetDataToPlot(input,resDiff,VarInt,ind_taxo,aggregate=FALSE)
     counts_tmp_combined = tmp_merge$counts
-
+    levelsMod = tmp_merge$levelsMod
     nbKept = length(ind_taxo)
     
-    if(!is.null(counts_tmp_combined) && nrow(counts_tmp_combined)>0)
+    if(!is.null(counts_tmp_combined) && nrow(counts_tmp_combined)>0 && !is.null(levelsMod))
     { 
     
-      if(input$typeDataBox == "Relative") 
-      { 
-        counts_tmp_combined = tmp_merge$prop
-      }
-      if(input$typeDataBox == "Log2") counts_tmp_combined = log2(counts_tmp_combined+1)
-      
+      if(input$typeDataBox == "Relative") counts_tmp_combined = tmp_merge$prop_all
+      else counts_tmp_combined = log2(counts_tmp_combined+1)
       if(nbKept==1) colnames(counts_tmp_combined)=ind_taxo
-    
 
       ## Create the data frame for the plot function
       dataBarPlot_mat = c()
@@ -1053,9 +1088,21 @@ CheckCountsTable <- function(counts)
       
       colnames(dataBarPlot_mat) = c("Taxonomy","Value","Samples")
       dataBarPlot_mat[,2] = tmp_counts
+
+      if(is.null(input$BoxColorBy) || length(VarInt)<=1){ dataBarPlot_mat$Colors = dataBarPlot_mat$Samples}
+      if(!is.null(input$BoxColorBy) && length(VarInt)>1)
+        { 
+        tmp = strsplit(as.character(dataBarPlot_mat$Samples),"-")
+        ind = which(VarInt%in%input$BoxColorBy)
+        dataBarPlot_mat$Colors = rapply(tmp, function(x) paste(x[ind],collapse ="-"), how = "unlist")
+      }
+      # print(dataBarPlot_mat$Colors)
+      dataBarPlot_mat$Samples = factor(dataBarPlot_mat$Samples,levels=levelsMod)
       
-      gg = ggplot(dataBarPlot_mat,aes(x=Samples,y=Value,fill=Samples))  + geom_boxplot(alpha=0.7) + theme_bw()  + theme(axis.text.x = element_text(angle = 90, hjust = 1))
-      gg = gg + ylab(input$typeDataBox)
+      gg = ggplot(dataBarPlot_mat,aes(x=Samples,y=Value,fill=Colors))  + geom_boxplot(alpha=alpha) +theme_bw()
+      gg = gg  +theme(axis.text=element_text(size=16,face="bold"),axis.title=element_text(size=18,face="bold"),panel.background = element_blank(),
+                      panel.grid.major = element_blank(),panel.grid.minor = element_blank(), axis.title.x=element_blank(), axis.text.x = element_text(angle = 90, hjust = 1,vjust=0.5)) 
+      gg = gg + ylab(paste(input$typeDataBox, "abundance")) +scale_fill_manual(values = colors) + guides(fill=FALSE)
       if(input$CheckAddPointsBox) gg = gg + geom_point(position=position_jitterdodge(dodge.width=0.9))
       if(input$SensPlotVisu=="Horizontal") gg = gg + coord_flip()
       if(nbKept>1) gg = gg + facet_wrap(~ Taxonomy,scales = input$ScaleBoxplot)
@@ -1085,7 +1132,7 @@ CheckCountsTable <- function(counts)
     #VarIntBoxDiv = input$VarBoxDiv 
     ind_taxo = rownames(counts)
     
-    tmp = GetDataToPlot(resDiff,VarInt,ind_taxo,aggregate=FALSE)
+    tmp = GetDataToPlot(input,resDiff,VarInt,ind_taxo,aggregate=FALSE)
     counts_tmp_combined = tmp$counts
     targetInt = tmp$targetInt
 
@@ -1099,7 +1146,7 @@ CheckCountsTable <- function(counts)
 #                            diversity = c(rep("Alpha",nb),rep("Beta",nb),rep("Gamma",nb)),
 #                            Var = as.character(rep(names(alpha),3)),
 #                            X = as.character(rep(targetInt[,VarIntBoxDiv],3)))
-dataTmp = data.frame(value=c(alpha,beta,gamma),
+      dataTmp = data.frame(value=c(alpha,beta,gamma),
                      diversity = c(rep("Alpha",nb),rep("Beta",nb),rep("Gamma",nb)),
                      Var = as.character(rep(names(alpha),3)))
      

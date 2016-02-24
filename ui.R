@@ -60,7 +60,8 @@ if (!require(ade4)) {
 }
 
 if (!require(genefilter)) {
-  install.packages('genefilter')
+  source("https://bioconductor.org/biocLite.R")
+  biocLite("genefilter")
   library(genefilter)
 }
 
@@ -207,7 +208,7 @@ body <- dashboardBody(
               column(width=3,infoBoxOutput("RowTarget",width=NULL)),
               column(width=3,infoBoxOutput("InfoTaxo",width=NULL)),
               column(width=3,infoBoxOutput("InfoDESeq",width=NULL)),
-              column(width=3,conditionalPanel(condition="input.RunDESeq>=1",infoBoxOutput("InfoContrast",width=NULL)))
+              column(width=3,infoBoxOutput("InfoContrast",width=NULL))
             ),            
             fluidRow(
               column(width=5,
@@ -254,12 +255,8 @@ body <- dashboardBody(
                     column(width=3,
                       radioButtons("fitType",h6(strong("Relationship")),choices = c("Parametric"="parametric","Local"="local"))
                     ),
-                    column(width=3,
-                      conditionalPanel(condition="input.FileFormat=='fileCounts' && input.TypeTaxo=='RDP'",
-                        sliderInput("ThreshProba",h6(strong("Probability threshold (rdp annotation)")),min=0.01, max=1,value=0.5,step = 0.01)
-                      )
-                    ),
-                    column(width=3,uiOutput("RefSelect"))
+                    column(width=3,checkboxInput("AccountForNA","Compute geometric mean without 0",value=TRUE))
+                    # column(width=3,uiOutput("RefSelect"))
                   )
                 ),
                 fluidRow(
@@ -301,21 +298,23 @@ body <- dashboardBody(
               column(width=3,
                 box(title = "Select your plot",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = FALSE,collapsed= FALSE,
                   selectInput("DiagPlot","",c("Total barplot"="barplotTot","Nul barplot"="barplotNul",
-                                              "Maj. taxonomy"="MajTax", "Density"="densityPlot", 
+                                              "Maj. taxonomy"="MajTax", "Density"="densityPlot", "Dispersion" = "DispPlot",
                                               "Size factors VS total"="SfactorsVStot", "PCA"="pcaPlot", "PCoA"="pcoaPlot","Clustering" = "clustPlot"))
                     ),
                 box(title = "Options",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
-                    
+                    conditionalPanel(condition="input.DiagPlot!='clustPlot' && input.DiagPlot!='pcaPlot' && input.DiagPlot!='SfactorsVStot' && input.DiagPlot!='DispPlot'",
+                                     radioButtons("CountsType","Counts:",c("Normalized"="norm","Raw"="raw"),inline = TRUE)
+                                     ),
                     conditionalPanel(condition="input.DiagPlot!='Sfactors' && input.DiagPlot!='SfactorsVStot' ",uiOutput("VarIntDiag")),
-                    conditionalPanel(condition="input.DiagPlot=='pcoaPlot'",
+                    conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='pcaPlot'",
                                      h5(strong("Select the modalities")),
                                      uiOutput("ModMat")
-                    ),
+                                    ),
                     conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='SERE' || input.DiagPlot=='clustPlot' ",
-                      selectInput("DistClust","Distance",c("euclidean", "SERE"="sere", "canberra", "bray", "kulczynski", "jaccard", 
-                                                         "gower", "altGower", "morisita", "horn","mountford","raup","binomial",
-                                                         "chao","cao","mahalanobis"),selected="jaccard")
-                    )
+                                      selectInput("DistClust","Distance",c("euclidean", "SERE"="sere", "canberra", "bray", "kulczynski", "jaccard", 
+                                                  "gower", "altGower", "morisita", "horn","mountford","raup","binomial",
+                                                  "chao","cao","mahalanobis"),selected="jaccard")
+                                    )
                     
 #                 conditionalPanel(condition="input.RadioPlotBi=='Nuage'",selectInput("ColorBiplot", "Couleur",choices=c("Bleue" = 'blue',"Rouge"='red',"Vert"='green', "Noir"='black'),width="50%")),
 #                 sliderInput("TransAlphaBi", "Transparence",min=1, max=100, value=50, step=1),
@@ -349,7 +348,7 @@ body <- dashboardBody(
                   fluidRow(
                     column(width=12, p(strong("Size"))),
                     column(width=6,sliderInput("cexTitleDiag", h6("Axis"),min=0,max=5,value = 1,step =0.1)),
-                    conditionalPanel(condition="input.DiagPlot=='SfactorsVStot' || input.DiagPlot=='pcaPlot'",column(width=6,sliderInput("cexLabelDiag", h6("Points"),min=0,max=5,value = 1,step =0.1)))
+                    conditionalPanel(condition="input.DiagPlot=='SfactorsVStot' || input.DiagPlot=='pcaPlot' || input.DiagPlot=='pcoaPlot'",column(width=6,sliderInput("cexLabelDiag", h6("Points"),min=0,max=5,value = 1,step =0.1)))
                     
                   )
 
@@ -411,8 +410,11 @@ body <- dashboardBody(
               ########################################################################
               box(title = "Options",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
                   conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction'",
-                                    uiOutput("VarIntVisu")
+                                    uiOutput("VarIntVisu"),
+                                   h5(strong("Select the modalities")),
+                                   uiOutput("ModVisu")
                   ),
+                  
                   conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity'",
                                    radioButtons("SelectSpecifTaxo","Select the features",c("Most abundant"="Most","All"="All", "Differential features" = "Diff"))
                   ),
@@ -476,6 +478,7 @@ body <- dashboardBody(
                 ## BOXPLOT
                 ##################
                 conditionalPanel(condition="input.PlotVisuSelect=='Boxplot'",
+                                 uiOutput("ColBoxplot"),
                                  radioButtons("ScaleBoxplot","Scales",c("Fixed"="fixed","Free"="free"),inline=TRUE),
                                  checkboxInput("CheckAddPointsBox","Add points",value=TRUE)
                 ),

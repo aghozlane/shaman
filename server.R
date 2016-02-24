@@ -63,7 +63,8 @@ if (!require(rNVD3)) {
 }
 
 if (!require(genefilter)) {
-  install.packages('genefilter')
+  source("https://bioconductor.org/biocLite.R")
+  biocLite("genefilter")
   library(genefilter)
 }
 
@@ -196,13 +197,13 @@ shinyServer(function(input, output,session) {
     normFactors = NULL
     CT_noNorm = NULL
     data = dataInput()$data
-    target = dataInputTarget()
-    taxo = input$TaxoSelect
+    target = isolate(dataInputTarget())
+    taxo = isolate(input$TaxoSelect)
     
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target)) 
     {
       design = GetDesign(input)
-      tmp = GetCountsMerge(input,data,taxo,target,design)
+      tmp = isolate(GetCountsMerge(input,data,taxo,target,design))
       counts = tmp$counts
       CheckTarget = tmp$CheckTarget
       normFactors = tmp$normFactors
@@ -451,7 +452,7 @@ shinyServer(function(input, output,session) {
 
   ## Counts table for the selected taxonomy level
   output$CountsMerge <- renderDataTable(
-    dataMergeCounts()$counts,
+    round(counts(ResDiffAnal()$dds,normalized=TRUE)),
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
                    pageLength = 10,scrollX=TRUE
     ))
@@ -665,13 +666,15 @@ shinyServer(function(input, output,session) {
     
   })
 
-
-
 # Infobox Contrast
 output$InfoContrast <- renderInfoBox({
+  input$RunDESeq
   input$AddContrast
   input$RemoveContrast
   input$fileContrast
+  resDiff = ResDiffAnal()
+  res=NULL
+  if(!is.null(resDiff)){
   
   res = infoBox("Contrasts", subtitle = h6("At least one contrast (non null) must be defined"), icon = icon("warning"),color = "light-blue",width=NULL,fill=TRUE)
   test = FALSE
@@ -685,7 +688,7 @@ output$InfoContrast <- renderInfoBox({
   }
   
   if(test) res = infoBox("Contrasts", subtitle = h6("Contrasts OK"), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
-    
+  }
     return(res)
   })
 
@@ -705,8 +708,6 @@ output$InfoContrast <- renderInfoBox({
     ModInterestCond = unique(target[,which(test)])
     #alltmp = c(InterVar,Interaction)
     
-    
-   
     if(!is.null(resDiff))
     { 
       box(title="Contrasts",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = FALSE,
@@ -799,7 +800,7 @@ output$InfoContrast <- renderInfoBox({
 
   # Infobox Contrast
   output$InfoDESeq <- renderInfoBox({
-    
+      input$RunDESeq
       
       resDiff = ResDiffAnal()
       if(!is.null(resDiff)){
@@ -925,7 +926,7 @@ output$InfoContrast <- renderInfoBox({
   ))
 
 
-  ## Select Modality PCOA
+  ## Select Modality DiagPlot
 
   output$ModMat <- renderUI({
     
@@ -942,6 +943,29 @@ output$InfoContrast <- renderInfoBox({
     return(Mod)
     
   })
+  
+  
+  ## Select Modality VisuPlot
+  
+  output$ModVisu <- renderUI({
+    Mod = NULL
+    
+    VisuVarInt = input$VisuVarInt
+    target = dataInputTarget()
+    if(!is.null(VisuVarInt))
+    {
+      Mod = list()
+      
+      for(i in 1:length(VisuVarInt)){
+        value = as.character(unique(as.factor(target[,VisuVarInt[i]])))
+        Mod[[i]] = selectizeInput(paste("ModVisu",VisuVarInt[i],sep=""),VisuVarInt[i],value,selected=value, multiple = TRUE)
+      }
+    }
+    return(Mod)
+    
+  })
+  
+  
 
 #####################################################
 ##
@@ -1004,29 +1028,30 @@ output$exportPDFVisu <- downloadHandler(
 output$exportVisu <- downloadHandler(
   filename <- function() { paste(input$PlotVisuSelect,paste('SHAMAN',input$Exp_format_Visu,sep="."),sep="_") },
   content <- function(file) {
-    filesize = file.info(namesfile)[,"size"]
-    if(is.na(filesize)){filesize=0}
-    if(filesize!=0)
-    {
-      BaseContrast = read.table(namesfile,header=TRUE)
+
       taxo = input$TaxoSelect
-    
+
       if(input$Exp_format_Visu=="png") png(file, width = input$widthVisuExport, height = input$heightVisuExport)
       if(input$Exp_format_Visu=="pdf") pdf(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96)
-      if(input$Exp_format_Visu=="eps") postscript(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96)
+      if(input$Exp_format_Visu=="eps") postscript(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96,paper="special")
       if(input$Exp_format_Visu=="svg") svg(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96)
 
       if(input$PlotVisuSelect=="Barplot") print(Plot_Visu_Barplot(input,ResDiffAnal())$gg)
       if(input$PlotVisuSelect=="Heatmap"){
         if(input$HeatMapType=="Counts") print(Plot_Visu_Heatmap(input,ResDiffAnal(),export=TRUE))
-        if(input$HeatMapType=="Log2FC") print(Plot_Visu_Heatmap_FC(input,BaseContrast,ResDiffAnal(),export=TRUE))
+        if(input$HeatMapType=="Log2FC") {      
+          BaseContrast = read.table(namesfile,header=TRUE)
+          filesize = file.info(namesfile)[,"size"]
+          if(is.na(filesize)){filesize=0}
+          if(filesize!=0) print(Plot_Visu_Heatmap_FC(input,BaseContrast,ResDiffAnal(),export=TRUE))
+        }
       } 
     
-      if(input$PlotVisuSelect=="Boxplot") print(Plot_Visu_Boxplot(input,ResDiffAnal()))
+      if(input$PlotVisuSelect=="Boxplot") print(Plot_Visu_Boxplot(input,ResDiffAnal(),alpha=ifelse(input$Exp_format_Visu=="eps",1,0.7)))
       if(input$PlotVisuSelect=="Diversity") print(Plot_Visu_Diversity(input,ResDiffAnal(),type="point"))
       if(input$PlotVisuSelect=="Rarefaction") print( Plot_Visu_Rarefaction(input,ResDiffAnal(),ranges$x,ranges$y,ylab=taxo))
       dev.off()
-    }
+    
   }
 )
 
@@ -1194,8 +1219,11 @@ output$RunButton <- renderUI({
 
   output$PlotVisuBar <- renderChart({
     resDiff = ResDiffAnal()
-    if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Barplot(input,resDiff)$plotd3)
-  },env=new.env())
+    res = NULL
+    if(!is.null(resDiff$dds) && length(input$VisuVarInt)>=1) tmp = Plot_Visu_Barplot(input,resDiff)
+    if(!is.null(tmp)) res = tmp$plotd3
+    return(res)
+    })
 
 # output$PlotVisu <- renderPlotly({
 #   resDiff = ResDiffAnal()
@@ -1278,6 +1306,15 @@ output$RunButton <- renderUI({
   })
 
 
+  output$ColBoxplot <- renderUI({
+    
+    VarInt = input$VisuVarInt
+    res = NULL
+    if(length(VarInt)>1) res = selectizeInput("BoxColorBy",h6(strong(paste("Color by"))),VarInt, selected = VarInt,multiple = TRUE)
+    return(res)
+  })
+  
+  
 #   output$DiversityBoxPlot <- renderPlot({
 #     resDiff = ResDiffAnal()
 #     if(!is.null(resDiff$dds)) Plot_Visu_Diversity(input,resDiff,type="box")
