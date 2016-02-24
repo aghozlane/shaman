@@ -418,7 +418,7 @@ body <- dashboardBody(
                   conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity'",
                                    radioButtons("SelectSpecifTaxo","Select the features",c("Most abundant"="Most","All"="All", "Differential features" = "Diff", "Non differential features" = "NoDiff"))
                   ),
-                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && (input.SelectSpecifTaxo=='Diff' || && input.SelectSpecifTaxo=='NoDiff') ",
+                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && (input.SelectSpecifTaxo=='Diff' || input.SelectSpecifTaxo=='NoDiff') ",
                                    selectizeInput("ContrastList_table_Visu","",choices = "", multiple = FALSE)
                   ),
                   conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity'",

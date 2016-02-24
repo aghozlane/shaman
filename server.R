@@ -676,18 +676,18 @@ output$InfoContrast <- renderInfoBox({
   res=NULL
   if(!is.null(resDiff)){
   
-  res = infoBox("Contrasts", subtitle = h6("At least one contrast (non null) must be defined"), icon = icon("warning"),color = "light-blue",width=NULL,fill=TRUE)
-  test = FALSE
-  filesize = isolate(file.info(namesfile)[,"size"])
-  
-  if(is.na(filesize)){filesize=0}
-  if(filesize!=0) 
-  {
-    tmp = read.table(namesfile,header=TRUE)
-    if(any(as.vector(tmp)!=0)) test = TRUE
-  }
-  
-  if(test) res = infoBox("Contrasts", subtitle = h6("Contrasts OK"), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
+    res = infoBox("Contrasts", subtitle = h6("At least one contrast (non null) must be defined"), icon = icon("warning"),color = "light-blue",width=NULL,fill=TRUE)
+    test = FALSE
+    filesize = isolate(file.info(namesfile)[,"size"])
+    
+    if(is.na(filesize)){filesize=0}
+    if(filesize!=0) 
+    {
+      tmp = read.table(namesfile,header=TRUE)
+      if(any(as.vector(tmp)!=0)) test = TRUE
+    }
+    
+    if(test) res = infoBox("Contrasts", subtitle = h6("Contrasts OK"), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
   }
     return(res)
   })

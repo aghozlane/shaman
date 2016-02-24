@@ -61,9 +61,6 @@ read_rdp <- function(filename, threshold_annot)
 
 
 
-
-
-
 CheckCountsTable <- function(counts)
   {
     Error = NULL
@@ -87,7 +84,7 @@ CheckCountsTable <- function(counts)
   {
     Error = NULL
     Warning = NULL
-    if(ncol(taxo)<=1){Error = "The number of columns of the taxonomy table must be at least 2" }
+    if(ncol(taxo)<1){Error = "The number of columns of the taxonomy table must be at least 1" }
     if(nrow(taxo)<=1){Error = "The number of rows if the taxonomy table must be at least 2" }
     if(TRUE%in%is.numeric(taxo)){Error = "The taxonomy table must contain only character" }
 
@@ -843,29 +840,24 @@ CheckCountsTable <- function(counts)
       }
       if (!is.null(val) && !is.null(list.val))
       {
+
         ## Create the variable to plot
         targetInt = as.data.frame(target[,VarInt])
         rownames(targetInt)=target[,1]  
-        
         ## Combining the Varint
         if(length(VarInt)>1){targetInt$AllVar = apply(targetInt,1,paste, collapse = "-"); targetInt$AllVar = factor(targetInt$AllVar,levels =  expand.grid2.list(list.val))}
         if(length(VarInt)<=1){targetInt$AllVar = target[,VarInt]; targetInt$AllVar = factor(targetInt$AllVar,levels = val)}
-        
         colnames(targetInt) = c(VarInt,"AllVar")
         
         ## Keep only the selected modalities
-        if(length(VarInt)>1) Kval = apply(expand.grid(val,val),1,paste, collapse = "-")
-        else Kval = val
-        if(!is.null(Kval))
-        {
-          ind_kept = which(targetInt$AllVar%in%Kval)
-          targetInt = targetInt[ind_kept,]
-        }
+        ind_kept = which(!is.na(targetInt$AllVar))
+        targetInt = targetInt[ind_kept,]
+          
         levelsMod = levels(targetInt$AllVar)
         
         ## Create the counts matrix only for the selected subset
         counts_tmp = counts[Taxonomy%in%ind_taxo,]
-        counts_tmp = as.data.frame(counts_tmp[,colnames(counts_tmp)%in%rownames(targetInt)])
+        counts_tmp = counts_tmp[,colnames(counts_tmp)%in%rownames(targetInt)]
         
         ## Proportions over all the taxonomies
         prop_all = t(counts)/rowSums(t(counts))
@@ -874,14 +866,14 @@ CheckCountsTable <- function(counts)
         rownames(prop_all) = targetInt$AllVar
         
         ## Be careful transposition !
-        if(aggregate && nrow(counts_tmp)>0)
+        if(aggregate && nrow(counts_tmp)>0 && nrow(targetInt)>0)
         { 
           counts_tmp_combined = aggregate(t(counts_tmp),by=list(targetInt$AllVar),sum)
           rownames(counts_tmp_combined) = counts_tmp_combined$Group.1
           namesCounts = counts_tmp_combined$Group.1
           counts_tmp_combined = as.matrix(counts_tmp_combined[,-1])
         }
-        if(!aggregate && nrow(counts_tmp)>0)
+        if(!aggregate && nrow(counts_tmp)>0 && nrow(targetInt)>0)
         {  
           counts_tmp_combined = t(counts_tmp)
           prop_tmp_combined = counts_tmp_combined/colSums(counts_tmp)
@@ -891,11 +883,14 @@ CheckCountsTable <- function(counts)
         }
         
         ## Ordering the counts
-        MeanCounts = apply(counts_tmp_combined,2,mean)
-        ord = order(MeanCounts,decreasing=TRUE)
-        counts_tmp_combined = as.matrix(counts_tmp_combined[,ord])
-        if(!aggregate) prop_tmp_combined = as.matrix(prop_tmp_combined[,ord])
-        prop_all = as.matrix(prop_all[,ord])
+        if(!is.null(counts_tmp_combined))
+        {
+          MeanCounts = apply(counts_tmp_combined,2,mean)
+          ord = order(MeanCounts,decreasing=TRUE)
+          counts_tmp_combined = as.matrix(counts_tmp_combined[,ord])
+          if(!aggregate) prop_tmp_combined = as.matrix(prop_tmp_combined[,ord])
+          prop_all = as.matrix(prop_all[,ord])
+        }
       }
     }
     
