@@ -96,7 +96,7 @@ shinyServer(function(input, output,session) {
   file.create(namesfile,showWarnings=FALSE)
 
   ## Popup messages
-  observe(if(input$AddRegScatter) info("By adding the regression line, you will loose interactivity."))
+  observe(if(input$AddRegScatter) info("By adding the regression line, you will lose interactivity."))
 
   ## Counts file
   dataInputCounts <-reactive({ 
@@ -1060,6 +1060,7 @@ output$exportVisu <- downloadHandler(
       } 
     
       if(input$PlotVisuSelect=="Boxplot") print(Plot_Visu_Boxplot(input,ResDiffAnal(),alpha=ifelse(input$Exp_format_Visu=="eps",1,0.7)))
+      if(input$PlotVisuSelect=="Scatterplot") print(Plot_Visu_Scatterplot(input,ResDiffAnal(),export=TRUE,lmEst = FALSE))
       if(input$PlotVisuSelect=="Diversity") print(Plot_Visu_Diversity(input,ResDiffAnal(),type="point"))
       if(input$PlotVisuSelect=="Rarefaction") print( Plot_Visu_Rarefaction(input,ResDiffAnal(),ranges$x,ranges$y,ylab=taxo))
       dev.off()

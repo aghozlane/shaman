@@ -1168,7 +1168,7 @@ CheckCountsTable <- function(counts)
         symbol_var = if (PchBy == "None" || is.null(PchBy)) factor(rep(1,nrow(data))) else data[,PchBy]
         size_var = if (PointSize == "None" || is.null(PointSize))  1 else data[,PointSize]
         
-        plot = ggplot(data, aes(x = x_var, y = y_var)) + geom_point(aes(color=col_var,size =size_var,shape = symbol_var),alpha=0.7) 
+        plot = ggplot(data, aes(x = x_var, y = y_var)) + geom_point(aes(color=col_var,size =size_var,shape = symbol_var),alpha=0.7) +theme_bw()
         if(input$SizeLabelScatter!=0) plot = plot + geom_text(aes(label=rownames(data),color=col_var,size=input$SizeLabelScatter/20),vjust = 0,nudge_y =0.05)
         plot = plot + xlab(Xvar) + ylab(Yvar)
         if(input$AddRegScatter) plot = plot + geom_smooth(method="lm")
