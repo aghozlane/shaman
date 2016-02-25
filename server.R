@@ -54,6 +54,12 @@ if (!require(biom)) {
 
 if (!require(devtools)) {
   install.packages('devtools')
+  library(devtools)
+}
+
+if (!require(scatterD3)) {
+  install.packages('scatterD3')
+  library(scatterD3)
 }
 
 if (!require(rNVD3)) {
@@ -67,7 +73,7 @@ if (!require(genefilter)) {
   biocLite("genefilter")
   library(genefilter)
 }
-
+library(shinyjs)
 # Allow to upload 50M files
 options(shiny.maxRequestSize=50*1024^2) 
 source("internal.R")
@@ -87,10 +93,10 @@ shinyServer(function(input, output,session) {
   ## Create base for contrast
   rand = floor(runif(1,0,1e9))
   namesfile = tempfile(pattern = "BaseContrast", tmpdir = tempdir(), fileext = "")
-  #paste("/srv/shiny-server/sample-apps/SHAMAN/BaseContrast_",rand,".txt",sep="")
   file.create(namesfile,showWarnings=FALSE)
 
-  #namesfile = "www/All_Contrast.txt"
+  ## Popup messages
+  observe(if(input$AddRegScatter) info("By adding the regression line, you will loose interactivity."))
 
   ## Counts file
   dataInputCounts <-reactive({ 
@@ -1253,8 +1259,34 @@ output$RunButton <- renderUI({
     return(resplot)
   },env=new.env())
   
+  
+  output$ScatterplotD3 <- renderScatterD3({
+    resDiff = ResDiffAnal()
+    if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Scatterplot(input,resDiff))
+  })
 
-
+  output$Scatterplotgg <- renderPlot({
+    resDiff = ResDiffAnal()
+    if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Scatterplot(input,resDiff,lmEst=FALSE))
+  })
+  
+  ## Regression coefficients Table
+  output$lmRegScatter <- renderDataTable(
+    Plot_Visu_Scatterplot(input,ResDiffAnal(),lmEst=TRUE)$regCoef, 
+    options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
+                   pageLength = 10,scrollX=TRUE
+    ))
+  
+  output$lmEquation <- renderPrint({ 
+    res = Plot_Visu_Scatterplot(input,ResDiffAnal(),lmEst=TRUE)
+    coef = res$regCoef
+    Rsq = res$Rsq
+    
+    div(HTML(paste(h4(strong("Linear equation: ")),
+               "y =", round(coef[2,1],2),'x ',ifelse(coef[1,1]>=0,"+",""), round(coef[1,1],2),'<br/>','<br/>',
+               h4(strong("Adjusted R squared:")),round(Rsq,5)*100," %")))
+  })
+  
   output$Boxplot <- renderPlot({
     resDiff = ResDiffAnal()
     if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Boxplot(input,resDiff))
@@ -1305,6 +1337,8 @@ output$RunButton <- renderUI({
     if(input$PlotVisuSelect=="Barplot") res =  showOutput("PlotVisuBar")
     if(input$PlotVisuSelect=="Heatmap") res =  d3heatmapOutput("heatmap", height = input$heightVisu+10)
     if(input$PlotVisuSelect=="Boxplot") res = plotOutput("Boxplot", height = input$heightVisu+10)
+    if(input$PlotVisuSelect=="Scatterplot" && !input$AddRegScatter) res = scatterD3Output("ScatterplotD3", height = input$heightVisu+10)
+    if(input$PlotVisuSelect=="Scatterplot" && input$AddRegScatter) res = plotOutput("Scatterplotgg", height = input$heightVisu+10)
     if(input$PlotVisuSelect=="Diversity") res =  plotOutput("DiversityPlot", height = input$heightVisu+10)
     if(input$PlotVisuSelect=="Rarefaction") res = plotOutput("RarefactionPlot",dblclick = "RarefactionPlot_dblclick",brush = brushOpts(id = "RarefactionPlot_brush",resetOnNew = TRUE), height = input$heightVisu+10)
     
@@ -1409,6 +1443,40 @@ output$RunButton <- renderUI({
       }
     
   })
+  
+  
+  output$VarIntVisuScatter <- renderUI({
+    
+    target=dataInputTarget()
+    data = dataInput()$data 
+    taxo = input$TaxoSelect
+    resDiff = ResDiffAnal()
+    res = list()
+    namesTarget = colnames(target)[2:ncol(target)]
+    
+    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target)) 
+    {
+      counts = dataMergeCounts()$counts
+      
+      ## Get numeric variables from target
+      typesTarget = sapply(target,class)
+      numInd = (typesTarget=="numeric")[2:ncol(target)]
+      Available_x = sort(rownames(counts))
+      if(any(numInd)) Available_x = c(Available_x,namesTarget[numInd])
+      Available_y = Available_x
+      
+      res[[1]] = selectizeInput("Xscatter",h6(strong("X variable")),Available_x, selected = Available_x[1],multiple = FALSE)
+      res[[2]] = selectizeInput("Yscatter",h6(strong("Y variable")),Available_y, selected = Available_x[2],multiple = FALSE)
+      res[[3]] = selectizeInput("ColorBy",h6(strong("Color variable")),c("None"="None",namesTarget[!numInd]),multiple = FALSE)
+      res[[4]] = selectizeInput("PchBy",h6(strong("Symbol variable")),c("None"="None",namesTarget[!numInd]),multiple = FALSE)
+      res[[5]] = selectizeInput("PointSize",h6(strong("Point size according to")),c("None"="None",Available_x), selected = NULL,multiple = FALSE)
+    }
+    
+    return(res)
+    
+  })
+  
+  
   #####################################################
   ##
   ##                KRONA

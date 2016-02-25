@@ -1111,6 +1111,83 @@ CheckCountsTable <- function(counts)
   }
   
   
+  
+  ######################################################
+  ##
+  ##            Scatter plot
+  ##
+  ######################################################
+  
+  
+  Plot_Visu_Scatterplot<- function(input,resDiff,export=FALSE,lmEst = FALSE){
+    
+    plot = NULL
+    regCoef = NULL
+    Rsq = NULL
+    dds = resDiff$dds
+    counts = as.data.frame(round(counts(dds, normalized = TRUE)))
+    target = as.data.frame(resDiff$target)
+    data = cbind(target,log2(t(counts)+1))
+    
+    ## Get Input for ScatterPlot
+    Xvar = input$Xscatter
+    Yvar = input$Yscatter
+    ColBy = input$ColorBy
+    PchBy = input$PchBy
+    PointSize = input$PointSize
+    
+    x_var = if (is.null(Xvar)) NULL else data[,Xvar]
+    y_var = if (is.null(Yvar)) NULL else data[,Yvar]
+    col_var = if (ColBy== "None" || is.null(ColBy)) NULL else data[,ColBy]
+    symbol_var = if (PchBy == "None" || is.null(PchBy)) NULL else data[,PchBy]
+    size_var = if (PointSize == "None" || is.null(PointSize))  NULL else data[,PointSize]
+    
+    if(!export && !input$AddRegScatter && !lmEst){
+      plot = scatterD3(x = x_var,
+                            y = y_var,
+                            lab = rownames(data),
+                            xlab = Xvar,
+                            ylab = Yvar,
+                            col_var = col_var,
+                            col_lab = ColBy,
+                            symbol_var = symbol_var,
+                            symbol_lab = PchBy,
+                            size_var = size_var,
+                            size_lab = PointSize,
+                            key_var = rownames(data),
+                            height = input$heightVisu,
+                            point_opacity = 0.7,
+                            labels_size = input$SizeLabelScatter,
+                            transitions = TRUE)
+      return(plot)
+    }
+
+    if(export || input$AddRegScatter){
+      if(!lmEst ){
+        col_var = if (ColBy== "None" || is.null(ColBy)) 1 else data[,ColBy]
+        symbol_var = if (PchBy == "None" || is.null(PchBy)) factor(rep(1,nrow(data))) else data[,PchBy]
+        size_var = if (PointSize == "None" || is.null(PointSize))  1 else data[,PointSize]
+        
+        plot = ggplot(data, aes(x = x_var, y = y_var)) + geom_point(aes(color=col_var,size =size_var,shape = symbol_var),alpha=0.7) 
+        if(input$SizeLabelScatter!=0) plot = plot + geom_text(aes(label=rownames(data),color=col_var,size=input$SizeLabelScatter/20),vjust = 0,nudge_y =0.05)
+        plot = plot + xlab(Xvar) + ylab(Yvar)
+        if(input$AddRegScatter) plot = plot + geom_smooth(method="lm")
+      return(plot)
+      }
+    }
+    if(lmEst)
+    {
+      res = lm(y_var~x_var)
+      sumRes = summary(res)
+      regCoef = sumRes$coefficients 
+      rownames(regCoef) = c("Intercept",Xvar)
+      Rsq = sumRes$r.squared
+      return(list(regCoef=regCoef,Rsq = Rsq))
+    }
+  }
+  
+  
+  
   ######################################################
   ##
   ##            GLOBAL VIEW

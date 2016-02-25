@@ -2,7 +2,7 @@ if(!require(shinydashboard)){
   install.packages('shinydashboard')
   library(shinydashboard)
 }
-
+library(shinyjs)
 if (!require(psych)) {
   install.packages('psych')
   library(psych)
@@ -41,6 +41,11 @@ if (!require(DT)) {
 if (!require(RColorBrewer)) {
   install.packages('RColorBrewer')
   library(RColorBrewer)
+}
+
+if (!require(scatterD3)) {
+  install.packages('scatterD3')
+  library(scatterD3)
 }
 
 if (!require(gplots)) {
@@ -394,12 +399,27 @@ body <- dashboardBody(
   tabItem(tabName = "Visu",
           fluidRow(
             column(width=9,
-                   uiOutput("plotVisu")
-            ),
+                   uiOutput("plotVisu"),
+                   conditionalPanel(condition="input.PlotVisuSelect=='Scatterplot' && !input.AddRegScatter",
+                                    useShinyjs(),
+                                    br(),
+                                    p(actionButton("scatterD3-reset-zoom", HTML("<span class='glyphicon glyphicon-search' aria-hidden='true'></span> Reset Zoom")),Align="right")
+                                    ), 
+                   conditionalPanel(condition="input.PlotVisuSelect=='Scatterplot' && input.AddRegScatter", 
+                                    column(width=6,
+                                           br(),
+                                           box(title = "Regression coefficients",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
+                                                dataTableOutput("lmRegScatter")
+                                           )
+                                    ),
+                                    column(width=6,br(),htmlOutput("lmEquation"))
+                   )
+                                    
+                   ),
 
             column(width=3,
               box(title = "Select your plot",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = FALSE,collapsed= FALSE,
-                  selectizeInput("PlotVisuSelect","",c("Barplot"="Barplot","Heatmap"="Heatmap","Boxplot"="Boxplot","Diversity"="Diversity","Rarefaction"="Rarefaction"),selected = "Barplot")
+                  selectizeInput("PlotVisuSelect","",c("Barplot"="Barplot","Heatmap"="Heatmap","Boxplot"="Boxplot","Scatterplot"="Scatterplot","Diversity"="Diversity","Rarefaction"="Rarefaction"),selected = "Scatterplot")
               ),
 
 
@@ -409,19 +429,22 @@ body <- dashboardBody(
               ###
               ########################################################################
               box(title = "Options",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
-                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction'",
-                                    uiOutput("VarIntVisu"),
+                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Scatterplot' ",
+                                   uiOutput("VarIntVisu"),
                                    h5(strong("Select the modalities")),
                                    uiOutput("ModVisu")
                   ),
-                  
-                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity'",
+                  conditionalPanel(condition="input.PlotVisuSelect=='Scatterplot' ",
+                                   uiOutput("VarIntVisuScatter"),
+                                   checkboxInput("AddRegScatter","Add regression line",FALSE)
+                  ),                 
+                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && input.PlotVisuSelect!='Scatterplot'",
                                    radioButtons("SelectSpecifTaxo","Select the features",c("Most abundant"="Most","All"="All", "Differential features" = "Diff", "Non differential features" = "NoDiff"))
                   ),
-                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && (input.SelectSpecifTaxo=='Diff' || input.SelectSpecifTaxo=='NoDiff') ",
+                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && input.PlotVisuSelect!='Scatterplot' && (input.SelectSpecifTaxo=='Diff' || input.SelectSpecifTaxo=='NoDiff') ",
                                    selectizeInput("ContrastList_table_Visu","",choices = "", multiple = FALSE)
                   ),
-                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity'",
+                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && input.PlotVisuSelect!='Scatterplot'",
                                    uiOutput("TaxoToPlotVisu")
                   ),
 
@@ -507,6 +530,16 @@ body <- dashboardBody(
                                    column(width=6,sliderInput("lowerMargin", h6("Lower"),min=0,max=20,value = 6,step = 1))
                                  )
                 ),
+                
+                ##################
+                ## Scatterplot
+                ##################
+                conditionalPanel(condition="input.PlotVisuSelect=='Scatterplot'",
+                                 fluidRow(
+                                   column(width=12,sliderInput("SizeLabelScatter", h6("Label size"),min=0,max=50,value = 10,step = 1))
+                                  )
+                ),
+                
                 ##################
                 ## ALL
                 ##################
