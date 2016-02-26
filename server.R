@@ -80,6 +80,7 @@ if (!require(googleVis)) {
 }
 
 library(shinyjs)
+
 # Allow to upload 50M files
 options(shiny.maxRequestSize=50*1024^2) 
 source("internal.R")
@@ -376,7 +377,10 @@ shinyServer(function(input, output,session) {
     res = NULL
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0)
     {
+      taxo = rbind(taxo,rep(NA,ncol(taxo)))
       tmpPercent = round(apply(is.na(taxo),2,table)["FALSE",]/nrow(counts)*100,2)
+
+      print(tmpPercent)
       df <- data.frame(Label = colnames(taxo),Value = tmpPercent)
     
       res = gvisGauge(df,options=list(min=0, max=100, greenFrom=80,

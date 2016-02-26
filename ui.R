@@ -431,7 +431,7 @@ body <- dashboardBody(
 
             column(width=3,
               box(title = "Select your plot",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = FALSE,collapsed= FALSE,
-                  selectizeInput("PlotVisuSelect","",c("Barplot"="Barplot","Heatmap"="Heatmap","Boxplot"="Boxplot","Scatterplot"="Scatterplot","Diversity"="Diversity","Rarefaction"="Rarefaction"),selected = "Barplot")
+                  selectizeInput("PlotVisuSelect","",c("Barplot"="Barplot","Heatmap"="Heatmap","Boxplot"="Boxplot","Diversity"="Diversity","Rarefaction"="Rarefaction"),selected = "Barplot")
               ),
 
 

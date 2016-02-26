@@ -1223,6 +1223,7 @@ CheckCountsTable <- function(counts)
 
     if(nrow(counts_tmp_combined)>0 && !is.null(counts_tmp_combined) && !is.null(targetInt))
     { 
+      print(TaxoNumber(counts_tmp_combined))
       alpha <- tapply(TaxoNumber(counts_tmp_combined), targetInt$AllVar, mean)
       gamma <- TaxoNumber(counts_tmp_combined, targetInt$AllVar)
       beta = gamma/alpha - 1
