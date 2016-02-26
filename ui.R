@@ -70,6 +70,12 @@ if (!require(genefilter)) {
   library(genefilter)
 }
 
+
+if (!require(googleVis)) {
+  install.packages('googleVis')
+  library(googleVis)
+}
+
 sidebar <- dashboardSidebar(
   sidebarMenu(
     menuItem("Home", tabName = "Home", icon = icon("home")),
@@ -403,23 +409,29 @@ body <- dashboardBody(
                    conditionalPanel(condition="input.PlotVisuSelect=='Scatterplot' && !input.AddRegScatter",
                                     useShinyjs(),
                                     br(),
-                                    p(actionButton("scatterD3-reset-zoom", HTML("<span class='glyphicon glyphicon-search' aria-hidden='true'></span> Reset Zoom")),Align="right")
+                                    p(actionButton("scatterD3-reset-zoom", HTML("<span class='glyphicon glyphicon-search' aria-hidden='true'></span> Reset Zoom")),Align="right"),
+                                    box(title = "Correlation table",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
+                                        dataTableOutput("CorTable")
+                                    )
                                     ), 
+                   
                    conditionalPanel(condition="input.PlotVisuSelect=='Scatterplot' && input.AddRegScatter", 
-                                    column(width=6,
-                                           br(),
-                                           box(title = "Regression coefficients",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
-                                                dataTableOutput("lmRegScatter")
-                                           )
+                                    fluidRow(
+                                      column(width=6,
+                                      br(),
+                                      box(title = "Regression coefficients",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
+                                          dataTableOutput("lmRegScatter")
+                                      )
                                     ),
                                     column(width=6,br(),htmlOutput("lmEquation"))
+                                    )
                    )
                                     
                    ),
 
             column(width=3,
               box(title = "Select your plot",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = FALSE,collapsed= FALSE,
-                  selectizeInput("PlotVisuSelect","",c("Barplot"="Barplot","Heatmap"="Heatmap","Boxplot"="Boxplot","Scatterplot"="Scatterplot","Diversity"="Diversity","Rarefaction"="Rarefaction"),selected = "Scatterplot")
+                  selectizeInput("PlotVisuSelect","",c("Barplot"="Barplot","Heatmap"="Heatmap","Boxplot"="Boxplot","Scatterplot"="Scatterplot","Diversity"="Diversity","Rarefaction"="Rarefaction"),selected = "Barplot")
               ),
 
 
@@ -436,6 +448,7 @@ body <- dashboardBody(
                   ),
                   conditionalPanel(condition="input.PlotVisuSelect=='Scatterplot' ",
                                    uiOutput("VarIntVisuScatter"),
+                                   radioButtons("CorMeth","Correlation method",c("Pearson" = "pearson","Spearman" = "spearman"),inline=TRUE),
                                    checkboxInput("AddRegScatter","Add regression line",FALSE)
                   ),                 
                   conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && input.PlotVisuSelect!='Scatterplot'",
@@ -483,10 +496,10 @@ body <- dashboardBody(
                 conditionalPanel(condition="input.PlotVisuSelect=='Diversity'",
                                  selectizeInput("WhichDiv",h6(strong("Diversity")),c('Alpha','Beta','Gamma'),selected  = c('Alpha','Beta','Gamma'),multiple=TRUE),
                                  checkboxInput("AddBoxplotDiv","AddBoxplot",value=FALSE)
-                ),
-                conditionalPanel(condition="input.PlotVisuSelect=='Diversity' && input.AddBoxplotDiv",
-                                 uiOutput("SelectVarBoxDiv")
                 )
+#                 conditionalPanel(condition="input.PlotVisuSelect=='Diversity' && input.AddBoxplotDiv",
+#                                  uiOutput("SelectVarBoxDiv")
+#                 )
               ),
 
 

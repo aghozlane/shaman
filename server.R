@@ -73,6 +73,12 @@ if (!require(genefilter)) {
   biocLite("genefilter")
   library(genefilter)
 }
+
+if (!require(googleVis)) {
+  install.packages('googleVis')
+  library(googleVis)
+}
+
 library(shinyjs)
 # Allow to upload 50M files
 options(shiny.maxRequestSize=50*1024^2) 
@@ -355,13 +361,51 @@ shinyServer(function(input, output,session) {
     {
       tabBox(width = NULL, selected = "Count table",
              tabPanel("Count table",dataTableOutput("DataCounts")),
-             tabPanel("Taxonomy",dataTableOutput("DataTaxo"))  
+             tabPanel("Taxonomy",dataTableOutput("DataTaxo")),
+             tabPanel("Summary",h5(strong("Percentage of annotation")),htmlOutput("SummaryView"),
+                      br(),h5(strong("Number of features by level:")),plotOutput("SummaryViewBarplot",width = 1200,height=500))
       )
     }
     
   })
 
-
+  output$SummaryView <- renderGvis({
+    data = dataInput()$data
+    taxo = data$taxo
+    counts = data$counts
+    res = NULL
+    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0)
+    {
+      tmpPercent = round(apply(is.na(taxo),2,table)["FALSE",]/nrow(counts)*100,2)
+      df <- data.frame(Label = colnames(taxo),Value = tmpPercent)
+    
+      res = gvisGauge(df,options=list(min=0, max=100, greenFrom=80,
+                                    greenTo=100, yellowFrom=60, yellowTo=80,
+                                    redFrom=0, redTo=60, width=1200, height=300))
+    }
+    return(res)
+  })
+  
+  
+  output$SummaryViewBarplot <- renderPlot({
+    data = dataInput()$data
+    taxo = data$taxo
+    counts = data$counts
+    res = NULL
+    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0)
+    {
+      colors=rep(c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c","#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5","#8c564b",
+                   "#c49c94","#e377c2","#f7b6d2","#7f7f7f", "#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"),ceiling(ncol(taxo)/20))
+      tmp = apply(taxo,2,unique)
+      nbfeatures = as.numeric(lapply(tmp,length)) -as.numeric(lapply(lapply(tmp,is.na),any))
+      df <- data.frame(Label = colnames(taxo),Count = nbfeatures)
+      df$Label = factor(df$Label,levels =colnames(taxo) )
+      res = ggplot(df,aes(x=Label,y=Count,fill=Label))+geom_bar(stat="identity")
+      res = res + theme_bw() + xlab("Taxonomy") + scale_fill_manual(values=colors) + guides(fill=FALSE)
+    }
+    return(res)
+  })
+  
   #####################################################
   ##
   ##                TARGET FILE
@@ -1278,6 +1322,13 @@ output$RunButton <- renderUI({
                    pageLength = 10,scrollX=TRUE
     ))
   
+  ## Correlation coefficients Table
+  output$CorTable <- renderDataTable(
+    Plot_Visu_Scatterplot(input,ResDiffAnal(),CorEst=TRUE)$cor.est, 
+    options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
+                   pageLength = 10,scrollX=TRUE
+    ))
+  
   output$lmEquation <- renderPrint({ 
     res = Plot_Visu_Scatterplot(input,ResDiffAnal(),lmEst=TRUE)
     coef = res$regCoef
@@ -1320,18 +1371,18 @@ output$RunButton <- renderUI({
   })
 
 
-
-  output$SelectVarBoxDiv <- renderUI({
-    
-    selectVar = input$VisuVarInt
-    
-    if(!is.null(selectVar)) 
-    {
-      selectInput("VarBoxDiv", h6(strong("By")),selectVar)
-    }
-    
-  })
-  
+# 
+#   output$SelectVarBoxDiv <- renderUI({
+#     
+#     selectVar = input$VisuVarInt
+#     
+#     if(!is.null(selectVar)) 
+#     {
+#       selectInput("VarBoxDiv", h6(strong("By")),selectVar)
+#     }
+#     
+#   })
+#   
   output$plotVisu <- renderUI({
     
     res=NULL

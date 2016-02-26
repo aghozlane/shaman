@@ -1119,11 +1119,13 @@ CheckCountsTable <- function(counts)
   ######################################################
   
   
-  Plot_Visu_Scatterplot<- function(input,resDiff,export=FALSE,lmEst = FALSE){
+  Plot_Visu_Scatterplot<- function(input,resDiff,export=FALSE,lmEst = FALSE,CorEst=FALSE){
     
     plot = NULL
     regCoef = NULL
     Rsq = NULL
+    cor.est = NULL
+    cor.pvalue = NULL
     dds = resDiff$dds
     counts = as.data.frame(round(counts(dds, normalized = TRUE)))
     target = as.data.frame(resDiff$target)
@@ -1142,7 +1144,7 @@ CheckCountsTable <- function(counts)
     symbol_var = if (PchBy == "None" || is.null(PchBy)) NULL else data[,PchBy]
     size_var = if (PointSize == "None" || is.null(PointSize))  NULL else data[,PointSize]
     
-    if(!export && !input$AddRegScatter && !lmEst){
+    if(!export && !input$AddRegScatter && !lmEst && !CorEst){
       plot = scatterD3(x = x_var,
                             y = y_var,
                             lab = rownames(data),
@@ -1163,7 +1165,7 @@ CheckCountsTable <- function(counts)
     }
 
     if(export || input$AddRegScatter){
-      if(!lmEst ){
+      if(!lmEst && !CorEst){
         col_var = if (ColBy== "None" || is.null(ColBy)) 1 else data[,ColBy]
         symbol_var = if (PchBy == "None" || is.null(PchBy)) factor(rep(1,nrow(data))) else data[,PchBy]
         size_var = if (PointSize == "None" || is.null(PointSize))  1 else data[,PointSize]
@@ -1175,7 +1177,7 @@ CheckCountsTable <- function(counts)
       return(plot)
       }
     }
-    if(lmEst)
+    if(lmEst && !CorEst)
     {
       res = lm(y_var~x_var)
       sumRes = summary(res)
@@ -1183,6 +1185,14 @@ CheckCountsTable <- function(counts)
       rownames(regCoef) = c("Intercept",Xvar)
       Rsq = sumRes$r.squared
       return(list(regCoef=regCoef,Rsq = Rsq))
+    }
+    if(CorEst)
+    {
+      print(head(data))
+      
+      cor.est = cor(as.matrix(data),method = input$CorMeth)
+      #cor.pvalue = cor.test(data,method = input$CorMeth)
+      return(list(cor.est=cor.est))
     }
   }
   
