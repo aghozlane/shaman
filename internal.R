@@ -202,7 +202,7 @@ CheckCountsTable <- function(counts)
     ## Counts and taxo tables
     CT = dataInput$counts
     taxo = dataInput$taxo
-        
+
     ## Select cols in the target
     labels = target[,1]
     ind = which(colnames(CT)%in%labels)
@@ -222,17 +222,24 @@ CheckCountsTable <- function(counts)
       
       ## Counts normalisation
       dds <- DESeqDataSetFromMatrix(countData=CT, colData=target, design=design)
-      
       ## Normalisation with or without 0
       if(input$AccountForNA || RowProd==0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT))
       if(!input$AccountForNA && RowProd!=0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)))
        
       normFactors = sizeFactors(dds)
-        
+      # Only interesting OTU
+      merged_table = merge(CT, taxo[order(rownames(CT)),], by="row.names")
+      CT = merged_table[,2: (dim(CT)[2]+1)]
+      taxo = merged_table[,(dim(CT)[2]+2):dim(merged_table)[2]]
+      rownames(CT) = merged_table[,1]
+      rownames(taxo) = merged_table[,1]
       ordOTU = order(rownames(taxo))
-      indOTU_annot = which(rownames(CT)%in%rownames(taxo))
-      counts_annot = CT[indOTU_annot[ordOTU],]
-
+      counts_annot = CT
+      
+#       ordOTU = order(rownames(taxo))
+#       indOTU_annot = which(rownames(CT)%in%rownames(taxo))
+#       counts_annot = CT[indOTU_annot[ordOTU],]
+     
       if(taxoSelect=="OTU") counts = counts_annot
       else{
         taxoS = taxo[ordOTU,taxoSelect]
@@ -1376,6 +1383,7 @@ CheckCountsTable <- function(counts)
     counts <- data.frame(Id = rownames(counts(dds)), counts(dds), round(counts(dds, normalized = TRUE)))
     colnames(counts) <- c("Id", colnames(counts(dds)), paste0("norm.", colnames(counts(dds))))
     bm <- data.frame(Id = rownames(result[[1]]), baseMean = round(result[[1]][,"baseMean"], 2))
+    
     base <- merge(merge(info, counts, by = "Id", all.y = TRUE), bm, by = "Id")
     tmp <- base[, paste("norm", colnames(counts(dds)), sep = ".")]
     for (cond in conds) {
