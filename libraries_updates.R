@@ -40,3 +40,21 @@ cp_to_rNVD3 = function(p, dest){
 #apply the copy to all the css files
 sapply(css_files, cp_to_rNVD3, rNVD3_path)
 
+# first get d3heatmap javascript library path
+scatterD3_path = paste(.libPaths(), 'scatterD3/htmlwidgets/', sep='/')
+
+# then get all js files in this directory
+js_files = dir(path=scatterD3_path, pattern = "*.js$", recursive = T, full.names = T)
+
+# then create a function tu update the files
+d3_to_d333 = function(target){
+  # the function will use the bash tool sed on the file target
+  # it makes 3 replacements
+  system(command=paste('sed -i .bck -e "s/d3\\ /d333 /g" -e "s/d3\\./d333./g" -e "s/d3;/d333;/g" -e "s/d3=/d333=/g" ', target))
+}
+# apply the replacement function to all js files
+sapply(js_files, d3_to_d333)
+
+# change from d3.min.js to d3.js in the yaml file
+system(command=paste('sed -i .bck -e "s/d3$/d333/g" ', .libPaths(), '/scatterD3/htmlwidgets/scatterD3.yaml', sep=''))
+
