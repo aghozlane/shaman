@@ -206,10 +206,12 @@ CheckCountsTable <- function(counts)
     ## Select cols in the target
     labels = target[,1]
     ind = which(colnames(CT)%in%labels)
-    
+
+
     ## Get the feature size for the normalisation
     Size_indcol = which(toupper(colnames(CT))%in%"SIZE")
     if(length(Size_indcol)==1) FeatureSize = CT[,Size_indcol]
+    
     
     if(length(ind)==length(labels))
     { 
@@ -254,6 +256,7 @@ CheckCountsTable <- function(counts)
       CheckTarget = TRUE
     }
     return(list(counts=counts,CheckTarget=CheckTarget,normFactors=normFactors, CT_noNorm=CT_noNorm))
+    #return(list(counts=counts,target=target[ind,],labeled=labeled,normFactors=normFactors, CT_noNorm=CT_noNorm))
   }
   
   ## Get the geometric mean of the counts (0 are replaced by NA values)
@@ -289,7 +292,7 @@ CheckCountsTable <- function(counts)
     dds <- DESeqDataSetFromMatrix(countData=counts, colData=target, design=design)
     sizeFactors(dds) = normFactorsOTU
     dds <- estimateDispersions(dds, fitType=input$fitType)
-    dds <- nbinomWaldTest(dds)
+    dds <- nbinomWaldTest(dds,modelMatrixType = "expanded")
     countsNorm = counts(dds, normalized = TRUE)
     return(list(dds = dds,raw_counts=counts,countsNorm=countsNorm,target=target,design=design,normFactors = normFactorsOTU,CT_noNorm=CT_noNorm))
   }
@@ -1370,7 +1373,7 @@ CheckCountsTable <- function(counts)
     conds = unique(group)
     
     result = list()
-    alpha = input$AlphaVal
+    alpha = as.numeric(input$AlphaVal)
     cooksCutoff = ifelse(input$CooksCutOff!='Auto',ifelse(input$CooksCutOff!=Inf,input$CutOffVal,Inf),TRUE)
     result[[input$ContrastList_table]] <- results(dds,contrast=BaseContrast[,input$ContrastList_table],pAdjustMethod=input$AdjMeth,
                                                   cooksCutoff=cooksCutoff,
@@ -1423,9 +1426,10 @@ CheckCountsTable <- function(counts)
       mcols.add$outlier <- ifelse(mcols(dds)$maxCooks > cooksCutoff, "Yes", "No")
       complete.name <- merge(complete.name, mcols.add, by = "Id")
       complete[[name]] <- complete.name
-      up.name <- complete.name[which(complete.name$padj <= alpha & complete.name$betaConv & complete.name$log2FoldChange>=0), ]
+      complete.name=complete.name[order(complete.name$padj),]
+      up.name <- complete.name[which(complete.name$padj <= alpha & complete.name$betaConv & complete.name$log2FoldChange>=0.0), ]
       up.name <- up.name[order(up.name$padj), ]
-      down.name <- complete.name[which(complete.name$padj<=alpha & complete.name$betaConv & complete.name$log2FoldChange<=0), ]
+      down.name <- complete.name[which(complete.name$padj<=alpha & complete.name$betaConv & complete.name$log2FoldChange<=0.0), ]
       down.name <- down.name[order(down.name$padj), ]
 
       name <- gsub(" ", "", name)

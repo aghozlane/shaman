@@ -216,7 +216,8 @@ body <- dashboardBody(
 
     tabItem(tabName = "RunDiff",
             fluidRow(
-              column(width=3,infoBoxOutput("RowTarget",width=NULL)),
+              column(width=3,valueBoxOutput("RowTarget",width=NULL)),
+              #column(width=3,infoBoxOutput("RowTarget",width=NULL)),
               column(width=3,infoBoxOutput("InfoTaxo",width=NULL)),
               column(width=3,infoBoxOutput("InfoDESeq",width=NULL)),
               column(width=3,infoBoxOutput("InfoContrast",width=NULL))
@@ -473,7 +474,7 @@ body <- dashboardBody(
                 ## HEATMAP
                 ##################
                 conditionalPanel(condition="input.PlotVisuSelect=='Heatmap'",
-                                 selectizeInput(inputId = "HeatMapType",label = h6(strong("Type of data")),choices = c("Counts" = "Counts", "Log2FC" = "Log2FC"),selected = "Counts")                                 
+                                 selectizeInput(inputId = "HeatMapType",label = h6(strong("Type of data")),choices = c("Log2Counts" = "Counts", "Log2FoldChange" = "Log2FC"),selected = "Counts")                                 
                 ),
                 conditionalPanel(condition="input.PlotVisuSelect=='Heatmap' && input.HeatMapType=='Log2FC'",
                                  selectizeInput("ContrastList_table_FC",h6(strong("Contrasts (Min = 2)")),choices = "", multiple = TRUE)

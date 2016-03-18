@@ -215,8 +215,9 @@ shinyServer(function(input, output,session) {
     CheckTarget = FALSE
     normFactors = NULL
     CT_noNorm = NULL
+    #labeled= NULL
     data = dataInput()$data
-    target = isolate(dataInputTarget())
+    target = isolate(dataInputTarget()$target)
     taxo = isolate(input$TaxoSelect)
     
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target)) 
@@ -225,10 +226,13 @@ shinyServer(function(input, output,session) {
       tmp = isolate(GetCountsMerge(input,data,taxo,target,design))
       counts = tmp$counts
       CheckTarget = tmp$CheckTarget
+      #target = tmp$target
+      #labeled = tmp$labeled
       normFactors = tmp$normFactors
       CT_noNorm = tmp$CT_noNorm
     }
     return(list(counts=counts,CheckTarget=CheckTarget,normFactors=normFactors,CT_noNorm=CT_noNorm))
+    #return(list(counts=counts,target=target,labeled=labeled,normFactors=normFactors,CT_noNorm=CT_noNorm))
   })
 
 
@@ -422,16 +426,26 @@ shinyServer(function(input, output,session) {
     
     inFile <- input$fileTarget
     counts = dataInput()$data$counts
+    
+    
     if (is.null(inFile)) return(NULL)
     
     
     data = read.csv(inFile$datapath,sep="\t",header=TRUE)
     rownames(data) <- as.character(data[, 1])
+    ind = which(rownames(data)%in%colnames(counts))
     #ord = order(rownames(data))
     #data = data[ord,]
     ### A SUPPRIMER 
     #rownames(data) <- colnames(counts)
-    return((data))
+    
+    # Percent annotated
+    print(ind)
+    print(colnames(counts))
+    print(rownames(data))
+    labeled = length(ind)/length(colnames(counts))*100.0
+    
+    return(list(target=data[ind,], labeled=labeled))
   })
 
 
@@ -439,7 +453,7 @@ shinyServer(function(input, output,session) {
   ## Interest Variables
   output$SelectInterestVar <- renderUI({
         
-    target=dataInputTarget()
+    target=dataInputTarget()$target
     
     if(!is.null(target)) 
     {
@@ -453,7 +467,7 @@ shinyServer(function(input, output,session) {
   ## Interactions
   output$SelectInteraction2 <- renderUI({
         
-    target = dataInputTarget()
+    target = dataInputTarget()$target
 
     if(!is.null(target)) 
     {
@@ -467,7 +481,7 @@ shinyServer(function(input, output,session) {
   ## Reference radio buttons
   output$RefSelect <- renderUI({
     
-    target = dataInputTarget()
+    target = dataInputTarget()$target
     RB=list()
     if(!is.null(target)) 
     {
@@ -489,16 +503,22 @@ shinyServer(function(input, output,session) {
 
   # Infobox design
   output$RowTarget <- renderInfoBox({
-    
-    target = dataInputTarget()
-    
-    if(!is.null(target)) 
+    #target = dataInputTarget()
+    #labeled = dataMergeCounts()$labeled
+    labeled = dataInputTarget()$labeled
+    if(!is.null(labeled)) 
     {
       #### Ajout fontion check target
-      infoBox(h6(strong("Target file")), subtitle = h6("Your target file is OK"), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
+      #infoBox(h6(strong("Target file")), subtitle = h6("Your target file is OK"), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
+      labeled = round(labeled,2)
+      if(labeled>0) res = valueBox(paste0(labeled, "%"),h6(strong("Labeled features")), color = "green",width=NULL,icon = icon("list"))
+      else res = valueBox(paste0(labeled, "%"),h6(strong("Labeled features")), color = "red",width=NULL,icon = icon("list"))  
     }
-    else infoBox(h6(strong("Target file")), subtitle = h6("Label of the target file must correspond to count table column names") ,color = "light-blue",width=NULL,fill=TRUE, icon = icon("warning"))
-  })
+    #else infoBox(h6(strong("Target file")), subtitle = h6("Label of the target file must correspond to count table column names") ,color = "light-blue",width=NULL,fill=TRUE, icon = icon("warning"))
+    else res = valueBox(paste0(0, "%"),h6(strong("Labeled features")), color = "light-blue",width=NULL,icon = icon("list"))
+    return(res)
+  }
+  )
 
 
 
@@ -551,7 +571,7 @@ shinyServer(function(input, output,session) {
   ## Box for target visualisation
   output$BoxTarget <- renderUI({
     
-    target = dataInputTarget()
+    target = dataInputTarget()$target
     
     if(!is.null(target) &&  nrow(target)>0)
     {
@@ -877,7 +897,9 @@ output$InfoContrast <- renderInfoBox({
     counts = dataMergeCounts()$counts
     CT_noNorm = dataMergeCounts()$CT_noNorm
     normFactors = dataMergeCounts()$normFactors
-    target = dataInputTarget()
+    ## HEEEERRREE
+    target = dataInputTarget()$target
+    print(target)
     design = GetDesign(input)
    
     Get_dds_object(input,counts,target,design,normFactors,CT_noNorm)
@@ -942,7 +964,7 @@ output$InfoContrast <- renderInfoBox({
   
   output$VarIntDiag <- renderUI({
     
-    target=dataInputTarget()
+    target=dataInputTarget()$target
     
     if(!is.null(target)) 
     {
@@ -991,7 +1013,7 @@ output$InfoContrast <- renderInfoBox({
   output$ModMat <- renderUI({
     
     VarInt = input$VarInt
-    target = dataInputTarget()
+    target = dataInputTarget()$target
     
     Mod = list()
     
@@ -1011,7 +1033,7 @@ output$InfoContrast <- renderInfoBox({
     Mod = NULL
     
     VisuVarInt = input$VisuVarInt
-    target = dataInputTarget()
+    target = dataInputTarget()$target
     if(!is.null(VisuVarInt))
     {
       Mod = list()
@@ -1261,7 +1283,7 @@ output$ExportTableButton <- renderUI({
 output$RunButton <- renderUI({
   
   res = NULL
-  target = dataInputTarget()
+  target = dataInputTarget()$target
   taxo = input$TaxoSelect
   if(!is.null(target) && taxo!="...") res = actionButton("RunDESeq",strong("Run analysis"),icon = icon("caret-right"))
   
@@ -1450,7 +1472,7 @@ output$RunButton <- renderUI({
             cont = which(colnames(padj)%in%SelContrast)
             padj = padj[,cont] 
           }
-          ind = which(padj<=input$AlphaVal)
+          ind = which(padj<=as.numeric(input$AlphaVal))
           if(length(ind)>0) selTaxo = Feature_names[ind]
           else selTaxo = NULL
           res = selectizeInput("selectTaxoPlot",h6(strong(paste("Select the",input$TaxoSelect, "to plot"))),Available_taxo, selected = selTaxo,multiple = TRUE,options = list(minItems = 2))
@@ -1471,7 +1493,7 @@ output$RunButton <- renderUI({
             cont = which(colnames(padj)%in%SelContrast)
             padj = padj[,cont] 
           }
-          ind = which(padj>input$AlphaVal)
+          ind = which(padj>as.numeric(input$AlphaVal))
           if(length(ind)>0) selTaxo = Feature_names[ind]
           else selTaxo = NULL
           res = selectizeInput("selectTaxoPlot",h6(strong(paste("Select the",input$TaxoSelect, "to plot"))),Available_taxo, selected = selTaxo,multiple = TRUE,options = list(minItems = 2))
@@ -1490,7 +1512,7 @@ output$RunButton <- renderUI({
 #     if(length(int)>=2) intSel = int[c(1,2)]
 #     else intSel = int[1]
         
-      target=dataInputTarget()
+      target=dataInputTarget()$target
       
       if(!is.null(target)) 
       {
