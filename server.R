@@ -525,7 +525,7 @@ shinyServer(function(input, output,session) {
 
   ## target table
   output$DataTarget <- renderDataTable(
-  dataInputTarget(),
+  dataInputTarget()$target,
   options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
                  pageLength = 10,scrollX=TRUE
   ))
@@ -572,7 +572,7 @@ shinyServer(function(input, output,session) {
   output$BoxTarget <- renderUI({
     
     target = dataInputTarget()$target
-    
+
     if(!is.null(target) &&  nrow(target)>0)
     {
       box(title="Target file overview",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
