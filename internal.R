@@ -292,7 +292,11 @@ CheckCountsTable <- function(counts)
     dds <- DESeqDataSetFromMatrix(countData=counts, colData=target, design=design)
     sizeFactors(dds) = normFactorsOTU
     dds <- estimateDispersions(dds, fitType=input$fitType)
-    dds <- nbinomWaldTest(dds,modelMatrixType = "expanded")
+    if(as.numeric(R.Version()$major)+as.numeric(R.Version()$minor) >= 4.3){
+      dds <- nbinomWaldTest(dds)
+    }else{
+      dds <- nbinomWaldTest(dds,modelMatrixType = "expanded")
+    }
     countsNorm = counts(dds, normalized = TRUE)
     return(list(dds = dds,raw_counts=counts,countsNorm=countsNorm,target=target,design=design,normFactors = normFactorsOTU,CT_noNorm=CT_noNorm))
   }

@@ -384,7 +384,7 @@ shinyServer(function(input, output,session) {
       taxo = rbind(taxo,rep(NA,ncol(taxo)))
       tmpPercent = round(apply(is.na(taxo),2,table)["FALSE",]/nrow(counts)*100,2)
 
-      print(tmpPercent)
+      #print(tmpPercent)
       df <- data.frame(Label = colnames(taxo),Value = tmpPercent)
     
       res = gvisGauge(df,options=list(min=0, max=100, greenFrom=80,
@@ -440,9 +440,9 @@ shinyServer(function(input, output,session) {
     #rownames(data) <- colnames(counts)
     
     # Percent annotated
-    print(ind)
-    print(colnames(counts))
-    print(rownames(data))
+#     print(ind)
+#     print(colnames(counts))
+#     print(rownames(data))
     labeled = length(ind)/length(colnames(counts))*100.0
     
     return(list(target=data[ind,], labeled=labeled))
@@ -899,7 +899,7 @@ output$InfoContrast <- renderInfoBox({
     normFactors = dataMergeCounts()$normFactors
     ## HEEEERRREE
     target = dataInputTarget()$target
-    print(target)
+    #print(target)
     design = GetDesign(input)
    
     Get_dds_object(input,counts,target,design,normFactors,CT_noNorm)
@@ -1565,7 +1565,7 @@ output$RunButton <- renderUI({
     taxo = input$TaxoSelect
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="...") 
     {
-      print(data$counts)
+      #print(data$counts)
     krona_table=tempfile(pattern = "krona", tmpdir = tempdir(), fileext = "")
     url=paste(krona_table, ".html", sep="")
     #system(paste("export PERL5LIB=/home/aghozlan/workspace/SHAMAN_App/KronaTools-2.6/lib:$PERL5LIB; /home/aghozlan/workspace/META10S_App/krona_bin/bin/ktImportText", krona_table))
