@@ -1465,7 +1465,10 @@ output$RunButton <- renderUI({
         { 
           BaseContrast = read.table(namesfile,header=TRUE)
           SelContrast = input$ContrastList_table_Visu
-          padj = Get_log2FC_padj(input,BaseContrast,resDiff, info = NULL)$padj
+          #padj = Get_log2FC_padj(input,BaseContrast,resDiff, info = NULL)$padj
+          selcontrast_matrix = as.matrix(BaseContrast[,SelContrast])
+          colnames(selcontrast_matrix) = SelContrast
+          padj = Get_log2FC_padj(input,selcontrast_matrix,resDiff, info = NULL)$padj
           Feature_names = rownames(padj)
           if(ncol(as.matrix(padj))>1)
           { 

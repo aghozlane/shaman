@@ -937,7 +937,7 @@ CheckCountsTable <- function(counts)
     if(nbKept>1) namesTax = colnames(counts_tmp_combined)
     if(nbKept==1) namesTax = ind_taxo
     
-    dataNull = data.frame(x=c(1,2),y=c(1,2))
+    dataNull = data.frame(x=c(0,0),y=c(1,2))
     plotd3 = nvd3Plot(x ~ y , data = dataNull, type = "multiBarChart", id = 'barplotTaxoNyll',height = input$heightVisu,width=input$widthVisu)
     gg = NULL
     
@@ -1432,9 +1432,10 @@ CheckCountsTable <- function(counts)
       complete[[name]] <- complete.name
       complete.name=complete.name[order(complete.name$padj),]
       up.name <- complete.name[which(complete.name$padj <= alpha & complete.name$betaConv & complete.name$log2FoldChange>=0.0), ]
-      up.name <- up.name[order(up.name$padj), ]
+      ## useless order
+      #up.name <- up.name[order(up.name$padj), ]
       down.name <- complete.name[which(complete.name$padj<=alpha & complete.name$betaConv & complete.name$log2FoldChange<=0.0), ]
-      down.name <- down.name[order(down.name$padj), ]
+      #down.name <- down.name[order(down.name$padj), ]
 
       name <- gsub(" ", "", name)
       keep <- c("Id","baseMean","FC","log2FoldChange","padj")
@@ -1456,7 +1457,7 @@ CheckCountsTable <- function(counts)
     SelContrast = colnames(BaseContrast)
     nbCont = length(SelContrast)
     result = list()
-    alpha = input$AlphaVal
+    alpha = as.numeric(input$AlphaVal)
     cooksCutoff = ifelse(input$CooksCutOff!='Auto',ifelse(input$CooksCutOff!=Inf,input$CutOffVal,Inf),TRUE)
 
       for(i in 1:nbCont)
@@ -1489,7 +1490,9 @@ CheckCountsTable <- function(counts)
     
     res = NULL
     SelContrast = input$ContrastList_table_FC
-    log2FC = Get_log2FC_padj(input,BaseContrast,resDiff, info = NULL)$log2FC
+    selcontrast_matrix = as.matrix(BaseContrast[,SelContrast])
+    colnames(selcontrast_matrix) = SelContrast
+    log2FC = Get_log2FC_padj(input,selcontrast_matrix,resDiff, info = NULL)$log2FC
 
     
     if(!is.null(log2FC) && length(SelContrast)>=2)
