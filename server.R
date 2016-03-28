@@ -76,7 +76,7 @@ if (!require(genefilter)) {
 
 if (!require(googleVis)) {
   install.packages('googleVis')
-  library(googleVis)
+  suppressPackageStartupMessages(library(googleVis))
 }
 
 library(shinyjs)
