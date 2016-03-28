@@ -225,6 +225,7 @@ CheckCountsTable <- function(counts)
       ## Counts normalisation
       dds <- DESeqDataSetFromMatrix(countData=CT, colData=target, design=design)
       ## Normalisation with or without 0
+      ### Strange with Rowprod, not executed properly each time
       if(input$AccountForNA || RowProd==0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT))
       if(!input$AccountForNA && RowProd!=0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)))
        
@@ -1034,7 +1035,6 @@ CheckCountsTable <- function(counts)
     if(input$SensPlotVisu=="Horizontal") counts_tmp_combined = t(as.matrix(counts_tmp_combined))
     
     if(!export) plot = d3heatmap(counts_tmp_combined, dendrogram = "none", Rowv = NA, Colv = NA, na.rm = TRUE,width = input$widthVisu, height = input$heightVisu, show_grid = FALSE, colors = col, scale = input$scaleHeatmap,cexRow = 0.6)
-    
     if(export) plot = heatmap.2(counts_tmp_combined, dendrogram = "none", Rowv = NA, Colv = NA, na.rm = TRUE, density.info="none", margins=c(12,8),trace="none",srtCol=45,col = col, scale = input$scaleHeatmap,cexRow = 0.6)
     return(plot)
   }
@@ -1501,7 +1501,7 @@ CheckCountsTable <- function(counts)
       log2FC = log2FC[,SelContrast] 
       ind_taxo = input$selectTaxoPlot
       ind = rownames(log2FC)%in%ind_taxo
-      log2FC = log2FC[ind,]
+      log2FC = as.matrix(log2FC[ind,])
       
       
       col <- c(colorRampPalette(c("royalblue4","royalblue3","royalblue2","royalblue1","white"))(n = 100),colorRampPalette(c("white",  "firebrick1", "firebrick2", "firebrick3", "firebrick4"))(n = 100))
@@ -1509,10 +1509,7 @@ CheckCountsTable <- function(counts)
       if(input$SensPlotVisu=="Horizontal") log2FC = t(as.matrix(log2FC))
       
       if(!export) res = d3heatmap(log2FC, dendrogram = "row", Rowv = TRUE, Colv = NA, na.rm = TRUE, width = input$widthVisu, height = input$heightVisu, show_grid = FALSE, colors = col, scale = input$scaleHeatmap,cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap)
-    
-      
       if(export) res = heatmap.2(log2FC, dendrogram = "row", Rowv = TRUE, Colv = NA, na.rm = TRUE, width = input$widthVisu, height = input$heightVisu, show_grid = FALSE, colors = col, scale = input$scaleHeatmap,cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap)
-
     }
     return(res)
   }
