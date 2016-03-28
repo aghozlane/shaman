@@ -1510,7 +1510,6 @@ CheckCountsTable <- function(counts)
       
       if(!export) res = d3heatmap(log2FC, dendrogram = "row", Rowv = TRUE, Colv = NA, na.rm = TRUE, width = input$widthVisu, height = input$heightVisu, show_grid = FALSE, colors = col, scale = input$scaleHeatmap,cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap)
       if(export) res = heatmap.2(log2FC, dendrogram = "row", Rowv = TRUE, Colv = NA, na.rm = TRUE, width = input$widthVisu, height = input$heightVisu, density.info="none", show_grid = FALSE, trace="none", col = col, scale = input$scaleHeatmap,cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap)
-      #if(export) plot = heatmap.2(counts_tmp_combined, dendrogram = "none", Rowv = NA, Colv = NA, na.rm = TRUE, density.info="none", margins=c(12,8),trace="none",srtCol=45,col = col, scale = input$scaleHeatmap,cexRow = 0.6)
       }
     return(res)
   }
