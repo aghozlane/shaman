@@ -187,7 +187,17 @@ CheckCountsTable <- function(counts)
     
   }
 
-  
+#   computePonderationFactors=function(mgs_vect, taxo)
+#   {
+#     pond_factor = c()
+#     for (mgs in mgs_vect){
+#       print(typeof(taxo[which(taxo[, 1] == mgs), 2]))
+#       gene_size = as.vector(taxo[which(taxo[, 1] == mgs), 2])
+#       print(gene_size)
+#       pond_factor = c(pond_factor, gene_size / sum(gene_size))
+#     }
+#     return(pond_factor)
+#   }
   
   ## Get the counts for the selected taxonomy
   GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
@@ -210,6 +220,7 @@ CheckCountsTable <- function(counts)
 
     ## Get the feature size for the normalisation
     Size_indcol = which(toupper(colnames(CT))%in%"SIZE")
+    #Size_indcol = which(toupper(colnames(CT))%in%"size")
     if(length(Size_indcol)==1) FeatureSize = CT[,Size_indcol]
     
     
@@ -222,10 +233,31 @@ CheckCountsTable <- function(counts)
       CT_noNorm = CT
       RowProd = sum(apply(CT_noNorm,1,prod))
       
+#       if(input$TypeTable == "MGS"){
+#         merged_table = merge(CT, taxo[order(rownames(CT)),], by="row.names")
+#         CT = merged_table[,2: (dim(CT)[2]+1)]
+#         taxo = merged_table[,(dim(CT)[2]+2):dim(merged_table)[2]]
+#         rownames(CT) = merged_table[,1]
+#         rownames(taxo) = merged_table[,1]
+#         FeatureSize = FeatureSize[which(names(FeatureSize) %in%rownames(CT))]
+#         
+#         print("Do something")
+#         mgs = unique(taxo[,"MGS"])
+#         #HERE
+#         pond_factors = computePonderationFactors(mgs, cbind(taxo[,"MGS"],FeatureSize))
+#         print(pond_factors)
+#         CT = CT * pond_factors
+#         CT_int=t(apply(CT,1,as.integer))
+#         rownames(CT_int)=rownames(CT)
+#         colnames(CT_int)=colnames(CT)
+#         CT=CT_int
+#         CT_noNorm = CT
+#         RowProd = sum(apply(CT_noNorm,1,prod))
+#       }
+#       
       ## Counts normalisation
       dds <- DESeqDataSetFromMatrix(countData=CT, colData=target, design=design)
       ## Normalisation with or without 0
-      ### Strange with Rowprod, not executed properly each time
       if(input$AccountForNA || RowProd==0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT))
       if(!input$AccountForNA && RowProd!=0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)))
        
@@ -238,14 +270,14 @@ CheckCountsTable <- function(counts)
       rownames(taxo) = merged_table[,1]
       ordOTU = order(rownames(taxo))
       counts_annot = CT
-      
 #       ordOTU = order(rownames(taxo))
 #       indOTU_annot = which(rownames(CT)%in%rownames(taxo))
 #       counts_annot = CT[indOTU_annot[ordOTU],]
-     
+     ## ICI modif
       if(taxoSelect=="OTU") counts = counts_annot
       else{
         taxoS = taxo[ordOTU,taxoSelect]
+        #taxoS = taxo[,taxoSelect]
         counts = aggregate(counts_annot,by=list(Taxonomy = taxoS),sum)
         rownames(counts)=counts[,1];counts=counts[,-1]
       }
@@ -294,9 +326,9 @@ CheckCountsTable <- function(counts)
     sizeFactors(dds) = normFactorsOTU
     dds <- estimateDispersions(dds, fitType=input$fitType)
     if(as.numeric(R.Version()$major)+as.numeric(R.Version()$minor) >= 4.3){
-      dds <- nbinomWaldTest(dds)
+      dds <- nbinomWaldTest(dds, maxit=10)
     }else{
-      dds <- nbinomWaldTest(dds,modelMatrixType = "expanded")
+      dds <- nbinomWaldTest(dds,modelMatrixType = "expanded",maxit=10)
     }
     countsNorm = counts(dds, normalized = TRUE)
     return(list(dds = dds,raw_counts=counts,countsNorm=countsNorm,target=target,design=design,normFactors = normFactorsOTU,CT_noNorm=CT_noNorm))
@@ -1509,7 +1541,7 @@ CheckCountsTable <- function(counts)
       if(input$SensPlotVisu=="Horizontal") log2FC = t(as.matrix(log2FC))
       
       if(!export) res = d3heatmap(log2FC, dendrogram = "row", Rowv = TRUE, Colv = NA, na.rm = TRUE, width = input$widthVisu, height = input$heightVisu, show_grid = FALSE, colors = col, scale = input$scaleHeatmap,cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap)
-      if(export) res = heatmap.2(log2FC, dendrogram = "row", Rowv = TRUE, Colv = NA, na.rm = TRUE, width = input$widthVisu, height = input$heightVisu, density.info="none", show_grid = FALSE, trace="none", col = col, scale = input$scaleHeatmap,cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap)
+      if(export) res = heatmap.2(log2FC, dendrogram = "none", Rowv = TRUE, Colv = NA, na.rm = TRUE, width = input$widthVisu, height = input$heightVisu, margins=c(12,8), density.info="none", show_grid = FALSE, trace="none", col = col, scale = input$scaleHeatmap,cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap)
       }
     return(res)
   }

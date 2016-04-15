@@ -95,10 +95,10 @@ body <- dashboardBody(
                             p("SHAMAN is a SHiny application for Metagenomic ANalysis including the normalization,
                                        the differential analysis and mutiple visualization.",style = "font-family: 'times'; font-si16pt"),
                             p("SHAMAN is based on DESeq2 R package", a("[Anders and Huber 2010]", href="http://www.ncbi.nlm.nih.gov/pubmed/20979621"), "for the analysis of metagenomic data, as suggested in", a("[McMurdie and Holmes 2014]",href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3974642/"),
-                              ". SHAMAN robustly identifies the differential abundant genera with the Generalized Linear Model implemented in DESeq2", a("[Love 2014]", href="http://www.ncbi.nlm.nih.gov/pubmed/25516281"),".
+                              ". SHAMAN robustly identifies the differential abundant genera with the Generalized Linear Model implemented in DESeq2", a("[Love 2014,", href="http://www.ncbi.nlm.nih.gov/pubmed/25516281"),a("Jonsson2016]",href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC4727335/"),".
                               Resulting p-values are adjusted according to the Benjamini and Hochberg procedure [Benjamini and Hochberg 1995].
                               The PCOA is performed with the", a("ade4 R package",href="http://pbil.univ-lyon1.fr/ade4/"), "and plots are generated with", a("ggplot2",href="http://ggplot2.org/"), "or", a("D3.js packages",href="http://d3js.org/"), ".
-                              A presentation about SHAMAN is available", a("here",target="_blank",href="shaman_presentation.pdf"),style = "font-family: 'times'; font-si16pt"),
+                              A presentation about SHAMAN is available", a("here.",target="_blank",href="shaman_presentation.pdf"),style = "font-family: 'times'; font-si16pt"),
                             p("Hereafter is the global workflow of the SHAMAN application:"),
                             div(img(src = "Workflow.png",width = "100%",style="max-width: 600px"),Align="center")
                             ),
@@ -106,12 +106,11 @@ body <- dashboardBody(
                             p(a("Stevenn Volant", href="mailto:stevenn.volant@pasteur.fr"), "(Initiator, coding, testing, documentation, evaluation)"),
                             p(a("Amine Ghozlane",href="mailto:amine.ghozlane@pasteur.fr"), "(Coding, testing, documentation, evaluation)"),
                             p(a("Hugo Varet",href="mailto:hugo.varet@pasteur.fr"), "(Coding, testing, feature suggestions)"),
-                            p(a("Pierre Lechat",href="mailto:pierre.lechat@pasteur.fr"), "(Coding, testing, feature suggestions)"),
                             p(a("Marie-Agnès Dillies",href="mailto:marie-agnes.dillies@pasteur.fr"), "(Evaluation)"),
                             p(a("Sean Kennedy",href="mailto:sean.kennedy@pasteur.fr"), "(Evaluation)"),
                             h3("Acknowledgements"),
                             p("Thanks to the following people for patches and other suggestions for improvements:"),
-                            p(a("Christophe Malabat",href="mailto:christophe.malabat@pasteur.fr"),a(", Julien Tap",href="mailto:julien.tap@danone.com"),a(", Anna Zhukova",href="mailto:anna.zhukova@pasteur.fr"), a(", Rachel Torchet",href="mailto:rachel.torchet@pasteur.fr"))
+                            p(a("Christophe Malabat, ",href="mailto:christophe.malabat@pasteur.fr"), a("Pierre Lechat, ",href="mailto:pierre.lechat@pasteur.fr"),a("Julien Tap, ",href="mailto:julien.tap@danone.com"),a("Anna Zhukova, ",href="mailto:anna.zhukova@pasteur.fr"), a("Rachel Torchet",href="mailto:rachel.torchet@pasteur.fr"))
                           ),
                    tabPanel("Citing SHAMAN",p("No papers about SHAMAN have been published yet, but a manuscript is in preparation.",style = "font-family: 'times'; font-si16pt"),
                             p("For now, if you have any comments, questions or suggestions, or want to use SHAMAN please contact authors", a("here", href="mailto:shaman@pasteur.fr"),".", style = "font-family: 'times'; font-si16pt; color:red")
@@ -134,7 +133,7 @@ body <- dashboardBody(
             p("The 16S rRNA (V3 - V4 regions) from fece samples was sequenced at time stamp : 2, 3, 4 and 5.", br(),
               "The analysis will consider the different impact of the different fiber intake and the comparison to patient metabolic data.")),
             tabPanel("1-Load 16S data",
-            p("The first step consists to load the count matrix and the annotation table as follow :"),
+            p("The first step consists to load the count table and the annotation table as follow :"),
             p("- Select 'Upload your data'", br(),
               "- Load the count table :",br(), img(src = "tutorial/tutorial_upload1.png",width = "100%",style="max-width: 900px"),hr(),
               "- Load the annotation table :", br(), img(src = "tutorial/tutorial_upload2.png",width = "100%",style="max-width: 900px"),hr(),
@@ -185,7 +184,10 @@ body <- dashboardBody(
                 ),
                 conditionalPanel(condition="input.FileFormat=='fileCounts'",
                   box(title="Load the count table",width = 3,height = "250px", status = "primary", solidHeader = TRUE,collapsible = FALSE,
-                    fileInput('fileCounts', h6(strong('Select your file')),width="100%")
+                      fluidRow(
+                        column(width=6,radioButtons("TypeTable",h6(strong("Type:")),c("OTU/Gene table"="OTU","MGS table"="MGS")))
+                      ),
+                      fileInput('fileCounts', h6(strong('Select your file')),width="100%")
                   ),
                   
                   box(title="Load the taxonomy file",width = 3,height = "250px", status = "primary", solidHeader = TRUE,collapsible = FALSE,

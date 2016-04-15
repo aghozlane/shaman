@@ -1528,7 +1528,7 @@ output$RunButton <- renderUI({
   
   output$VarIntVisuScatter <- renderUI({
     
-    target=dataInputTarget()
+    target=dataInputTarget()$target
     data = dataInput()$data 
     taxo = input$TaxoSelect
     resDiff = ResDiffAnal()
