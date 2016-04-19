@@ -928,7 +928,7 @@ output$InfoContrast <- renderInfoBox({
     if(!is.null(data$taxo) && nrow(data$taxo)>0)
     { 
       tmp = colnames(data$taxo)
-      selectInput("TaxoSelect",h6(strong("Select the taxonomy level")),c("...",tmp,"OTU"))
+      selectInput("TaxoSelect",h6(strong("Select the taxonomy level")),c("...",tmp,"OTU/Gene"))
     }
     else selectInput("TaxoSelect",h6(strong("Select the taxonomy level")),c("..."))
 

@@ -187,18 +187,6 @@ CheckCountsTable <- function(counts)
     
   }
 
-#   computePonderationFactors=function(mgs_vect, taxo)
-#   {
-#     pond_factor = c()
-#     for (mgs in mgs_vect){
-#       print(typeof(taxo[which(taxo[, 1] == mgs), 2]))
-#       gene_size = as.vector(taxo[which(taxo[, 1] == mgs), 2])
-#       print(gene_size)
-#       pond_factor = c(pond_factor, gene_size / sum(gene_size))
-#     }
-#     return(pond_factor)
-#   }
-  
   ## Get the counts for the selected taxonomy
   GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
   {
@@ -217,44 +205,29 @@ CheckCountsTable <- function(counts)
     labels = target[,1]
     ind = which(colnames(CT)%in%labels)
 
-
-    ## Get the feature size for the normalisation
-    Size_indcol = which(toupper(colnames(CT))%in%"SIZE")
-    #Size_indcol = which(toupper(colnames(CT))%in%"size")
-    if(length(Size_indcol)==1) FeatureSize = CT[,Size_indcol]
-    
-    
     if(length(ind)==length(labels))
     { 
-      CT = CT[,ind]
-      
+      if(input$TypeTable == "MGS"){
+        ## Get the feature size for the normalisation
+        Size_indcol = which(toupper(colnames(CT))%in%"SIZE")
+        if(length(Size_indcol)==1) FeatureSize = CT[,Size_indcol]
+        else print("Size parameter is missing in the count matrix")
+        # Consider only counts
+        CT = CT[,ind]
+        # Divide by gene length
+        CT = CT / FeatureSize * 1000
+        # Convert matrix as integer
+        CT_int=t(apply(CT,1,as.integer))
+        rownames(CT_int)=rownames(CT)
+        colnames(CT_int)=colnames(CT)
+        CT=CT_int
+      }
+      else CT = CT[,ind]
       ## Order CT according to the target
       CT = OrderCounts(counts=CT,labels=labels)$CountsOrder
       CT_noNorm = CT
       RowProd = sum(apply(CT_noNorm,1,prod))
       
-#       if(input$TypeTable == "MGS"){
-#         merged_table = merge(CT, taxo[order(rownames(CT)),], by="row.names")
-#         CT = merged_table[,2: (dim(CT)[2]+1)]
-#         taxo = merged_table[,(dim(CT)[2]+2):dim(merged_table)[2]]
-#         rownames(CT) = merged_table[,1]
-#         rownames(taxo) = merged_table[,1]
-#         FeatureSize = FeatureSize[which(names(FeatureSize) %in%rownames(CT))]
-#         
-#         print("Do something")
-#         mgs = unique(taxo[,"MGS"])
-#         #HERE
-#         pond_factors = computePonderationFactors(mgs, cbind(taxo[,"MGS"],FeatureSize))
-#         print(pond_factors)
-#         CT = CT * pond_factors
-#         CT_int=t(apply(CT,1,as.integer))
-#         rownames(CT_int)=rownames(CT)
-#         colnames(CT_int)=colnames(CT)
-#         CT=CT_int
-#         CT_noNorm = CT
-#         RowProd = sum(apply(CT_noNorm,1,prod))
-#       }
-#       
       ## Counts normalisation
       dds <- DESeqDataSetFromMatrix(countData=CT, colData=target, design=design)
       ## Normalisation with or without 0
@@ -268,18 +241,30 @@ CheckCountsTable <- function(counts)
       taxo = merged_table[,(dim(CT)[2]+2):dim(merged_table)[2]]
       rownames(CT) = merged_table[,1]
       rownames(taxo) = merged_table[,1]
-      ordOTU = order(rownames(taxo))
+      #ordOTU = order(rownames(taxo))
       counts_annot = CT
 #       ordOTU = order(rownames(taxo))
 #       indOTU_annot = which(rownames(CT)%in%rownames(taxo))
 #       counts_annot = CT[indOTU_annot[ordOTU],]
-     ## ICI modif
-      if(taxoSelect=="OTU") counts = counts_annot
+     ## Aggregate matrix
+      if(taxoSelect=="OTU/Gene") counts = counts_annot
       else{
-        taxoS = taxo[ordOTU,taxoSelect]
-        #taxoS = taxo[,taxoSelect]
-        counts = aggregate(counts_annot,by=list(Taxonomy = taxoS),sum)
-        rownames(counts)=counts[,1];counts=counts[,-1]
+        if(input$TypeTable == "MGS"){
+          taxoS = taxo[,input$TypeTable]
+          counts = aggregate(counts_annot,by=list(Taxonomy = taxoS),mean)
+          rownames(counts)=counts[,1]
+          counts=counts[,-1]
+          counts_int=t(apply(counts,1,as.integer))
+          rownames(counts_int)=rownames(counts)
+          colnames(counts_int)=colnames(counts)
+          counts=counts_int
+        }
+        if(taxoSelect != "MGS"){
+          #taxoS = taxo[ordOTU,taxoSelect]
+          taxoS = taxo[,taxoSelect]
+          counts = aggregate(counts_annot,by=list(Taxonomy = taxoS),sum)
+          rownames(counts)=counts[,1];counts=counts[,-1]
+        }
       }
       
       ## Ordering the counts table according to the target labels 
