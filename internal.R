@@ -311,9 +311,9 @@ CheckCountsTable <- function(counts)
     sizeFactors(dds) = normFactorsOTU
     dds <- estimateDispersions(dds, fitType=input$fitType)
     if(as.numeric(R.Version()$major)+as.numeric(R.Version()$minor) >= 4.3){
-      dds <- nbinomWaldTest(dds, maxit=10)
+      dds <- nbinomWaldTest(dds)
     }else{
-      dds <- nbinomWaldTest(dds,modelMatrixType = "expanded",maxit=10)
+      dds <- nbinomWaldTest(dds,modelMatrixType = "expanded")
     }
     countsNorm = counts(dds, normalized = TRUE)
     return(list(dds = dds,raw_counts=counts,countsNorm=countsNorm,target=target,design=design,normFactors = normFactorsOTU,CT_noNorm=CT_noNorm))
