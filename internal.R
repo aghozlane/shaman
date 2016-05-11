@@ -618,7 +618,7 @@ CheckCountsTable <- function(counts)
 
   
   ### PCoA
-  PCoAPlot_meta <-function (input,dds, group_init,col = c("SpringGreen","dodgerblue","black","firebrick1"), plot = "pcoa") 
+  PCoAPlot_meta <-function (input, dds, group_init, col = c("SpringGreen","dodgerblue","black","firebrick1"), plot = "pcoa") 
   {
     cval=c()
     time_set = 0
@@ -1526,7 +1526,7 @@ CheckCountsTable <- function(counts)
       if(input$SensPlotVisu=="Horizontal") log2FC = t(as.matrix(log2FC))
       
       if(!export) res = d3heatmap(log2FC, dendrogram = "row", Rowv = TRUE, Colv = NA, na.rm = TRUE, width = input$widthVisu, height = input$heightVisu, show_grid = FALSE, colors = col, scale = input$scaleHeatmap,cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap)
-      if(export) res = heatmap.2(log2FC, dendrogram = "none", Rowv = TRUE, Colv = NA, na.rm = TRUE, width = input$widthVisu, height = input$heightVisu, margins=c(12,8), density.info="none", show_grid = FALSE, trace="none", col = col, scale = input$scaleHeatmap,cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap)
+      if(export) res = heatmap.2(log2FC, dendrogram = "none", Rowv = TRUE, Colv = NA, na.rm = TRUE, width = input$widthVisu, height = input$heightVisu, margins=c(input$lowerMargin,input$rightMargin), density.info="none", show_grid = FALSE, trace="none", col = col, scale = input$scaleHeatmap,cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap)
       }
     return(res)
   }

@@ -112,8 +112,11 @@ body <- dashboardBody(
                             p("Thanks to the following people for patches and other suggestions for improvements:"),
                             p(a("Christophe Malabat, ",href="mailto:christophe.malabat@pasteur.fr"), a("Pierre Lechat, ",href="mailto:pierre.lechat@pasteur.fr"),a("Julien Tap, ",href="mailto:julien.tap@danone.com"),a("Anna Zhukova, ",href="mailto:anna.zhukova@pasteur.fr"), a("Rachel Torchet",href="mailto:rachel.torchet@pasteur.fr"))
                           ),
-                   tabPanel("Citing SHAMAN",p("No papers about SHAMAN have been published yet, but a manuscript is in preparation.",style = "font-family: 'times'; font-si16pt"),
-                            p("For now, if you have any comments, questions or suggestions, or want to use SHAMAN please contact authors", a("here", href="mailto:shaman@pasteur.fr"),".", style = "font-family: 'times'; font-si16pt; color:red")
+                   tabPanel("Citing SHAMAN",
+                   p("No papers about SHAMAN have been published yet, but a manuscript is in preparation.",style = "font-family: 'times'; font-si16pt"),
+                   p("Publication using SHAMAN :",style = "font-family: 'times'; font-si18pt; font-style: strong"),
+                   p(a("A bacteriocin from epidemic Listeria strains alters the host intestinal microbiota to favor infection.", href="http://www.ncbi.nlm.nih.gov/pubmed/27140611"), "Quereda JJ, Dussurget O, Nahori MA, Ghozlane A, Volant S, Dillies MA, Regnault B, Kennedy S, Mondot S, Villoing B, Cossart P, Pizarro-Cerda J.",style = "font-family: 'times'; font-si16pt"),
+                   p("If you have any comments, questions or suggestions, or need help to use SHAMAN, please contact authors", a("here", href="mailto:shaman@pasteur.fr"),".", style = "font-family: 'times'; font-si16pt; color:red")
             )))
     ),
 
