@@ -76,6 +76,12 @@ if (!require(googleVis)) {
   suppressPackageStartupMessages(library(googleVis))
 }
 
+if(!require(plotly)){
+  install.packages('plotly')
+  library(plotly)
+}
+
+
 sidebar <- dashboardSidebar(
   sidebarMenu(
     menuItem("Home", tabName = "Home", icon = icon("home")),
@@ -500,12 +506,12 @@ body <- dashboardBody(
                 ## DIVERSITY
                 ##################
                 conditionalPanel(condition="input.PlotVisuSelect=='Diversity'",
-                                 selectizeInput("WhichDiv",h6(strong("Diversity")),c('Alpha','Beta','Gamma'),selected  = c('Alpha','Beta','Gamma'),multiple=TRUE),
-                                 checkboxInput("AddBoxplotDiv","AddBoxplot",value=FALSE)
+                                 selectizeInput("WhichDiv",h6(strong("Diversity")),c('Alpha','Beta','Gamma','Shannon','Simpson','Inv.Simpson'),selected  = c('Alpha','Shannon','Simpson','Inv.Simpson'),multiple=TRUE)
+                ),
+                conditionalPanel(condition="input.PlotVisuSelect=='Diversity'",
+                                 uiOutput("SelectVarBoxDiv")
+                                 
                 )
-#                 conditionalPanel(condition="input.PlotVisuSelect=='Diversity' && input.AddBoxplotDiv",
-#                                  uiOutput("SelectVarBoxDiv")
-#                 )
               ),
 
 
@@ -528,8 +534,8 @@ body <- dashboardBody(
                 ## DIVERSITY
                 ##################
                 conditionalPanel(condition="input.PlotVisuSelect=='Diversity'",
-                                 sliderInput("sizePointGlobal", h6(strong("Points size")),min=0.5,max=10,value =3,step=0.5),
-                                 checkboxInput("SplitVisuGlobal","Split diversity",value=FALSE)
+                                 radioButtons("DivScale","Scales",c("Fixed"="fixed","Free"="free"),selected = "free",inline=TRUE),
+                                radioButtons("DivAddError","Add Error bars",c("Add"="Add","Remove"="Remove"),selected = "Add",inline=TRUE)
                 ),
                 ##################
                 ## HEATMAP

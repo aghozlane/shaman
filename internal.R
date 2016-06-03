@@ -864,9 +864,13 @@ CheckCountsTable <- function(counts)
     
     if (length(VarInt)>0 && nbKept>0)
     { 
+      
       ## Get the modalities to keep
       for(i in 1:length(VarInt))
       { 
+        ## Replace "-" by "." 
+        target[,VarInt[i]] =  gsub("-",".",target[,VarInt[i]])
+        
         Tinput = paste("input$","ModVisu",VarInt[i],sep="")
         expr=parse(text=Tinput)
         ## All the modalities for all the var of interest
@@ -1237,73 +1241,102 @@ CheckCountsTable <- function(counts)
   
   
   Plot_Visu_Diversity <- function(input,resDiff,type="point"){
-    
     gg = NULL
     dds = resDiff$dds
     counts = round(counts(dds, normalized = TRUE))
-    #target = resDiff$target
+    
+    counts_rare = rrarefy(t(counts), min(colSums(counts)))
     
     ## Get Input for the plot
     VarInt = input$VisuVarInt
-    #VarIntBoxDiv = input$VarBoxDiv 
+    VarIntBoxDiv = input$VarBoxDiv 
+    VarIntDivCol = input$VarDivCol
     ind_taxo = rownames(counts)
     
     tmp = GetDataToPlot(input,resDiff,VarInt,ind_taxo,aggregate=FALSE)
     counts_tmp_combined = tmp$counts
     targetInt = tmp$targetInt
+    levelsMod = tmp$levelsMod
 
     if(nrow(counts_tmp_combined)>0 && !is.null(counts_tmp_combined) && !is.null(targetInt))
     { 
-      print(TaxoNumber(counts_tmp_combined))
+      sqrt.nb = sqrt(table(targetInt$AllVar))
+      
       alpha <- tapply(TaxoNumber(counts_tmp_combined), targetInt$AllVar, mean)
+      ci.alpha.down = pmax(alpha - 1.96*tapply(TaxoNumber(counts_tmp_combined), targetInt$AllVar, mean)/sqrt.nb,0)
+      ci.alpha.up = alpha + 1.96*tapply(TaxoNumber(counts_tmp_combined), targetInt$AllVar, mean)/sqrt.nb
+      
+      shan <- tapply(diversity(counts_tmp_combined, index = "shannon"), targetInt$AllVar, mean)
+      ci.shan.down = pmax(shan - 1.96*tapply(diversity(counts_tmp_combined, index = "shannon"), targetInt$AllVar, sd)/sqrt.nb,0)
+      ci.shan.up = shan + 1.96*tapply(diversity(counts_tmp_combined, index = "shannon"), targetInt$AllVar, sd)/sqrt.nb
+      
+      simpson <- tapply(diversity(counts_tmp_combined, index = "simpson"), targetInt$AllVar, mean)
+      ci.simpson.down = pmax(simpson - 1.96*tapply(diversity(counts_tmp_combined, index = "simpson"), targetInt$AllVar, sd)/sqrt.nb,0)
+      ci.simpson.up = simpson + 1.96*tapply(diversity(counts_tmp_combined, index = "simpson"), targetInt$AllVar, sd)/sqrt.nb
+      
+      invsimpson <- tapply(diversity(counts_tmp_combined, index = "invsimpson"), targetInt$AllVar, mean)
+      ci.invsimpson.down = pmax(invsimpson - 1.96*tapply(diversity(counts_tmp_combined, index = "invsimpson"), targetInt$AllVar, sd)/sqrt.nb,0)
+      ci.invsimpson.up = invsimpson + 1.96*tapply(diversity(counts_tmp_combined, index = "invsimpson"), targetInt$AllVar, sd)/sqrt.nb
+      
       gamma <- TaxoNumber(counts_tmp_combined, targetInt$AllVar)
       beta = gamma/alpha - 1
       nb = length(alpha)
-#       dataTmp = data.frame(value=c(alpha,beta,gamma),
-#                            diversity = c(rep("Alpha",nb),rep("Beta",nb),rep("Gamma",nb)),
-#                            Var = as.character(rep(names(alpha),3)),
-#                            X = as.character(rep(targetInt[,VarIntBoxDiv],3)))
-      dataTmp = data.frame(value=c(alpha,beta,gamma),
-                     diversity = c(rep("Alpha",nb),rep("Beta",nb),rep("Gamma",nb)),
-                     Var = as.character(rep(names(alpha),3)))
-     
-      ## Merge targetInt et dataTmp par rapport à Var
-#       VectX = c()
-#       for(i in 1:nb)
-#       {
-#         ## If duplicated, take only one row
-#         tmpX = which(targetInt$AllVar%in%names(alpha)[i])[1]
-#         VectX = c(VectX,targetInt[tmpX,VarIntBoxDiv]) 
-#       }
-#       print(VectX)
-#       dataTmp$X =  as.character(rep(VectX,3))
-                               
-      dataTmp = dataTmp[dataTmp$diversity%in%input$WhichDiv,]
-
-      if(type=="point")
-      { 
-        gg = ggplot(dataTmp, aes(x=Var, y=value, color=diversity)) + theme_bw() + theme(axis.text.x = element_text(angle = 90, hjust = 1))
-        gg = gg + geom_point(size=input$sizePointGlobal) 
-        if(input$SensPlotVisu=="Horizontal") gg = gg + coord_flip()
-        if(input$SplitVisuGlobal==TRUE) gg = gg + facet_wrap(~ diversity)
-      }
-#       if(type=="box")
-#       { 
-#         gg = ggplot(dataTmp,aes(x=X,y=value,fill=diversity))  + geom_boxplot(alpha=0.7) + theme_bw()  + theme(axis.text.x = element_text(angle = 90, hjust = 1))
-#         gg = gg + geom_point(size=input$sizePointGlobal) 
-#         gg = gg + geom_point(position=position_jitterdodge(dodge.width=0.9))
-#         if(input$SensPlotVisuGlobal=="Horizontal") gg = gg + coord_flip()
-#         if(input$SplitVisuGlobal==TRUE) gg = gg + facet_wrap(~ diversity) 
-#       }
       
-#       nvd3Plot(value ~ Var | diversity, data = dataTmp, id = 'Scachart', type = 'lineChart',height = 1000,width=1000)
-#       p1$xAxis(axisLabel = 'Variable of interest')
+      dataTmp = data.frame(value=c(alpha,beta,gamma,shan,simpson,invsimpson),
+                            ci.down=c(ci.alpha.down,beta,gamma,ci.shan.down,ci.simpson.down,ci.invsimpson.down),
+                            ci.up=c(ci.alpha.up,beta,gamma,ci.shan.up,ci.simpson.up,ci.invsimpson.up),
+                            diversity = c(rep("Alpha",nb),rep("Beta",nb),rep("Gamma",nb),rep("Shannon",nb),rep("Simpson",nb),rep("Inv.Simpson",nb)),
+                            Var = as.character(rep(names(alpha),6)))
+                        
+      dataTmp = dataTmp[dataTmp$diversity%in%input$WhichDiv,]
+      
+      ## Order of the modalities
+      dataTmp$Var = factor(dataTmp$Var,levels = levelsMod)
+      
+      tmp.mat = matrix(unlist((lapply(as.matrix(as.character(dataTmp$Var)),strsplit,"-"))),ncol=length(VarInt),byrow = T)
+        
+      indVar = VarInt%in%VarIntBoxDiv
+      if(length(which(indVar))>=1){
+        if(length(which(indVar))>=2) dataTmp$VarX = factor(apply(tmp.mat[,which(indVar)],1,paste,collapse = "-"))
+        if(length(which(indVar))==1) dataTmp$VarX = factor(tmp.mat[,which(indVar)])
+      }
+        
+      if(is.null(VarIntBoxDiv)) dataTmp$VarX = tmp.mat[,1]
+      dataTmp$VarCol = dataTmp$VarX
+      
+      if(length(which(!indVar))>=1){
+        if(length(which(!indVar))>=2) dataTmp$VarCol = factor(apply(tmp.mat[,which(!indVar)],1,paste,collapse = "-"))
+        if(length(which(!indVar))==1) dataTmp$VarCol = factor(tmp.mat[,which(!indVar)])
+      }
+      
+      dataTmp$Var = factor(dataTmp$Var,levels = levelsMod)
+      
+      colors = rep(c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c","#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5","#8c564b",
+                       "#c49c94","#e377c2","#f7b6d2","#7f7f7f", "#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"),ceiling(nrow(targetInt)/20))
+      
+      gg = ggplot(dataTmp, aes(x=VarX, y=value, fill=VarCol)) 
+      gg = gg + theme_bw() + theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust=0.5), legend.title=element_blank())
+      gg = gg + geom_bar(stat = "identity",width=0.4,position = position_dodge(width=0.5),alpha=0.8) 
+      if(input$DivAddError=="Add") gg = gg + geom_errorbar(aes(ymin=ci.down, ymax=ci.up,color=VarCol,width=.2),position = position_dodge(width=0.5))
+      if(input$SensPlotVisu=="Horizontal") gg = gg + coord_flip() + facet_wrap(~ diversity,scales="fixed")
+      if(input$SensPlotVisu=="Vertical") gg = gg + facet_wrap(~ diversity,scales=input$DivScale)
+      gg = gg + xlab(paste(VarIntBoxDiv,collapse ="-"))+ ylab("Diversity")
+      gg = gg + scale_fill_manual(values = colors[1:length(unique(dataTmp[,7]))]) + scale_color_manual(values = colors[1:length(unique(dataTmp[,7]))])
+       
+        
+      ## Get interactivity
+       #ff = ggplotly(gg)
     }
     return(gg)
     
   }
 
   
+  
+  strsplit_Var <-function(names,ind)
+  {
+    return(unlist(strsplit(names,"-"))[ind])
+  }
   
   ## Rarefaction
   Plot_Visu_Rarefaction <- function(input,resDiff,xlim,ylim,ylab="Species"){
@@ -1342,44 +1375,44 @@ CheckCountsTable <- function(counts)
   }
   
   
-  rarefaction_curve <- function (x, step = 1, taxo ="Species") 
-  {
-    
-    tot = rowSums(x)
-    S = TaxoNumber(x)
-    if (any(S <= 0)) {
-      x <- x[S > 0, , drop = FALSE]
-      tot <- tot[S > 0]
-      S <- S[S > 0]
-    }
-    nr <- nrow(x)
-
-    out <- lapply(seq_len(nr), function(i) {
-      n <- seq(1, tot[i], by = step)
-      if (n[length(n)] != tot[i]) n <- c(n, tot[i])
-      drop(rarefy(x[i, ], n))
-    })
-    
-    
-    df = data.frame()
-    
-    for(i in 1: length(out))
-    {
-      dftmp = data.frame(x=attr(out[[i]], "Subsample"),y=out[[i]],samples=rep(rownames(x)[i],length(out[[i]])))
-      df = rbind(df,dftmp)
-    }
-    
-    Nmax = sapply(out, function(x) max(attr(x, "Subsample")))
-    Smax = sapply(out, max)
-    
-#     plot =  nvd3Plot(y ~ x | samples, data = df, id = 'chart', type = 'lineChart',height=600)
-#     plot$xAxis(axisLabel = 'Sample size')
-    
-    plot =  ggplot(df,aes=c(x=x,y=y,  group=samples, colour=samples)) + geom_line()+xlab('Sample size') 
-    plot = plot + theme_bw() + theme(legend.position="bottom")
-
-    return(plot)
-  }
+#   rarefaction_curve <- function (x, step = 1, taxo ="Species") 
+#   {
+#     
+#     tot = rowSums(x)
+#     S = TaxoNumber(x)
+#     if (any(S <= 0)) {
+#       x <- x[S > 0, , drop = FALSE]
+#       tot <- tot[S > 0]
+#       S <- S[S > 0]
+#     }
+#     nr <- nrow(x)
+# 
+#     out <- lapply(seq_len(nr), function(i) {
+#       n <- seq(1, tot[i], by = step)
+#       if (n[length(n)] != tot[i]) n <- c(n, tot[i])
+#       drop(rarefy(x[i, ], n))
+#     })
+#     
+#     
+#     df = data.frame()
+#     
+#     for(i in 1: length(out))
+#     {
+#       dftmp = data.frame(x=attr(out[[i]], "Subsample"),y=out[[i]],samples=rep(rownames(x)[i],length(out[[i]])))
+#       df = rbind(df,dftmp)
+#     }
+#     
+#     Nmax = sapply(out, function(x) max(attr(x, "Subsample")))
+#     Smax = sapply(out, max)
+#     
+# #     plot =  nvd3Plot(y ~ x | samples, data = df, id = 'chart', type = 'lineChart',height=600)
+# #     plot$xAxis(axisLabel = 'Sample size')
+#     
+#     plot =  ggplot(df,aes=c(x=x,y=y,  group=samples, colour=samples)) + geom_line()+xlab('Sample size') 
+#     plot = plot + theme_bw() + theme(legend.position="bottom")
+# 
+#     return(plot)
+#   }
   
   
   TableDiff_print <- function(input,BaseContrast,resDiff, info = NULL) 
@@ -1476,7 +1509,9 @@ CheckCountsTable <- function(counts)
     result = list()
     alpha = as.numeric(input$AlphaVal)
     cooksCutoff = ifelse(input$CooksCutOff!='Auto',ifelse(input$CooksCutOff!=Inf,input$CutOffVal,Inf),TRUE)
-
+    
+    if(nbCont>=2)
+    {
       for(i in 1:nbCont)
       { 
         cont = as.character(SelContrast[i])
@@ -1498,7 +1533,7 @@ CheckCountsTable <- function(counts)
       }
       rownames(log2FC) = rownames(result[[SelContrast[1]]])
       rownames(padj) = rownames(result[[SelContrast[1]]])
-
+    }
     return(list(log2FC=as.data.frame(log2FC),padj=padj))
   }
   
@@ -1521,12 +1556,15 @@ CheckCountsTable <- function(counts)
       log2FC = as.matrix(log2FC[ind,])
       
       
-      col <- c(colorRampPalette(c("royalblue4","royalblue3","royalblue2","royalblue1","white"))(n = 100),colorRampPalette(c("white",  "firebrick1", "firebrick2", "firebrick3", "firebrick4"))(n = 100))
+      col1 <- c(colorRampPalette(c("royalblue4","royalblue3","royalblue2","royalblue1","white"))(n = 100),colorRampPalette(c("white",  "firebrick1", "firebrick2", "firebrick3", "firebrick4"))(n = 100))
+      breaks <- c(seq(min(log2FC,-0.01), 0,length=100),seq(0.01,max(log2FC,0.02),length=100))
+      colorFunc <- col_bin(col1, bins = rescale(breaks))
       ## Transpose matrix if Horizontal
       if(input$SensPlotVisu=="Horizontal") log2FC = t(as.matrix(log2FC))
       
-      if(!export) res = d3heatmap(log2FC, dendrogram = "row", Rowv = TRUE, Colv = NA, na.rm = TRUE, width = input$widthVisu, height = input$heightVisu, show_grid = FALSE, colors = col, scale = input$scaleHeatmap,cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap)
-      if(export) res = heatmap.2(log2FC, dendrogram = "none", Rowv = TRUE, Colv = NA, na.rm = TRUE, width = input$widthVisu, height = input$heightVisu, margins=c(input$lowerMargin,input$rightMargin), density.info="none", show_grid = FALSE, trace="none", col = col, scale = input$scaleHeatmap,cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap)
+      if(!export) res = d3heatmap(log2FC, dendrogram = "row", Rowv = TRUE, Colv = NA, na.rm = TRUE, width = input$widthVisu, height = input$heightVisu, show_grid = FALSE, colors = colorFunc, scale = input$scaleHeatmap,cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap)
+      if(export) res = heatmap.2(log2FC, dendrogram = "none", Rowv = TRUE, Colv = NA, na.rm = TRUE, width = input$widthVisu, height = input$heightVisu, margins=c(input$lowerMargin,input$rightMargin), density.info="none", show_grid = FALSE, trace="none", col = col1, scale = input$scaleHeatmap,cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, 
+                                 offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap,symm=FALSE,symkey=TRUE,symbreaks=TRUE)
       }
     return(res)
   }

@@ -79,7 +79,16 @@ if (!require(googleVis)) {
   suppressPackageStartupMessages(library(googleVis))
 }
 
-library(shinyjs)
+if (!require(shinyjs)) {
+  install.packages('shinyjs')
+  library(shinyjs)
+}
+
+if(!require(plotly)){
+  install.packages('plotly')
+  library(plotly)
+}
+
 
 # Allow to upload 50M files
 options(shiny.maxRequestSize=50*1024^2) 
@@ -1396,19 +1405,31 @@ output$RunButton <- renderUI({
     }
   })
 
+#### Select color and split for diversity
 
-# 
-#   output$SelectVarBoxDiv <- renderUI({
+  output$SelectVarBoxDiv <- renderUI({
+    
+    selectVar = input$VisuVarInt
+    selectInput("VarBoxDiv", h6(strong("Split by")),selectVar,selectVar[1],multiple = TRUE)
+
+  })
+  
+  
+#   output$SelectVarDivCol <- renderUI({
 #     
 #     selectVar = input$VisuVarInt
+#     VarB = input$VarBoxDiv
 #     
-#     if(!is.null(selectVar)) 
+#     if(length(selectVar)>1) 
 #     {
-#       selectInput("VarBoxDiv", h6(strong("By")),selectVar)
+#       selectInput("VarDivCol", h6(strong("Color by")),c(NULL,selectVar[-which(selectVar%in%VarB)]),multiple = FALSE)
 #     }
 #     
 #   })
 #   
+  
+  
+  
   output$plotVisu <- renderUI({
     
     res=NULL
