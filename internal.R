@@ -1294,22 +1294,34 @@ CheckCountsTable <- function(counts)
       dataTmp$Var = factor(dataTmp$Var,levels = levelsMod)
       
       tmp.mat = matrix(unlist((lapply(as.matrix(as.character(dataTmp$Var)),strsplit,"-"))),ncol=length(VarInt),byrow = T)
-        
+      tmp.level = matrix(unlist((lapply(as.matrix(as.character(levelsMod)),strsplit,"-"))),ncol=length(VarInt),byrow = T)
+      
       indVar = VarInt%in%VarIntBoxDiv
       if(length(which(indVar))>=1){
-        if(length(which(indVar))>=2) dataTmp$VarX = factor(apply(tmp.mat[,which(indVar)],1,paste,collapse = "-"))
-        if(length(which(indVar))==1) dataTmp$VarX = factor(tmp.mat[,which(indVar)])
+        if(length(which(indVar))>=2){
+          tmp.levelX = apply(tmp.level[,which(indVar)],1,paste,collapse = "-")
+          dataTmp$VarX = factor(apply(tmp.mat[,which(indVar)],1,paste,collapse = "-"),levels = unique(tmp.levelX))
+        }
+        if(length(which(indVar))==1){
+          tmp.levelX = tmp.level[,which(indVar)]
+          dataTmp$VarX = factor(tmp.mat[,which(indVar)],levels = unique(tmp.levelX))
+        }
       }
         
       if(is.null(VarIntBoxDiv)) dataTmp$VarX = tmp.mat[,1]
       dataTmp$VarCol = dataTmp$VarX
       
       if(length(which(!indVar))>=1){
-        if(length(which(!indVar))>=2) dataTmp$VarCol = factor(apply(tmp.mat[,which(!indVar)],1,paste,collapse = "-"))
-        if(length(which(!indVar))==1) dataTmp$VarCol = factor(tmp.mat[,which(!indVar)])
+        if(length(which(!indVar))>=2){
+          tmp.levelCol = apply(tmp.level[,which(!indVar)],1,paste,collapse = "-")
+          dataTmp$VarCol = factor(apply(tmp.mat[,which(!indVar)],1,paste,collapse = "-"),levels = unique(tmp.levelCol))
+        }
+        if(length(which(!indVar))==1){ 
+          tmp.levelCol = tmp.level[,which(!indVar)]
+          dataTmp$VarCol = factor(tmp.mat[,which(!indVar)],levels = unique(tmp.levelCol))
+        }
       }
       
-      dataTmp$Var = factor(dataTmp$Var,levels = levelsMod)
       
       colors = rep(c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c","#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5","#8c564b",
                        "#c49c94","#e377c2","#f7b6d2","#7f7f7f", "#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"),ceiling(nrow(targetInt)/20))
