@@ -99,9 +99,29 @@ body <- dashboardBody(
                      "- Diversity",br(),img(src="tutorial/tutorial_diversity.png",width = "100%",style="max-width: 900px"),hr(),
                      "- Rarefaction",br(),img(src="tutorial/tutorial_rarefaction.png",width = "100%",style="max-width: 900px"))),
             tabPanel("6-Other datasets available",
-            p("You can test SHAMAN with the dataset with two other datasets : "),
-            p("- Bacteriocin impact on mice microbiota from ", a("[Quereda et al. 2016]",href="http://www.ncbi.nlm.nih.gov/pubmed/27140611"), ":", a("here",target="_blank",href="listeria.zip"), br(),
-              "- MOCK communities from ", a("[The NIH HMP Working Group, 2009]",href="http://www.ncbi.nlm.nih.gov/pubmed/19819907"), ":", a("here",target="_blank",href="mock.zip")))))
+            p("You can test SHAMAN with two other datasets : "),
+            p("- Bacteriocin impact on mice microbiota from ", a("[Quereda et al. 2016]",href="http://www.ncbi.nlm.nih.gov/pubmed/27140611"), ":", a("here",target="_blank",href="listeria.zip"), br(),br(),
+              
+              "The project is divided into three group :  WT, Delta : Bacteriocin KO, Delta-complemented: Bacteriocin KO + complementation.", br(),
+              "Three time points are considered :", br(),
+              "- T0 : merged counts from -48H and -24H", br(),
+              "- T2 : 6H after listeria infection", br(),
+              "- T3 : 24H after listeria infection", br(),
+              
+              img(src="listeria.png",width = "100%",style="max-width: 500px"),br(),br(),
+              
+              "Analysis with SHAMAN:", br(),
+              "Set variables: condition, time, mice", br(),
+              "Set interactions:",
+              "1. condition:mice", br(),
+              "2. condition:time", br(),hr(),
+              "- MOCK communities from ", a("[The NIH HMP Working Group, 2009]",href="http://www.ncbi.nlm.nih.gov/pubmed/19819907"), ":", a("here",target="_blank",href="mock.zip"),br(),
+              "Mock communities are composed of 21 species mixed in even or staggered proportions :", br(),br(),
+              img(src="mock.png",width = "100%",style="max-width: 600px"),br(),br(),
+              "Analysis with SHAMAN: ",br(),
+              "Set variables : Community", br(),
+              "no interaction"))
+              ))
     ),
     
     tabItem(tabName = "Upload",
