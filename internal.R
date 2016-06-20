@@ -124,6 +124,17 @@ CheckCountsTable <- function(counts)
     
     ## Taxonomy table
     taxo = as.data.frame(observation_metadata(dataBIOM))
+    OTUnames = rownames(taxo)
+
+    ## Modif taxo table (remove p__,... and change the colnames)
+    taxo = as.data.frame(sapply(taxo,gsub,pattern="^.*__",replacement=""))
+    colnames(taxo) = c("Kingdom", "Phylum","Class","Order","Family","Genus","Species")
+    rownames(taxo) = OTUnames
+    ## Remove empty row
+    taxo[taxo==""] = NA
+    taxo = na.omit(taxo)
+    
+    
     CheckTaxo = CheckTaxoTable(taxo,counts)
     
     ## Pourcentage of annotation
@@ -235,6 +246,10 @@ CheckCountsTable <- function(counts)
       if(!input$AccountForNA && RowProd!=0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)))
        
       normFactors = sizeFactors(dds)
+      
+      ## Keep normalized OTU table
+      CT_Norm = counts(dds, normalized=TRUE)
+      
       # Only interesting OTU
       merged_table = merge(CT, taxo[order(rownames(CT)),], by="row.names")
       CT = merged_table[,2: (dim(CT)[2]+1)]
@@ -273,7 +288,7 @@ CheckCountsTable <- function(counts)
       normFactors = tmpOrder$normFactorsOrder
       CheckTarget = TRUE
     }
-    return(list(counts=counts,CheckTarget=CheckTarget,normFactors=normFactors, CT_noNorm=CT_noNorm))
+    return(list(counts=counts,CheckTarget=CheckTarget,normFactors=normFactors, CT_noNorm=CT_noNorm, CT_Norm =CT_Norm))
     #return(list(counts=counts,target=target[ind,],labeled=labeled,normFactors=normFactors, CT_noNorm=CT_noNorm))
   }
   
@@ -305,7 +320,7 @@ CheckCountsTable <- function(counts)
   
   
   ## Get the dds object of DESeq2
-  Get_dds_object <- function(input,counts,target,design,normFactorsOTU,CT_noNorm)
+  Get_dds_object <- function(input,counts,target,design,normFactorsOTU,CT_noNorm,CT_Norm)
   {
     dds <- DESeqDataSetFromMatrix(countData=counts, colData=target, design=design)
     sizeFactors(dds) = normFactorsOTU
@@ -316,7 +331,9 @@ CheckCountsTable <- function(counts)
       dds <- nbinomWaldTest(dds,modelMatrixType = "expanded")
     }
     countsNorm = counts(dds, normalized = TRUE)
-    return(list(dds = dds,raw_counts=counts,countsNorm=countsNorm,target=target,design=design,normFactors = normFactorsOTU,CT_noNorm=CT_noNorm))
+    
+    save(dds,file="dds.RData")
+    return(list(dds = dds,raw_counts=counts,countsNorm=countsNorm,target=target,design=design,normFactors = normFactorsOTU,CT_noNorm=CT_noNorm,CT_Norm=CT_Norm))
   }
 
   ## Get the design according to the input
@@ -338,10 +355,14 @@ CheckCountsTable <- function(counts)
     VarInt = input$VarInt
     dds = resDiff$dds
     counts = resDiff$raw_counts
-    if(input$CountsType=="norm") counts = resDiff$countsNorm
+    if(input$CountsType=="Normalized") counts = resDiff$countsNorm
     target = resDiff$target
     normFactors = resDiff$normFactors
-    CT_noNorm = resDiff$CT_noNorm
+    
+    ## Counts at the OTU level
+    CT = resDiff$CT_noNorm
+    if(input$CountsType=="Normalized") CT = resDiff$CT_Norm
+    
     group = as.data.frame(target[,VarInt])
     rownames(group) = rownames(target)
     res = NULL
@@ -354,6 +375,7 @@ CheckCountsTable <- function(counts)
       if(input$DiagPlot=="barplotTot") res = barplotTot(input,counts,group = group, col=colors)
       if(input$DiagPlot=="barplotNul") res = barPlotNul(input,counts, group = group, col=colors)
       if(input$DiagPlot=="densityPlot") res = densityPlotTot(input,counts, group = group, col=colors)
+      if(input$DiagPlot=="boxplotNorm") res = boxplotNorm(input,CT,group = group, col=colors)
       if(input$DiagPlot=="DispPlot") res = plotDispEsts(dds)
       if(input$DiagPlot=="MajTax") res = majTaxPlot(input,counts, group = group, col=colors)
       if(input$DiagPlot=="SfactorsVStot") res = diagSFactors(input,normFactors,resDiff$raw_counts) 
@@ -450,6 +472,46 @@ CheckCountsTable <- function(counts)
   }
   
   
+  my.boxplot <- function(x, pol.col = 1, pol.density = NULL, pol.angle = 45,
+                         bxp.pars = list(boxwex = 0.8, staplewex = 0.5, outwex = 0.5), ...){
+    res <- boxplot(x, pars = bxp.pars, ...) # que boxplot se d�merde avec ses arguments
+    n <- ncol(res$stats) # nombre de boxplots
+    density <- if(is.null(pol.density)){NULL}else{rep(pol.density, length = n)}
+    angle <- if(is.null(pol.angle)){NULL}else{rep(pol.angle, length = n)}
+    col <- if(is.null(pol.col)){NULL}else{rep(pol.col, length = n)}
+    # Ajout des textures
+    ex <- bxp.pars$boxwex/2 # j'ai juste besoin de la largeur des bo�tes pass�e � bxp
+    for(i in 1:n){
+      polygon(c(i - ex, i - ex, i + ex, i + ex),
+              c(res$stats[2, i], res$stats[4, i], res$stats[4, i], res$stats[2, i]),
+              density = density[i], angle = angle[i], col = col[i])
+      segments(i-ex,res$stats[3,i],i+ex,res$stats[3,i],lwd=3,col="black",lend=1)
+    }
+  }
+  
+  
+  
+  ## Boxplot for the counts normalized/no normalized
+  boxplotNorm <- function(input,CT, group, col = c("lightblue","orange", "MediumVioletRed", "SpringGreen")) 
+  {
+    
+    ncol1 <- ncol(group) == 1
+    par(cex=input$cexTitleDiag,mar=c(12,6,4,5))
+    if(input$RemoveNullValue) CT[CT==0] = NA
+    
+    ### Boxplots of the counts
+    my.boxplot(log2(CT+1), las = 2, pol.col = col[as.integer(group[,1])],
+               pol.density = if (ncol1) {NULL}
+               else {15}, 
+               pol.angle = if (ncol1) {NULL}
+            else {seq(0,160,length.out =nlevels(group[, 2]))[as.integer(group[, 2])]},
+            main = paste(input$CountsType, "counts distribution"), ylab = expression(log[2] ~ ( count + 1)))
+    legend("topright", levels(group[, 1]), fill = col[1:nlevels(group[,1])], bty = "n")
+    if (!ncol1)  legend("topleft", levels(group[, 2]), density = 15,col = 1, angle = seq(0,160,length.out =nlevels(group[, 2]))[1:nlevels(group[, 2])], bty = "n")
+    
+     }
+  
+
   
 
   ## barplot total
@@ -457,7 +519,7 @@ CheckCountsTable <- function(counts)
   {
 
     ncol1 <- ncol(group) == 1
-    par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
+    par(cex=input$cexTitleDiag,mar=c(12,6,4,5))
     barplot(colSums(counts), cex.names = cex.names, main = "Total mapped read count per sample", ylab = "Total mapped read count", 
             ylim = c(0, max(colSums(counts)) * 1.2), density = if (ncol1) {NULL}
             else {15}, 
@@ -477,7 +539,7 @@ CheckCountsTable <- function(counts)
     percentage.allNull <- (nrow(counts) - nrow(removeNulCounts(counts))) * 100/nrow(counts)
     ncol1 <- ncol(group) == 1
     
-    par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
+    par(cex=input$cexTitleDiag,mar=c(12,6,4,5))
 
     barplot(percentage, las = 2, col = col[as.integer(group[,1])], 
             density = if (ncol1) {NULL}
@@ -500,7 +562,7 @@ CheckCountsTable <- function(counts)
     
     counts <- removeNulCounts(counts)
     ncol1 <- ncol(group) == 1
-    par(cex=input$cexTitleDiag,mar=c(8,5,4,5))
+    par(cex=input$cexTitleDiag,mar=c(12,5,4,5))
     plot(density(log2(counts[, 1] + 1)), las = 1, lwd = 2, main = "Density of counts distribution", 
          xlab = expression(log[2] ~ (raw ~ count + 1)), 
          ylim = c(0, max(apply(counts, 2, function(x) {max(density(log2(x + 1))$y)})) * 1.05), 
@@ -543,7 +605,7 @@ CheckCountsTable <- function(counts)
     maj <- apply(p, 2, max)
     seqname <- rownames(p)[apply(p, 2, which.max)]
     ncol1 <- ncol(group) == 1
-    par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
+    par(cex=input$cexTitleDiag,mar=c(12,6,4,5))
     x <- barplot(maj, col = col[as.integer(group[, 1])], main = "Proportion of mapped reads from\nmost expressed sequence",
                  ylim = c(0, max(maj) * 1.2), cex.main = 1, 
                  cex.names = cex.names, las = 2, ylab = "Proportion of mapped reads", 
@@ -653,7 +715,7 @@ CheckCountsTable <- function(counts)
     { 
       ## Get the norm data
       counts.norm = as.data.frame(round(counts(dds)))
-      if(input$CountsType=="norm") counts.norm = as.data.frame(round(counts(dds, normalized = TRUE)))
+      if(input$CountsType=="Normalized") counts.norm = as.data.frame(round(counts(dds, normalized = TRUE)))
       # was removed
       counts.norm = counts.norm[,ind_kept]
   
@@ -832,6 +894,60 @@ CheckCountsTable <- function(counts)
   }
   
   
+  BaseContrastEasy <- function(input,names,namesfile,target)
+  {  
+    
+    v_tmp = rep(0,length(names))
+    filesize = file.info(namesfile)[,"size"]
+    F1 = NULL
+    nameContrast = ""
+    
+    ## Get the selected modalities
+    M1 = input$Select1_contrast
+    M2 = input$Select2_contrast
+    
+    if(length(input$Interaction2)>0) F1 = input$Select3_contrast
+    ## Get the name of the parameter corresponding to the modalities
+    InterVar = input$InterestVar
+    Sel_Var = InterVar[which(unlist(lapply(target[,InterVar],FUN = function(x){M1%in%x})))]
+    names1dds = paste(Sel_Var,M1,sep="")
+    names2dds = paste(Sel_Var,M2,sep="")
+    
+    ## fill the vector
+    ind1 = which(names%in%names1dds)
+    ind2 = which(names%in%names2dds)
+    if(length(ind1)>0) v_tmp[ind1] = 1
+    if(length(ind2)>0) v_tmp[ind2] = -1
+    
+    nameContrast = paste(M1,"_vs_",M2,sep="")
+    
+    if(F1!="All" && !is.null(F1)){
+      Sel_Var_For = InterVar[which(unlist(lapply(target[,InterVar],FUN = function(x){F1%in%x})))]
+      ## Depends on the interation
+      namesfor1 = paste(Sel_Var,M1,".",Sel_Var_For,F1,sep="")
+      namesfor1.1 = paste(Sel_Var_For,F1,".",Sel_Var,M1,sep="")
+      namesfor2 = paste(Sel_Var,M2,".",Sel_Var_For,F1,sep="")
+      namesfor2.1 = paste(Sel_Var_For,F1,".",Sel_Var,M2,sep="")
+      ind1.for = which(names%in%c(namesfor1,namesfor1.1))
+      ind2.for = which(names%in%c(namesfor2,namesfor2.1))
+      if(length(ind1.for)>0) v_tmp[ind1] = 1
+      if(length(ind2.for)>0) v_tmp[ind2] = -1
+      nameContrast = paste(nameContrast,"_for_",F1,sep="")
+    }
+    
+    
+    if(filesize!=0)
+    { 
+      oldContrast = read.table(namesfile,header=TRUE)
+      colnamesTmp = c(colnames(oldContrast),nameContrast)
+      mat = cbind(oldContrast,v_tmp)
+    }
+    else{ colnamesTmp = nameContrast; mat = v_tmp}
+    
+    write.table(mat,namesfile,row.names=FALSE,col.names = colnamesTmp)
+  }
+  
+  
   ## Remove nul counts
   removeNulCounts <-function (counts) 
   {
@@ -844,13 +960,16 @@ CheckCountsTable <- function(counts)
   ##              VISUALISATION PLOTS
   ##
   ############################################################
+  ## counts = NULL only used for the diversity (based on rar) 
   
-  GetDataToPlot <- function(input,resDiff,VarInt,ind_taxo,aggregate=TRUE)
+  GetDataToPlot <- function(input,resDiff,VarInt,ind_taxo,aggregate=TRUE,rarefy=FALSE)
   {
     dds = resDiff$dds
     val = c()
     list.val = list()
     counts = as.data.frame(round(counts(dds, normalized = TRUE)))
+    if(rarefy) {set.seed(1234); counts = t(rrarefy(t(counts), min(colSums(counts))))}
+    
     target = resDiff$target
     counts_tmp_combined = NULL
     prop_tmp_combined = NULL
@@ -1161,10 +1280,23 @@ CheckCountsTable <- function(counts)
     Rsq = NULL
     cor.est = NULL
     cor.pvalue = NULL
+    div = NULL
     dds = resDiff$dds
     counts = as.data.frame(round(counts(dds, normalized = TRUE)))
     target = as.data.frame(resDiff$target)
-    data = cbind(target,log2(t(counts)+1))
+    ## Get the diversity values
+    tmp_div = Plot_Visu_Diversity(input,resDiff,ForScatter=TRUE)$dataDiv
+    
+    if(!is.null(tmp_div)){
+    div = cbind(round(tmp_div$value[tmp_div$diversity =="Alpha"],3),
+                round(tmp_div$value[tmp_div$diversity =="Shannon"],3),
+                round(tmp_div$value[tmp_div$diversity =="Inv.Simpson"],3),
+                round(tmp_div$value[tmp_div$diversity =="Simpson"],3))
+    colnames(div) = c("Alpha div","Shannon div","Inv.Simpson div","Simpson div")
+    }
+    if(input$TransDataScatter =="log2") data = cbind(target,log2(t(counts)+1),div)
+    if(input$TransDataScatter =="none") data = cbind(target,t(counts),div)
+
     
     ## Get Input for ScatterPlot
     Xvar = input$Xscatter
@@ -1178,8 +1310,8 @@ CheckCountsTable <- function(counts)
     col_var = if (ColBy== "None" || is.null(ColBy)) NULL else data[,ColBy]
     symbol_var = if (PchBy == "None" || is.null(PchBy)) NULL else data[,PchBy]
     size_var = if (PointSize == "None" || is.null(PointSize))  NULL else data[,PointSize]
-    
-    if(!export && !input$AddRegScatter && !lmEst && !CorEst){
+
+    if(!export && !input$AddRegScatter && !lmEst && !CorEst && !is.null(x_var) && !is.null(y_var)){
       plot = scatterD3(x = x_var,
                             y = y_var,
                             lab = rownames(data),
@@ -1206,9 +1338,10 @@ CheckCountsTable <- function(counts)
         size_var = if (PointSize == "None" || is.null(PointSize))  1 else data[,PointSize]
         
         plot = ggplot(data, aes(x = x_var, y = y_var)) + geom_point(aes(color=col_var,size =size_var,shape = symbol_var),alpha=0.7) +theme_bw()
-        if(input$SizeLabelScatter!=0) plot = plot + geom_text(aes(label=rownames(data),color=col_var,size=input$SizeLabelScatter/20),vjust = 0,nudge_y =0.05)
+        plot = plot + geom_smooth(method="lm")
+        if(input$SizeLabelScatter!=0) plot = plot + geom_text(aes(label=rownames(data),color=col_var,size=as.numeric(input$SizeLabelScatter)/10),vjust = 0,nudge_y =0.05)
         plot = plot + xlab(Xvar) + ylab(Yvar)
-        if(input$AddRegScatter) plot = plot + geom_smooth(method="lm")
+        
       return(plot)
       }
     }
@@ -1223,7 +1356,11 @@ CheckCountsTable <- function(counts)
     }
     if(CorEst)
     {
-      print(head(data))
+      typesTarget = sapply(target,class)
+      numInd = (typesTarget=="numeric")[1:ncol(target)]
+      
+      if(any(numInd)) data = cbind(target[,numInd],log2(t(counts)+1),div)
+      if(!any(numInd)) data = cbind(log2(t(counts)+1),div)
       
       cor.est = cor(as.matrix(data),method = input$CorMeth)
       #cor.pvalue = cor.test(data,method = input$CorMeth)
@@ -1240,23 +1377,31 @@ CheckCountsTable <- function(counts)
   ######################################################
   
   
-  Plot_Visu_Diversity <- function(input,resDiff,type="point"){
+  Plot_Visu_Diversity <- function(input,resDiff,ForScatter=FALSE){
     gg = NULL
+    dataTmp = NULL
     dds = resDiff$dds
     counts = round(counts(dds, normalized = TRUE))
     
-    counts_rare = rrarefy(t(counts), min(colSums(counts)))
-    
     ## Get Input for the plot
-    VarInt = input$VisuVarInt
-    VarIntBoxDiv = input$VarBoxDiv 
-    VarIntDivCol = input$VarDivCol
-    ind_taxo = rownames(counts)
-    
-    tmp = GetDataToPlot(input,resDiff,VarInt,ind_taxo,aggregate=FALSE)
-    counts_tmp_combined = tmp$counts
-    targetInt = tmp$targetInt
-    levelsMod = tmp$levelsMod
+    if(!ForScatter)
+    {
+      VarInt = input$VisuVarInt
+      VarIntBoxDiv = input$VarBoxDiv 
+      VarIntDivCol = input$VarDivCol
+      ind_taxo = rownames(counts)
+      tmp = GetDataToPlot(input,resDiff,VarInt,ind_taxo,aggregate=FALSE,rarefy = TRUE)
+      counts_tmp_combined = tmp$counts
+      targetInt = tmp$targetInt
+      levelsMod = tmp$levelsMod
+    }
+    if(ForScatter)
+    {
+      counts_tmp_combined = t(counts)
+      targetInt = resDiff$target
+      targetInt$AllVar = targetInt[,1]
+      levelsMod = NULL
+    }
 
     if(nrow(counts_tmp_combined)>0 && !is.null(counts_tmp_combined) && !is.null(targetInt))
     { 
@@ -1287,59 +1432,61 @@ CheckCountsTable <- function(counts)
                             ci.up=c(ci.alpha.up,beta,gamma,ci.shan.up,ci.simpson.up,ci.invsimpson.up),
                             diversity = c(rep("Alpha",nb),rep("Beta",nb),rep("Gamma",nb),rep("Shannon",nb),rep("Simpson",nb),rep("Inv.Simpson",nb)),
                             Var = as.character(rep(names(alpha),6)))
-                        
-      dataTmp = dataTmp[dataTmp$diversity%in%input$WhichDiv,]
       
-      ## Order of the modalities
-      dataTmp$Var = factor(dataTmp$Var,levels = levelsMod)
-      
-      tmp.mat = matrix(unlist((lapply(as.matrix(as.character(dataTmp$Var)),strsplit,"-"))),ncol=length(VarInt),byrow = T)
-      tmp.level = matrix(unlist((lapply(as.matrix(as.character(levelsMod)),strsplit,"-"))),ncol=length(VarInt),byrow = T)
-      
-      indVar = VarInt%in%VarIntBoxDiv
-      if(length(which(indVar))>=1){
-        if(length(which(indVar))>=2){
-          tmp.levelX = apply(tmp.level[,which(indVar)],1,paste,collapse = "-")
-          dataTmp$VarX = factor(apply(tmp.mat[,which(indVar)],1,paste,collapse = "-"),levels = unique(tmp.levelX))
-        }
-        if(length(which(indVar))==1){
-          tmp.levelX = tmp.level[,which(indVar)]
-          dataTmp$VarX = factor(tmp.mat[,which(indVar)],levels = unique(tmp.levelX))
-        }
-      }
+      if(!ForScatter)
+      {                  
+        dataTmp = dataTmp[dataTmp$diversity%in%input$WhichDiv,]
         
-      if(is.null(VarIntBoxDiv)) dataTmp$VarX = tmp.mat[,1]
-      dataTmp$VarCol = dataTmp$VarX
-      
-      if(length(which(!indVar))>=1){
-        if(length(which(!indVar))>=2){
-          tmp.levelCol = apply(tmp.level[,which(!indVar)],1,paste,collapse = "-")
-          dataTmp$VarCol = factor(apply(tmp.mat[,which(!indVar)],1,paste,collapse = "-"),levels = unique(tmp.levelCol))
+        ## Order of the modalities
+        dataTmp$Var = factor(dataTmp$Var,levels = levelsMod)
+        
+        tmp.mat = matrix(unlist((lapply(as.matrix(as.character(dataTmp$Var)),strsplit,"-"))),ncol=length(VarInt),byrow = T)
+        tmp.level = matrix(unlist((lapply(as.matrix(as.character(levelsMod)),strsplit,"-"))),ncol=length(VarInt),byrow = T)
+        
+        indVar = VarInt%in%VarIntBoxDiv
+        if(length(which(indVar))>=1){
+          if(length(which(indVar))>=2){
+            tmp.levelX = apply(tmp.level[,which(indVar)],1,paste,collapse = "-")
+            dataTmp$VarX = factor(apply(tmp.mat[,which(indVar)],1,paste,collapse = "-"),levels = unique(tmp.levelX))
+          }
+          if(length(which(indVar))==1){
+            tmp.levelX = tmp.level[,which(indVar)]
+            dataTmp$VarX = factor(tmp.mat[,which(indVar)],levels = unique(tmp.levelX))
+          }
         }
-        if(length(which(!indVar))==1){ 
-          tmp.levelCol = tmp.level[,which(!indVar)]
-          dataTmp$VarCol = factor(tmp.mat[,which(!indVar)],levels = unique(tmp.levelCol))
+          
+        if(is.null(VarIntBoxDiv)) dataTmp$VarX = tmp.mat[,1]
+        dataTmp$VarCol = dataTmp$VarX
+        
+        if(length(which(!indVar))>=1){
+          if(length(which(!indVar))>=2){
+            tmp.levelCol = apply(tmp.level[,which(!indVar)],1,paste,collapse = "-")
+            dataTmp$VarCol = factor(apply(tmp.mat[,which(!indVar)],1,paste,collapse = "-"),levels = unique(tmp.levelCol))
+          }
+          if(length(which(!indVar))==1){ 
+            tmp.levelCol = tmp.level[,which(!indVar)]
+            dataTmp$VarCol = factor(tmp.mat[,which(!indVar)],levels = unique(tmp.levelCol))
+          }
         }
+        
+        
+        colors = rep(c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c","#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5","#8c564b",
+                         "#c49c94","#e377c2","#f7b6d2","#7f7f7f", "#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"),ceiling(nrow(targetInt)/20))
+        
+        gg = ggplot(dataTmp, aes(x=VarX, y=value, fill=VarCol)) 
+        gg = gg + theme_bw() + theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust=0.5), legend.title=element_blank())
+        gg = gg + geom_bar(stat = "identity",width=0.4,position = position_dodge(width=0.5),alpha=0.8) 
+        if(input$DivAddError=="Add") gg = gg + geom_errorbar(aes(ymin=ci.down, ymax=ci.up,color=VarCol,width=.2),position = position_dodge(width=0.5))
+        if(input$SensPlotVisu=="Horizontal") gg = gg + coord_flip() + facet_wrap(~ diversity,scales="fixed")
+        if(input$SensPlotVisu=="Vertical") gg = gg + facet_wrap(~ diversity,scales=input$DivScale)
+        gg = gg + xlab(paste(VarIntBoxDiv,collapse ="-"))+ ylab("Diversity")
+        gg = gg + scale_fill_manual(values = colors[1:length(unique(dataTmp[,7]))]) + scale_color_manual(values = colors[1:length(unique(dataTmp[,7]))])
       }
-      
-      
-      colors = rep(c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c","#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5","#8c564b",
-                       "#c49c94","#e377c2","#f7b6d2","#7f7f7f", "#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"),ceiling(nrow(targetInt)/20))
-      
-      gg = ggplot(dataTmp, aes(x=VarX, y=value, fill=VarCol)) 
-      gg = gg + theme_bw() + theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust=0.5), legend.title=element_blank())
-      gg = gg + geom_bar(stat = "identity",width=0.4,position = position_dodge(width=0.5),alpha=0.8) 
-      if(input$DivAddError=="Add") gg = gg + geom_errorbar(aes(ymin=ci.down, ymax=ci.up,color=VarCol,width=.2),position = position_dodge(width=0.5))
-      if(input$SensPlotVisu=="Horizontal") gg = gg + coord_flip() + facet_wrap(~ diversity,scales="fixed")
-      if(input$SensPlotVisu=="Vertical") gg = gg + facet_wrap(~ diversity,scales=input$DivScale)
-      gg = gg + xlab(paste(VarIntBoxDiv,collapse ="-"))+ ylab("Diversity")
-      gg = gg + scale_fill_manual(values = colors[1:length(unique(dataTmp[,7]))]) + scale_color_manual(values = colors[1:length(unique(dataTmp[,7]))])
-       
         
       ## Get interactivity
        #ff = ggplotly(gg)
     }
-    return(gg)
+    return(list(plot=gg,dataDiv = dataTmp))
     
   }
 
@@ -1512,7 +1659,6 @@ CheckCountsTable <- function(counts)
   {
     log2FC = NULL
     padj = NULL
-    VarInt = input$VarInt
     dds = resDiff$dds
     counts = resDiff$counts
     target = resDiff$target
@@ -1522,7 +1668,7 @@ CheckCountsTable <- function(counts)
     alpha = as.numeric(input$AlphaVal)
     cooksCutoff = ifelse(input$CooksCutOff!='Auto',ifelse(input$CooksCutOff!=Inf,input$CutOffVal,Inf),TRUE)
     
-    if(nbCont>=2)
+    if(nbCont>=1)
     {
       for(i in 1:nbCont)
       { 
@@ -1543,11 +1689,13 @@ CheckCountsTable <- function(counts)
         colnames(log2FC) = names(result)
         colnames(padj) = names(result)
       }
+    
       rownames(log2FC) = rownames(result[[SelContrast[1]]])
       rownames(padj) = rownames(result[[SelContrast[1]]])
     }
     return(list(log2FC=as.data.frame(log2FC),padj=padj))
   }
+  
   
   
   Plot_Visu_Heatmap_FC <- function(input,BaseContrast,resDiff,export=FALSE){
@@ -1563,23 +1711,199 @@ CheckCountsTable <- function(counts)
     { 
       cont = which(colnames(log2FC)%in%SelContrast)
       log2FC = log2FC[,SelContrast] 
-      ind_taxo = input$selectTaxoPlot
+      ind_taxo = input$selectTaxoPlotComp
       ind = rownames(log2FC)%in%ind_taxo
       log2FC = as.matrix(log2FC[ind,])
       
+      if(input$SortHeatComp =="Selection") tmp_ord = match(ind_taxo, rownames(log2FC))
+      if(input$SortHeatComp =="Names") tmp_ord = order(rownames(log2FC))
+      if(input$SortHeatComp =="Values") tmp_ord = order(log2FC[,1])
+      
+      if(input$SortHeatComp !="Auto") log2FC = log2FC[tmp_ord,]
       
       col1 <- c(colorRampPalette(c("royalblue4","royalblue3","royalblue2","royalblue1","white"))(n = 100),colorRampPalette(c("white",  "firebrick1", "firebrick2", "firebrick3", "firebrick4"))(n = 100))
-      breaks <- c(seq(min(log2FC,-0.01), 0,length=100),seq(0.01,max(log2FC,0.02),length=100))
+      breaks <- c(seq(min(log2FC,-0.01,na.rm = TRUE), 0,length=100),seq(0.01,max(log2FC,0.02,na.rm = TRUE),length=100))
       colorFunc <- col_bin(col1, bins = rescale(breaks))
       ## Transpose matrix if Horizontal
-      if(input$SensPlotVisu=="Horizontal") log2FC = t(as.matrix(log2FC))
+      if(input$SensPlotVisuComp=="Horizontal") log2FC = t(as.matrix(log2FC))
       
-      if(!export) res = d3heatmap(log2FC, dendrogram = "row", Rowv = TRUE, Colv = NA, na.rm = TRUE, width = input$widthVisu, height = input$heightVisu, show_grid = FALSE, colors = colorFunc, scale = input$scaleHeatmap,cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap)
-      if(export) res = heatmap.2(log2FC, dendrogram = "none", Rowv = TRUE, Colv = NA, na.rm = TRUE, width = input$widthVisu, height = input$heightVisu, margins=c(input$lowerMargin,input$rightMargin), density.info="none", show_grid = FALSE, trace="none", col = col1, scale = input$scaleHeatmap,cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, 
-                                 offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap,symm=FALSE,symkey=TRUE,symbreaks=TRUE)
+      if(!export && nrow(log2FC)>0) res = d3heatmap(log2FC, dendrogram = "none", Rowv = (input$SortHeatComp =="Auto"), Colv = FALSE, na.rm = TRUE, height = input$heightVisuComp, show_grid = FALSE, colors = colorFunc, scale = input$scaleHeatmapComp,cexRow = input$LabelSizeHeatmapComp,cexCol =input$LabelSizeHeatmapComp, offsetCol=input$LabelColOffsetHeatmapComp,offsetRow=input$LabelRowOffsetHeatmapComp)
+      if(export && nrow(log2FC)>0) heatmap.2(log2FC, dendrogram = "none", Rowv = (input$SortHeatComp =="Auto"), Colv = FALSE, na.rm = TRUE, margins=c(input$lowerMarginComp,input$rightMarginComp), density.info="none", trace="none", col = col1, scale = input$scaleHeatmapComp,cexRow = input$LabelSizeHeatmapComp,cexCol =input$LabelSizeHeatmapComp, 
+                            offsetCol=input$LabelColOffsetHeatmapComp,offsetRow=input$LabelRowOffsetHeatmapComp,symm=FALSE,symkey=TRUE,symbreaks=TRUE)
       }
     return(res)
   }
 
+  
+  
+  #######################################
+  ##
+  ##    Add tooltips on venn digramm
+  ##
+  #######################################
+  
+  venn_tooltip <- function(venn){
+    venn$x$tasks[length(venn$x$tasks)+1] <- list(
+      htmlwidgets::JS('
+                      function(){
+                      var div = d3.select(this);
+                      
+                      // add a tooltip
+                      var tooltip = d3.select("body").append("div")
+                      .attr("class", "venntooltip")
+                      .style("position", "absolute")
+                      .style("text-align", "center")
+                      .style("width", 128)
+                      .style("height", 16)
+                      .style("background", "#333")
+                      .style("color","#ddd")
+                      .style("padding","2px")
+                      .style("border","0px")
+                      .style("border-radius","8px")
+                      .style("opacity",0);
+                      
+                      div.selectAll("path")
+                      .style("stroke-opacity", 0)
+                      .style("stroke", "#fff")
+                      .style("stroke-width", 0)
+                      
+                      // add listeners to all the groups to display tooltip on mousover
+                      div.selectAll("g")
+                      .on("mouseover", function(d, i) {
+                      
+                      // sort all the areas relative to the current item
+                      venn.sortAreas(div, d);
+                      
+                      // Display a tooltip with the current size
+                      tooltip.transition().duration(400).style("opacity", .9);
+                      tooltip.text(d.size);
 
+                      // highlight the current path
+                      var selection = d3.select(this).transition("tooltip").duration(400);
+                      selection.select("path")
+                      .style("stroke-width", 3)
+                      .style("fill-opacity", d.sets.length == 1 ? .4 : .1)
+                      .style("stroke-opacity", 1);
+                      })
+                      
+                      .on("mousemove", function() {
+                      tooltip.style("left", (d3.event.pageX) + "px")
+                      .style("top", (d3.event.pageY - 28) + "px");
+                      })
+                      
+                      .on("mouseout", function(d, i) {
+                      tooltip.transition().duration(50).style("opacity", 0);
+                      var selection = d3.select(this).transition("tooltip").duration(400);
+                      selection.select("path")
+                      .style("stroke-width", 0)
+                      .style("fill-opacity", d.sets.length == 1 ? .25 : .0)
+                      .style("stroke-opacity", 0);
+                      });
+                      }
+                      ')
+      )
+    return(venn)
+    }
+  
+  ## df: data frame with diff abundant features
+    
+  GetData_venn <-function(input,SelContrast,BaseContrast,resDiff)
+  {
+      
+      res = list()
+      df.tot = NULL
+      VarInt = input$VarInt
+      dds = resDiff$dds
+      counts = resDiff$counts
+      target = resDiff$target
+      nbCont = length(SelContrast)
+      result = list()
+      alpha = as.numeric(input$AlphaVal)
+      cooksCutoff = ifelse(input$CooksCutOff!='Auto',ifelse(input$CooksCutOff!=Inf,input$CutOffVal,Inf),TRUE)
+      
+      if(nbCont>=2)
+      {
+        for(i in 1:nbCont)
+        { 
+          cont = as.character(SelContrast[i])
+          result[[cont]] <- results(dds,contrast=BaseContrast[,cont],pAdjustMethod=input$AdjMeth,
+                                    cooksCutoff=cooksCutoff,
+                                    independentFiltering=input$IndFiltering,alpha=alpha)
+        }
+        padj = round(result[[SelContrast[1]]][, "padj"], 3)
+        # save(result,padj,SelContrast,file = "test1.RData")
+        df = as.matrix(rownames(result[[1]]))
+        if(length(which(padj>alpha))>0) df[which(padj>alpha),]=NA 
+        if(any(is.na(padj))) df[which(is.na(padj)),]=NA 
+        
+        if(nbCont>1)
+        {
+          for(i in 2:nbCont)
+          {
+            padj = round(result[[SelContrast[i]]][, "padj"], 3)
+            df.tmp = as.matrix(rownames(result[[i]]))
+            if(length(which(padj>alpha))>0) df.tmp[which(padj>alpha),]=NA 
+            if(any(is.na(padj))) df.tmp[which(is.na(padj)),]=NA  
+            df = cbind(df,df.tmp)
+          }
+          colnames(df) = SelContrast
+          df = as.data.frame(df)
+        }
+        
+        ## Keep the entire dataframe
+        df.tot = as.data.frame(apply(df,2,Go_data_top))
+        maxRow = max(apply(as.data.frame(apply(df,2,Go_data_top)),2,FUN=function(x) length(which(!is.na(x)))))
+        
+        df.tot = df.tot[1:max(maxRow,1),]
+        ## Remove col with only NA
+        df = df[,which(apply(!is.na(df),2,any))]
+        
+        ncont = ncol(as.data.frame(df))
+        names.df = names(df)
+        cmp=1
+        if(ncont>1 && !is.null(ncont))
+        {
+          for(i in 1:(ncont))
+          {
+            for(j in i:ncont)
+            {
+              if(i!=j) res[[cmp]] = list(sets=list(names.df[i],names.df[j]),size= length(which(!is.na(intersect(df[,i],df[,j])))))
+              if(i==j) res[[cmp]] = list(sets=list(names.df[i]),size= length(which(!is.na(intersect(df[,i],df[,i])))))
+              cmp=cmp+1
+            }
+          }
+        }
+        
+      }
+    return(list(res=res,df.tot=df.tot))
+  }
+  
+  
+  
+  Plot_Visu_Venn <- function(input,BaseContrast,resDiff,export=FALSE){
+    
+    res = NULL
+    SelContrast = input$ContrastList_table_FC
+    data = GetData_venn(input,SelContrast,BaseContrast,resDiff)$res
+    res = venn_tooltip(d3vennR(data=data))
+    
+    return(res)
+  }
+  
+  
+  
+  ## Get the non NA data at the top of the dataframe
+  Go_data_top <- function(vect)
+  {
+    n = length(vect)
+    tmp = rep(NA,n)
+    ind = which(!is.na(vect))
+    n1 = length(ind)
+    if(n1>0)    tmp[1:n1] =  vect[ind]
+    return(tmp)
+  }
+  
+  
+  
+  
   

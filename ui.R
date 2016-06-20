@@ -1,88 +1,9 @@
-if(!require(shinydashboard)){
-  install.packages('shinydashboard')
-  library(shinydashboard)
-}
-library(shinyjs)
-if (!require(psych)) {
-  install.packages('psych')
-  library(psych)
-}
-
-if (!require(ggplot2)) {
-  install.packages('ggplot2')
-  library(ggplot2)
-}
-
-if (!require(vegan)) {
-  install.packages('vegan')
-  library(vegan)
-}
-
-if (!require(dendextend)) {
-  install.packages('dendextend')
-  library(dendextend)
-}
-
-if (!require(circlize)) {
-  install.packages('circlize')
-  library(circlize)
-}
-
-if (!require(biom)) {
-  install.packages('biom')
-  library(biom)
-}
-
-if (!require(DT)) {
-  install.packages('DT')
-  library(DT)
-}
-
-if (!require(RColorBrewer)) {
-  install.packages('RColorBrewer')
-  library(RColorBrewer)
-}
-
-if (!require(scatterD3)) {
-  install.packages('scatterD3')
-  library(scatterD3)
-}
-
-if (!require(gplots)) {
-  install.packages('gplots')
-  library(gplots)
-}
-
-if (!require(DESeq2)) {
-  source("https://bioconductor.org/biocLite.R")
-  biocLite("DESeq2")
-  library(DESeq2)
-}
-
-if (!require(ade4)) {
-  install.packages('ade4')
-  library(ade4)
-}
-
-if (!require(genefilter)) {
-  source("https://bioconductor.org/biocLite.R")
-  biocLite("genefilter")
-  library(genefilter)
-}
-
-
-if (!require(googleVis)) {
-  install.packages('googleVis')
-  suppressPackageStartupMessages(library(googleVis))
-}
-
-if(!require(plotly)){
-  install.packages('plotly')
-  library(plotly)
-}
-
+source('LoadPackages.R')
 
 sidebar <- dashboardSidebar(
+  tags$head(
+    tags$script(src = "custom.js")
+  ),
   sidebarMenu(
     menuItem("Home", tabName = "Home", icon = icon("home")),
     menuItem("Tutorial", tabName = "Tutorial", icon = icon("book")),
@@ -280,11 +201,17 @@ body <- dashboardBody(
                     ),
                     column(width=3,checkboxInput("AccountForNA","Compute geometric mean without 0",value=TRUE))
                     # column(width=3,uiOutput("RefSelect"))
+                  ),
+                  fluidRow(
+                    column(width=3,
+                        fileInput('fileSizeFactors', h6(strong('Define your own size factors')),width="100%")
+                    ),
+                    column(width=3,br(),htmlOutput("InfoSizeFactor"))
                   )
                 ),
                 fluidRow(
                 column(width=8,
-#                        uiOutput("contrastBox"),
+                        uiOutput("contrastBox"),
                        uiOutput("contrastBoxAdvanced")
                        ),
                 column(width=4,
@@ -302,7 +229,8 @@ body <- dashboardBody(
                 br(),
                 conditionalPanel(condition="input.DiagPlot=='SfactorsVStot'",
                   box(title = "Size factors",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
-                    dataTableOutput("SizeFactTable")
+                    dataTableOutput("SizeFactTable"),
+                    downloadButton('ExportSizeFactor', 'Export table')
                   )
                 ),
                   
@@ -321,13 +249,16 @@ body <- dashboardBody(
               column(width=3,
                 box(title = "Select your plot",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = FALSE,collapsed= FALSE,
                   selectInput("DiagPlot","",c("Total barplot"="barplotTot","Nul barplot"="barplotNul",
-                                              "Maj. taxonomy"="MajTax", "Density"="densityPlot", "Dispersion" = "DispPlot",
+                                              "Maj. taxonomy"="MajTax","Boxplots" = "boxplotNorm", "Density"="densityPlot", "Dispersion" = "DispPlot",
                                               "Size factors VS total"="SfactorsVStot", "PCA"="pcaPlot", "PCoA"="pcoaPlot","Clustering" = "clustPlot"))
                     ),
                 box(title = "Options",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
                     conditionalPanel(condition="input.DiagPlot!='clustPlot' && input.DiagPlot!='pcaPlot' && input.DiagPlot!='SfactorsVStot' && input.DiagPlot!='DispPlot'",
-                                     radioButtons("CountsType","Counts:",c("Normalized"="norm","Raw"="raw"),inline = TRUE)
+                                     radioButtons("CountsType","Counts:",c("Normalized"="Normalized","Raw"="Raw"),inline = TRUE)
                                      ),
+                    conditionalPanel(condition="input.DiagPlot=='boxplotNorm'",
+                                    checkboxInput("RemoveNullValue","Remove 0",value = TRUE)
+                                    ),
                     conditionalPanel(condition="input.DiagPlot!='Sfactors' && input.DiagPlot!='SfactorsVStot' ",uiOutput("VarIntDiag")),
                     conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='pcaPlot'",
                                      h5(strong("Select the modalities")),
@@ -414,19 +345,12 @@ body <- dashboardBody(
   
   #### Data Viz
   
-  tabItem(tabName = "Visu",
+  tabItem(tabName = "GlobVisu",
           fluidRow(
             column(width=9,
                    uiOutput("plotVisu"),
-                   conditionalPanel(condition="input.PlotVisuSelect=='Scatterplot' && !input.AddRegScatter",
-                                    useShinyjs(),
-                                    br(),
-                                    p(actionButton("scatterD3-reset-zoom", HTML("<span class='glyphicon glyphicon-search' aria-hidden='true'></span> Reset Zoom")),Align="right"),
-                                    box(title = "Correlation table",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
-                                        dataTableOutput("CorTable")
-                                    )
-                                    ), 
                    
+                   ### Regression and correlation outputs for the scatter plot
                    conditionalPanel(condition="input.PlotVisuSelect=='Scatterplot' && input.AddRegScatter", 
                                     fluidRow(
                                       column(width=6,
@@ -437,7 +361,25 @@ body <- dashboardBody(
                                     ),
                                     column(width=6,br(),htmlOutput("lmEquation"))
                                     )
-                   )
+                   ),
+                   conditionalPanel(condition="input.PlotVisuSelect=='Scatterplot'",
+                                    useShinyjs(),
+                                    br(),
+                                    p(actionButton("scatterD3-reset-zoom", HTML("<span class='glyphicon glyphicon-search' aria-hidden='true'></span> Reset Zoom")),Align="right"),
+                                    box(title = "Correlation table",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
+                                        dataTableOutput("CorTable")
+                                    )
+                   ),
+                   
+                   ## Values of the diversities
+                   conditionalPanel(condition="input.PlotVisuSelect=='Diversity'",
+                                    br(),
+                      box(title = "Diversities values",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
+                                    dataTableOutput("Diversitytable"),
+                                    downloadButton('ExportDiversitytable', 'Export table')
+                          
+                      )
+                   ) 
                                     
                    ),
 
@@ -460,6 +402,8 @@ body <- dashboardBody(
                   ),
                   conditionalPanel(condition="input.PlotVisuSelect=='Scatterplot' ",
                                    uiOutput("VarIntVisuScatter"),
+                                   radioButtons("TransDataScatter","Data transformation",c("Log2 +1" = "log2","None" = "none"),inline=TRUE),
+                                   hr(),
                                    radioButtons("CorMeth","Correlation method",c("Pearson" = "pearson","Spearman" = "spearman"),inline=TRUE),
                                    checkboxInput("AddRegScatter","Add regression line",FALSE)
                   ),                 
@@ -467,7 +411,8 @@ body <- dashboardBody(
                                    radioButtons("SelectSpecifTaxo","Select the features",c("Most abundant"="Most","All"="All", "Differential features" = "Diff", "Non differential features" = "NoDiff"))
                   ),
                   conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && input.PlotVisuSelect!='Scatterplot' && (input.SelectSpecifTaxo=='Diff' || input.SelectSpecifTaxo=='NoDiff') ",
-                                   selectizeInput("ContrastList_table_Visu","",choices = "", multiple = FALSE)
+                                   selectizeInput("ContrastList_table_Visu","",choices = "", multiple = TRUE),
+                                   radioButtons("UnionInterContrasts","Union or intersection ?",c("Union"="Union","Intersection"="Inter"),inline = TRUE)
                   ),
                   conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && input.PlotVisuSelect!='Scatterplot'",
                                    uiOutput("TaxoToPlotVisu")
@@ -477,6 +422,7 @@ body <- dashboardBody(
                 ## BARPLOT
                 ##################
                 conditionalPanel(condition="input.PlotVisuSelect=='Barplot'",
+                                 hr(),
                                  selectizeInput(inputId = "CountsOrProp",label = h6(strong("Type of data")),choices = c("Proportions" = "prop", "Counts" = "counts"),selected = "prop")
                 ),
                 
@@ -484,12 +430,6 @@ body <- dashboardBody(
                 ##################
                 ## HEATMAP
                 ##################
-                conditionalPanel(condition="input.PlotVisuSelect=='Heatmap'",
-                                 selectizeInput(inputId = "HeatMapType",label = h6(strong("Type of data")),choices = c("Log2Counts" = "Counts", "Log2FoldChange" = "Log2FC"),selected = "Counts")                                 
-                ),
-                conditionalPanel(condition="input.PlotVisuSelect=='Heatmap' && input.HeatMapType=='Log2FC'",
-                                 selectizeInput("ContrastList_table_FC",h6(strong("Contrasts (Min = 2)")),choices = "", multiple = TRUE)
-                ),
                 conditionalPanel(condition="input.PlotVisuSelect=='Heatmap'",
                                  selectizeInput(inputId = "scaleHeatmap",label = h6(strong("Scale:")),choices = c("None" = "none", "Rows" = "row", "Column" = "col"),selected = "none")
                                  
@@ -499,6 +439,7 @@ body <- dashboardBody(
                 ## BOXPLOT
                 ##################
                 conditionalPanel(condition="input.PlotVisuSelect=='Boxplot'",
+                                 hr(),
                                  selectizeInput("typeDataBox",h6(strong("Type of data")),c("Log2"="Log2","Relative"="Relative"))
                 ),
                 
@@ -510,7 +451,6 @@ body <- dashboardBody(
                 ),
                 conditionalPanel(condition="input.PlotVisuSelect=='Diversity'",
                                  uiOutput("SelectVarBoxDiv")
-                                 
                 )
               ),
 
@@ -540,7 +480,7 @@ body <- dashboardBody(
                 ##################
                 ## HEATMAP
                 ##################
-                conditionalPanel(condition="input.PlotVisuSelect=='Heatmap' && input.HeatMapType!='Log2FC'",
+                conditionalPanel(condition="input.PlotVisuSelect=='Heatmap'",
                                  selectInput("colors", label=h6(strong("Gradient of colors")),choices = c("green-blue", "blue-white-red", "purple-white-orange", "red-yellow-green"),selected = "blue-white-red")
                 ),
                 conditionalPanel(condition="input.PlotVisuSelect=='Heatmap'",
@@ -568,7 +508,7 @@ body <- dashboardBody(
                 ##################
                 ## ALL
                 ##################
-                conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction'",
+                conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Scatterplot'",
                                  radioButtons(inputId = "SensPlotVisu",label = h6(strong("Orientation")),choices = c("Vertical" = "Vertical", "Horizontal" = "Horizontal"),selected = "Vertical",inline = TRUE)
                 )
               ),
@@ -586,6 +526,75 @@ body <- dashboardBody(
                   ),
                   downloadButton("exportVisu", "Export")
               )
+            )
+          )
+  ),
+
+  tabItem(tabName = "CompPlot",
+          fluidRow(
+            column(width=9,
+                   uiOutput("plotVisuComp"),
+                   conditionalPanel(condition="input.PlotVisuSelectComp=='Venn'",
+                                    dataTableOutput("DataVenn")
+                   )
+            ),
+            column(width=3,
+                   box(title = "Select your plot",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = FALSE,collapsed= FALSE,
+                        selectizeInput("PlotVisuSelectComp","",c("Venn diagram"="Venn","Heatmap"="Heatmap_comp"),selected = "Heatmap_comp")
+                   ),
+                   box(title = "Options",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
+                          selectizeInput("ContrastList_table_FC",h6(strong("Contrasts (Min = 2)")),choices = "", multiple = TRUE),
+                          conditionalPanel(condition="input.PlotVisuSelectComp=='Heatmap_comp'",
+                                          radioButtons("SelectSpecifTaxoComp","Select the features",c("Most abundant"="Most","All"="All", "Differential features" = "Diff", "Non differential features" = "NoDiff"))
+                                          ),
+                          conditionalPanel(condition="input.PlotVisuSelectComp=='Heatmap_comp' && (input.SelectSpecifTaxoComp=='Diff' || input.SelectSpecifTaxoComp=='NoDiff')",
+                                          selectizeInput("ContrastList_table_VisuComp","",choices = "", multiple = TRUE),
+                                          radioButtons("UnionInterContrastsComp","Union or intersection ?",c("Union"="Union","Intersection"="Inter"),inline = TRUE)
+                                          ),
+                          conditionalPanel(condition="input.PlotVisuSelectComp=='Heatmap_comp'",
+                                          uiOutput("TaxoToPlotVisuComp"),
+                                          selectizeInput(inputId = "scaleHeatmapComp",label = h6(strong("Scale:")),choices = c("None" = "none", "Rows" = "row", "Column" = "col"),selected = "none"),
+                                          selectInput("SortHeatComp","Sort by:", c("Selection" ="Selection","Values" = "Values","Names"="Names","Auto"="Auto"))
+                                          )
+                    ),
+                   
+                   box(title = "Appearance",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
+                       sliderInput("heightVisuComp", h6(strong("Height")),min=100,max=4000,value = 800),
+                       
+                       ##################
+                       ## HEATMAP
+                       ##################
+
+                       conditionalPanel(condition="input.PlotVisuSelectComp=='Heatmap_comp'",
+                                        radioButtons(inputId = "SensPlotVisuComp",label = h6(strong("Orientation")),choices = c("Vertical" = "Vertical", "Horizontal" = "Horizontal"),selected = "Vertical",inline = TRUE),
+                                        fluidRow(
+                                          column(width=12,h6(strong("Labels options"))),
+                                          column(width=6,sliderInput("LabelSizeHeatmapComp", h6("Size"),min=0.1,max=2,value = 0.7,step = 0.1)),
+                                          column(width=6,sliderInput("LabelOrientHeatmapComp", h6("Orientation"),min=0,max=90,value = 0,step = 5)),
+                                          column(width=6,sliderInput("LabelColOffsetHeatmapComp", h6("Column offset"),min=0,max=4,value = 0,step = 0.5)),
+                                          column(width=6,sliderInput("LabelRowOffsetHeatmapComp", h6("Row offset"),min=0,max=4,value = 0,step = 0.5)),
+                                          column(width=12,h6(strong("Margins options"))),
+                                          column(width=6,sliderInput("rightMarginComp", h6("Right"),min=0,max=20,value = 6,step = 1)),
+                                          column(width=6,sliderInput("lowerMarginComp", h6("Lower"),min=0,max=20,value = 6,step = 1))
+                                        )
+                       )
+                       
+                    ),
+                   conditionalPanel(condition="input.PlotVisuSelectComp!='Venn'",
+                     box(title = "Export",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
+                         ##################
+                         ## BARPLOT
+                         ##################
+                         selectInput("Exp_format_VisuComp",h5(strong("Export format")),c("png"="png","pdf"="pdf","eps"="eps","svg"="svg"), multiple = FALSE),
+                         fluidRow(
+                           column(width=6,numericInput("heightVisuExportComp", "Height (in px)",min=100,max=NA,value = 500,step =1)),
+                           column(width=6,numericInput("widthVisuExportComp", "Width (in px)",min=100,max=NA,value = 500,step =1))
+                         ),
+                         downloadButton("exportVisuComp", "Export")
+                     )
+                   )
+                   
+                   
             )
           )
   ),
