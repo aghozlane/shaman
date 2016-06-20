@@ -930,8 +930,8 @@ CheckCountsTable <- function(counts)
       namesfor2.1 = paste(Sel_Var_For,F1,".",Sel_Var,M2,sep="")
       ind1.for = which(names%in%c(namesfor1,namesfor1.1))
       ind2.for = which(names%in%c(namesfor2,namesfor2.1))
-      if(length(ind1.for)>0) v_tmp[ind1] = 1
-      if(length(ind2.for)>0) v_tmp[ind2] = -1
+      if(length(ind1.for)>0) v_tmp[ind1.for] = 1
+      if(length(ind2.for)>0) v_tmp[ind2.for] = -1
       nameContrast = paste(nameContrast,"_for_",F1,sep="")
     }
     

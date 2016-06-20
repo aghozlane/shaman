@@ -410,6 +410,10 @@ shinyServer(function(input, output,session) {
     data = read.csv(inFile$datapath,sep="\t",header=TRUE)
     rownames(data) <- as.character(data[, 1])
     ind = which(rownames(data)%in%colnames(counts))
+    target = data[ind,]
+    ## Replace "-" by "."
+    target = as.data.frame(apply(target,2,gsub,pattern = "-",replacement = "."))
+    
     #ord = order(rownames(data))
     #data = data[ord,]
     ### A SUPPRIMER 
@@ -421,7 +425,7 @@ shinyServer(function(input, output,session) {
 #     print(rownames(data))
     labeled = length(ind)/length(colnames(counts))*100.0
     
-    return(list(target=data[ind,], labeled=labeled))
+    return(list(target = target, labeled=labeled))
   })
 
 
