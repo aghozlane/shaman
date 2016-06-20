@@ -147,3 +147,7 @@ if (!require(genefilter)) {
   biocLite("genefilter")
   library(genefilter)
 }
+if (!require(plotly)) {
+  install.packages('plotly')
+  library(ploty)
+}

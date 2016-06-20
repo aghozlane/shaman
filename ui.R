@@ -42,7 +42,7 @@ body <- dashboardBody(
                    tabPanel("Citing SHAMAN",
                    p("No papers about SHAMAN have been published yet, but a manuscript is in preparation.",style = "font-family: 'times'; font-si16pt"),
                    p("Publication using SHAMAN :",style = "font-family: 'times'; font-si18pt; font-style: strong"),
-                   p(a("A bacteriocin from epidemic Listeria strains alters the host intestinal microbiota to favor infection.", href="http://www.ncbi.nlm.nih.gov/pubmed/27140611"), "Quereda JJ, Dussurget O, Nahori MA, Ghozlane A, Volant S, Dillies MA, Regnault B, Kennedy S, Mondot S, Villoing B, Cossart P, Pizarro-Cerda J.",style = "font-family: 'times'; font-si16pt"),
+                   p(a("A bacteriocin from epidemic Listeria strains alters the host intestinal microbiota to favor infection.", href="http://www.ncbi.nlm.nih.gov/pubmed/27140611"), "Quereda JJ, Dussurget O, Nahori MA, Ghozlane A, Volant S, Dillies MA, Regnault B, Kennedy S, Mondot S, Villoing B, Cossart P, Pizarro-Cerda J.; PNAS 2016",style = "font-family: 'times'; font-si16pt"),
                    p("If you have any comments, questions or suggestions, or need help to use SHAMAN, please contact authors", a("here", href="mailto:shaman@pasteur.fr"),".", style = "font-family: 'times'; font-si16pt; color:red")
             )))
     ),
@@ -97,7 +97,11 @@ body <- dashboardBody(
                      "- Heatmap",br(),img(src="tutorial/tutorial_heatmap.png",width = "100%",style="max-width: 900px"),hr(),
                      "- Boxplot",br(),img(src="tutorial/tutorial_boxplot.png",width = "100%",style="max-width: 900px"),hr(),
                      "- Diversity",br(),img(src="tutorial/tutorial_diversity.png",width = "100%",style="max-width: 900px"),hr(),
-                     "- Rarefaction",br(),img(src="tutorial/tutorial_rarefaction.png",width = "100%",style="max-width: 900px")))))
+                     "- Rarefaction",br(),img(src="tutorial/tutorial_rarefaction.png",width = "100%",style="max-width: 900px"))),
+            tabPanel("6-Other datasets available",
+            p("You can test SHAMAN with the dataset with two other datasets : "),
+            p("- Bacteriocin impact on mice microbiota from ", a("[Quereda et al. 2016]",href="http://www.ncbi.nlm.nih.gov/pubmed/27140611"), ":", a("here",target="_blank",href="listeria.zip"), br(),
+              "- MOCK communities from ", a("[The NIH HMP Working Group, 2009]",href="http://www.ncbi.nlm.nih.gov/pubmed/19819907"), ":", a("here",target="_blank",href="mock.zip")))))
     ),
     
     tabItem(tabName = "Upload",
