@@ -216,6 +216,9 @@ CheckCountsTable <- function(counts)
     labels = target[,1]
     ind = which(colnames(CT)%in%labels)
 
+    ## Get the normalization variable (normalization can be done according to this variable)
+    VarNorm = input$VarNorm
+    
     if(length(ind)==length(labels))
     { 
       if(input$TypeTable == "MGS"){
@@ -232,20 +235,49 @@ CheckCountsTable <- function(counts)
         rownames(CT_int)=rownames(CT)
         colnames(CT_int)=colnames(CT)
         CT=CT_int
-      }
-      else CT = CT[,ind]
+      } else CT = CT[,ind]
+      
       ## Order CT according to the target
       CT = OrderCounts(counts=CT,labels=labels)$CountsOrder
       CT_noNorm = CT
       RowProd = sum(apply(CT_noNorm,1,prod))
       
-      ## Counts normalisation
+      ## Create the dds object
       dds <- DESeqDataSetFromMatrix(countData=CT, colData=target, design=design)
-      ## Normalisation with or without 0
-      if(input$AccountForNA || RowProd==0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT))
-      if(!input$AccountForNA && RowProd!=0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)))
-       
-      normFactors = sizeFactors(dds)
+      
+      if(is.null(VarNorm)){
+        ## Counts normalisation
+        ## Normalisation with or without 0
+        if(input$AccountForNA || RowProd==0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT))
+        if(!input$AccountForNA && RowProd!=0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)))
+        normFactors = sizeFactors(dds)
+        
+      } else{
+        group = as.data.frame(target[,VarNorm])
+        group = apply(group,1,paste, collapse = "-")
+        normFactors = c()
+        mod = unique(group)
+        ## At least 2 samples are needed for the normalization
+        if(min(table(group))>1){
+          for(i in unique(group))
+          {
+            indgrp = which(group==i) 
+            CT_tmp = CT[,indgrp]
+            CT_tmp = removeNulCounts(CT_tmp) 
+            target_tmp = data.frame(labels = rownames(target)[indgrp])
+            dds_tmp <- DESeqDataSetFromMatrix(countData=CT_tmp, colData=target_tmp, design=~labels)
+            if(input$AccountForNA) dds_tmp = estimateSizeFactors(dds_tmp,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT_tmp))
+            if(!input$AccountForNA) dds_tmp = estimateSizeFactors(dds_tmp,locfunc=eval(as.name(input$locfunc)))
+            normFactors[indgrp] = sizeFactors(dds_tmp)
+          }
+        } else{
+            if(input$AccountForNA || RowProd==0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT))
+            if(!input$AccountForNA && RowProd!=0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)))
+            normFactors = sizeFactors(dds)
+        }
+        
+        sizeFactors(dds) = normFactors
+      }
       
       ## Keep normalized OTU table
       CT_Norm = counts(dds, normalized=TRUE)
@@ -898,6 +930,7 @@ CheckCountsTable <- function(counts)
   {  
     
     v_tmp = rep(0,length(names))
+    print(names)
     filesize = file.info(namesfile)[,"size"]
     F1 = NULL
     nameContrast = ""
@@ -905,6 +938,8 @@ CheckCountsTable <- function(counts)
     ## Get the selected modalities
     M1 = input$Select1_contrast
     M2 = input$Select2_contrast
+    print(M1)
+    print(M2)
     
     if(length(input$Interaction2)>0) F1 = input$Select3_contrast
     ## Get the name of the parameter corresponding to the modalities
@@ -916,8 +951,11 @@ CheckCountsTable <- function(counts)
     ## fill the vector
     ind1 = which(names%in%names1dds)
     ind2 = which(names%in%names2dds)
+    print(ind1)
+    print(ind2)
     if(length(ind1)>0) v_tmp[ind1] = 1
     if(length(ind2)>0) v_tmp[ind2] = -1
+    print(v_tmp)
     
     nameContrast = paste(M1,"_vs_",M2,sep="")
     
@@ -934,11 +972,12 @@ CheckCountsTable <- function(counts)
       if(length(ind2.for)>0) v_tmp[ind2.for] = -1
       nameContrast = paste(nameContrast,"_for_",F1,sep="")
     }
-    
+    print(v_tmp)
     
     if(filesize!=0)
     { 
       oldContrast = read.table(namesfile,header=TRUE)
+      print(oldContrast)
       colnamesTmp = c(colnames(oldContrast),nameContrast)
       mat = cbind(oldContrast,v_tmp)
     }

@@ -177,6 +177,8 @@ body <- dashboardBody(
        
               column(width=7,
                 box(title="Options",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
+                    p(strong("Linear model options"),Align ="center"),
+                    hr(),
                   fluidRow(
                     column(width=3,
                       radioButtons("TransType",h6(strong("Type of transformation")),choices = c("VST"="VST","rlog"="rlog"))
@@ -202,11 +204,14 @@ body <- dashboardBody(
                     ),  
                     column(width=3,
                       radioButtons("fitType",h6(strong("Relationship")),choices = c("Parametric"="parametric","Local"="local"))
-                    ),
-                    column(width=3,checkboxInput("AccountForNA","Compute geometric mean without 0",value=TRUE))
+                    )
                     # column(width=3,uiOutput("RefSelect"))
                   ),
+                  p(strong("Options for the normalization step"),Align ="center"),
+                  hr(),
                   fluidRow(
+                    column(width=3,checkboxInput("AccountForNA","Compute geometric mean without 0",value=TRUE)),
+                    column(width=3,uiOutput("SelectVarNorm")),
                     column(width=3,
                         fileInput('fileSizeFactors', h6(strong('Define your own size factors')),width="100%")
                     ),

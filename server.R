@@ -458,6 +458,24 @@ shinyServer(function(input, output,session) {
   })
 
 
+  ## Var for normalization
+  output$SelectVarNorm <- renderUI({
+    
+    target=dataInputTarget()$target
+    res = selectInput("VarNorm",h6(strong("Normalization by:")),NULL,multiple=TRUE)
+    if(!is.null(target)) 
+    {
+      namesTarget = colnames(target)[2:ncol(target)]
+      ind = which(apply(as.data.frame(target[,namesTarget]),2,is.numeric))
+      if(length(ind)>=1) namesTarget = namesTarget[-ind]
+      res = selectInput("VarNorm",h6(strong("Normalization by:")),c(NULL,namesTarget),multiple=TRUE)
+    }
+    return(res)
+    
+  })
+  
+  
+  
   ## Reference radio buttons
   output$RefSelect <- renderUI({
     
@@ -662,7 +680,7 @@ shinyServer(function(input, output,session) {
     
     AddContEasy()
     
-  })
+  },priority=1)
 
 
   AddContFromFile <-eventReactive(input$fileContrast,{ 
@@ -792,7 +810,7 @@ output$InfoContrast <- renderInfoBox({
   })
   
   ModifMod_ContEasy <-eventReactive(input$Select1_contrast,{
-    
+    input$RunDESeq
     resDiff = ResDiffAnal()
     int = input$Interaction2
     target = as.data.frame(resDiff$target)
@@ -800,7 +818,7 @@ output$InfoContrast <- renderInfoBox({
     InterVar = input$InterestVar
     
     ## Get the selected variable from the selected modality
-    Sel_Var = InterVar[which(unlist(lapply(target[,InterVar],FUN = function(x){input$Select1_contrast%in%x})))]
+    Sel_Var = InterVar[which(unlist(lapply(as.data.frame(target[,InterVar]),FUN = function(x){input$Select1_contrast%in%x})))]
 
     ModInterestCond = levels(target[,Sel_Var])
     ModInterestCond = ModInterestCond[-which(ModInterestCond==input$Select1_contrast)]
@@ -823,10 +841,10 @@ output$InfoContrast <- renderInfoBox({
     
     InterVar = input$InterestVar
     ## Remove numeric variable
-    ind = unlist(lapply(target[,InterVar],is.numeric))
+    ind = unlist(lapply(as.data.frame(target[,InterVar]),is.numeric))
     InterVar = InterVar[!ind]
-    
-    ModInterestAll = unique(unlist(lapply(target[,InterVar],levels)))
+
+    ModInterestAll = unique(unlist(lapply(as.data.frame(target[,InterVar]),levels)))
     
     updateSelectInput(session, "Select1_contrast",label="Compare",ModInterestAll)
   })
@@ -850,7 +868,7 @@ output$InfoContrast <- renderInfoBox({
     InterVar = input$InterestVar
     
     ## Get the selected variable from the selected modality
-    Sel_Var = InterVar[which(unlist(lapply(target[,InterVar],FUN = function(x){input$Select1_contrast%in%x})))]
+    Sel_Var = InterVar[which(unlist(lapply(as.data.frame(target[,InterVar]),FUN = function(x){input$Select1_contrast%in%x})))]
    
     
     ## Keep only the variables in interactoin with Sel_Var
@@ -861,11 +879,11 @@ output$InfoContrast <- renderInfoBox({
       var_Inter = var_Inter[-which(var_Inter%in%Sel_Var)]
       
       ## remove if numeric
-      if(length(var_Inter)>1){ind = unlist(lapply(target[,var_Inter],is.numeric));var_Inter = var_Inter[!ind]}
+      if(length(var_Inter)>1){ind = unlist(lapply(as.data.frame(target[,var_Inter]),is.numeric));var_Inter = var_Inter[!ind]}
       if(length(var_Inter)==1){ind = is.numeric(target[,var_Inter]);var_Inter = var_Inter[!ind]}
       
       
-      if(length(var_Inter)>=1)  ModInterestFor = c("All",unique(unlist(lapply(target[,var_Inter],levels))))
+      if(length(var_Inter)>=1)  ModInterestFor = c("All",unique(unlist(lapply(as.data.frame(target[,var_Inter]),levels))))
     }
     
     updateSelectInput(session,"Select3_contrast","For",ModInterestFor)
