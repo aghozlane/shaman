@@ -27,7 +27,8 @@ shinyServer(function(input, output,session) {
     
     if (is.null(inFile)) return(NULL)
     
-    data = read.csv(inFile$datapath,sep="\t",header=TRUE)
+    data = read.csv(inFile$datapath,sep="\t",header=TRUE,check.names=FALSE)
+    colnames(data) = gsub("-",".",colnames(data))
     
     ## Rownames
     if(!TRUE%in%duplicated(data[,1])) rownames(data)=data[,1];data=data[,-1]
@@ -408,11 +409,13 @@ shinyServer(function(input, output,session) {
     
     
     data = read.csv(inFile$datapath,sep="\t",header=TRUE)
+    ## Replace "-" by "."
+    data = as.data.frame(apply(data,2,gsub,pattern = "-",replacement = "."))
     rownames(data) <- as.character(data[, 1])
     ind = which(rownames(data)%in%colnames(counts))
     target = data[ind,]
-    ## Replace "-" by "."
-    target = as.data.frame(apply(target,2,gsub,pattern = "-",replacement = "."))
+    
+    # target = as.data.frame(apply(target,2,gsub,pattern = "-",replacement = "."))
     
     #ord = order(rownames(data))
     #data = data[ord,]
