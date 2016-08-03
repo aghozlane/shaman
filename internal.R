@@ -125,15 +125,14 @@ CheckCountsTable <- function(counts)
     ## Taxonomy table
     taxo = as.data.frame(observation_metadata(dataBIOM))
     OTUnames = rownames(taxo)
-
     ## Modif taxo table (remove p__,... and change the colnames)
     taxo = as.data.frame(sapply(taxo,gsub,pattern="^.*__",replacement=""))
     colnames(taxo) = c("Kingdom", "Phylum","Class","Order","Family","Genus","Species")
     rownames(taxo) = OTUnames
     ## Remove empty row
     taxo[taxo==""] = NA
-    taxo = na.omit(taxo)
-    
+    taxo[taxo=="Unassigned"] = NA
+    taxo=taxo[rowSums(is.na(taxo))!=dim(taxo)[2], ]
     
     CheckTaxo = CheckTaxoTable(taxo,counts)
     

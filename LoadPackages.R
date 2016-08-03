@@ -47,14 +47,15 @@ if (!require(d3heatmap)) {
   library(d3heatmap)
 }
 
-if (!require(biom)) {
-  install.packages('biom')
-  library(biom)
-}
-
 if (!require(devtools)) {
   install.packages('devtools')
   library(devtools)
+}
+
+# Let us use biomformat instead of biom
+if (!require(biomformat)){
+ library(biomformat)
+ devtools::install_github("biomformat", "aghozlane")
 }
 
 if (!require(scatterD3)) {
