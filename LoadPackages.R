@@ -65,7 +65,7 @@ if (!require(scatterD3)) {
 
 if (!require(rNVD3)) {
   library(devtools)
-  install_github('rNVD3', 'ramnathv')
+  install_github('rNVD3', 'aghozlane')
   library(rNVD3)
 }
 

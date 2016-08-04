@@ -118,6 +118,8 @@ CheckCountsTable <- function(counts)
     ## Counts table
     counts = biom_data(dataBIOM)
     counts = as.matrix(counts)
+    ## Change of - to . is risky
+    colnames(counts) = gsub("-",".",colnames(counts))
     counts = as.data.frame(counts)
     CheckCounts = CheckCountsTable(counts)
     counts = CheckCounts$counts
@@ -150,7 +152,6 @@ CheckCountsTable <- function(counts)
     counts = dataC
     CheckCounts = CheckCountsTable(counts)
     counts = CheckCounts$counts
-    
     ## Taxonomy table
     taxo = as.data.frame(dataT)
     CheckTaxo = CheckTaxoTable(taxo,counts)
