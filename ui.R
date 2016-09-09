@@ -346,7 +346,7 @@ body <- dashboardBody(
                     conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='SERE' || input.DiagPlot=='clustPlot' ",
                                       selectInput("DistClust","Distance",c("euclidean", "SERE"="sere", "canberra", "bray", "kulczynski", "jaccard", 
                                                   "gower", "altGower", "morisita", "horn","mountford","raup","binomial",
-                                                  "chao","cao","mahalanobis"),selected="jaccard")
+                                                  "chao","cao","mahalanobis"),selected="canberra")
                                     )
                     
 

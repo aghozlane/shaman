@@ -402,7 +402,11 @@ PCoAPlot_meta <-function (input, dds, group_init, col = c("SpringGreen","dodgerb
         s.class(dfxy = pco.counts.norm$li, fac = group, col = col, label = levels(group), add.plot = TRUE, cpoint = 0, clabel = 0, cstar = input$cexstar, cell=input$cexcircle)
       }
     }else{
-      barplot(eigen[1:7], xlab="Dimensions", ylab="Eigenvalues (%)", names.arg = 1:7, col = c(rep("black", 2), rep("grey", 5)), ylim=c(0,max(eigen)+5), cex.axis=1.2, cex.lab=1.4,cex.names=1.2)
+      v_axes = c(as.numeric(gsub("PC","",input$PCaxe1)),as.numeric(gsub("PC","",input$PCaxe2)))
+      nbBar = max(7,max(v_axes))
+      col = rep("grey",nbBar)
+      col[v_axes] = "black"
+      barplot(eigen[1:nbBar], xlab="Dimensions", ylab="Eigenvalues (%)", names.arg = 1:nbBar, col = col, ylim=c(0,max(eigen)+5), cex.axis=1.2, cex.lab=1.4,cex.names=1.2)
     }
   }
   
@@ -474,7 +478,12 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
       text(pca$x[, as.numeric(gsub("PC","",input$PCaxe1))] - ifelse(pca$x[, as.numeric(gsub("PC","",input$PCaxe1))] > 0, abs, -abs), pca$x[,as.numeric(gsub("PC","",input$PCaxe2))] - ifelse(pca$x[,as.numeric(gsub("PC","",input$PCaxe2))] > 0, ord, -ord), colnames(counts.trans), col = col[indgrp],cex=input$cexLabelDiag)
       
     }
-    if(plot=="eigen"){eigen = pca$sdev[1:min(7,ncol(counts.trans))]^2; barplot(eigen, xlab="Dimensions", ylab="Eigenvalues (%)", names.arg = 1:min(7,ncol(counts.trans)), col = c(rep("black", 3), rep("grey", 4)), ylim=c(0,max(eigen)+5), cex.axis=1.2, cex.lab=1.4,cex.names=1.2)}
+    if(plot=="eigen"){
+      nbBar = max(7,max(c(as.numeric(gsub("PC","",input$PCaxe1)),as.numeric(gsub("PC","",input$PCaxe2)))))
+      col = rep("grey",nbBar)
+      eigen = pca$sdev[1:nbBar]^2
+      col[c(as.numeric(gsub("PC","",input$PCaxe1)),as.numeric(gsub("PC","",input$PCaxe2)))] = "black"
+      barplot(eigen, xlab="Dimensions", ylab="Eigenvalues (%)", names.arg = 1:nbBar, col = col, ylim=c(0,max(eigen)+5), cex.axis=1.2, cex.lab=1.4,cex.names=1.2)}
     
   }
 }

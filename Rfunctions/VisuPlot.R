@@ -292,7 +292,7 @@ Plot_Visu_Scatterplot<- function(input,resDiff,export=FALSE,lmEst = FALSE,CorEst
     if(any(numInd)) data = cbind(target[,numInd],log2(t(counts)+1),div)
     if(!any(numInd)) data = cbind(log2(t(counts)+1),div)
     
-    cor.est = cor(as.matrix(data),method = input$CorMeth,na.rm=TRUE)
+    cor.est = round(cor(as.matrix(data),method = input$CorMeth),3)
     #cor.pvalue = cor.test(data,method = input$CorMeth)
     return(list(cor.est=cor.est))
   }

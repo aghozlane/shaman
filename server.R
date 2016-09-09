@@ -24,7 +24,7 @@ shinyServer(function(input, output,session) {
 
   ## Counts file
   dataInputCounts <-reactive({ 
-    print(input$TypeTaxo)
+    
     inFile <- input$fileCounts
     
     if (is.null(inFile)) return(NULL)
