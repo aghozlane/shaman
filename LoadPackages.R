@@ -131,6 +131,19 @@ if (!require(scales)) {
   library(scales)
 }
 
+
+if(!require(biomformat)){
+  devtools::install_github("biomformat", "aghozlane")
+}
+
+
 # Allow to upload 50M files
 options(shiny.maxRequestSize=50*1024^2) 
-source("internal.R")
+source("Rfunctions/Data_Management.R")
+source("Rfunctions/Stat_Model.R")
+source("Rfunctions/DiagPlot.R")
+source("Rfunctions/VisuPlot.R")
+source("Rfunctions/CompPlot.R")
+source("Rfunctions/DiffTable.R")
+
+

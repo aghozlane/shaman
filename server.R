@@ -1,11 +1,12 @@
 source('LoadPackages.R')
-
+library(shiny)
 renderDataTable <- DT::renderDataTable
 dataTableOutput <- DT::dataTableOutput
 
 shinyServer(function(input, output,session) {
-  
-  
+
+  hide(id = "loading-content", anim = TRUE, animType = "fade",time=1.5)
+  hide(id = "loading-content-bar", anim = TRUE, animType = "fade",time=1.5)
   #####################################################
   ##
   ##                    LOAD FILES
@@ -20,9 +21,10 @@ shinyServer(function(input, output,session) {
   ## Popup messages
   observe(if(input$AddRegScatter) info("By adding the regression line, you will lose interactivity."))
   
+
   ## Counts file
   dataInputCounts <-reactive({ 
-    
+    print(input$TypeTaxo)
     inFile <- input$fileCounts
     
     if (is.null(inFile)) return(NULL)
@@ -44,7 +46,7 @@ shinyServer(function(input, output,session) {
     inFile <- input$fileTaxo
     
     if (is.null(inFile)) return(NULL)
-    
+    print(input$TypeTaxo)
     if(input$TypeTaxo=="Table") 
     {
       data = read.csv(inFile$datapath,sep="\t",header=TRUE)
@@ -279,6 +281,7 @@ shinyServer(function(input, output,session) {
     
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && CheckOK)
     {
+
       sidebarMenu(
         menuItem("Statistical analysis",
                  menuSubItem("Run differential analysis",tabName="RunDiff"),
@@ -1009,6 +1012,7 @@ shinyServer(function(input, output,session) {
   
   ## Run DESeq2 via RunDESeq button
   observeEvent(input$RunDESeq,{
+
     withProgress(message="Analysis in progress...",ResDiffAnal())
   })
   
@@ -1080,6 +1084,39 @@ shinyServer(function(input, output,session) {
     resDiff = isolate(ResDiffAnal())
     Plot_diag(input,resDiff)
   },height = reactive(input$heightDiag))
+  
+  
+  
+  ## Select PCA/PCOA axis
+  output$PC1_sel <-renderUI ({
+    res = NULL
+    resDiff = ResDiffAnal()
+    
+    if(!is.null(resDiff)){ 
+      pca_tab = Plot_diag(input,resDiff,getTable=TRUE)
+      if(!is.null(pca_tab)) 
+      {
+        pc_axes = paste("PC",seq(1,ncol(pca_tab)),sep="")
+        res = selectizeInput("PCaxe1","X-axis",pc_axes)
+      }
+    }
+    return(res)
+  })
+  
+  output$PC2_sel <-renderUI ({
+    res = NULL
+    resDiff = ResDiffAnal()
+    
+    if(!is.null(resDiff)){ 
+      pca_tab = Plot_diag(input,resDiff,getTable=TRUE)
+      if(!is.null(pca_tab)) 
+      {
+        pc_axes = paste("PC",seq(1,ncol(pca_tab)),sep="")
+        res = selectizeInput("PCaxe2","Y-axis",pc_axes,selected=pc_axes[min(2,ncol(pca_tab))])
+      }
+    }
+    return(res)
+  })
   
   
   
@@ -1275,6 +1312,7 @@ shinyServer(function(input, output,session) {
   ## Get the diff table
   dataDiff <-reactive({ 
     input$AddContrast
+    input$AddContrastEasy
     input$RemoveContrast
     input$fileContrast
     input$RunDESeq
@@ -1804,8 +1842,9 @@ shinyServer(function(input, output,session) {
       ## Get numeric variables from target
       typesTarget = sapply(target,class)
       numInd = (typesTarget=="numeric")[2:ncol(target)]
-      Available_x = c(sort(rownames(counts)),"Alpha div","Shannon div","Inv.Simpson div","Simpson div")
-      if(any(numInd)) Available_x = c(Available_x,namesTarget[numInd])
+      Available_x = list(x1 = c(sort(rownames(counts))),"Diversity" = c("Alpha div","Shannon div","Inv.Simpson div","Simpson div"))
+      names(Available_x)[1] = taxo
+      if(any(numInd)) Available_x$Variables = namesTarget[numInd]
       Available_y = Available_x
       
       res[[1]] = selectizeInput("Xscatter",h6(strong("X variable")),Available_x, selected = Available_x[1],multiple = FALSE)
@@ -1840,5 +1879,8 @@ shinyServer(function(input, output,session) {
       data.frame(refs)
     }
   }, sanitize.text.function = function(x) x)
+  
+  
+  
   
 })

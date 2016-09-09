@@ -1,9 +1,21 @@
-source('LoadPackages.R')
+source("css/owncss.R")
+source("Rfunctions/Data_Management.R")
+library(shinydashboard)
+library(shinythemes)
+library(shinyjs)
+
+
 
 sidebar <- dashboardSidebar(
+  useShinyjs(),
+  inlineCSS(appCSS),
   tags$head(
     tags$script(src = "custom.js")
   ),
+  div(id = "loading-content-bar",
+      p()),
+  div(
+    id = "app-content-bar",
   sidebarMenu(
     menuItem("Home", tabName = "Home", icon = icon("home")),
     menuItem("Tutorial", tabName = "Tutorial", icon = icon("book")),
@@ -11,12 +23,28 @@ sidebar <- dashboardSidebar(
     menuItemOutput("dymMenu"),
     img(src = "logo.jpg", height = 49, width = 220,style="position:absolute;bottom:0;margin:0 0 15px 10px;")
   )
+  )
 )
 
 body <- dashboardBody(
+  tags$style(type="text/css", Errorcss),
+  
+  useShinyjs(),
+  inlineCSS(appCSS),
+  div(
+    id = "loading-content",
+    br(),
+    br(),
+    br(),
+    h2("Please wait while SHAMAN is loading...")),
+  div(
+    id = "app-content-bar",
   tabItems(
     tabItem(tabName = "Home",
+            fluidRow(
+              column(width=9,
             div(style="width:100% ; max-width: 1200px",
+                
               tabBox(title="Welcome to SHAMAN", id="tabset1", width=NULL,
                    tabPanel("About", tags$script(type="text/javascript", language="javascript", src="google-analytics.js"),
                             p("SHAMAN is a SHiny application for Metagenomic ANalysis including the normalization,
@@ -44,7 +72,21 @@ body <- dashboardBody(
                    p("Publication using SHAMAN :",style = "font-family: 'times'; font-si18pt; font-style: strong"),
                    p(a("A bacteriocin from epidemic Listeria strains alters the host intestinal microbiota to favor infection.", href="http://www.ncbi.nlm.nih.gov/pubmed/27140611"), "Quereda JJ, Dussurget O, Nahori MA, Ghozlane A, Volant S, Dillies MA, Regnault B, Kennedy S, Mondot S, Villoing B, Cossart P, Pizarro-Cerda J.; PNAS 2016",style = "font-family: 'times'; font-si16pt"),
                    p("If you have any comments, questions or suggestions, or need help to use SHAMAN, please contact authors", a("here", href="mailto:shaman@pasteur.fr"),".", style = "font-family: 'times'; font-si16pt; color:red")
-            )))
+            )))),
+              column(width=3,
+            box(
+              title = "What's new in SHAMAN", width = NULL, status = "primary",
+              div(style = 'overflow-y: scroll; max-height: 400px',
+                  addNews("Sep 9th 2016","PCA/PCOA","You can select the axes for the PCOA and PCA plots."),
+                  addNews("Aug 1st 2016","Biom format","SHAMAN can now support all the Biom format versions."),
+                  addNews("Jun 24th 2016","Comparisons plots","The venn diagram and the heatmap of foldchange 
+                                                                have been added to compare the results of 2 or more contrasts"),
+                  addNews("Jun 17th 2016","Diversity plots","Enhancement of the visualtisation of the diverties. 
+                                                              The shanon and inv. shanon have been added")
+                  )
+            )
+              )
+              )
     ),
 
     tabItem(tabName = "Tutorial",
@@ -253,8 +295,11 @@ body <- dashboardBody(
     tabItem(tabName = "DiagPlotTab",
             fluidRow(
               column(width=9,
-                     
-                plotOutput("PlotDiag",height="100%"),
+                     tags$head(tags$style(HTML(spincss))),
+                     div(id = "plot-container",
+                         tags$img(src = "gears.gif",id ="loading-spinner"),
+                         plotOutput("PlotDiag",height="100%")
+                     ),
                 br(),
                 conditionalPanel(condition="input.DiagPlot=='SfactorsVStot'",
                   box(title = "Size factors",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
@@ -291,7 +336,12 @@ body <- dashboardBody(
                     conditionalPanel(condition="input.DiagPlot!='Sfactors' && input.DiagPlot!='SfactorsVStot' ",uiOutput("VarIntDiag")),
                     conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='pcaPlot'",
                                      h5(strong("Select the modalities")),
-                                     uiOutput("ModMat")
+                                     uiOutput("ModMat"),
+                                     fluidRow(
+                                       column(width=5,uiOutput("PC1_sel")),
+                                       column(width=2,br(),br(),p("VS")),
+                                       column(width=5,uiOutput("PC2_sel"))
+                                     )
                                     ),
                     conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='SERE' || input.DiagPlot=='clustPlot' ",
                                       selectInput("DistClust","Distance",c("euclidean", "SERE"="sere", "canberra", "bray", "kulczynski", "jaccard", 
@@ -299,6 +349,7 @@ body <- dashboardBody(
                                                   "chao","cao","mahalanobis"),selected="jaccard")
                                     )
                     
+
 #                 conditionalPanel(condition="input.RadioPlotBi=='Nuage'",selectInput("ColorBiplot", "Couleur",choices=c("Bleue" = 'blue',"Rouge"='red',"Vert"='green', "Noir"='black'),width="50%")),
 #                 sliderInput("TransAlphaBi", "Transparence",min=1, max=100, value=50, step=1),
 #                 conditionalPanel(condition="input.RadioPlotBi!='Nuage'", radioButtons("SensGraphBi","Sens du graph",choices=c("Vertical"="Vert","Horizontal"="Hori"))),
@@ -377,7 +428,14 @@ body <- dashboardBody(
   tabItem(tabName = "GlobVisu",
           fluidRow(
             column(width=9,
-                   uiOutput("plotVisu"),
+                   tags$head(tags$style(HTML(spincss))),
+                   div(id = "plot-container",
+                       conditionalPanel(condition="input.PlotVisuSelect=='Boxplot' || input.PlotVisuSelect=='Diversity' || input.PlotVisuSelect=='Rarefaction'",   
+                                          tags$img(src = "gears.gif",id ="loading-spinner")
+                                        ),
+                       uiOutput("plotVisu")
+                   ),
+                   
                    
                    ### Regression and correlation outputs for the scatter plot
                    conditionalPanel(condition="input.PlotVisuSelect=='Scatterplot' && input.AddRegScatter", 
@@ -403,7 +461,7 @@ body <- dashboardBody(
                    ## Values of the diversities
                    conditionalPanel(condition="input.PlotVisuSelect=='Diversity'",
                                     br(),
-                      box(title = "Diversities values",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
+                      box(title = "Diversity values",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
                                     dataTableOutput("Diversitytable"),
                                     downloadButton('ExportDiversitytable', 'Export table')
                           
@@ -648,6 +706,7 @@ body <- dashboardBody(
   )
  )
 )
+)
   ## GOOGLE ANALYTIC
  #tags$head(includeScript("google-analytics.js"))
   ## Logo SHAMAN
@@ -660,5 +719,6 @@ body <- dashboardBody(
     sidebar,
     body
   )
+
 
 
