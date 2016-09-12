@@ -46,7 +46,7 @@ shinyServer(function(input, output,session) {
     inFile <- input$fileTaxo
     
     if (is.null(inFile)) return(NULL)
-    print(input$TypeTaxo)
+    
     if(input$TypeTaxo=="Table") 
     {
       data = read.csv(inFile$datapath,sep="\t",header=TRUE)
@@ -315,7 +315,7 @@ shinyServer(function(input, output,session) {
   output$DataCounts <- renderDataTable(
     dataInput()$data$counts, 
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE
+                   pageLength = 10,scrollX=TRUE, processing=FALSE
     ))
   
   ## Counts Table
@@ -325,7 +325,7 @@ shinyServer(function(input, output,session) {
     BaseContrast = read.table(namesfile,header=TRUE)
     GetData_venn(input,SelContrast,BaseContrast,resDiff)$df.tot
   }, options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                    pageLength = 10,scrollX=TRUE
+                    pageLength = 10,scrollX=TRUE, processing=FALSE
   ))
   
   
@@ -362,7 +362,7 @@ shinyServer(function(input, output,session) {
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0)
     {
       taxo = rbind(taxo,rep(NA,ncol(taxo)))
-      tmpPercent = round(apply(is.na(taxo),2,table)["FALSE",]/nrow(counts)*100,2)
+      tmpPercent = round(apply(is.na(taxo),2,table)["FALSE",]/(nrow(taxo)-1)*100,2)
       
       #print(tmpPercent)
       df <- data.frame(Label = colnames(taxo),Value = tmpPercent)
@@ -531,14 +531,14 @@ shinyServer(function(input, output,session) {
   output$DataTarget <- renderDataTable(
     dataInputTarget()$target,
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE
+                   pageLength = 10,scrollX=TRUE, processing=FALSE
     ))
   
   ## Counts table for the selected taxonomy level
   output$CountsMerge <- renderDataTable(
     round(counts(ResDiffAnal()$dds,normalized=TRUE)),
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE
+                   pageLength = 10,scrollX=TRUE, processing=FALSE
     ))
   
   
@@ -1140,7 +1140,7 @@ shinyServer(function(input, output,session) {
   
   output$SizeFactTable <- renderDataTable(
     SizeFactor_table(),
-    options = list(scrollX=TRUE,searching = FALSE
+    options = list(scrollX=TRUE,searching = FALSE, processing=FALSE
     ))
   
   
@@ -1336,21 +1336,21 @@ shinyServer(function(input, output,session) {
   output$DataDiffcomplete <- renderDataTable(
     datatable(dataDiff()$complete,rownames = FALSE),
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE
+                   pageLength = 10,scrollX=TRUE, processing=FALSE
     ))
   
   ## Up diff table
   output$DataDiffup <- renderDataTable(
     datatable(dataDiff()$up,rownames = FALSE),
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE
+                   pageLength = 10,scrollX=TRUE, processing=FALSE
     ))
   
   ## Down diff table
   output$DataDiffdown <- renderDataTable(
     datatable(dataDiff()$down,rownames = FALSE),
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE
+                   pageLength = 10,scrollX=TRUE, processing=FALSE
     ))
   
   
@@ -1496,14 +1496,14 @@ shinyServer(function(input, output,session) {
   output$lmRegScatter <- renderDataTable(
     Plot_Visu_Scatterplot(input,ResDiffAnal(),lmEst=TRUE)$regCoef, 
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE
+                   pageLength = 10,scrollX=TRUE, processing=FALSE
     ))
   
   ## Correlation coefficients Table
   output$CorTable <- renderDataTable(
     Plot_Visu_Scatterplot(input,ResDiffAnal(),CorEst=TRUE)$cor.est, 
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE
+                   pageLength = 10,scrollX=TRUE, processing=FALSE
     ))
   
   output$lmEquation <- renderPrint({ 
@@ -1550,7 +1550,7 @@ shinyServer(function(input, output,session) {
     datatable(tmp[,c(4,5,1,2,3)],rownames= FALSE)
   },
   options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                 pageLength = 10,scrollX=TRUE
+                 pageLength = 10,scrollX=TRUE, processing=FALSE
   ))
   
   ## Export Diversitytable in .csv

@@ -195,6 +195,7 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
       CT=CT_int
     } else CT = CT[,ind]
     
+    save.image("test.RData")
     ## Order CT according to the target
     CT = OrderCounts(counts=CT,labels=labels)$CountsOrder
     CT_noNorm = CT
@@ -239,9 +240,10 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
     
     ## Keep normalized OTU table
     CT_Norm = counts(dds, normalized=TRUE)
-    
+    save(CT_Norm,dds,CT,taxo,taxoSelect,file="test.RData")
     # Only interesting OTU
-    merged_table = merge(CT, taxo[order(rownames(CT)),], by="row.names")
+    # merged_table = merge(CT, taxo[order(rownames(CT)),], by="row.names")
+    merged_table = merge(CT, taxo, by="row.names")
     CT = merged_table[,2: (dim(CT)[2]+1)]
     taxo = merged_table[,(dim(CT)[2]+2):dim(merged_table)[2]]
     rownames(CT) = merged_table[,1]
