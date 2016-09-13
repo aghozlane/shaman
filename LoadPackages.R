@@ -54,8 +54,9 @@ if (!require(devtools)) {
 
 # Let us use biomformat instead of biom
 if (!require(biomformat)){
- library(biomformat)
+  library(devtools)
  devtools::install_github("biomformat", "aghozlane")
+library(biomformat)
 }
 
 if (!require(scatterD3)) {
