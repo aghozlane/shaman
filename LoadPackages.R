@@ -51,6 +51,11 @@ if (!require(devtools)) {
   install.packages('devtools')
   library(devtools)
 }
+if (!require(BiocInstaller)){
+  source("https://bioconductor.org/biocLite.R")
+  biocLite("BiocInstaller")
+  library(BiocInstaller)
+}
 
 # Let us use biomformat instead of biom
 if (!require(biomformat)){

@@ -1,8 +1,20 @@
 source("css/owncss.R")
 source("Rfunctions/Data_Management.R")
-library(shinydashboard)
-library(shinythemes)
-library(shinyjs)
+if(!require(shinydashboard)){
+  installed.packages("shinydashboard")
+  library(shinydashboard)  
+}
+if(!require(shinythemes)){
+  install.packages("shinythemes")
+  library(shinythemes)
+}
+if(!require(shinyjs)){
+  install.packages("shinyjs")
+  library(shinyjs)  
+}
+
+
+
 
 
 
