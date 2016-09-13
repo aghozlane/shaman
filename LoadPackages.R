@@ -1,7 +1,10 @@
 if (!require("Rcpp")){
   install.packages("Rcpp")
 }
-
+if(!require(shiny)){
+  install.packages("shiny")
+  library(shiny)
+}
 if(!require(shinydashboard)){
   install.packages('shinydashboard')
   library(shinydashboard)
