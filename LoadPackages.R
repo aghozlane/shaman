@@ -146,8 +146,13 @@ if(!require(biomformat)){
 }
 
 
-# Allow to upload 50M files
-options(shiny.maxRequestSize=50*1024^2) 
+# Allow to upload 50M files only shaman server
+if(Sys.info()["nodename"] == "shaman"){
+  options(shiny.maxRequestSize=50*1024^2)
+}else{
+  # No limit
+  options(shiny.maxRequestSize=500000000000000*1024^2)
+}
 source("Rfunctions/Data_Management.R")
 source("Rfunctions/Stat_Model.R")
 source("Rfunctions/DiagPlot.R")
