@@ -14,10 +14,6 @@ if(!require(shinyjs)){
 }
 
 
-
-
-
-
 sidebar <- dashboardSidebar(
   useShinyjs(),
   inlineCSS(appCSS),
@@ -31,6 +27,7 @@ sidebar <- dashboardSidebar(
   sidebarMenu(
     menuItem("Home", tabName = "Home", icon = icon("home")),
     menuItem("Tutorial", tabName = "Tutorial", icon = icon("book")),
+    menuItem("Download/Install (beta)", tabName = "Download", icon = icon("download")),
     menuItem("Upload your data", tabName = "Upload", icon = icon("upload")),
     menuItemOutput("dymMenu"),
     img(src = "logo.jpg", height = 49, width = 220,style="position:absolute;bottom:0;margin:0 0 15px 10px;")
@@ -61,11 +58,12 @@ body <- dashboardBody(
                    tabPanel("About", tags$script(type="text/javascript", language="javascript", src="google-analytics.js"),
                             p("SHAMAN is a SHiny application for Metagenomic ANalysis including the normalization,
                                        the differential analysis and mutiple visualization.",style = "font-family: 'times'; font-si16pt"),
-                            p("SHAMAN is based on DESeq2 R package", a("[Anders and Huber 2010]", href="http://www.ncbi.nlm.nih.gov/pubmed/20979621"), "for the analysis of metagenomic data, as suggested in", a("[McMurdie and Holmes 2014]",href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3974642/"),
-                              ". SHAMAN robustly identifies the differential abundant genera with the Generalized Linear Model implemented in DESeq2", a("[Love 2014,", href="http://www.ncbi.nlm.nih.gov/pubmed/25516281"),a("Jonsson2016]",href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC4727335/"),".
+                            p("SHAMAN is based on DESeq2 R package", a("[Anders and Huber 2010]", href="http://www.ncbi.nlm.nih.gov/pubmed/20979621"), "for the analysis of metagenomic data, as suggested in", a("[McMurdie and Holmes 2014,",href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3974642/"),a("Jonsson2016]",href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC4727335/"),
+                              ". SHAMAN robustly identifies the differential abundant genera with the Generalized Linear Model implemented in DESeq2", a("[Love 2014]", href="http://www.ncbi.nlm.nih.gov/pubmed/25516281"),".
                               Resulting p-values are adjusted according to the Benjamini and Hochberg procedure [Benjamini and Hochberg 1995].
                               The PCOA is performed with the", a("ade4 R package",href="http://pbil.univ-lyon1.fr/ade4/"), "and plots are generated with", a("ggplot2",href="http://ggplot2.org/"), "or", a("D3.js packages",href="http://d3js.org/"), ".
-                              A presentation about SHAMAN is available", a("here.",target="_blank",href="shaman_presentation.pdf"),style = "font-family: 'times'; font-si16pt"),
+                              A presentation about SHAMAN is available", a("here.",target="_blank",href="shaman_presentation.pdf"), br(),
+                              "SHAMAN is compatible with standard formats for metagenomic analysis. We also provide a complete pipeline for OTU picking and annotation named",a("MASQUE", href="https://github.com/aghozlane/masque") ,"used in production at Institut Pasteur.",style = "font-family: 'times'; font-si16pt"),
                             p("Hereafter is the global workflow of the SHAMAN application:"),
                             div(img(src = "Workflow.png",width = "100%",style="max-width: 600px"),Align="center")
                             ),
@@ -89,6 +87,7 @@ body <- dashboardBody(
             box(
               title = "What's new in SHAMAN", width = NULL, status = "primary",
               div(style = 'overflow-y: scroll; max-height: 400px',
+                  addNews("Sep 14th 2016","Download and install SHAMAN","You can install SHAMAN (beta)."),
                   addNews("Sep 9th 2016","PCA/PCOA","You can select the axes for the PCOA and PCA plots."),
                   addNews("Aug 1st 2016","Biom format","SHAMAN can now support all the Biom format versions."),
                   addNews("Jun 24th 2016","Comparisons plots","The venn diagram and the heatmap of foldchange 
@@ -177,6 +176,26 @@ body <- dashboardBody(
               "no interaction"))
               ))
     ),
+    
+    tabItem(tabName = "Download",
+            fluidRow(
+              column(width=9,
+                     div(style="width:100% ; max-width: 1200px",
+                         
+                         tabBox(title="Download / Install SHAMAN", id="tabset1", width=NULL,
+                                tabPanel("HOWTO", tags$script(type="text/javascript", language="javascript", src="google-analytics.js"),
+                                         p("SHAMAN is available for R>3.X. The installation, download and execution can all be performed with a small R script :",style = "font-family: 'times'; font-si16pt"),
+                                         wellPanel("# Load shiny packages",br(),
+                                           "if(!require('shiny')){",br(),"  install.packages('shiny')",br(),"  library(shiny)",br(),"}",br(),
+                                              br(),"# Install dependencies, download last version of SHAMAN from github and run shaman in one command :",br(),"runGitHub('aghozlane/shaman')"),
+                                         p("This script can also be dowloaded", a("here", target="_blank", href="shamanapp.R"), "and executed as following :"),
+                                         wellPanel("chmod +x ./shamanapp.R && Rscript ./shamanapp.R"),
+                                         p("Contribution to SHAMAN code are always welcome and can be performed with the", a("github deposit.",href="https://github.com/aghozlane/shaman"))
+                                ))
+                         )
+                     )
+              )
+            ),
     
     tabItem(tabName = "Upload",
             tags$style(type='text/css', ".well { max-width: 20em; }"),
