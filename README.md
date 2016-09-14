@@ -1,13 +1,13 @@
 # SHAMAN: a SHiny Application for Metagenomics ANalysis
-[Stevenn Volant](https://research.pasteur.fr/fr/member/stevenn-volant/) (stevenn.volant@pasteur.fr)
+[Stevenn Volant](https://research.pasteur.fr/fr/member/stevenn-volant/) (stevenn.volant@pasteur.fr)  
 [Amine Ghozlane](https://research.pasteur.fr/fr/member/amine-ghozlane/) (amine.ghozlane@pasteur.fr) (@xealf8)
 
 ## Contents
 
 - [Introduction](#introduction)
 - [Installation](#installation)
-- [Bugs](#bugs)
 - [Citation](#citation)
+- [Contact](#contact)
 - [Acknowledgements](#acknowledgements)
 
 ## Introduction
@@ -40,12 +40,16 @@ This script can also be executed as following :
 chmod +x ./shaman/www/shamanapp.R && Rscript ./shaman/www/shamanapp.R
 ```
 
-
 ## Citation
 
 No papers about SHAMAN have been published yet, but a manuscript is in preparation.  
 Publication using SHAMAN :  
-A bacteriocin from epidemic Listeria strains alters the host intestinal microbiota to favor infection. Quereda JJ, Dussurget O, Nahori MA, Ghozlane A, Volant S, Dillies MA, Regnault B, Kennedy S, Mondot S, Villoing B, Cossart P, Pizarro-Cerda J.; PNAS 2016 [PUBMED](http://www.ncbi.nlm.nih.gov/pubmed/27140611).  
+  
+- A bacteriocin from epidemic Listeria strains alters the host intestinal microbiota to favor infection. Quereda JJ, Dussurget O, Nahori MA, Ghozlane A, Volant S, Dillies MA, Regnault B, Kennedy S, Mondot S, Villoing B, Cossart P, Pizarro-Cerda J.; PNAS 2016 [PUBMED](http://www.ncbi.nlm.nih.gov/pubmed/27140611).
+
+
+## Contact
+
 If you have any comments, questions or suggestions, or need help to use SHAMAN, please contact authors [here](shaman@pasteur.fr).
 
 ## Acknowledgements
