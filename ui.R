@@ -27,7 +27,7 @@ sidebar <- dashboardSidebar(
   sidebarMenu(id = "side",
     menuItem("Home", tabName = "Home", icon = icon("home")),
     menuItem("Tutorial", tabName = "Tutorial", icon = icon("book")),
-    menuItem("Download/Install (beta)", tabName = "Download", icon = icon("download")),
+    menuItem("Download/Install", tabName = "Download", icon = icon("download")),
     menuItem("Upload your data", tabName = "Upload", icon = icon("upload")),
     # bookmarkButton(),
     menuItemOutput("dymMenu"),
@@ -70,13 +70,14 @@ body <- dashboardBody(
                             ),
                    tabPanel("Authors", h3("The main contributors to SHAMAN:"),
                             p(a("Stevenn Volant", href="mailto:stevenn.volant@pasteur.fr"), "(Initiator, coding, testing, documentation, evaluation)"),
-                            p(a("Amine Ghozlane",href="mailto:amine.ghozlane@pasteur.fr"), "(Coding, testing, documentation, evaluation)"),
+                            p(a("Amine Ghozlane",href="mailto:amine.ghozlane@pasteur.fr"), "(Coding, testing, documentation, evaluation, packaging)"),
                             p(a("Hugo Varet",href="mailto:hugo.varet@pasteur.fr"), "(Coding, testing, feature suggestions)"),
+                            p(a("Christophe Malabat, ",href="mailto:christophe.malabat@pasteur.fr"), "(Packaging)"), 
                             p(a("Marie-Agnès Dillies",href="mailto:marie-agnes.dillies@pasteur.fr"), "(Evaluation)"),
                             p(a("Sean Kennedy",href="mailto:sean.kennedy@pasteur.fr"), "(Evaluation)"),
                             h3("Acknowledgements"),
                             p("Thanks to the following people for patches and other suggestions for improvements:"),
-                            p(a("Christophe Malabat, ",href="mailto:christophe.malabat@pasteur.fr"), a("Pierre Lechat, ",href="mailto:pierre.lechat@pasteur.fr"),a("Julien Tap, ",href="mailto:julien.tap@danone.com"),a("Anna Zhukova, ",href="mailto:anna.zhukova@pasteur.fr"), a("Rachel Torchet",href="mailto:rachel.torchet@pasteur.fr"))
+                            p(a("Pierre Lechat, ",href="mailto:pierre.lechat@pasteur.fr"),a("Julien Tap, ",href="mailto:julien.tap@danone.com"),a("Anna Zhukova, ",href="mailto:anna.zhukova@pasteur.fr"), a("Rachel Torchet",href="mailto:rachel.torchet@pasteur.fr"))
                           ),
                    tabPanel("Citing SHAMAN",
                    p("No papers about SHAMAN have been published yet, but a manuscript is in preparation.",style = "font-family: 'times'; font-si16pt"),
@@ -88,6 +89,8 @@ body <- dashboardBody(
             box(
               title = "What's new in SHAMAN", width = NULL, status = "primary",
               div(style = 'overflow-y: scroll; max-height: 400px',
+                  addNews("Sep 21th 2016","SHAMAN on docker","The install of SHAMAN is now available with docker.
+                           The R install is also update and pass in release candidate state."),
                   addNews("Sep 14th 2016","Download and install SHAMAN","You can install SHAMAN (beta)."),
                   addNews("Sep 9th 2016","PCA/PCOA","You can select the axes for the PCOA and PCA plots."),
                   addNews("Aug 1st 2016","Biom format","SHAMAN can now support all the Biom format versions."),
@@ -184,13 +187,27 @@ body <- dashboardBody(
                      div(style="width:100% ; max-width: 1200px",
                          
                          tabBox(title="Download / Install SHAMAN", id="tabset1", width=NULL,
-                                tabPanel("HOWTO", tags$script(type="text/javascript", language="javascript", src="google-analytics.js"),
-                                         p("SHAMAN is available for R>3.X. The installation, download and execution can all be performed with a small R script :",style = "font-family: 'times'; font-si16pt"),
-                                         wellPanel("# Load shiny packages",br(),
+                                tabPanel("Docker install", tags$script(type="text/javascript", language="javascript", src="google-analytics.js"),
+                                p("Docker install is the easiest way to use SHAMAN locally.",style = "font-family: 'times'; font-si16pt"),
+                                p("- Install docker on Linux:"),
+                                wellPanel("sudo apt-get install docker",br(),
+                                "sudo service docker start"),
+                                p("- Install docker on Windows and Mac"),
+                                p("Download and install docker from",a("https://www.docker.com/", href="https://www.docker.com/"),
+                                  "Then, you will need to install the", a("Docker toolbox.", href="https://www.docker.com/products/docker-toolbox"),
+                                  "Once installed, run ‘Docker Quickstart Terminal’ application."),
+                                p("- Running SHAMAN:"),
+                                wellPanel(div(style = 'width: 400px',"docker run --rm -p 80:80 aghozlane/shaman")),
+                                p("Then connect to http://0.0.0.0/")
+                                ),
+                                tabPanel("R install (RC)", tags$script(type="text/javascript", language="javascript", src="google-analytics.js"),
+                                         p("SHAMAN is available for R>3.1.2. The installation, download and execution can all be performed with a small R script :",style = "font-family: 'times'; font-si16pt"),
+                                         wellPanel(div(style = 'width: 400px',"# Load shiny packages",br(),
                                            "if(!require('shiny')){",br(),"  install.packages('shiny')",br(),"  library(shiny)",br(),"}",br(),
-                                              br(),"# Install dependencies, download last version of SHAMAN from github and run shaman in one command :",br(),"runGitHub('aghozlane/shaman')"),
+                                              br(),"# Install dependencies,",br(),"# download last version from github,",br(),"# and run SHAMAN in one command:",br(),"runGitHub('aghozlane/shaman')")),
                                          p("This script can also be dowloaded", a("here", target="_blank", href="shamanapp.R"), "and executed as following :"),
                                          wellPanel("chmod +x ./shamanapp.R && Rscript ./shamanapp.R"),
+                                         p("Of note, the R version has an impact on the contrast definition. DESeq2 contrast are harder to define on R>3.2."),
                                          p("Contribution to SHAMAN code are always welcome and can be performed with the", a("github deposit.",href="https://github.com/aghozlane/shaman"))
                                 ))
                          )

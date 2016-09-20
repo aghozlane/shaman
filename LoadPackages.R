@@ -18,8 +18,6 @@ if(!require(devtools)){
   install.packages('devtools')
 }
 
-#library(plotly)
-
 if (!require(psych)) {
   install.packages('psych')
   library(psych)
@@ -132,11 +130,6 @@ if (!require(ade4)) {
 if (!require(scales)) {
   install.packages('scales')
   library(scales)
-}
-
-
-if(!require(biomformat)){
-  devtools::install_github("biomformat", "aghozlane")
 }
 
 
