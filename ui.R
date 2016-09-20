@@ -1,3 +1,4 @@
+options(shiny.sanitize.errors = FALSE)
 source("css/owncss.R")
 source("Rfunctions/Data_Management.R")
 if(!require(shinydashboard)){
