@@ -3,6 +3,7 @@ library(shiny)
 renderDataTable <- DT::renderDataTable
 dataTableOutput <- DT::dataTableOutput
 
+
 shinyServer(function(input, output,session) {
 
   hide(id = "loading-content", anim = TRUE, animType = "fade",time=1.5)
@@ -185,7 +186,7 @@ shinyServer(function(input, output,session) {
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target)) 
     {
       design = GetDesign(input)
-      tmp = isolate(GetCountsMerge(input,data,taxo,target,design))
+      tmp = isolate(withProgress(GetCountsMerge(input,data,taxo,target,design),message="Merging the counts ..."))
       counts = tmp$counts
       CheckTarget = tmp$CheckTarget
       #target = tmp$target
@@ -294,13 +295,9 @@ shinyServer(function(input, output,session) {
                  menuSubItem("Comparison plots",tabName="CompPlot"),
                  tabName = "Visu"),
         menuItem("Perspective plots", icon = icon("pie-chart"), tabName = "Krona")
-        
       )
     }
-    else{
-      sidebarMenu()
-    }
-    
+
   })
   
   
@@ -333,7 +330,7 @@ shinyServer(function(input, output,session) {
   output$DataTaxo <- renderDataTable(
     dataInput()$data$taxo, 
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE
+                   pageLength = 10,scrollX=TRUE, processing=FALSE
     ))
   
   
@@ -993,29 +990,28 @@ shinyServer(function(input, output,session) {
   
   
   ## Get the results from DESeq2
-  ResDiffAnal <-eventReactive(input$RunDESeq,{
+  ResDiffAnal <-eventReactive(input$RunDESeq,withProgress({
     
     target = dataInputTarget()$target
     design = GetDesign(input)
-    
-    counts = dataMergeCounts()$counts
-    CT_noNorm = dataMergeCounts()$CT_noNorm
-    CT_Norm = dataMergeCounts()$CT_Norm
+    dMC = dataMergeCounts()
+    counts = dMC$counts
+    CT_noNorm = dMC$CT_noNorm
+    CT_Norm = dMC$CT_Norm
     ## If no file, size factors are estimated
     normFactors = SizeFactors_fromFile()$normFactors
     
     Get_dds_object(input,counts,target,design,normFactors,CT_noNorm,CT_Norm)
     
     
-  })
+  },message = "Analysis in progress"))
   
   
   ## Run DESeq2 via RunDESeq button
   observeEvent(input$RunDESeq,{
-
-    withProgress(message="Analysis in progress...",ResDiffAnal())
+    ResDiffAnal()
   })
-  
+    
   
   #####################################################
   ##

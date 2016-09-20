@@ -5,7 +5,7 @@ library(shinythemes)
 library(shinyjs)
 
 
-
+function(request) {
 sidebar <- dashboardSidebar(
   useShinyjs(),
   inlineCSS(appCSS),
@@ -20,6 +20,7 @@ sidebar <- dashboardSidebar(
     menuItem("Home", tabName = "Home", icon = icon("home")),
     menuItem("Tutorial", tabName = "Tutorial", icon = icon("book")),
     menuItem("Upload your data", tabName = "Upload", icon = icon("upload")),
+    # bookmarkButton(),
     menuItemOutput("dymMenu"),
     img(src = "logo.jpg", height = 49, width = 220,style="position:absolute;bottom:0;margin:0 0 15px 10px;")
   )
@@ -714,11 +715,13 @@ body <- dashboardBody(
   dbHeader$children[[2]]$children <-  tags$a(tags$img(src='akuaku.png',height='40',width='50',style="margin:5px 0 5px 0;",align='left'), tags$h3("SHAMAN",style="font-family:Purisa; margin:15px 25px 5px 0;color:white;"))
   
 # Put them together into a dashboardPage
-  dashboardPage(skin="blue",
+
+    dashboardPage(skin="blue",
     dbHeader,
     sidebar,
     body
   )
+}
 
 
 
