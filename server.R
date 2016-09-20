@@ -282,7 +282,7 @@ shinyServer(function(input, output,session) {
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && CheckOK)
     {
 
-      sidebarMenu(
+      sidebarMenu(id = "side",
         menuItem("Statistical analysis",
                  menuSubItem("Run differential analysis",tabName="RunDiff"),
                  menuSubItem("Diagnostic plots",tabName="DiagPlotTab"),

@@ -24,7 +24,7 @@ sidebar <- dashboardSidebar(
       p()),
   div(
     id = "app-content-bar",
-  sidebarMenu(
+  sidebarMenu(id = "side",
     menuItem("Home", tabName = "Home", icon = icon("home")),
     menuItem("Tutorial", tabName = "Tutorial", icon = icon("book")),
     menuItem("Download/Install (beta)", tabName = "Download", icon = icon("download")),
