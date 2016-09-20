@@ -198,7 +198,7 @@ body <- dashboardBody(
                                   "Once installed, run ‘Docker Quickstart Terminal’ application."),
                                 p("- Running SHAMAN:"),
                                 wellPanel(div(style = 'width: 400px',"docker run --rm -p 80:80 aghozlane/shaman")),
-                                p("Then connect to http://0.0.0.0/")
+                                p("Then connect to http://0.0.0.0/ with your favorite web navigator.")
                                 ),
                                 tabPanel("R install (RC)", tags$script(type="text/javascript", language="javascript", src="google-analytics.js"),
                                          p("SHAMAN is available for R>3.1.2. The installation, download and execution can all be performed with a small R script :",style = "font-family: 'times'; font-si16pt"),
