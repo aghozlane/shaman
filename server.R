@@ -1,5 +1,4 @@
 source('LoadPackages.R')
-library(shiny)
 renderDataTable <- DT::renderDataTable
 dataTableOutput <- DT::dataTableOutput
 

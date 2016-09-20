@@ -1,7 +1,10 @@
 if (!require("Rcpp")){
   install.packages("Rcpp")
 }
-
+if(!require(shiny)){
+  install.packages("shiny")
+  library(shiny)
+}
 if(!require(shinydashboard)){
   install.packages('shinydashboard')
   library(shinydashboard)
@@ -51,11 +54,17 @@ if (!require(devtools)) {
   install.packages('devtools')
   library(devtools)
 }
+if (!require(BiocInstaller)){
+  source("https://bioconductor.org/biocLite.R")
+  biocLite("BiocInstaller")
+  library(BiocInstaller)
+}
 
 # Let us use biomformat instead of biom
 if (!require(biomformat)){
- library(biomformat)
+  library(devtools)
  devtools::install_github("biomformat", "aghozlane")
+library(biomformat)
 }
 
 if (!require(scatterD3)) {
@@ -137,8 +146,13 @@ if(!require(biomformat)){
 }
 
 
-# Allow to upload 50M files
-options(shiny.maxRequestSize=50*1024^2) 
+# Allow to upload 50M files only shaman server
+if(Sys.info()["nodename"] == "shaman"){
+  options(shiny.maxRequestSize=50*1024^2)
+}else{
+  # No limit
+  options(shiny.maxRequestSize=500000000000000*1024^2)
+}
 source("Rfunctions/Data_Management.R")
 source("Rfunctions/Stat_Model.R")
 source("Rfunctions/DiagPlot.R")

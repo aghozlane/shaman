@@ -27,18 +27,18 @@ system(command=paste('sed -i .bck -e "s/d3\\.min/d3/g" ', .libPaths(), '/d3heatm
 #### replacement of the css cals of the rNVD3 ####
 
 # get the rNVD3 path
-rNVD3_path = paste(.libPaths(), 'rNVD3/nvd3/css/', sep='/')
+#rNVD3_path = paste(.libPaths(), 'rNVD3/nvd3/css/', sep='/')
 
 # get the path of the current source. may need to be modified (parent.frame(1) or parent.frame(2) or parent.frame(3) or else) 
-current_path = dirname(parent.frame(2)$ofile) 
+#current_path = dirname(parent.frame(2)$ofile) 
 # get the css files path
-css_files = dir(path=current_path, pattern = "*.css$", full.names = T)
+#css_files = dir(path=current_path, pattern = "*.css$", full.names = T)
 # create the function to copy the css file
-cp_to_rNVD3 = function(p, dest){
-  system(paste('cp', p, dest))
-}
+#cp_to_rNVD3 = function(p, dest){
+#  system(paste('cp', p, dest))
+#}
 #apply the copy to all the css files
-sapply(css_files, cp_to_rNVD3, rNVD3_path)
+#sapply(css_files, cp_to_rNVD3, rNVD3_path)
 
 # first get d3heatmap javascript library path
 scatterD3_path = paste(.libPaths(), 'scatterD3/htmlwidgets/', sep='/')
