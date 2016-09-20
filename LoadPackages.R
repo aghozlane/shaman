@@ -45,10 +45,6 @@ if (!require(circlize)) {
   library(circlize)
 }
 
-if (!require(d3heatmap)) {
-  install.packages('d3heatmap')
-  library(d3heatmap)
-}
 
 if (!require(devtools)) {
   install.packages('devtools')
@@ -60,21 +56,24 @@ if (!require(BiocInstaller)){
   library(BiocInstaller)
 }
 
+if (!require(d3heatmap)) {
+  devtools::install_github('aghozlane/d3heatmap')
+  library(d3heatmap)
+}
+
 # Let us use biomformat instead of biom
 if (!require(biomformat)){
-  library(devtools)
- devtools::install_github("biomformat", "aghozlane")
+ devtools::install_github("aghozlane/biomformat")
 library(biomformat)
 }
 
 if (!require(scatterD3)) {
-  install.packages('scatterD3')
+  devtools::install_github('aghozlane/scatterD3')
   library(scatterD3)
 }
 
 if (!require(rNVD3)) {
-  library(devtools)
-  install_github('rNVD3', 'aghozlane')
+  devtools::install_github('aghozlane/rNVD3')
   library(rNVD3)
 }
 
@@ -102,11 +101,6 @@ if(!require(plotly)){
 if(!require(d3vennR)){
   install_github("timelyportfolio/d3vennR")
   library(d3vennR)
-}
-
-if (!require(psych)) {
-  install.packages('psych')
-  library(psych)
 }
 
 if (!require(DT)) {
