@@ -412,11 +412,11 @@ shinyServer(function(input, output,session) {
     ## Replace "-" by "."
     ind_num = which(sapply(data,is.numeric))
     if(length(ind_num)>0){
-      data_tmp =cbind( apply(as.data.frame(apply(data[,-ind_num],2,gsub,pattern = "-",replacement = ".")),2,as.factor),data[,ind_num])
+      data_tmp =cbind( as.data.frame(apply(data[,-ind_num],2,gsub,pattern = "-",replacement = ".")),data[,ind_num])
       colnames(data_tmp) = c(colnames(data)[-ind_num],colnames(data)[ind_num])
       data = data_tmp
     }
-    if(length(ind_num)==0){data = as.data.frame(apply(data,2,gsub,pattern = "-",replacement = "."))}
+    if(length(ind_num)==0){data = as.data.frame(apply(data[,-ind_num],2,gsub,pattern = "-",replacement = "."))}
     
     rownames(data) <- as.character(data[, 1])
     ind = which(rownames(data)%in%colnames(counts))
@@ -827,13 +827,12 @@ shinyServer(function(input, output,session) {
     
     InterVar = input$InterestVar
     
-    target_int = lapply(as.data.frame(target[,InterVar]),as.factor)
-    ModInterestAll = unique(unlist(lapply(target_int,levels)))
+    
     
     ## Get the selected variable from the selected modality
     Sel_Var = InterVar[which(unlist(lapply(as.data.frame(target[,InterVar]),FUN = function(x){input$Select1_contrast%in%x})))]
     
-    ModInterestCond = levels(target[,Sel_Var])
+    ModInterestCond = levels(sapply(target[,Sel_Var],as.factor))
     ModInterestCond = ModInterestCond[-which(ModInterestCond==input$Select1_contrast)]
     
     updateSelectInput(session,"Select2_contrast","To",ModInterestCond)
@@ -896,8 +895,9 @@ shinyServer(function(input, output,session) {
       if(length(var_Inter)>1){ind = unlist(lapply(as.data.frame(target[,var_Inter]),is.numeric));var_Inter = var_Inter[!ind]}
       if(length(var_Inter)==1){ind = is.numeric(target[,var_Inter]);var_Inter = var_Inter[!ind]}
       
-      
+
       if(length(var_Inter)>=1)  ModInterestFor = c("All",unique(unlist(lapply(as.data.frame(target[,var_Inter]),levels))))
+
     }
     
     updateSelectInput(session,"Select3_contrast","For",ModInterestFor)
