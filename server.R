@@ -407,9 +407,17 @@ shinyServer(function(input, output,session) {
     if (is.null(inFile)) return(NULL)
     
     
-    data = read.csv(inFile$datapath,sep="\t",header=TRUE)
+    data = read.table(inFile$datapath,sep="\t",header=TRUE,stringsAsFactors = FALSE)
+    data = as.data.frame(data)
     ## Replace "-" by "."
-    data = as.data.frame(apply(data,2,gsub,pattern = "-",replacement = "."))
+    ind_num = which(sapply(data,is.numeric))
+    if(length(ind_num)>0){
+      data_tmp =cbind( as.data.frame(apply(data[,-ind_num],2,gsub,pattern = "-",replacement = "."),stringsAsFactors = FALSE),data[,ind_num])
+      colnames(data_tmp) = c(colnames(data)[-ind_num],colnames(data)[ind_num])
+      data = data_tmp
+    }
+    if(length(ind_num)==0){data = as.data.frame(apply(data,2,gsub,pattern = "-",replacement = "."),stringsAsFactors = FALSE)}
+    
     rownames(data) <- as.character(data[, 1])
     ind = which(rownames(data)%in%colnames(counts))
     target = data[ind,]
