@@ -407,16 +407,16 @@ shinyServer(function(input, output,session) {
     if (is.null(inFile)) return(NULL)
     
     
-    data = read.table(inFile$datapath,sep="\t",header=TRUE,stringsAsFactors = FALSE)
+    data = read.table(inFile$datapath,sep="\t",header=TRUE)
     data = as.data.frame(data)
     ## Replace "-" by "."
     ind_num = which(sapply(data,is.numeric))
     if(length(ind_num)>0){
-      data_tmp =cbind( as.data.frame(apply(data[,-ind_num],2,gsub,pattern = "-",replacement = "."),stringsAsFactors = FALSE),data[,ind_num])
+      data_tmp =cbind( apply(as.data.frame(apply(data[,-ind_num],2,gsub,pattern = "-",replacement = ".")),2,as.factor),data[,ind_num])
       colnames(data_tmp) = c(colnames(data)[-ind_num],colnames(data)[ind_num])
       data = data_tmp
     }
-    if(length(ind_num)==0){data = as.data.frame(apply(data,2,gsub,pattern = "-",replacement = "."),stringsAsFactors = FALSE)}
+    if(length(ind_num)==0){data = as.data.frame(apply(data,2,gsub,pattern = "-",replacement = "."))}
     
     rownames(data) <- as.character(data[, 1])
     ind = which(rownames(data)%in%colnames(counts))
@@ -827,6 +827,9 @@ shinyServer(function(input, output,session) {
     
     InterVar = input$InterestVar
     
+    target_int = lapply(as.data.frame(target[,InterVar]),as.factor)
+    ModInterestAll = unique(unlist(lapply(target_int,levels)))
+    
     ## Get the selected variable from the selected modality
     Sel_Var = InterVar[which(unlist(lapply(as.data.frame(target[,InterVar]),FUN = function(x){input$Select1_contrast%in%x})))]
     
@@ -850,13 +853,12 @@ shinyServer(function(input, output,session) {
     target = as.data.frame(resDiff$target)
     
     InterVar = input$InterestVar
+    
     ## Remove numeric variable
     ind = unlist(lapply(as.data.frame(target[,InterVar]),is.numeric))
     InterVar = InterVar[!ind]
-
-    ModInterestAll = unique(unlist(lapply(as.data.frame(target[,InterVar]),levels)))
-    
-    ModInterestAll = unique(unlist(lapply(as.data.frame(target[,InterVar]),levels)))
+    target_int = lapply(as.data.frame(target[,InterVar]),as.factor)
+    ModInterestAll = unique(unlist(lapply(target_int,levels)))
     
     updateSelectInput(session, "Select1_contrast",label="Compare",ModInterestAll)
   })
