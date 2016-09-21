@@ -444,7 +444,6 @@ shinyServer(function(input, output,session) {
   output$SelectInterestVar <- renderUI({
     
     target=dataInputTarget()$target
-    print(target)
     if(!is.null(target)) 
     {
       namesTarget = colnames(target)[2:ncol(target)]

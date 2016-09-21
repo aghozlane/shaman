@@ -75,6 +75,7 @@ Plot_Visu_Barplot <- function(input,resDiff)
                      "#c49c94","#e377c2","#f7b6d2","#7f7f7f", "#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"),ceiling(nbKept/20))
     
     dataBarPlot_mat$Taxonomy = factor(dataBarPlot_mat$Taxonomy,levels = namesTax)
+    dataBarPlot_mat$AllVar = factor(dataBarPlot_mat$AllVar,levels = unique(dataBarPlot_mat$AllVar))
     
     gg= ggplot(dataBarPlot_mat, aes(x=AllVar, y=Proportions, fill=Taxonomy)) 
     gg= gg + geom_bar(stat="identity")
