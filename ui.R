@@ -113,7 +113,7 @@ body <- dashboardBody(
               ", which is available", a("here",target="_blank",href="Alimintest.zip"),"."),
             p("The zip archive contains 4 different files :", br(),
               "- the otu count matrix : Alimintest_otu_table.csv,", br(),
-              "- the otu annotation table : Alimintest_otu_table.csv,", br(),
+              "- the otu annotation table : Alimintest_otu_annotation.csv,", br(),
               "- the experimental design : Alimintest_target.csv,", br(),
               "- the contrast table : Alimintest_contrasts.csv."),
             p("Two groups of person follow two  strict diet periods that involve the intake of 40g following 10g of fiber per day, or 10g of fiber after a 40g fiber intake period:"),
