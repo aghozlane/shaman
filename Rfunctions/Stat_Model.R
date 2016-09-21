@@ -36,7 +36,7 @@ Get_dds_object <- function(input,counts,target,design,normFactorsOTU,CT_noNorm,C
   dds <- DESeqDataSetFromMatrix(countData=counts, colData=target, design=design)
   sizeFactors(dds) = normFactorsOTU
   dds <- estimateDispersions(dds, fitType=input$fitType)
-  if(as.numeric(R.Version()$major)+as.numeric(R.Version()$minor) >= 4.3){
+  if(as.numeric(R.Version()$major)>=3 && as.numeric(R.Version()$minor) >=1.3){
     dds <- nbinomWaldTest(dds)
   }else{
     dds <- nbinomWaldTest(dds,modelMatrixType = "expanded")

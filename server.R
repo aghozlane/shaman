@@ -416,7 +416,7 @@ shinyServer(function(input, output,session) {
       colnames(data_tmp) = c(colnames(data)[-ind_num],colnames(data)[ind_num])
       data = data_tmp
     }
-    if(length(ind_num)==0){data = as.data.frame(apply(data[,-ind_num],2,gsub,pattern = "-",replacement = "."))}
+    if(length(ind_num)==0){data = as.data.frame(apply(data,2,gsub,pattern = "-",replacement = "."))}
     
     rownames(data) <- as.character(data[, 1])
     ind = which(rownames(data)%in%colnames(counts))
@@ -444,7 +444,7 @@ shinyServer(function(input, output,session) {
   output$SelectInterestVar <- renderUI({
     
     target=dataInputTarget()$target
-    
+    print(target)
     if(!is.null(target)) 
     {
       namesTarget = colnames(target)[2:ncol(target)]
@@ -805,14 +805,17 @@ shinyServer(function(input, output,session) {
     
     if(!is.null(resDiff))
     { 
-      box(title="Contrasts (New)",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = FALSE,
-          fluidRow(
-            column(width=3,selectInput("Select1_contrast","Compare","")),
-            column(width=3,selectInput("Select2_contrast","To","")),
-            if(length(int)>=1) column(width=3,selectInput("Select3_contrast",label=h6(strong("For")),"")),
-            column(width=3,br(),actionButton("AddContrastEasy","Add",icon = icon("plus")))
-          )
-      )
+      ## Check the R version
+      if(as.numeric(R.Version()$major)<=3 && as.numeric(R.Version()$minor) <=1.2){
+        box(title="Contrasts (New)",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = FALSE,
+            fluidRow(
+              column(width=3,selectInput("Select1_contrast","Compare","")),
+              column(width=3,selectInput("Select2_contrast","To","")),
+              if(length(int)>=1) column(width=3,selectInput("Select3_contrast",label=h6(strong("For")),"")),
+              column(width=3,br(),actionButton("AddContrastEasy","Add",icon = icon("plus")))
+            )
+        )
+      }
     }
     
     
