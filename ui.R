@@ -73,7 +73,7 @@ body <- dashboardBody(
                             p(a("Stevenn Volant", href="mailto:stevenn.volant@pasteur.fr"), "(Initiator, coding, testing, documentation, evaluation)"),
                             p(a("Amine Ghozlane",href="mailto:amine.ghozlane@pasteur.fr"), "(Coding, testing, documentation, evaluation, packaging)"),
                             p(a("Hugo Varet",href="mailto:hugo.varet@pasteur.fr"), "(Coding, testing, feature suggestions)"),
-                            p(a("Christophe Malabat, ",href="mailto:christophe.malabat@pasteur.fr"), "(Packaging)"), 
+                            p(a("Christophe Malabat",href="mailto:christophe.malabat@pasteur.fr"), "(Packaging)"), 
                             p(a("Marie-Agnès Dillies",href="mailto:marie-agnes.dillies@pasteur.fr"), "(Evaluation)"),
                             p(a("Sean Kennedy",href="mailto:sean.kennedy@pasteur.fr"), "(Evaluation)"),
                             h3("Acknowledgements"),
@@ -91,7 +91,7 @@ body <- dashboardBody(
               title = "What's new in SHAMAN", width = NULL, status = "primary",
               div(style = 'overflow-y: scroll; max-height: 400px',
                   addNews("Sep 21th 2016","SHAMAN on docker","The install of SHAMAN is now available with docker.
-                           The R install is also update and pass in release candidate state."),
+                           The R install is also updated and passed in release candidate state."),
                   addNews("Sep 14th 2016","Download and install SHAMAN","You can install SHAMAN (beta)."),
                   addNews("Sep 9th 2016","PCA/PCOA","You can select the axes for the PCOA and PCA plots."),
                   addNews("Aug 1st 2016","Biom format","SHAMAN can now support all the Biom format versions."),
