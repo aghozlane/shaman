@@ -29,7 +29,7 @@ shinyServer(function(input, output,session) {
     
     if (is.null(inFile)) return(NULL)
     
-    data = read.csv(inFile$datapath,sep="\t",header=TRUE,check.names=FALSE)
+    data = read.csv(inFile$datapath,sep=input$sepcount,header=TRUE,check.names=FALSE)
     colnames(data) = gsub("-",".",colnames(data))
     
     ## Rownames
@@ -49,7 +49,7 @@ shinyServer(function(input, output,session) {
     
     if(input$TypeTaxo=="Table") 
     {
-      data = read.csv(inFile$datapath,sep="\t",header=TRUE)
+      data = read.csv(inFile$datapath,sep=input$septaxo,header=TRUE)
       
       ## Rownames
       if(!TRUE%in%duplicated(data[,1])){ 
@@ -134,7 +134,7 @@ shinyServer(function(input, output,session) {
     
     if (is.null(inFile)) return(NULL)
     
-    data = read.csv(inFile$datapath,sep="\t",header=TRUE)
+    data = read.csv(inFile$datapath,sep=input$sepsize,header=TRUE)
     return(as.data.frame(data))
   })
   

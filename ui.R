@@ -147,8 +147,13 @@ body <- dashboardBody(
               "- PCA",br(),img(src="tutorial/tutorial_pca.png",width = "100%",style="max-width: 900px"),hr(),
               "- PCOA",br(),img(src="tutorial/tutorial_pcoa.png",width = "100%",style="max-width: 900px"),hr(),
               "- Clustering",br(),img(src="tutorial/tutorial_clustering.png",width = "100%",style="max-width: 900px"))),
-            tabPanel("4-Differential analysis results",
-            img(src = "tutorial/tutorial_table.png",width = "100%",style="max-width: 900px")),
+            tabPanel("4-Tables",
+                     p("'Tables' section provides the results of the differential analysis.
+                       For one given contrast, we have:",br(),
+                       "- The id of the given taxonomical level",br(),
+                       "- The base mean is the mean normalized count for the given annotation of all samples.",br(),
+                       "- The fold change .",br(),
+            img(src = "tutorial/tutorial_table.png",width = "100%",style="max-width: 900px"))),
             tabPanel("5-Visualization",
                      p("'Diagnostic plots' section provides several visualization to control the analysis",br(),
                      "- Barplot",br(),img(src="tutorial/tutorial_barplot.png",width = "100%",style="max-width: 900px"),hr(),
@@ -229,19 +234,27 @@ body <- dashboardBody(
                   selectInput("FileFormat","",c("Count table & taxonomy"="fileCounts","BIOM file"="fileBiom"),selected="fileCounts")
                 ),
                 conditionalPanel(condition="input.FileFormat=='fileCounts'",
-                  box(title="Load the count table",width = 3,height = "250px", status = "primary", solidHeader = TRUE,collapsible = FALSE,
+                  box(title="Load the count table",width = 3,height = "260px", status = "primary", solidHeader = TRUE,collapsible = FALSE,
                       fluidRow(
-                        column(width=6,radioButtons("TypeTable",h6(strong("Type:")),c("OTU/Gene table"="OTU","MGS table"="MGS")))
+                        column(width=6,radioButtons("TypeTable",h6(strong("Type:")),c("OTU/Gene table"="OTU","MGS table"="MGS"))),
+                        column(width=6,selectInput("sepcount", h6(strong("Separator:")),
+                                           c("\\t" = "\t",
+                                             "," = ",",
+                                             ";" = ";")))
                       ),
                       fileInput('fileCounts', h6(strong('Select your file')),width="100%")
                   ),
                   
-                  box(title="Load the taxonomy file",width = 3,height = "250px", status = "primary", solidHeader = TRUE,collapsible = FALSE,
+                  box(title="Load the taxonomy file",width = 3,height = "260px", status = "primary", solidHeader = TRUE,collapsible = FALSE,
                       fluidRow(
                         column(width=6,radioButtons("TypeTaxo",h6(strong("Format:")),c("Table"="Table","RDP"="RDP"))),
                         column(width=6,
                              conditionalPanel(condition="input.TypeTaxo=='RDP'",numericInput("RDP_th",h6(strong("Threshold:")),0.5,step=0.01,min=0.01,max=1))
-                        )
+                        ),
+                        column(width=6,
+                               conditionalPanel(condition="input.TypeTaxo=='Table'",selectInput("septaxo", h6(strong("Separator:")),
+                                                    c("\\t" = "\t", "," = ",", ";" = ";")))
+                               )
                       ),
                       fileInput('fileTaxo', h6(strong('Select your file')),width="100%")
                   )
@@ -249,7 +262,7 @@ body <- dashboardBody(
                 ),
                 
                 conditionalPanel(condition="input.FileFormat=='fileBiom'",
-                                 box(title="Load the BIOM file",width = 3,height = "250px", status = "primary", solidHeader = TRUE,collapsible = FALSE,
+                                 box(title="Load the BIOM file",width = 3, status = "primary", solidHeader = TRUE,collapsible = FALSE,
                                      fileInput('fileBiom', h5(strong('Select your file')),width="100%")
                                  )           
                 )
@@ -274,8 +287,9 @@ body <- dashboardBody(
               column(width=5,
                 box(title="Experimental design",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = FALSE,
                   fluidRow(
-                    column(width=6,fileInput('fileTarget', h6(strong('Select your target file')),width="100%")),
-                    column(width=6,uiOutput("SelectTaxo"))
+                    column(width=5,fileInput('fileTarget', h6(strong('Select your target file')),width="100%")),
+                    column(width=2,selectInput("septarget", h6(strong("Separator:")), c("\\t" = "\t", "," = ",", ";" = ";"))),
+                    column(width=5,uiOutput("SelectTaxo"))
                   ),
                   fluidRow( 
                     column(width=6,uiOutput("SelectInterestVar")),
@@ -327,6 +341,7 @@ body <- dashboardBody(
                     column(width=3,
                         fileInput('fileSizeFactors', h6(strong('Define your own size factors')),width="100%")
                     ),
+                    column(width=3, selectInput("sepsize", h6(strong("Separator:")), c("\\t" = "\t", "," = ",", ";" = ";"))),
                     column(width=3,br(),htmlOutput("InfoSizeFactor"))
                   )
                 ),
