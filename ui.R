@@ -231,16 +231,13 @@ body <- dashboardBody(
             br(),
              fluidRow(
                 box(title="Select your file format",width = 3,status = "success", solidHeader = TRUE,collapsible = FALSE,
-                  selectInput("FileFormat","",c("Count table & taxonomy"="fileCounts","BIOM file"="fileBiom"),selected="fileCounts")
+                  selectInput("FileFormat","",c("Count table & taxonomy (*.csv or *.tsv)"="fileCounts","BIOM file"="fileBiom"),selected="fileCounts")
                 ),
                 conditionalPanel(condition="input.FileFormat=='fileCounts'",
                   box(title="Load the count table",width = 3,height = "260px", status = "primary", solidHeader = TRUE,collapsible = FALSE,
                       fluidRow(
                         column(width=6,radioButtons("TypeTable",h6(strong("Type:")),c("OTU/Gene table"="OTU","MGS table"="MGS"))),
-                        column(width=6,selectInput("sepcount", h6(strong("Separator:")),
-                                           c("\\t" = "\t",
-                                             "," = ",",
-                                             ";" = ";")))
+                        column(width=6,selectInput("sepcount", h6(strong("Separator:")),c("Tab" = "\t", "Comma" = ",","Semi-colon" = ";")))
                       ),
                       fileInput('fileCounts', h6(strong('Select your file')),width="100%")
                   ),
@@ -253,7 +250,7 @@ body <- dashboardBody(
                         ),
                         column(width=6,
                                conditionalPanel(condition="input.TypeTaxo=='Table'",selectInput("septaxo", h6(strong("Separator:")),
-                                                    c("\\t" = "\t", "," = ",", ";" = ";")))
+                                                    c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
                                )
                       ),
                       fileInput('fileTaxo', h6(strong('Select your file')),width="100%")
@@ -288,8 +285,8 @@ body <- dashboardBody(
                 box(title="Experimental design",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = FALSE,
                   fluidRow(
                     column(width=5,fileInput('fileTarget', h6(strong('Select your target file')),width="100%")),
-                    column(width=2,selectInput("septarget", h6(strong("Separator:")), c("\\t" = "\t", "," = ",", ";" = ";"))),
-                    column(width=5,uiOutput("SelectTaxo"))
+                    column(width=3,selectInput("septarget", h6(strong("Separator:")), c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";"))),
+                    column(width=4,uiOutput("SelectTaxo"))
                   ),
                   fluidRow( 
                     column(width=6,uiOutput("SelectInterestVar")),
@@ -341,7 +338,7 @@ body <- dashboardBody(
                     column(width=3,
                         fileInput('fileSizeFactors', h6(strong('Define your own size factors')),width="100%")
                     ),
-                    column(width=3, selectInput("sepsize", h6(strong("Separator:")), c("\\t" = "\t", "," = ",", ";" = ";"))),
+                    column(width=3, selectInput("sepsize", h6(strong("Separator:")), c("Tab" = "\t", "," = "Comma", "Semicolon" = ";"))),
                     column(width=3,br(),htmlOutput("InfoSizeFactor"))
                   )
                 ),
@@ -369,7 +366,11 @@ body <- dashboardBody(
                 conditionalPanel(condition="input.DiagPlot=='SfactorsVStot'",
                   box(title = "Size factors",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
                     dataTableOutput("SizeFactTable"),
-                    downloadButton('ExportSizeFactor', 'Export table')
+                    fluidRow( 
+                      column(width=3,downloadButton('ExportSizeFactor', 'Export table')),
+                      column(width=3,selectInput("sepsizef", h6(strong("Separator:")), c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
+                    ),
+                    tags$style(type='text/css', "#ExportSizeFactor { margin-top: 37px;}")
                   )
                 ),
                   
@@ -481,7 +482,10 @@ body <- dashboardBody(
                          htmlOutput("ContrastOverviewTable")
                      ),
                      box(title = "Export",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
-                         fluidRow(column(width=12,selectInput("WhichExportTable", "Select the table to export",c("Complete"="Complete","Up"="Up","Down"="Down")))),
+                         fluidRow(
+                           column(width=8,selectInput("WhichExportTable", "Select the table to export",c("Significant"="Significant","Complete"="Complete","Up"="Up","Down"="Down"))),
+                           column(width=4,selectInput("sepexpdiff", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
+                         ),
                          uiOutput("ExportTableButton")   
                      )
             )
@@ -527,9 +531,12 @@ body <- dashboardBody(
                    conditionalPanel(condition="input.PlotVisuSelect=='Diversity'",
                                     br(),
                       box(title = "Diversity values",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
-                                    dataTableOutput("Diversitytable"),
-                                    downloadButton('ExportDiversitytable', 'Export table')
-                          
+                          dataTableOutput("Diversitytable"),
+                          fluidRow(
+                            column(width=3,downloadButton('ExportDiversitytable', 'Export table')),
+                            column(width=3,selectInput("sepdiversity", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
+                          ),
+                          tags$style(type='text/css', "#ExportDiversitytable { margin-top: 37px;}")
                       )
                    ) 
                                     

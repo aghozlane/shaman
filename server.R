@@ -576,8 +576,8 @@ shinyServer(function(input, output,session) {
   
   ## Export size factors
   output$ExportSizeFactor <- downloadHandler(
-    filename = function() { 'SHAMAN_sizefactors.csv' },
-    content = function(file){write.table(SizeFactor_table(), file,quote=FALSE,row.names = FALSE,sep="\t")}
+    filename = function() { if (input$sepsizef == "\t") 'SHAMAN_sizefactors.tsv' else 'SHAMAN_sizefactors.csv' },
+    content = function(file){write.table(SizeFactor_table(), file,quote=FALSE,row.names = FALSE,sep=input$sepsizef)}
   )
   
   
@@ -1337,8 +1337,12 @@ shinyServer(function(input, output,session) {
     return(res)
   })
   
-  
-  
+  ## Significant diff table
+  output$DataDiffsignificant <- renderDataTable(
+    datatable(dataDiff()$significant,rownames = FALSE),
+    options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
+                   pageLength = 10,scrollX=TRUE, processing=FALSE
+    ))
   ## Complete diff table
   output$DataDiffcomplete <- renderDataTable(
     datatable(dataDiff()$complete,rownames = FALSE),
@@ -1369,10 +1373,12 @@ shinyServer(function(input, output,session) {
     if(!is.null(data))
     {
       
-      tabBox(width = NULL, selected = "Complete",
+      tabBox(width = NULL, selected = "Significant",
+             tabPanel("Significant",dataTableOutput("DataDiffsignificant")),
              tabPanel("Complete",dataTableOutput("DataDiffcomplete")),
              tabPanel("Up",dataTableOutput("DataDiffup")),
-             tabPanel("Down",dataTableOutput("DataDiffdown"))  
+             tabPanel("Down",dataTableOutput("DataDiffdown"))
+             
       )
     }
     
@@ -1387,12 +1393,18 @@ shinyServer(function(input, output,session) {
   
   #### Export diff table
   output$exportDiffTable <- downloadHandler(
-    filename = function() {paste(input$WhichExportTable,input$ContrastList_table,'SHAMAN.csv',sep="_")},
+    filename = function() {
+      extension='SHAMAN.csv'
+      if(input$sepexpdiff == "\t") extension='SHAMAN.tsv' 
+      paste(input$WhichExportTable,input$ContrastList_table,extension,sep="_")
+      },
+    
     content = function(file){
       switch(input$WhichExportTable,
-             "Complete" = write.csv(dataDiff()$complete, file,row.names = FALSE),
-             "Up" =  write.csv(dataDiff()$up, file,row.names = FALSE),
-             "Down" =  write.csv(dataDiff()$down, file,row.names = FALSE)
+             "Significant" = write.table(dataDiff()$significant, file,row.names = FALSE, sep=input$sepexpdiff),
+             "Complete" = write.table(dataDiff()$complete, file,row.names = FALSE, sep=input$sepexpdiff),
+             "Up" =  write.table(dataDiff()$up, file,row.names = FALSE, sep=input$sepexpdiff),
+             "Down" =  write.table(dataDiff()$down, file,row.names = FALSE, sep=input$sepexpdiff)
       )
     }
   )
@@ -1562,13 +1574,16 @@ shinyServer(function(input, output,session) {
   
   ## Export Diversitytable in .csv
   output$ExportDiversitytable <- downloadHandler(
-    filename = function() { 'SHAMAN_Diversity.csv' },
+    filename = function() { 
+      if(input$sepdiversity) 'SHAMAN_Diversity.tsv'
+      else 'SHAMAN_Diversity.csv'
+    },
     content = function(file){
       resDiff = ResDiffAnal()
       tmp = Plot_Visu_Diversity(input,resDiff)$dataDiv
       tmp$VarX=NULL; tmp$VarCol=NULL
       datatable(tmp[,c(4,5,1,2,3)],rownames= FALSE)
-      write.csv(tmp, file,row.names = FALSE)
+      write.table(tmp, file,row.names = FALSE, sep=input$sepdiversity)
     }
   )
   

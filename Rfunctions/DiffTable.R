@@ -67,6 +67,7 @@ TableDiff_print <- function(input,BaseContrast,resDiff, info = NULL)
     complete.name <- merge(complete.name, mcols.add, by = "Id")
     complete[[name]] <- complete.name
     complete.name=complete.name[order(complete.name$padj),]
+    significant.name <- complete.name[which(complete.name$padj <= alpha & complete.name$betaConv), ]
     up.name <- complete.name[which(complete.name$padj <= alpha & complete.name$betaConv & complete.name$log2FoldChange>=0.0), ]
     ## useless order
     #up.name <- up.name[order(up.name$padj), ]
@@ -78,5 +79,5 @@ TableDiff_print <- function(input,BaseContrast,resDiff, info = NULL)
     #       complete.complete[, paste(name, keep, sep = ".")] <- complete.name[, keep]
   }
   #return(list(complete=complete.name,up=up.name,down=down.name))
-  return(list(complete=complete.name[,keep],up=up.name[,keep],down=down.name[,keep]))
+  return(list(significant=significant.name[,keep],complete=complete.name[,keep],up=up.name[,keep],down=down.name[,keep]))
 }
