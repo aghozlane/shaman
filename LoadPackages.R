@@ -91,11 +91,6 @@ if (!require(shinyjs)) {
   library(shinyjs)
 }
 
-if(!require(plotly)){
-  install.packages('plotly')
-  library(plotly)
-}
-
 if(!require(d3vennR)){
   install_github("timelyportfolio/d3vennR")
   library(d3vennR)
