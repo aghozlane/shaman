@@ -43,7 +43,7 @@ Get_dds_object <- function(input,counts,target,design,normFactorsOTU,CT_noNorm,C
   }
   countsNorm = counts(dds, normalized = TRUE)
   
-  save(dds,file="dds.RData")
+  #save(dds,file="dds.RData")
   return(list(dds = dds,raw_counts=counts,countsNorm=countsNorm,target=target,design=design,normFactors = normFactorsOTU,CT_noNorm=CT_noNorm,CT_Norm=CT_Norm))
 }
 

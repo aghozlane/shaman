@@ -370,7 +370,7 @@ body <- dashboardBody(
                 br(),
                 conditionalPanel(condition="input.DiagPlot=='SfactorsVStot'",
                   box(title = "Size factors",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
-                    dataTableOutput("SizeFactTable"),
+                    DT::dataTableOutput("SizeFactTable"),
                     fluidRow( 
                       column(width=3,downloadButton('ExportSizeFactor', 'Export table')),
                       column(width=3,selectInput("sepsizef", h6(strong("Separator:")), c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
@@ -517,7 +517,7 @@ body <- dashboardBody(
                                       column(width=6,
                                       br(),
                                       box(title = "Regression coefficients",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
-                                          dataTableOutput("lmRegScatter")
+                                          DT::dataTableOutput("lmRegScatter")
                                       )
                                     ),
                                     column(width=6,br(),htmlOutput("lmEquation"))
@@ -528,7 +528,7 @@ body <- dashboardBody(
                                     br(),
                                     p(actionButton("scatterD3-reset-zoom", HTML("<span class='glyphicon glyphicon-search' aria-hidden='true'></span> Reset Zoom")),Align="right"),
                                     box(title = "Correlation table",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
-                                        dataTableOutput("CorTable")
+                                        DT::dataTableOutput("CorTable")
                                     )
                    ),
                    
@@ -536,7 +536,7 @@ body <- dashboardBody(
                    conditionalPanel(condition="input.PlotVisuSelect=='Diversity'",
                                     br(),
                       box(title = "Diversity values",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
-                          dataTableOutput("Diversitytable"),
+                          DT::dataTableOutput("Diversitytable"),
                           fluidRow(
                             column(width=3,downloadButton('ExportDiversitytable', 'Export table')),
                             column(width=3,selectInput("sepdiversity", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
@@ -699,7 +699,7 @@ body <- dashboardBody(
             column(width=9,
                    uiOutput("plotVisuComp"),
                    conditionalPanel(condition="input.PlotVisuSelectComp=='Venn'",
-                                    dataTableOutput("DataVenn")
+                                    DT::dataTableOutput("DataVenn")
                    )
             ),
             column(width=3,

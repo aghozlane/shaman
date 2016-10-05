@@ -413,6 +413,7 @@ Plot_Visu_Diversity <- function(input,resDiff,ForScatter=FALSE){
     ## Get interactivity
     #ff = ggplotly(gg)
   }
+  print(dataTmp)
   return(list(plot=gg,dataDiv = dataTmp))
   
 }

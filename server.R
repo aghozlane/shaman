@@ -1,7 +1,4 @@
 source('LoadPackages.R')
-renderDataTable <- DT::renderDataTable
-dataTableOutput <- DT::dataTableOutput
-
 
 shinyServer(function(input, output,session) {
 
@@ -308,25 +305,26 @@ shinyServer(function(input, output,session) {
   #####################################################
   
   ## Counts Table
-  output$DataCounts <- renderDataTable(
+  output$DataCounts <- DT::renderDataTable(
     dataInput()$data$counts, 
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
                    pageLength = 10,scrollX=TRUE, processing=FALSE
     ))
   
   ## Counts Table
-  output$DataVenn<- renderDataTable({
-    SelContrast = input$ContrastList_table_FC
-    resDiff = ResDiffAnal()
-    BaseContrast = read.table(namesfile,header=TRUE)
-    GetData_venn(input,SelContrast,BaseContrast,resDiff)$df.tot
-  }, options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
+  output$DataVenn<- DT::renderDataTable(#{
+    #SelContrast = input$ContrastList_table_FC
+    #resDiff = ResDiffAnal()
+    #BaseContrast = read.table(namesfile,header=TRUE)
+    GetData_venn(input,input$ContrastList_table_FC,read.table(namesfile,header=TRUE),ResDiffAnal())$df.tot,
+  #}
+   options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
                     pageLength = 10,scrollX=TRUE, processing=FALSE
   ))
   
   
   ## Taxonomy table
-  output$DataTaxo <- renderDataTable(
+  output$DataTaxo <- DT::renderDataTable(
     dataInput()$data$taxo, 
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
                    pageLength = 10,scrollX=TRUE, processing=FALSE
@@ -341,8 +339,8 @@ shinyServer(function(input, output,session) {
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0)
     {
       tabBox(width = NULL, selected = "Count table",
-             tabPanel("Count table",dataTableOutput("DataCounts")),
-             tabPanel("Taxonomy",dataTableOutput("DataTaxo")),
+             tabPanel("Count table",DT::dataTableOutput("DataCounts")),
+             tabPanel("Taxonomy",DT::dataTableOutput("DataTaxo")),
              tabPanel("Summary",h5(strong("Percentage of annotation")),htmlOutput("SummaryView"),
                       br(),h5(strong("Number of features by level:")),plotOutput("SummaryViewBarplot",width = 1200,height=500))
       )
@@ -531,14 +529,14 @@ shinyServer(function(input, output,session) {
   
   
   ## target table
-  output$DataTarget <- renderDataTable(
+  output$DataTarget <- DT::renderDataTable(
     dataInputTarget()$target,
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
                    pageLength = 10,scrollX=TRUE, processing=FALSE
     ))
   
   ## Counts table for the selected taxonomy level
-  output$CountsMerge <- renderDataTable(
+  output$CountsMerge <- DT::renderDataTable(
     round(counts(ResDiffAnal()$dds,normalized=TRUE)),
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
                    pageLength = 10,scrollX=TRUE, processing=FALSE
@@ -554,7 +552,7 @@ shinyServer(function(input, output,session) {
     if(!is.null(counts) && taxo != "...")
     {
       box(title=paste("Count table (",taxo,")",sep=""),width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
-          dataTableOutput("CountsMerge"),
+          DT::dataTableOutput("CountsMerge"),
           downloadButton('ExportCounts', 'Export normalised counts'),
           downloadButton('ExportRelative', 'Export relative abundance')
       )  
@@ -589,7 +587,7 @@ shinyServer(function(input, output,session) {
     if(!is.null(target) &&  nrow(target)>0)
     {
       box(title="Target file overview",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
-          dataTableOutput("DataTarget")
+          DT::dataTableOutput("DataTarget")
       )  
     }
     
@@ -1145,7 +1143,7 @@ shinyServer(function(input, output,session) {
     
   })
   
-  output$SizeFactTable <- renderDataTable(
+  output$SizeFactTable <- DT::renderDataTable(
     SizeFactor_table(),
     options = list(scrollX=TRUE,searching = FALSE, processing=FALSE
     ))
@@ -1338,27 +1336,27 @@ shinyServer(function(input, output,session) {
   })
   
   ## Significant diff table
-  output$DataDiffsignificant <- renderDataTable(
+  output$DataDiffsignificant <- DT::renderDataTable(
     datatable(dataDiff()$significant,rownames = FALSE),
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
                    pageLength = 10,scrollX=TRUE, processing=FALSE
     ))
   ## Complete diff table
-  output$DataDiffcomplete <- renderDataTable(
+  output$DataDiffcomplete <- DT::renderDataTable(
     datatable(dataDiff()$complete,rownames = FALSE),
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
                    pageLength = 10,scrollX=TRUE, processing=FALSE
     ))
   
   ## Up diff table
-  output$DataDiffup <- renderDataTable(
+  output$DataDiffup <- DT::renderDataTable(
     datatable(dataDiff()$up,rownames = FALSE),
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
                    pageLength = 10,scrollX=TRUE, processing=FALSE
     ))
   
   ## Down diff table
-  output$DataDiffdown <- renderDataTable(
+  output$DataDiffdown <- DT::renderDataTable(
     datatable(dataDiff()$down,rownames = FALSE),
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
                    pageLength = 10,scrollX=TRUE, processing=FALSE
@@ -1374,10 +1372,10 @@ shinyServer(function(input, output,session) {
     {
       
       tabBox(width = NULL, selected = "Significant",
-             tabPanel("Significant",dataTableOutput("DataDiffsignificant")),
-             tabPanel("Complete",dataTableOutput("DataDiffcomplete")),
-             tabPanel("Up",dataTableOutput("DataDiffup")),
-             tabPanel("Down",dataTableOutput("DataDiffdown"))
+             tabPanel("Significant",DT::dataTableOutput("DataDiffsignificant")),
+             tabPanel("Complete",DT::dataTableOutput("DataDiffcomplete")),
+             tabPanel("Up",DT::dataTableOutput("DataDiffup")),
+             tabPanel("Down",DT::dataTableOutput("DataDiffdown"))
              
       )
     }
@@ -1512,14 +1510,14 @@ shinyServer(function(input, output,session) {
   
   
   ## Regression coefficients Table
-  output$lmRegScatter <- renderDataTable(
+  output$lmRegScatter <- DT::renderDataTable(
     Plot_Visu_Scatterplot(input,ResDiffAnal(),lmEst=TRUE)$regCoef, 
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
                    pageLength = 10,scrollX=TRUE, processing=FALSE
     ))
   
   ## Correlation coefficients Table
-  output$CorTable <- renderDataTable(
+  output$CorTable <- DT::renderDataTable(
     Plot_Visu_Scatterplot(input,ResDiffAnal(),CorEst=TRUE)$cor.est, 
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
                    pageLength = 10,scrollX=TRUE, processing=FALSE
@@ -1562,12 +1560,12 @@ shinyServer(function(input, output,session) {
   })
   
   
-  output$Diversitytable <- renderDataTable({
+  output$Diversitytable <- DT::renderDataTable(
+    datatable({
     resDiff = ResDiffAnal()
     tmp = Plot_Visu_Diversity(input,resDiff)$dataDiv
     tmp$VarX=NULL; tmp$VarCol=NULL
-    datatable(tmp[,c(4,5,1,2,3)],rownames= FALSE)
-  },
+    tmp[,c(4,5,1,2,3)]},rownames= FALSE),
   options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
                  pageLength = 10,scrollX=TRUE, processing=FALSE
   ))
