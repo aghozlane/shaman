@@ -195,7 +195,7 @@ body <- dashboardBody(
                      div(style="width:100% ; max-width: 1200px",
                          
                          tabBox(title="Download / Install SHAMAN", id="tabset1", width=NULL,
-                                tabPanel("Docker install", tags$script(type="text/javascript", language="javascript", src="google-analytics.js"),
+                                tabPanel("Docker install",
                                 p("Docker install is the easiest way to use SHAMAN locally."),
                                 p("- Install docker on ubuntu (Linux):",a("here",href="https://docs.docker.com/engine/installation/linux/ubuntulinux/")),
                                 p("- Install docker on Windows and Mac:"),
@@ -211,7 +211,7 @@ body <- dashboardBody(
                                 p("- Docker update after an update of SHAMAN:"),
                                 wellPanel("docker pull aghozlane/shaman")
                                 ),
-                                tabPanel("R install (RC)", tags$script(type="text/javascript", language="javascript", src="google-analytics.js"),
+                                tabPanel("R install (RC)",
                                          p("SHAMAN is available for R>3.1.2. The installation, download and execution can all be performed with a small R script :",style = "font-family: 'times'; font-si16pt"),
                                          wellPanel(div(style = 'width: 400px',"# Load shiny packages",br(),
                                            "if(!require('shiny')){",br(),"  install.packages('shiny')",br(),"  library(shiny)",br(),"}",br(),
