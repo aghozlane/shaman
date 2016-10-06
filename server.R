@@ -405,7 +405,7 @@ shinyServer(function(input, output,session) {
     if (is.null(inFile)) return(NULL)
     
     
-    data = read.table(inFile$datapath,sep="\t",header=TRUE)
+    data = read.table(inFile$datapath,sep=septarget,header=TRUE)
     data = as.data.frame(data)
     ## Replace "-" by "."
     ind_num = which(sapply(data,is.numeric))
@@ -1898,9 +1898,5 @@ shinyServer(function(input, output,session) {
       
       data.frame(refs)
     }
-  }, sanitize.text.function = function(x) x)
-  
-  
-  
-  
+  }, sanitize.text.function = function(x) x)  
 })
