@@ -269,7 +269,7 @@ Plot_Visu_Scatterplot<- function(input,resDiff,export=FALSE,lmEst = FALSE,CorEst
       size_var = if (PointSize == "None" || is.null(PointSize))  1 else data[,PointSize]
       
       plot = ggplot(data, aes(x = x_var, y = y_var)) + geom_point(aes(color=col_var,size =size_var,shape = symbol_var),alpha=0.7) +theme_bw()
-      plot = plot + geom_smooth(method="lm")
+      if(input$AddRegScatter) plot = plot + geom_smooth(method="lm")
       if(input$SizeLabelScatter!=0) plot = plot + geom_text(aes(label=rownames(data),color=col_var,size=as.numeric(input$SizeLabelScatter)/10),vjust = 0,nudge_y =0.05)
       plot = plot + xlab(Xvar) + ylab(Yvar)
       
@@ -333,10 +333,10 @@ Plot_Visu_Diversity <- function(input,resDiff,ForScatter=FALSE){
   if(nrow(counts_tmp_combined)>0 && !is.null(counts_tmp_combined) && !is.null(targetInt))
   { 
     sqrt.nb = sqrt(table(targetInt$AllVar))
-    
+    # save(counts_tmp_combined,targetInt,file = "testDiv.RData")
     alpha <- tapply(TaxoNumber(counts_tmp_combined), targetInt$AllVar, mean)
-    ci.alpha.down = pmax(alpha - 1.96*tapply(TaxoNumber(counts_tmp_combined), targetInt$AllVar, mean)/sqrt.nb,0)
-    ci.alpha.up = alpha + 1.96*tapply(TaxoNumber(counts_tmp_combined), targetInt$AllVar, mean)/sqrt.nb
+    ci.alpha.down = pmax(alpha - 1.96*tapply(TaxoNumber(counts_tmp_combined), targetInt$AllVar, sd)/sqrt.nb,0)
+    ci.alpha.up = alpha + 1.96*tapply(TaxoNumber(counts_tmp_combined), targetInt$AllVar, sd)/sqrt.nb
     
     shan <- tapply(diversity(counts_tmp_combined, index = "shannon"), targetInt$AllVar, mean)
     ci.shan.down = pmax(shan - 1.96*tapply(diversity(counts_tmp_combined, index = "shannon"), targetInt$AllVar, sd)/sqrt.nb,0)
@@ -413,7 +413,7 @@ Plot_Visu_Diversity <- function(input,resDiff,ForScatter=FALSE){
     ## Get interactivity
     #ff = ggplotly(gg)
   }
-  print(dataTmp)
+  
   return(list(plot=gg,dataDiv = dataTmp))
   
 }

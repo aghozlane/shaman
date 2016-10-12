@@ -13,14 +13,14 @@ if(!require(shinyjs)){
   install.packages("shinyjs")
   library(shinyjs)  
 }
-
+library(plotly)
 function(request) {
 sidebar <- dashboardSidebar(
   useShinyjs(),
   inlineCSS(appCSS),
-  tags$head(
-    tags$script(src = "custom.js")
-  ),
+#   tags$head(
+#     tags$script(src = "custom.js")
+#   ),
   div(id = "loading-content-bar",
       p()),
   div(
@@ -64,7 +64,7 @@ body <- dashboardBody(
                               ". SHAMAN robustly identifies the differential abundant genera with the Generalized Linear Model implemented in DESeq2", a("[Love 2014]", href="http://www.ncbi.nlm.nih.gov/pubmed/25516281"),".
                               Resulting p-values are adjusted according to the Benjamini and Hochberg procedure [Benjamini and Hochberg 1995].
                               The PCOA is performed with the", a("ade4 R package",href="http://pbil.univ-lyon1.fr/ade4/"), "and plots are generated with", a("ggplot2",href="http://ggplot2.org/"), "or", a("D3.js packages",href="http://d3js.org/"), ".
-                              A presentation about SHAMAN is available", a("here.",target="_blank",href="shaman_presentation.pdf"), br(),
+                              A presentation about SHAMAN is available", a("here",target="_blank",href="shaman_presentation.pdf")," and a poster", a("here.",target="_blank",href="shaman_poster.pdf"), br(),
                               "SHAMAN is compatible with standard formats for metagenomic analysis. We also provide a complete pipeline for OTU picking and annotation named",a("MASQUE", href="https://github.com/aghozlane/masque") ,"used in production at Institut Pasteur.",style = "font-family: 'times'; font-si16pt"),
                             p("Hereafter is the global workflow of the SHAMAN application:"),
                             div(img(src = "Workflow.png",width = "100%",style="max-width: 600px"),Align="center")
@@ -90,6 +90,8 @@ body <- dashboardBody(
             box(
               title = "What's new in SHAMAN", width = NULL, status = "primary",
               div(style = 'overflow-y: scroll; max-height: 400px',
+                  addNews("Oct 12th 2016","Filtering step and bugs fix","You can now apply a filter on the features according to their abundance 
+                          and the number of samples. Bugs on confidence intervals for the alpha diversity have been fixed"),
                   addNews("Sep 21th 2016","SHAMAN on docker","The install of SHAMAN is now available with docker.
                            The R install is also updated and passed in release candidate state."),
                   addNews("Sep 14th 2016","Download and install SHAMAN","You can install SHAMAN (beta)."),
@@ -305,47 +307,73 @@ body <- dashboardBody(
        
               column(width=7,
                 box(title="Options",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
-                    p(strong("Linear model options"),Align ="center"),
-                    hr(),
-                  fluidRow(
-                    column(width=3,
-                      radioButtons("TransType",h6(strong("Type of transformation")),choices = c("VST"="VST","rlog"="rlog"))
-                    ), 
-                    column(width=3,
-                      radioButtons("IndFiltering",h6(strong("Independent filtering")),choices = c("True"=TRUE,"False"=FALSE))
-                    ),
-                    column(width=3,
-                      radioButtons("AdjMeth",h6(strong("p-value adjustement")),choices = c("BH"="BH","BY"="BY"))
-                    ),
-                    column(width=3,
-                      textInput("AlphaVal",h6(strong("Level of significance")),value=0.05)
+                    tabBox(title="", id="tabsetOption", width=NULL,
+                           tabPanel("Statistical model", 
+                                    fluidRow(
+                                      column(width=3,
+                                             radioButtons("TransType",h6(strong("Type of transformation")),choices = c("VST"="VST","rlog"="rlog"))
+                                      ), 
+                                      column(width=3,
+                                             radioButtons("IndFiltering",h6(strong("Independent filtering")),choices = c("True"=TRUE,"False"=FALSE))
+                                      ),
+                                      column(width=3,
+                                             radioButtons("AdjMeth",h6(strong("p-value adjustement")),choices = c("BH"="BH","BY"="BY"))
+                                      ),
+                                      column(width=3,
+                                             textInput("AlphaVal",h6(strong("Level of significance")),value=0.05)
+                                      )
+                                    ),
+                                    fluidRow(
+                                      column(width=3,
+                                             radioButtons("CooksCutOff",h6(strong("Cooks cut-off")),choices = c("Auto"='Auto',"No cut-off"=Inf,"Value"="val")),
+                                             conditionalPanel(condition="input.CooksCutOff=='val'",textInput("CutOffVal",h6("Cut-off:"),value=0))
+                                      ),
+                                      
+                                      column(width=3,
+                                             radioButtons("locfunc",h6(strong("Local function")),choices = c("Median"="median","Shorth"="shorth"))
+                                      ),  
+                                      column(width=3,
+                                             radioButtons("fitType",h6(strong("Relationship")),choices = c("Parametric"="parametric","Local"="local"))
+                                      )
+                                      # column(width=3,uiOutput("RefSelect"))
+                                    )
+                           ),
+                           tabPanel("Normalization", 
+                                    fluidRow(
+                                      column(width=3,
+                                             selectizeInput("AccountForNA", h6(strong("Normalization method")),choices = c("Usual"="All", "Remove null counts"="NonNull", "Weighted"="Weighted"),selected = "NonNull")),
+                                      column(width=3,
+                                             uiOutput("SelectVarNorm")),
+                                      column(width=3,
+                                             fileInput('fileSizeFactors', h6(strong('Define your own size factors')),width="100%")
+                                      ),
+                                      column(width=3, selectInput("sepsize", h6(strong("Separator:")), c("Tab" = "\t", "," = "Comma", "Semicolon" = ";"))),
+                                      column(width=3,br(),htmlOutput("InfoSizeFactor"))
+                                    )
+                           ),
+                           tabPanel("Filtering",
+                                    fluidRow(
+                                      tags$div(title="If your count matrix is very sparse, you can add a filter on your data",
+                                               column(width=3,checkboxInput("AddFilter","Add a filtering step",value = FALSE))
+                                      )
+                                    ),
+                                    fluidRow(
+                                      conditionalPanel(condition="input.AddFilter",
+                                              column(width=6, 
+                                                     plotlyOutput("Plot_ThSamp"),
+                                                     column(width=10,uiOutput("ThSamp"),offset = 1)
+                                                     ),
+                                              column(width=6,
+                                                     plotlyOutput("Plot_ThAb"),
+                                                     column(width=10,uiOutput("ThAb"),offset = 1)
+                                                     ),
+                                              column(width=12,
+                                                     scatterD3Output("Plot_Scatter_Filter")
+                                              )
+                                      )
+                                    )
+                           )
                     )
-                  ),
-                  fluidRow(
-                    column(width=3,
-                           radioButtons("CooksCutOff",h6(strong("Cooks cut-off")),choices = c("Auto"='Auto',"No cut-off"=Inf,"Value"="val")),
-                           conditionalPanel(condition="input.CooksCutOff=='val'",textInput("CutOffVal",h6("Cut-off:"),value=0))
-                    ),
-                    
-                    column(width=3,
-                      radioButtons("locfunc",h6(strong("Local function")),choices = c("Median"="median","Shorth"="shorth"))
-                    ),  
-                    column(width=3,
-                      radioButtons("fitType",h6(strong("Relationship")),choices = c("Parametric"="parametric","Local"="local"))
-                    )
-                    # column(width=3,uiOutput("RefSelect"))
-                  ),
-                  p(strong("Options for the normalization step"),Align ="center"),
-                  hr(),
-                  fluidRow(
-                    column(width=3,checkboxInput("AccountForNA","Compute geometric mean without 0",value=TRUE)),
-                    column(width=3,uiOutput("SelectVarNorm")),
-                    column(width=3,
-                        fileInput('fileSizeFactors', h6(strong('Define your own size factors')),width="100%")
-                    ),
-                    column(width=3, selectInput("sepsize", h6(strong("Separator:")), c("Tab" = "\t", "," = "Comma", "Semicolon" = ";"))),
-                    column(width=3,br(),htmlOutput("InfoSizeFactor"))
-                  )
                 ),
                 fluidRow(
                 column(width=8,

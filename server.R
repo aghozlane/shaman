@@ -1,4 +1,5 @@
 source('LoadPackages.R')
+library(plotly)
 
 shinyServer(function(input, output,session) {
 
@@ -166,7 +167,7 @@ shinyServer(function(input, output,session) {
   
   
   ## Merge counts data
-  dataMergeCounts <-reactive({ 
+  dataMergeCounts <-reactive({
     input$RunDESeq
     
     counts = NULL
@@ -175,15 +176,24 @@ shinyServer(function(input, output,session) {
     CT_noNorm = NULL
     CT_Norm = NULL
     #labeled= NULL
-    data = dataInput()$data
+    data = isolate(dataInput()$data)
     target = isolate(dataInputTarget()$target)
     taxo = isolate(input$TaxoSelect)
     
+    withProgress(
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target)) 
     {
-      design = GetDesign(input)
-      tmp = isolate(withProgress(GetCountsMerge(input,data,taxo,target,design),message="Merging the counts ..."))
+      design = GetDesign(isolate(input))
+      tmp = isolate(GetCountsMerge(input,data,taxo,target,design))
       counts = tmp$counts
+      
+      ## Filtering the counts
+      if(isolate(input$AddFilter) && !is.null(isolate(input$SliderThSamp)) && !is.null(isolate(input$SliderThAb)))
+      {
+        ind.filter =Filtered_feature(counts,isolate(input$SliderThSamp),isolate(input$SliderThAb))$ind
+        counts = counts[-ind.filter,]
+      }
+      
       CheckTarget = tmp$CheckTarget
       #target = tmp$target
       #labeled = tmp$labeled
@@ -193,6 +203,7 @@ shinyServer(function(input, output,session) {
       CT_noNorm = tmp$CT_noNorm
       CT_Norm = tmp$CT_Norm
     }
+    ,message="Merging the counts ...")
     return(list(counts=counts,CheckTarget=CheckTarget,normFactors=normFactors,CT_noNorm=CT_noNorm, CT_Norm=CT_Norm))
     #return(list(counts=counts,target=target,labeled=labeled,normFactors=normFactors,CT_noNorm=CT_noNorm))
   })
@@ -258,7 +269,60 @@ shinyServer(function(input, output,session) {
   })
   
   
+  ####### Filtering the counts (sliders)
   
+  output$ThAb <- renderUI({
+    input$AddFilter
+    
+    res = NULL
+    counts = isolate(dataMergeCounts()$counts)
+    tot = rowSums(counts)
+    tmp = SelectThreshAb(counts,lambda=max(round(sum(counts)/nrow(counts)*0.05),min(tot)+1),graph=FALSE)
+    
+    res = sliderInput("SliderThAb","Threshold on the total abundance (in log)",min=0,max=round(max(log(tot+1)),1),value = log(tmp+1))
+    return(res)
+  })
+  
+  
+  output$ThSamp <- renderUI({
+    input$AddFilter
+    
+    res = NULL
+    counts = isolate(dataMergeCounts()$counts)
+    counts.bin = as.matrix(counts)
+    counts.bin[which(counts>0)] = 1
+    nbSampByFeat = rowSums(counts.bin)
+    
+    ## Default value
+    val = round(max(nbSampByFeat)*0.2)
+    
+    res = sliderInput("SliderThSamp","Threshold on the minimal number of samples",min=0,max=max(nbSampByFeat),value = val)
+    return(res)
+  })
+  
+  
+  ## Plot for the filtering step$
+  
+  # plot_filter(counts,th.samp,th.abund,type="Scatter")
+  
+  output$Plot_ThAb <- renderPlotly({
+    counts = dataMergeCounts()$counts
+    ## output of plot_filter is ggplot class
+    plot_filter(counts,input$SliderThSamp,input$SliderThAb,type="Abundance")
+    
+  })
+    
+  output$Plot_ThSamp <- renderPlotly({
+    counts = dataMergeCounts()$counts
+    ## output of plot_filter is ggplot class
+    plot_filter(counts,input$SliderThSamp,input$SliderThAb,type="Samples")
+  })
+  
+  output$Plot_Scatter_Filter <- renderScatterD3({
+    counts = dataMergeCounts()$counts
+    ## output of plot_filter is ggplot class
+    plot_filter(counts,input$SliderThSamp,input$SliderThAb,type="Scatter")
+  })
   #####################################################
   ##
   ##                DYNAMIC MENU
@@ -545,8 +609,8 @@ shinyServer(function(input, output,session) {
   
   ## Box for merged counts
   output$BoxCountsMerge <- renderUI({
-    
-    counts = dataMergeCounts()$counts
+    input$RunDESeq
+    counts = isolate(dataMergeCounts()$counts)
     taxo = input$TaxoSelect
     
     if(!is.null(counts) && taxo != "...")
@@ -1047,13 +1111,13 @@ shinyServer(function(input, output,session) {
   
   # Infobox taxo
   output$InfoTaxo <- renderInfoBox({
+    input$RunDESeq
+    data = isolate(dataInput()$data)
+    taxo = isolate(input$TaxoSelect)
     
-    data = dataInput()$data
-    taxo = input$TaxoSelect
-    
-    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="...") 
+    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(isolate(taxo)) && taxo!="...") 
     {
-      counts = dataMergeCounts()$counts
+      counts = isolate(dataMergeCounts()$counts)
       nfeature = nrow(counts)
       infoBox(h6(strong("Taxonomy")), subtitle = h6(paste(taxo, ", nb features: ",nfeature,sep="")), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
     }
@@ -1433,10 +1497,8 @@ shinyServer(function(input, output,session) {
     target = dataInputTarget()$target
     taxo = input$TaxoSelect
     if(!is.null(target) && taxo!="...") res = actionButton("RunDESeq",strong("Run analysis"),icon = icon("caret-right"))
-    
     return(res)
   })
-  
   
   
   
@@ -1898,5 +1960,55 @@ shinyServer(function(input, output,session) {
       
       data.frame(refs)
     }
-  }, sanitize.text.function = function(x) x)  
+  }, sanitize.text.function = function(x) x)
+  
+  
+  #####################################################
+  ##
+  ##      Disable/Enable actions
+  ##
+  #####################################################
+  
+  
+  ## Disable the actionbutton if the number of feature is lower than 2
+  observe({
+  
+    counts = dataMergeCounts()$counts
+    if(input$AddFilter && !is.null(input$SliderThSamp) && !is.null(input$SliderThAb))
+    {
+      ind.filter =Filtered_feature(counts,input$SliderThSamp,input$SliderThAb)$ind
+      counts = counts[-ind.filter,]
+    }
+
+    if (!is.null(counts)){
+      if (nrow(counts)>=2){
+        shinyjs::enable("RunDESeq")
+      }
+      if (nrow(counts)<2) {
+        shinyjs::disable("RunDESeq")
+      }
+    } 
+    if (is.null(counts)) {
+      shinyjs::disable("RunDESeq")
+    }
+  })
+  
+  
+  observe({
+    taxo = input$TaxoSelect
+    target=dataInputTarget()$target
+    
+    if(is.null(target) || taxo =="...") 
+    {
+      shinyjs::disable("AddFilter")
+    } else {
+      shinyjs::enable("AddFilter")
+    }
+  })
+  
+  
+
+  
 })
+
+

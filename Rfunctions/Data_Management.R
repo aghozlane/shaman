@@ -195,7 +195,7 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
       CT=CT_int
     } else CT = CT[,ind]
     
-    #save.image("test.RData")
+    
     ## Order CT according to the target
     CT = OrderCounts(counts=CT,labels=labels)$CountsOrder
     CT_noNorm = CT
@@ -207,8 +207,9 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
     if(is.null(VarNorm)){
       ## Counts normalisation
       ## Normalisation with or without 0
-      if(input$AccountForNA || RowProd==0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT))
-      if(!input$AccountForNA && RowProd!=0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)))
+      if(input$AccountForNA=="NonNull" || RowProd==0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT))
+      if(input$AccountForNA=="All" && RowProd!=0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)))
+      if(input$AccountForNA=="Weighted" && input$AccountForNA!="NonNull" ) {dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT)); sizeFactors(dds) = w.sizefactor(CT)}
       normFactors = sizeFactors(dds)
       
     } else{
@@ -225,13 +226,16 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
           CT_tmp = removeNulCounts(CT_tmp) 
           target_tmp = data.frame(labels = rownames(target)[indgrp])
           dds_tmp <- DESeqDataSetFromMatrix(countData=CT_tmp, colData=target_tmp, design=~labels)
-          if(input$AccountForNA) dds_tmp = estimateSizeFactors(dds_tmp,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT_tmp))
-          if(!input$AccountForNA) dds_tmp = estimateSizeFactors(dds_tmp,locfunc=eval(as.name(input$locfunc)))
-          normFactors[indgrp] = sizeFactors(dds_tmp)
+          if(input$AccountForNA=="NonNull") {dds_tmp = estimateSizeFactors(dds_tmp,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT_tmp)); normFactors[indgrp] = sizeFactors(dds_tmp)}
+          if(input$AccountForNA=="All") {dds_tmp = estimateSizeFactors(dds_tmp,locfunc=eval(as.name(input$locfunc))); normFactors[indgrp] = sizeFactors(dds_tmp)}
+          if(input$AccountForNA=="Weighted" && input$AccountForNA!="NonNull" ) {dds_tmp = estimateSizeFactors(dds_tmp,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT_tmp)); normFactors[indgrp] = w.sizefactor(CT_tmp)}
+          
         }
       } else{
-        if(input$AccountForNA || RowProd==0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT))
-        if(!input$AccountForNA && RowProd!=0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)))
+        if(input$AccountForNA=="NonNull" || RowProd==0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT))
+        if(input$AccountForNA=="All" && RowProd!=0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)))
+        if(input$AccountForNA=="Weighted" && input$AccountForNA!="NonNull" ) {dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT)); sizeFactors(dds) = w.sizefactor(CT)}
+        
         normFactors = sizeFactors(dds)
       }
       
@@ -240,7 +244,7 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
     
     ## Keep normalized OTU table
     CT_Norm = counts(dds, normalized=TRUE)
-    #save(CT_Norm,dds,CT,taxo,taxoSelect,file="test.RData")
+    
     # Only interesting OTU
     # merged_table = merge(CT, taxo[order(rownames(CT)),], by="row.names")
     merged_table = merge(CT, taxo, by="row.names")
@@ -254,7 +258,7 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
     #       indOTU_annot = which(rownames(CT)%in%rownames(taxo))
     #       counts_annot = CT[indOTU_annot[ordOTU],]
     ## Aggregate matrix
-    if(taxoSelect=="OTU/Gene") counts = counts_annot
+    if(taxoSelect=="OTU/Gene" || input$FileFormat=="fileBiom") counts = counts_annot
     else{
       if(input$TypeTable == "MGS"){
         taxoS = taxo[,input$TypeTable]
@@ -294,6 +298,62 @@ GeoMeansCT <- function(CT)
   return(gm)
 }
 
+## Get weighted size factors
+w.sizefactor <- function(CT)
+{
+  sf = c()
+  CT = as.matrix(CT)
+  nbsamp = ncol(CT)
+  CT[which(CT<1)]=NA
+  gm = apply(CT,1,geometric.mean,na.rm=TRUE)
+  weights = nbsamp - apply(CT,1,FUN=function(x){tmp =length(which(is.na(x))) ;return(tmp)})
+  weights_tmp = weights
+  
+  for(i in 1:ncol(CT))
+  {
+    ind = which(is.na(CT[,i]))
+    gm_tmp = gm
+    tmp = CT[,i]
+    if(length(ind)>0) {tmp = CT[-ind,i]; gm_tmp = gm[-ind]; weights_tmp = weights[-ind]}
+    sf[i] = w.median(tmp/gm_tmp,weights_tmp, na.rm = TRUE)
+  }
+  names(sf) = colnames(CT)
+  return(sf)
+}
+
+## Calculated the weighted median
+w.median <- function (x, w, na.rm = TRUE) 
+{
+  if (missing(w)) 
+    w <- rep.int(1, length(x))
+  else {
+    if (length(w) != length(x)) 
+      stop("'x' and 'w' must have the same length")
+    if (any(is.na(w))) 
+      stop("NA weights not allowed")
+    if (any(w < 0)) 
+      stop("Negative weights not allowed")
+  }
+  if (is.integer(w)) 
+    w <- as.numeric(w)
+  if (na.rm) {
+    w <- w[i <- !is.na(x)]
+    x <- x[i]
+  }
+  if (all(w == 0)) {
+    warning("All weights are zero")
+    return(NA)
+  }
+  o <- order(x)
+  x <- x[o]
+  w <- w[o]
+  p <- cumsum(w)/sum(w)
+  n <- sum(p < 0.5)
+  if (p[n + 1] > 0.5) 
+    x[n + 1]
+  else (x[n + 1] + x[n + 2])/2
+}
+
 
 ## Order the counts 
 OrderCounts <- function(counts,normFactors=NULL,labels)
@@ -309,5 +369,173 @@ OrderCounts <- function(counts,normFactors=NULL,labels)
   }
   colnames(CountsOrder) = labels
   return(list(CountsOrder=CountsOrder,normFactorsOrder = normFactorsOrder))
+}
+
+
+## Order the counts 
+Filtered_feature <- function(counts,th.samp,th.abund)
+{
+  ind = NULL
+  
+  ## Total abundance over samples
+  Tot_abundance = log(rowSums(counts)+1)
+  ind.ab = which(Tot_abundance<=th.abund)
+  
+  ## Get the numbre of non zero sample
+  counts.bin = as.matrix(counts)
+  counts.bin[which(counts>0)] = 1
+  nbSampByFeat = rowSums(counts.bin)
+  
+  ind.samp = which(nbSampByFeat<=th.samp)
+  
+  ind = unique(c(ind.samp,ind.ab))
+  
+  return(list(ind=ind,Tot_abundance=Tot_abundance,ind.ab=ind.ab,counts.bin=counts.bin,ind.samp=ind.samp,nbSampByFeat=nbSampByFeat))
+}
+
+
+
+## Order the counts 
+plot_filter <- function(counts,th.samp,th.abund,type="Scatter")
+{
+  res = NULL
+  
+  ## Initial plot for plotly
+  if(type == 'Abundance' || type == 'Samples'){ 
+    dataNull = data.frame(x=c(0,0),y=c(1,2),col=c("white","white"))
+    res = ggplotly(ggplot(dataNull,aes(x=x,y=y))+geom_point(aes(colour = col))+theme_bw()+ scale_color_manual(values = "white"))
+  }
+  
+  res_filter = Filtered_feature(counts,th.samp,th.abund)
+  if(type == 'Abundance' && !is.null(th.samp) && !is.null(th.abund) )
+  {
+    state = rep("Kept",nrow(counts))
+    ## Total abundance over samples
+    Tot_abundance = res_filter$Tot_abundance
+    
+    ind = res_filter$ind.ab
+    ord = order(Tot_abundance,decreasing = FALSE)
+    
+    ## Modify the state
+    state[ind] = "Removed"
+    
+    ## Create the data.frame for ggplot
+    df = data.frame(lab = rownames(counts)[ord],y = Tot_abundance[ord],State=state[ord])
+    df$lab = factor(df$lab,levels = rownames(counts)[ord])
+    df$State = factor(df$State,levels = c("Kept","Removed"))
+    
+    ## plot the results
+    gg = ggplot(df,aes(lab,y,fill=State)) + geom_bar(stat='identity') + theme_bw() +theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.5))
+    gg = gg + geom_hline( yintercept = th.abund,linetype = "longdash")
+    gg = gg + scale_fill_manual(values = c('springgreen3','firebrick'))
+    if(!"Kept"%in%df$State ) gg = gg + scale_fill_manual(values = 'firebrick')
+    if(!"Removed"%in%df$State ) gg = gg + scale_fill_manual(values = 'springgreen3')
+    
+    res = ggplotly(gg)
+  }
+  
+  if(type == 'Samples' && !is.null(th.samp) && !is.null(th.abund))
+  {
+    state = rep("Kept",nrow(counts))
+    
+    ## Get the number of non zero sample
+    nbSampByFeat = res_filter$nbSampByFeat
+    ind = res_filter$ind.samp
+    ord = order(nbSampByFeat,decreasing = FALSE)
+    
+    state[ind] = "Removed"
+    
+    df = data.frame(lab = rownames(counts)[ord],y = nbSampByFeat[ord],State=state[ord])
+    df$lab = factor(df$lab,levels = rownames(counts)[ord])
+    df$State = factor(df$State,levels = c("Kept","Removed"))
+    ## plot the results
+    
+    gg = ggplot(df,aes(lab,y,fill=State)) + geom_bar(stat='identity') + theme_bw() +theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.5))
+    gg = gg + geom_hline( yintercept = th.samp,linetype = "longdash")
+    gg = gg + scale_fill_manual(values = c('springgreen3','firebrick'))  
+    if(!"Kept"%in%df$State ) gg = gg + scale_fill_manual(values = 'firebrick')
+    if(!"Removed"%in%df$State ) gg = gg + scale_fill_manual(values = 'springgreen3')
+    
+    res = ggplotly(gg)
+    
+  }
+  
+  if(type == 'Scatter')
+  {
+    state = rep("Kept",nrow(counts))
+    
+    ## Get the number of non zero sample
+    nbSampByFeat = res_filter$nbSampByFeat
+    Tot_abundance = res_filter$Tot_abundance
+    
+    ## Get the selected features (under the thresholds)
+    ind = res_filter$ind
+    
+    ## Modify the state
+    state[ind] = "Removed"
+    
+    ## Create the data.frame for ggplot
+    df = data.frame(lab =rownames(counts), y = nbSampByFeat,x = Tot_abundance,State=state)
+    df$lab = factor(df$lab,levels = rownames(counts))
+    df$State = factor(df$State,levels = c("Kept","Removed"))
+    
+    x_var = df$x
+    y_var = df$y
+    State = df$State
+    PointSize = 2
+    colors_scat = list(Kept="#00CD66",Removed="#b22222")
+    print(State)
+    print(colors_scat)
+    print(head(df))
+    res = scatterD3(x = x_var,
+                     y = y_var,
+                     lab = rownames(df),
+                     xlab = "Abundance in log",
+                     ylab = "Number of samples",
+                     col_var = State,
+                     colors = colors_scat,
+                     size_lab = PointSize,
+                     key_var = rownames(df),
+                     point_opacity = 0.7,
+                     transitions = TRUE)
+    
+    
+#     gg = ggplot(df,aes(x,y,color=State,group = lab)) + geom_point() + theme_bw()
+#     gg = gg + geom_vline( xintercept = th.samp,linetype = "longdash")
+#     gg = gg + geom_hline( yintercept = th.abund,linetype = "longdash")
+#     gg = gg + scale_color_manual(values = c('springgreen3','firebrick'))
+#     ggplotly(gg)
+#     return(gg)
+  }
+  
+  return(res)
+}
+
+
+
+######################################################
+## NAME: SelectThreshAb 
+##
+## INPUT:
+##    infile : data matrix (counts, rows: taxo)
+##    lambda : Tuning parameter (default is 500)
+##
+## OUTPUT:
+##    Cut-off value 
+##
+######################################################
+
+SelectThreshAb <- function(infile,lambda=500,graph=TRUE){
+  
+  rs <- rowSums(infile)
+  test_Filtre <- sapply(c(min(rs):lambda),FUN=function(x) table(rs>x))
+  x <- c(min(rs):lambda)
+  reslm <- lm(test_Filtre[1,]~x)$coefficients
+  val <- which(test_Filtre[1,]>reslm[1])[1]
+  if (graph==TRUE){
+    plot(test_Filtre[1,],ylab="Nb especes avec moins de x comptages sur tous les echantillons",xlab="x")
+    abline(v=val,col="red")
+  }
+  return(val)
 }
 
