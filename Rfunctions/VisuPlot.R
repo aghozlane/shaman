@@ -529,7 +529,7 @@ GetDataToPlot <- function(input,resDiff,VarInt,ind_taxo,aggregate=TRUE,rarefy=FA
       
       ## Create the variable to plot
       targetInt = as.data.frame(target[,VarInt])
-      rownames(targetInt)=target[,1]  
+      rownames(targetInt)=rownames(target) 
       ## Combining the Varint
       if(length(VarInt)>1){targetInt$AllVar = apply(targetInt,1,paste, collapse = "-"); targetInt$AllVar = factor(targetInt$AllVar,levels =  expand.grid2.list(list.val))}
       if(length(VarInt)<=1){targetInt$AllVar = target[,VarInt]; targetInt$AllVar = factor(targetInt$AllVar,levels = val)}
@@ -583,6 +583,128 @@ GetDataToPlot <- function(input,resDiff,VarInt,ind_taxo,aggregate=TRUE,rarefy=FA
   return(list(counts = counts_tmp_combined,targetInt=targetInt,prop=prop_tmp_combined,namesCounts=namesCounts,levelsMod=levelsMod,prop_all=prop_all))
   
   
+}
+
+
+## Create the data table for the tree representation
+CreateTableTree <- function(input,resDiff,CT_Norm_OTU,taxo_table,VarInt,ind_taxo=rownames(CT_Norm_OTU))
+{
+  dds = resDiff$dds
+  val = c()
+  list.val = list()
+  counts = CT_Norm_OTU
+
+  target = resDiff$target
+  counts_tmp_combined = NULL
+  prop_tmp_combined = NULL
+  targetInt = NULL
+  namesCounts = NULL
+  levelsMod = NULL
+  ## Select a subset within the taxonomy level (default is the 12 most abundant)
+  nbKept = length(ind_taxo)
+  Taxonomy = rownames(counts)
+  
+  if (length(VarInt)>0 && nbKept>0)
+  { 
+    
+    ## Get the modalities to keep
+    for(i in 1:length(VarInt))
+    { 
+      ## Replace "-" by "." 
+      target[,VarInt[i]] =  gsub("-",".",target[,VarInt[i]])
+      
+      Tinput = paste("input$","ModVisu",VarInt[i],sep="")
+      expr=parse(text=Tinput)
+      ## All the modalities for all the var of interest
+      val = c(val,eval(expr))
+      list.val[[i]] = eval(expr)
+    }
+    if (!is.null(val) && !is.null(list.val))
+    {
+      
+      ## Create the variable to plot
+      targetInt = as.data.frame(target[,VarInt])
+      rownames(targetInt)=rownames(target)  
+      ## Combining the Varint
+      if(length(VarInt)>1){targetInt$AllVar = apply(targetInt,1,paste, collapse = "-"); targetInt$AllVar = factor(targetInt$AllVar,levels =  expand.grid2.list(list.val))}
+      if(length(VarInt)<=1){targetInt$AllVar = target[,VarInt]; targetInt$AllVar = factor(targetInt$AllVar,levels = val)}
+      colnames(targetInt) = c(VarInt,"AllVar")
+      
+      ## Keep only the selected modalities
+      ind_kept = which(!is.na(targetInt$AllVar))
+      targetInt = targetInt[ind_kept,]
+      
+      levelsMod = levels(targetInt$AllVar)
+      
+      ## Create the counts matrix only for the selected subset
+      counts_tmp = counts[Taxonomy%in%ind_taxo,]
+      counts_tmp = counts_tmp[,colnames(counts_tmp)%in%rownames(targetInt)]
+      
+      ## Be careful transposition !
+      if(nrow(counts_tmp)>0 && nrow(targetInt)>0)
+      { 
+        counts_tmp_combined = aggregate(t(counts_tmp),by=list(targetInt$AllVar),mean)
+        rownames(counts_tmp_combined) = counts_tmp_combined$Group.1
+        namesCounts = counts_tmp_combined$Group.1
+        counts_tmp_combined = as.matrix(counts_tmp_combined[,-1])
+      }
+
+      
+      ## Ordering the counts
+      if(!is.null(counts_tmp_combined))
+      {
+        MeanCounts = apply(counts_tmp_combined,2,mean)
+        ord = order(MeanCounts,decreasing=TRUE)
+        counts_tmp_combined = as.matrix(counts_tmp_combined[,ord])
+      }
+      
+    }
+  }
+  
+  return(list(counts = counts_tmp_combined,targetInt=targetInt,namesCounts=namesCounts,levelsMod=levelsMod))
+  
+  
+}
+
+
+
+
+###########################
+##        Tree
+###########################
+
+## The count matrix must be given at the leaf level.
+
+Plot_Visu_Tree <- function(input,resDiff,CT_Norm_OTU,taxo_table)
+{
+  
+  res = NULL
+  ## Get Input for BarPlot
+  VarInt = input$VisuVarInt
+  ind_taxo = input$selectTaxoPlot
+
+  ## Removed column with only 1 modality
+  ind = which(apply(taxo_table,2,FUN = function(x) length(unique(x[!is.na(x)])))==1)
+  if(length(ind)>0) taxo_table = taxo_table[,-ind]
+  # tmp_combined = GetDataToPlot(input,resDiff,VarInt,ind_taxo,CT_Norm_OTU=CT_Norm_OTU)
+  
+  if(nrow(CT_Norm_OTU)>0 && !is.null(CT_Norm_OTU) && nrow(taxo_table)>0 && !is.null(taxo_table))
+  { 
+    tmp = CreateTableTree(input,resDiff,CT_Norm_OTU,taxo_table,VarInt)
+    
+    if(nrow(tmp$counts)>0 && !is.null(tmp$counts))
+    {
+      merge_dat = merge(taxo_table,round(t(tmp$counts)),by="row.names")
+    
+      colnames(merge_dat)[1] = "OTU"
+      levels <- c("OTU", colnames(taxo_table))
+      conditions <- rownames(tmp$counts)
+      nodeFind = input$TaxoTree
+      if(input$TaxoTree=="...") nodeFind = NULL
+      res = treeWeightD3(merge_dat,conditions,levels,nodeFind=nodeFind, height =input$heightVisu+10)
+    }
+  }
+  return(res)
 }
 
 

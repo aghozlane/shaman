@@ -47,8 +47,6 @@ read_rdp <- function(filename, threshold_annot)
 
 
 
-
-
 ## Check the format of the counts table
 CheckCountsTable <- function(counts)
 {
@@ -165,13 +163,15 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
   CT_noNorm = NULL
   normFactors = NULL
   FeatureSize = NULL
+  CT_Norm = NULL
   
   ## Counts and taxo tables
   CT = dataInput$counts
   taxo = dataInput$taxo
+  # save(CT,target,taxo,file="testMerge.RData")
   
   ## Select cols in the target
-  labels = target[,1]
+  labels = rownames(target)
   ind = which(colnames(CT)%in%labels)
   
   ## Get the normalization variable (normalization can be done according to this variable)
@@ -200,10 +200,10 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
     CT = OrderCounts(counts=CT,labels=labels)$CountsOrder
     CT_noNorm = CT
     RowProd = sum(apply(CT_noNorm,1,prod))
-    
+  
     ## Create the dds object
-    dds <- DESeqDataSetFromMatrix(countData=CT, colData=target, design=design)
-    
+    dds <- DESeqDataSetFromMatrix(countData=CT, colData=target, design=design,ignoreRank=TRUE)
+    save(dds,file="testdds.RData")
     if(is.null(VarNorm)){
       ## Counts normalisation
       ## Normalisation with or without 0
@@ -225,7 +225,7 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
           CT_tmp = CT[,indgrp]
           CT_tmp = removeNulCounts(CT_tmp) 
           target_tmp = data.frame(labels = rownames(target)[indgrp])
-          dds_tmp <- DESeqDataSetFromMatrix(countData=CT_tmp, colData=target_tmp, design=~labels)
+          dds_tmp <- DESeqDataSetFromMatrix(countData=CT_tmp, colData=target_tmp, design=~labels,ignoreRank=TRUE)
           if(input$AccountForNA=="NonNull") {dds_tmp = estimateSizeFactors(dds_tmp,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT_tmp)); normFactors[indgrp] = sizeFactors(dds_tmp)}
           if(input$AccountForNA=="All") {dds_tmp = estimateSizeFactors(dds_tmp,locfunc=eval(as.name(input$locfunc))); normFactors[indgrp] = sizeFactors(dds_tmp)}
           if(input$AccountForNA=="Weighted" && input$AccountForNA!="NonNull" ) {dds_tmp = estimateSizeFactors(dds_tmp,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT_tmp)); normFactors[indgrp] = w.sizefactor(CT_tmp)}
@@ -247,9 +247,13 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
     
     # Only interesting OTU
     # merged_table = merge(CT, taxo[order(rownames(CT)),], by="row.names")
+    save(CT,taxo,file="testMerge.RData")
     merged_table = merge(CT, taxo, by="row.names")
+    ## Why ??
     CT = merged_table[,2: (dim(CT)[2]+1)]
     taxo = merged_table[,(dim(CT)[2]+2):dim(merged_table)[2]]
+    ## ???
+    
     rownames(CT) = merged_table[,1]
     rownames(taxo) = merged_table[,1]
     #ordOTU = order(rownames(taxo))
@@ -258,9 +262,9 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
     #       indOTU_annot = which(rownames(CT)%in%rownames(taxo))
     #       counts_annot = CT[indOTU_annot[ordOTU],]
     ## Aggregate matrix
-    if(taxoSelect=="OTU/Gene" || input$FileFormat=="fileBiom") counts = counts_annot
+    if(taxoSelect=="OTU/Gene") counts = counts_annot
     else{
-      if(input$TypeTable == "MGS"){
+      if(input$TypeTable == "MGS" && input$FileFormat!="fileBiom"){
         taxoS = taxo[,input$TypeTable]
         counts = aggregate(counts_annot,by=list(Taxonomy = taxoS),mean)
         rownames(counts)=counts[,1]
@@ -270,7 +274,7 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
         colnames(counts_int)=colnames(counts)
         counts=counts_int
       }
-      if(taxoSelect != "MGS"){
+      if(taxoSelect != "MGS" || input$FileFormat=="fileBiom"){
         #taxoS = taxo[ordOTU,taxoSelect]
         taxoS = taxo[,taxoSelect]
         counts = aggregate(counts_annot,by=list(Taxonomy = taxoS),sum)
@@ -528,6 +532,7 @@ plot_filter <- function(counts,th.samp,th.abund,type="Scatter")
 SelectThreshAb <- function(infile,lambda=500,graph=TRUE){
   
   rs <- rowSums(infile)
+  lambda = max(rs)
   test_Filtre <- sapply(c(min(rs):lambda),FUN=function(x) table(rs>x))
   x <- c(min(rs):lambda)
   reslm <- lm(test_Filtre[1,]~x)$coefficients

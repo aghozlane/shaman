@@ -33,7 +33,9 @@ GetInteraction2 <- function(target)
 ## Get the dds object of DESeq2
 Get_dds_object <- function(input,counts,target,design,normFactorsOTU,CT_noNorm,CT_Norm)
 {
-  dds <- DESeqDataSetFromMatrix(countData=counts, colData=target, design=design)
+  
+  dds <- DESeqDataSetFromMatrix(countData=counts, colData=target, design=design,ignoreRank = TRUE)
+  
   sizeFactors(dds) = normFactorsOTU
   dds <- estimateDispersions(dds, fitType=input$fitType)
   if(as.numeric(R.Version()$major)>=3 && as.numeric(R.Version()$minor) >=1.3){

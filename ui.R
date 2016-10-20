@@ -1,6 +1,11 @@
 options(shiny.sanitize.errors = FALSE)
 source("css/owncss.R")
 source("Rfunctions/Data_Management.R")
+library(treeWeightD3)
+if (!require(scatterD3)) {
+  devtools::install_github('aghozlane/scatterD3')
+  library(scatterD3)
+}
 if(!require(shinydashboard)){
   installed.packages("shinydashboard")
   library(shinydashboard)  
@@ -577,7 +582,7 @@ body <- dashboardBody(
 
             column(width=3,
               box(title = "Select your plot",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = FALSE,collapsed= FALSE,
-                  selectizeInput("PlotVisuSelect","",c("Barplot"="Barplot","Heatmap"="Heatmap","Boxplot"="Boxplot","Scatterplot"="Scatterplot","Diversity"="Diversity","Rarefaction"="Rarefaction"),selected = "Barplot")
+                  selectizeInput("PlotVisuSelect","",c("Barplot"="Barplot","Heatmap"="Heatmap","Boxplot"="Boxplot","Tree"="Tree","Scatterplot"="Scatterplot","Diversity"="Diversity","Rarefaction"="Rarefaction"),selected = "Barplot")
               ),
 
 
@@ -592,6 +597,8 @@ body <- dashboardBody(
                                    h5(strong("Select the modalities")),
                                    uiOutput("ModVisu")
                   ),
+                  conditionalPanel(condition="input.PlotVisuSelect=='Tree' ",
+                                   uiOutput("VarIntVisuTree")),
                   conditionalPanel(condition="input.PlotVisuSelect=='Scatterplot' ",
                                    uiOutput("VarIntVisuScatter"),
                                    radioButtons("TransDataScatter","Data transformation",c("Log2 +1" = "log2","None" = "none"),inline=TRUE),
@@ -599,14 +606,14 @@ body <- dashboardBody(
                                    radioButtons("CorMeth","Correlation method",c("Pearson" = "pearson","Spearman" = "spearman"),inline=TRUE),
                                    checkboxInput("AddRegScatter","Add regression line",FALSE)
                   ),                 
-                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && input.PlotVisuSelect!='Scatterplot'",
+                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && input.PlotVisuSelect!='Scatterplot' && input.PlotVisuSelect!='Tree'",
                                    radioButtons("SelectSpecifTaxo","Select the features",c("Most abundant"="Most","All"="All", "Differential features" = "Diff", "Non differential features" = "NoDiff"))
                   ),
-                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && input.PlotVisuSelect!='Scatterplot' && (input.SelectSpecifTaxo=='Diff' || input.SelectSpecifTaxo=='NoDiff') ",
+                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && input.PlotVisuSelect!='Scatterplot' && input.PlotVisuSelect!='Tree' && (input.SelectSpecifTaxo=='Diff' || input.SelectSpecifTaxo=='NoDiff') ",
                                    selectizeInput("ContrastList_table_Visu","",choices = "", multiple = TRUE),
                                    radioButtons("UnionInterContrasts","Union or intersection ?",c("Union"="Union","Intersection"="Inter"),inline = TRUE)
                   ),
-                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && input.PlotVisuSelect!='Scatterplot'",
+                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && input.PlotVisuSelect!='Scatterplot' && input.PlotVisuSelect!='Tree'",
                                    uiOutput("TaxoToPlotVisu")
                   ),
 
@@ -700,7 +707,7 @@ body <- dashboardBody(
                 ##################
                 ## ALL
                 ##################
-                conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Scatterplot'",
+                conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Scatterplot' && input.PlotVisuSelect!='Tree'",
                                  radioButtons(inputId = "SensPlotVisu",label = h6(strong("Orientation")),choices = c("Vertical" = "Vertical", "Horizontal" = "Horizontal"),selected = "Vertical",inline = TRUE)
                 )
               ),

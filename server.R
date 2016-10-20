@@ -1,6 +1,6 @@
 source('LoadPackages.R')
 library(plotly)
-
+library(treeWeightD3)
 shinyServer(function(input, output,session) {
 
   hide(id = "loading-content", anim = TRUE, animType = "fade",time=1.5)
@@ -471,18 +471,26 @@ shinyServer(function(input, output,session) {
     
     data = read.csv(inFile$datapath,sep=input$septarget,header=TRUE)
     data = as.data.frame(data)
+    names = colnames(data)
+    
+    ## Change the rownames
+    rownames(data) <- as.character(data[, 1])
+    
+    ## Keep only the row which are in the count table
+    ind = which(rownames(data)%in%colnames(counts))
+    data = as.data.frame(data[ind,])
+    colnames(data) = names
+    
     ## Replace "-" by "."
-    ind_num = which(sapply(data,is.numeric))
+    ind_num = which(sapply(as.data.frame(data[,-1]),is.numeric)) + 1
     if(length(ind_num)>0){
-      data_tmp =cbind( as.data.frame(apply(data[,-ind_num],2,gsub,pattern = "-",replacement = ".")),data[,ind_num])
+      data_tmp =cbind( as.data.frame(apply(as.data.frame(data[,-ind_num]),2,gsub,pattern = "-",replacement = ".")),data[,ind_num])
       colnames(data_tmp) = c(colnames(data)[-ind_num],colnames(data)[ind_num])
       data = data_tmp
     }
     if(length(ind_num)==0){data = as.data.frame(apply(data,2,gsub,pattern = "-",replacement = "."))}
     
-    rownames(data) <- as.character(data[, 1])
-    ind = which(rownames(data)%in%colnames(counts))
-    target = data[ind,]
+    target = data
     
     # target = as.data.frame(apply(target,2,gsub,pattern = "-",replacement = "."))
     
@@ -1071,6 +1079,7 @@ shinyServer(function(input, output,session) {
     counts = dMC$counts
     CT_noNorm = dMC$CT_noNorm
     CT_Norm = dMC$CT_Norm
+    
     ## If no file, size factors are estimated
     normFactors = SizeFactors_fromFile()$normFactors
     
@@ -1508,6 +1517,16 @@ shinyServer(function(input, output,session) {
   ##
   #####################################################
   
+  output$PlotVisuTree <- renderTreeWeightD3({
+    resDiff = ResDiffAnal()
+    taxo_table = dataInput()$data$taxo
+    CT_Norm_OTU = dataMergeCounts()$CT_Norm
+    res = NULL
+    if(!is.null(resDiff$dds) && length(input$VisuVarInt)>=1) res = Plot_Visu_Tree(input,resDiff,CT_Norm_OTU,taxo_table)
+    return(res)
+    
+  })
+  
   
   output$PlotVisuBar <- renderChart({
     resDiff = ResDiffAnal()
@@ -1699,8 +1718,10 @@ shinyServer(function(input, output,session) {
     if(input$PlotVisuSelect=="Barplot") res =  showOutput("PlotVisuBar")
     if(input$PlotVisuSelect=="Heatmap") res =  d3heatmapOutput("heatmap", height = input$heightVisu+10)
     if(input$PlotVisuSelect=="Boxplot") res = plotOutput("Boxplot", height = input$heightVisu+10)
+    if(input$PlotVisuSelect=="Tree") res = treeWeightD3Output('PlotVisuTree', height = input$heightVisu+10,width="100%")
     if(input$PlotVisuSelect=="Scatterplot" && !input$AddRegScatter) res = scatterD3Output("ScatterplotD3", height = input$heightVisu+10)
     if(input$PlotVisuSelect=="Scatterplot" && input$AddRegScatter) res = plotOutput("Scatterplotgg", height = input$heightVisu+10)
+    
     if(input$PlotVisuSelect=="Diversity") res =  plotOutput("DiversityPlot", height = input$heightVisu+10)
     if(input$PlotVisuSelect=="Rarefaction") res = plotOutput("RarefactionPlot",dblclick = "RarefactionPlot_dblclick",brush = brushOpts(id = "RarefactionPlot_brush",resetOnNew = TRUE), height = input$heightVisu+10)
     return(res)
@@ -1941,6 +1962,28 @@ shinyServer(function(input, output,session) {
   })
   
   
+  output$VarIntVisuTree <- renderUI({
+    
+    target=dataInputTarget()$target
+    data = dataInput()$data 
+    taxo = input$TaxoSelect
+    resDiff = ResDiffAnal()
+    res = NULL
+    
+    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target)) 
+    {
+      counts = dataMergeCounts()$counts
+  
+      Available_x = sort(rownames(counts))
+      
+      res = selectizeInput("TaxoTree",h6(strong(paste("Select a specific",taxo,sep=" "))),c("...",Available_x),multiple = FALSE)
+
+    }
+    
+    return(res)
+    
+  })
+  
   #####################################################
   ##
   ##                KRONA
@@ -1972,8 +2015,23 @@ shinyServer(function(input, output,session) {
   
   ## Disable the actionbutton if the number of feature is lower than 2
   observe({
-  
+    
+    input$TaxoSelect
+    testRank = FALSE
     counts = dataMergeCounts()$counts
+    InterVar = input$InterestVar
+    
+
+    if(length(InterVar)>0)
+    {
+      design = GetDesign(input)
+      target = dataInputTarget()$target
+      modelMatrix <- model.matrix(design, data = as.data.frame(target))
+      rk = qr(modelMatrix)$rank
+      testRank = (ncol(modelMatrix)==rk)
+    }
+    
+    
     if(input$AddFilter && !is.null(input$SliderThSamp) && !is.null(input$SliderThAb))
     {
       ind.filter =Filtered_feature(counts,input$SliderThSamp,input$SliderThAb)$ind
@@ -1984,13 +2042,14 @@ shinyServer(function(input, output,session) {
       if (nrow(counts)>=2){
         shinyjs::enable("RunDESeq")
       }
-      if (nrow(counts)<2) {
+      if (nrow(counts)<2 || !testRank) {
         shinyjs::disable("RunDESeq")
       }
     } 
-    if (is.null(counts)) {
+    if (is.null(counts) || !testRank) {
       shinyjs::disable("RunDESeq")
     }
+
   })
   
   
