@@ -1,7 +1,14 @@
 options(shiny.sanitize.errors = FALSE)
 source("css/owncss.R")
 source("Rfunctions/Data_Management.R")
-library(treeWeightD3)
+if (!require(devtools)) {
+  install.packages('devtools')
+  library(devtools)
+}
+if(!require(treeWeightD3)){
+  devtools::install_git('https://gitlab.pasteur.fr/plechat/treeWeightD3')
+  library(treeWeightD3)
+}
 if (!require(scatterD3)) {
   devtools::install_github('aghozlane/scatterD3')
   library(scatterD3)

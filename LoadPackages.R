@@ -48,6 +48,10 @@ if (!require(devtools)) {
   install.packages('devtools')
   library(devtools)
 }
+if(!require(treeWeightD3)){
+  devtools::install_git('https://gitlab.pasteur.fr/plechat/treeWeightD3')
+  library(treeWeightD3)
+}
 if (!require(BiocInstaller)){
   source("https://bioconductor.org/biocLite.R")
   biocLite("BiocInstaller")
