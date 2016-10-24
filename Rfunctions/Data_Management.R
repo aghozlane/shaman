@@ -89,6 +89,73 @@ CheckTaxoTable <- function(taxo,counts)
   return(list(Error=Error,Warning=Warning))
 }
 
+
+
+CheckTargetModel <- function(input,target,labeled,CT)
+{
+  Error = NULL
+  HowTo = NULL
+  InterVar = input$InterestVar
+  
+  labels = rownames(target)
+  ind = which(colnames(CT)%in%labels)
+  
+  ## At least one variable selected
+  if(is.null(Error) && length(ind)<=1){
+    Error = "Less than two samples names fit with the counts table" 
+    HowTo = "Check the samples names in the target file. They must be in the first column and must correspond EXACTLY to the names in the count table."
+  }
+  ## At least one variable selected
+  if(is.null(Error) && length(InterVar)==0){
+    Error = "At least one variable must be selected for the model" 
+    HowTo = "Add at least one variable in the 'Select the variables' widget"
+  }
+  
+  
+  ## Names of samples correct ?
+  if(is.null(Error) && labeled==0){
+    Error = "The names of the samples in the target file do not fit the counts table" 
+    HowTo = "Check the samples names in the target file. They must be in the first column and must correspond EXACTLY to the names in the count table."
+    }
+  
+  ## Number of columns
+  if(is.null(Error) && ncol(target)<2){
+    Error = "The number of columns of the target file must be at least 2"
+    HowTo = "Add at least one additional variable to describe your samples"
+
+    }
+  
+  ## Number of rows
+  if(is.null(Error) && nrow(target)<=1){
+    Error = "The number of rows if the target file must be at least 2"
+    HowTo = "Add information about more than 2 samples"
+    }
+  
+  ## NA values
+  if(is.null(Error) && (any(is.na(target)) || any(target ==""))){
+    Error = "NA's or missing values are not allowed in the target file" 
+    HowTo = "Remove all the samples for which one or more variables are NA or missing"
+  }
+  
+
+  
+  ## Full rank matrix
+  if(is.null(Error) && length(InterVar)>0)
+  {
+    design = GetDesign(input)
+    testRank = CheckMatrixRank(design,target)
+    if(!testRank){
+        Error = "The model matrix is not full rank. One or more variables or interaction terms 
+        are linear combinations of the others and must be removed." 
+        HowTo = "Remove variable(s) that provide the same information, i.e, if the value of a variable is totaly determine by an other variable remove one of them."
+        }
+  }
+    
+  return(list(Error=Error,HowTo=HowTo))
+}
+
+
+
 ## Get the percentage of annotated OTU
 PercentAnnot <- function(counts,taxo)
 {
@@ -247,12 +314,10 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
     
     # Only interesting OTU
     # merged_table = merge(CT, taxo[order(rownames(CT)),], by="row.names")
-    save(CT,taxo,file="testMerge.RData")
+
     merged_table = merge(CT, taxo, by="row.names")
-    ## Why ??
     CT = merged_table[,2: (dim(CT)[2]+1)]
     taxo = merged_table[,(dim(CT)[2]+2):dim(merged_table)[2]]
-    ## ???
     
     rownames(CT) = merged_table[,1]
     rownames(taxo) = merged_table[,1]
@@ -407,7 +472,7 @@ plot_filter <- function(counts,th.samp,th.abund,type="Scatter")
   ## Initial plot for plotly
   if(type == 'Abundance' || type == 'Samples'){ 
     dataNull = data.frame(x=c(0,0),y=c(1,2),col=c("white","white"))
-    res = ggplotly(ggplot(dataNull,aes(x=x,y=y))+geom_point(aes(colour = col))+theme_bw()+ scale_color_manual(values = "white"))
+    res = ggplot(dataNull,aes(x=x,y=y))+geom_point(aes(colour = col))+theme_bw()+ scale_color_manual(values = "white")
   }
   
   res_filter = Filtered_feature(counts,th.samp,th.abund)
@@ -430,12 +495,12 @@ plot_filter <- function(counts,th.samp,th.abund,type="Scatter")
     
     ## plot the results
     gg = ggplot(df,aes(lab,y,fill=State)) + geom_bar(stat='identity') + theme_bw() +theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.5))
-    gg = gg + geom_hline( yintercept = th.abund,linetype = "longdash")
+    gg = gg + geom_hline( yintercept = th.abund,linetype = "longdash") + xlab("")
     gg = gg + scale_fill_manual(values = c('springgreen3','firebrick'))
     if(!"Kept"%in%df$State ) gg = gg + scale_fill_manual(values = 'firebrick')
     if(!"Removed"%in%df$State ) gg = gg + scale_fill_manual(values = 'springgreen3')
     
-    res = ggplotly(gg)
+    res = gg
   }
   
   if(type == 'Samples' && !is.null(th.samp) && !is.null(th.abund))
@@ -455,12 +520,12 @@ plot_filter <- function(counts,th.samp,th.abund,type="Scatter")
     ## plot the results
     
     gg = ggplot(df,aes(lab,y,fill=State)) + geom_bar(stat='identity') + theme_bw() +theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.5))
-    gg = gg + geom_hline( yintercept = th.samp,linetype = "longdash")
+    gg = gg + geom_hline( yintercept = th.samp,linetype = "longdash") + xlab("")
     gg = gg + scale_fill_manual(values = c('springgreen3','firebrick'))  
     if(!"Kept"%in%df$State ) gg = gg + scale_fill_manual(values = 'firebrick')
     if(!"Removed"%in%df$State ) gg = gg + scale_fill_manual(values = 'springgreen3')
     
-    res = ggplotly(gg)
+    res = gg
     
   }
   
@@ -488,9 +553,7 @@ plot_filter <- function(counts,th.samp,th.abund,type="Scatter")
     State = df$State
     PointSize = 2
     colors_scat = list(Kept="#00CD66",Removed="#b22222")
-    print(State)
-    print(colors_scat)
-    print(head(df))
+
     res = scatterD3(x = x_var,
                      y = y_var,
                      lab = rownames(df),
@@ -532,15 +595,17 @@ plot_filter <- function(counts,th.samp,th.abund,type="Scatter")
 SelectThreshAb <- function(infile,lambda=500,graph=TRUE){
   
   rs <- rowSums(infile)
-  lambda = max(rs)
   test_Filtre <- sapply(c(min(rs):lambda),FUN=function(x) table(rs>x))
-  x <- c(min(rs):lambda)
-  reslm <- lm(test_Filtre[1,]~x)$coefficients
-  val <- which(test_Filtre[1,]>reslm[1])[1]
-  if (graph==TRUE){
-    plot(test_Filtre[1,],ylab="Nb especes avec moins de x comptages sur tous les echantillons",xlab="x")
-    abline(v=val,col="red")
-  }
-  return(val)
+  if(!is.list(test_Filtre))
+  {
+    x <- c(min(rs):lambda)
+    reslm <- lm(test_Filtre[1,]~x)$coefficients
+    val <- which(test_Filtre[1,]>reslm[1])[1]
+    if (graph==TRUE){
+      plot(test_Filtre[1,],ylab="Nb especes avec moins de x comptages sur tous les echantillons",xlab="x")
+      abline(v=val,col="red")
+    } 
+  } else val = min(rs)
+  return(max(val, min(rs)+1))
 }
 

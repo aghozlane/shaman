@@ -1,6 +1,8 @@
 source('LoadPackages.R')
-library(plotly)
-library(treeWeightD3)
+if(!require(plotly)){
+  install.packages("plotly")
+  library(plotly)  
+}
 shinyServer(function(input, output,session) {
 
   hide(id = "loading-content", anim = TRUE, animType = "fade",time=1.5)
@@ -175,33 +177,39 @@ shinyServer(function(input, output,session) {
     normFactors = NULL
     CT_noNorm = NULL
     CT_Norm = NULL
-    #labeled= NULL
+    ChTM = NULL
     data = isolate(dataInput()$data)
     target = isolate(dataInputTarget()$target)
+    labeled= isolate(dataInputTarget()$labeled)
     taxo = isolate(input$TaxoSelect)
     
     withProgress(
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target)) 
     {
       design = GetDesign(isolate(input))
-      tmp = isolate(GetCountsMerge(input,data,taxo,target,design))
-      counts = tmp$counts
+      ChTM = CheckTargetModel(input,target,labeled,data$counts)$Error
       
-      ## Filtering the counts
-      if(isolate(input$AddFilter) && !is.null(isolate(input$SliderThSamp)) && !is.null(isolate(input$SliderThAb)))
+      if(!is.null(design) && is.null(ChTM))
       {
-        ind.filter =Filtered_feature(counts,isolate(input$SliderThSamp),isolate(input$SliderThAb))$ind
-        counts = counts[-ind.filter,]
+        tmp = isolate(GetCountsMerge(input,data,taxo,target,design))
+        counts = tmp$counts
+        
+        ## Filtering the counts
+        if(isolate(input$AddFilter) && !is.null(isolate(input$SliderThSamp)) && !is.null(isolate(input$SliderThAb)))
+        {
+          ind.filter =Filtered_feature(counts,isolate(input$SliderThSamp),isolate(input$SliderThAb))$ind
+          counts = counts[-ind.filter,]
+        }
+        
+        CheckTarget = tmp$CheckTarget
+        #target = tmp$target
+        #labeled = tmp$labeled
+        normFactors = tmp$normFactors
+        
+        ## OTU table, norm and no norm
+        CT_noNorm = tmp$CT_noNorm
+        CT_Norm = tmp$CT_Norm
       }
-      
-      CheckTarget = tmp$CheckTarget
-      #target = tmp$target
-      #labeled = tmp$labeled
-      normFactors = tmp$normFactors
-      
-      ## OTU table, norm and no norm
-      CT_noNorm = tmp$CT_noNorm
-      CT_Norm = tmp$CT_Norm
     }
     ,message="Merging the counts ...")
     return(list(counts=counts,CheckTarget=CheckTarget,normFactors=normFactors,CT_noNorm=CT_noNorm, CT_Norm=CT_Norm))
@@ -277,7 +285,8 @@ shinyServer(function(input, output,session) {
     res = NULL
     counts = isolate(dataMergeCounts()$counts)
     tot = rowSums(counts)
-    tmp = SelectThreshAb(counts,lambda=max(round(sum(counts)/nrow(counts)*0.05),min(tot)+1),graph=FALSE)
+    save(counts,tot,file="testFilter.RData")
+    withProgress({tmp = SelectThreshAb(counts,lambda=max(round(sum(counts)/nrow(counts)*0.05),min(tot)+1),graph=FALSE)},message="Loading...")
     
     res = sliderInput("SliderThAb","Threshold on the total abundance (in log)",min=0,max=round(max(log(tot+1)),1),value = log(tmp+1))
     return(res)
@@ -305,14 +314,14 @@ shinyServer(function(input, output,session) {
   
   # plot_filter(counts,th.samp,th.abund,type="Scatter")
   
-  output$Plot_ThAb <- renderPlotly({
+  output$Plot_ThAb <- renderPlot({
     counts = dataMergeCounts()$counts
     ## output of plot_filter is ggplot class
     plot_filter(counts,input$SliderThSamp,input$SliderThAb,type="Abundance")
     
   })
     
-  output$Plot_ThSamp <- renderPlotly({
+  output$Plot_ThSamp <- renderPlot({
     counts = dataMergeCounts()$counts
     ## output of plot_filter is ggplot class
     plot_filter(counts,input$SliderThSamp,input$SliderThAb,type="Samples")
@@ -480,17 +489,17 @@ shinyServer(function(input, output,session) {
     ind = which(rownames(data)%in%colnames(counts))
     data = as.data.frame(data[ind,])
     colnames(data) = names
-    
     ## Replace "-" by "."
-    ind_num = which(sapply(as.data.frame(data[,-1]),is.numeric)) + 1
-    if(length(ind_num)>0){
-      data_tmp =cbind( as.data.frame(apply(as.data.frame(data[,-ind_num]),2,gsub,pattern = "-",replacement = ".")),data[,ind_num])
-      colnames(data_tmp) = c(colnames(data)[-ind_num],colnames(data)[ind_num])
-      data = data_tmp
+    if(ncol(data)>1 && nrow(data)>1){
+      ind_num = which(sapply(as.data.frame(data[,-1]),is.numeric)) + 1
+      if(length(ind_num)>0){
+        data_tmp =cbind( as.data.frame(apply(as.data.frame(data[,-ind_num]),2,gsub,pattern = "-",replacement = ".")),data[,ind_num])
+        colnames(data_tmp) = c(colnames(data)[-ind_num],colnames(data)[ind_num])
+        data = data_tmp
+      }
+      if(length(ind_num)==0){data = as.data.frame(apply(data,2,gsub,pattern = "-",replacement = "."))}
     }
-    if(length(ind_num)==0){data = as.data.frame(apply(data,2,gsub,pattern = "-",replacement = "."))}
-    
-    target = data
+    target = as.data.frame(data)
     
     # target = as.data.frame(apply(target,2,gsub,pattern = "-",replacement = "."))
     
@@ -522,18 +531,20 @@ shinyServer(function(input, output,session) {
     
   })
   
-  
   ## Interactions
   output$SelectInteraction2 <- renderUI({
     
     target = dataInputTarget()$target
-    
-    if(!is.null(target)) 
+    VarInt = input$InterestVar
+    res = NULL
+    if(!is.null(target) && length(input$InterestVar)>1) 
     {
-      Interac = GetInteraction2(target)
-      selectInput("Interaction2",h6(strong("Add interactions")),Interac,selected=NULL,multiple=TRUE)
+      Interac = GetInteraction2(target,VarInt)
+      res = selectInput("Interaction2",h6(strong("Add interactions")),Interac,selected=NULL,multiple=TRUE)
     }
+    if(length(input$InterestVar)==1) res = NULL
     
+    return(res)
   })
 
 
@@ -1134,6 +1145,65 @@ shinyServer(function(input, output,session) {
   })
   
   
+  # Infobox model/target
+#   output$InfoModel<- renderInfoBox({
+#     res = infoBox(h6(strong("Target file and variables")), 
+#                   subtitle = h6(strong("Your target file must contain at least 2 columns and 2 rows. NA's values are not allowed and the variables must not be collinear.")), 
+#                   icon = icon("book"),color = "green",width=NULL,fill=TRUE)
+#     
+#     target = dataInputTarget()$target
+#     taxo = input$TaxoSelect
+#     ChTM = NULL
+#     
+#     ## Return NULL if there is no error
+#     if(!is.null(target)) ChTM = CheckTargetModel(input,target)
+#   
+#     if(!is.null(ChTM)) res = infoBox(h6(strong("Error")), subtitle = h6(ChTM), icon = icon("thumbs-o-down"),color = "red",width=NULL,fill=TRUE)
+#     
+#     return(res)
+#     
+#     })
+  
+  output$InfoModel<- renderUI({
+    
+    CT = dataInput()$data$counts
+    target = dataInputTarget()$target
+    labeled = dataInputTarget()$labeled
+    taxo = input$TaxoSelect
+    ChTM = NULL
+    
+    ## Return NULL if there is no error
+    if(!is.null(target)) ChTM = CheckTargetModel(input,target,labeled,CT)
+    
+    if(!is.null(ChTM$Error)) {   
+      box(title = "Error", status = "danger",width = 6,
+          h6(strong(ChTM$Error)),
+          footer = em("Reminder: Your target file must contain at least 2 columns and 2 rows. NA's values are not allowed and the variables must not be collinear.")
+      )
+    }
+    
+  })
+  
+  output$InfoModelHowTo<- renderUI({
+    
+    CT = dataInput()$data$counts
+    target = dataInputTarget()$target
+    labeled = dataInputTarget()$labeled
+    taxo = input$TaxoSelect
+    ChTM = NULL
+    
+    ## Return NULL if there is no error
+    if(!is.null(target)) ChTM = CheckTargetModel(input,target,labeled,CT)
+    
+    if(!is.null(ChTM$HowTo)) {   
+      box(title = "How To", status = "success",width = 6,
+          h6(strong(ChTM$HowTo))
+      )
+    }
+    
+  })
+  
+  
   
   #####################################################
   ##
@@ -1503,9 +1573,18 @@ shinyServer(function(input, output,session) {
   output$RunButton <- renderUI({
     
     res = NULL
+    ChTM = "Error"
     target = dataInputTarget()$target
+    labeled = dataInputTarget()$labeled
+    CT = dataInput()$data$counts
     taxo = input$TaxoSelect
-    if(!is.null(target) && taxo!="...") res = actionButton("RunDESeq",strong("Run analysis"),icon = icon("caret-right"))
+    VarInt = input$InterestVar
+    
+    ## Return NULL if there is no error
+    if(!is.null(target) && length(VarInt)>=1) ChTM = CheckTargetModel(input,target,labeled,CT)$Error
+
+    if(!is.null(target) && taxo!="..." && is.null(ChTM) && length(VarInt)>=1) res = actionButton("RunDESeq",strong("Run analysis"),icon = icon("caret-right"))
+    
     return(res)
   })
   
@@ -2017,36 +2096,29 @@ shinyServer(function(input, output,session) {
   observe({
     
     input$TaxoSelect
-    testRank = FALSE
     counts = dataMergeCounts()$counts
-    InterVar = input$InterestVar
+    ChTM = ""
+    CT = dataInput()$data$counts
+    target = dataInputTarget()$target
+    labeled= dataInputTarget()$labeled
+    ChTM = CheckTargetModel(input,target,labeled,CT)$Error
     
-
-    if(length(InterVar)>0)
-    {
-      design = GetDesign(input)
-      target = dataInputTarget()$target
-      modelMatrix <- model.matrix(design, data = as.data.frame(target))
-      rk = qr(modelMatrix)$rank
-      testRank = (ncol(modelMatrix)==rk)
-    }
-    
-    
-    if(input$AddFilter && !is.null(input$SliderThSamp) && !is.null(input$SliderThAb))
+    if(input$AddFilter && !is.null(input$SliderThSamp) && !is.null(input$SliderThAb) && is.null(ChTM))
     {
       ind.filter =Filtered_feature(counts,input$SliderThSamp,input$SliderThAb)$ind
       counts = counts[-ind.filter,]
     }
 
+    
     if (!is.null(counts)){
       if (nrow(counts)>=2){
         shinyjs::enable("RunDESeq")
       }
-      if (nrow(counts)<2 || !testRank) {
+      if (nrow(counts)<2) {
         shinyjs::disable("RunDESeq")
       }
     } 
-    if (is.null(counts) || !testRank) {
+    if (is.null(counts) ) {
       shinyjs::disable("RunDESeq")
     }
 

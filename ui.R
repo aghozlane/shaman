@@ -6,7 +6,7 @@ if (!require(devtools)) {
   library(devtools)
 }
 if(!require(treeWeightD3)){
-  devtools::install_git('https://gitlab.pasteur.fr/plechat/treeWeightD3')
+  devtools::install_git('https://gitlab.pasteur.fr/plechat/treeWeightD3.git')
   library(treeWeightD3)
 }
 if (!require(scatterD3)) {
@@ -25,7 +25,11 @@ if(!require(shinyjs)){
   install.packages("shinyjs")
   library(shinyjs)  
 }
-library(plotly)
+if(!require(plotly)){
+  install.packages("plotly")
+  library(plotly)  
+}
+
 function(request) {
 sidebar <- dashboardSidebar(
   useShinyjs(),
@@ -309,10 +313,13 @@ body <- dashboardBody(
                   ),
                   fluidRow( 
                     column(width=6,uiOutput("SelectInterestVar")),
-                    column(width=6,uiOutput("SelectInteraction2")),
+                    column(width=6,uiOutput("SelectInteraction2"))
+                  ),
+                  fluidRow( 
                     column(width=6,uiOutput("RunButton"))
                   )
                 ),
+                fluidRow(uiOutput("InfoModel"),uiOutput("InfoModelHowTo")),
                 uiOutput("BoxTarget"),
                 uiOutput("BoxCountsMerge")
               ),
@@ -372,11 +379,11 @@ body <- dashboardBody(
                                     fluidRow(
                                       conditionalPanel(condition="input.AddFilter",
                                               column(width=6, 
-                                                     plotlyOutput("Plot_ThSamp"),
+                                                     plotOutput("Plot_ThSamp"),
                                                      column(width=10,uiOutput("ThSamp"),offset = 1)
                                                      ),
                                               column(width=6,
-                                                     plotlyOutput("Plot_ThAb"),
+                                                     plotOutput("Plot_ThAb"),
                                                      column(width=10,uiOutput("ThAb"),offset = 1)
                                                      ),
                                               column(width=12,
@@ -589,7 +596,8 @@ body <- dashboardBody(
 
             column(width=3,
               box(title = "Select your plot",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = FALSE,collapsed= FALSE,
-                  selectizeInput("PlotVisuSelect","",c("Barplot"="Barplot","Heatmap"="Heatmap","Boxplot"="Boxplot","Tree"="Tree","Scatterplot"="Scatterplot","Diversity"="Diversity","Rarefaction"="Rarefaction"),selected = "Barplot")
+                  # selectizeInput("PlotVisuSelect","",c("Barplot"="Barplot","Heatmap"="Heatmap","Boxplot"="Boxplot","Tree"="Tree","Scatterplot"="Scatterplot","Diversity"="Diversity","Rarefaction"="Rarefaction"),selected = "Tree")
+                  selectizeInput("PlotVisuSelect","",c("Barplot"="Barplot","Heatmap"="Heatmap","Boxplot"="Boxplot","Scatterplot"="Scatterplot","Diversity"="Diversity","Rarefaction"="Rarefaction"),selected = "Barplot")
               ),
 
 

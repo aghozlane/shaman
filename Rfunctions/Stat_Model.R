@@ -12,20 +12,22 @@
 
 
 ## Get the possible interaction for the statistical model
-GetInteraction2 <- function(target)
+GetInteraction2 <- function(target,VarInt)
 { 
   res=c()
-  namesTarget = colnames(target)[2:ncol(target)]
-  k=1
-  for(i in 1:(length(namesTarget)-1))
-  { 
-    for(j in (i+1):length(namesTarget))
+  
+  if(length(VarInt)>=2)
+  {
+    k=1
+    for(i in 1:(length(VarInt)-1))
     { 
-      res[k] = paste(namesTarget[i],":",namesTarget[j],sep="")
-      k = k+1
+      for(j in (i+1):length(VarInt))
+      { 
+        res[k] = paste(VarInt[i],":",VarInt[j],sep="")
+        k = k+1
+      }
     }
   }
-  
   return(res)
 }
 
@@ -33,7 +35,6 @@ GetInteraction2 <- function(target)
 ## Get the dds object of DESeq2
 Get_dds_object <- function(input,counts,target,design,normFactorsOTU,CT_noNorm,CT_Norm)
 {
-  
   dds <- DESeqDataSetFromMatrix(countData=counts, colData=target, design=design,ignoreRank = TRUE)
   
   sizeFactors(dds) = normFactorsOTU
@@ -53,10 +54,13 @@ Get_dds_object <- function(input,counts,target,design,normFactorsOTU,CT_noNorm,C
 ## Get the design according to the input
 GetDesign <- function(input)
 {
+  design = NULL
+  Interaction = NULL
   InterVar = input$InterestVar
-  Interaction = input$Interaction2
+  if(length(InterVar)>1) Interaction = input$Interaction2
   alltmp = c(InterVar,Interaction)
-  design = as.formula(paste("~", paste0(alltmp, collapse= "+")))
+  if(length(alltmp)>0) design = as.formula(paste("~", paste0(alltmp, collapse= "+")))
+  
   return(design)
 }
 
@@ -167,6 +171,23 @@ PrintContrasts <- function (coefs, contrasts,contnames)
   
 }
 
+## Check the rank of the matrix for the statistical model.
+CheckMatrixRank <- function(design,target)
+{
+  testRank = FALSE
 
+  if(!is.null(design) && length(as.character(design))) 
+  {
+    tmp = strsplit(as.character(design)[2],"[ ]*[+][ ]*")
+    testDesign = any(unlist(tmp)%in%colnames(target))
+  }
+  
+  if(nrow(target)>=1 && ncol(target)>=2 && nrow(target)>1 && !is.null(design) && testDesign){
+    modelMatrix <- model.matrix(design, data = as.data.frame(target))
+    rk = qr(modelMatrix)$rank
+    testRank = (ncol(modelMatrix)==rk)
+  }
+    return(testRank)
+}
 
 
