@@ -221,7 +221,7 @@ body <- dashboardBody(
                                   "Then, you will need to install the", a("Docker toolbox.", href="https://www.docker.com/products/docker-toolbox"),
                                   "Once installed, run ‘Docker Quickstart Terminal’ application."),
                                 p("- Running SHAMAN:"),
-                                wellPanel(div(style = 'width: 400px',"docker run --rm -p 80:80 aghozlane/shaman")),
+                                wellPanel(div(style = 'width: 400px',"docker pull aghozlane/shaman && docker run --rm -p 80:80 aghozlane/shaman")),
                                 p("Then connect to http://0.0.0.0/ with your favorite web navigator."),
                                 p("Failed: port is already allocated ?"),
                                 wellPanel(div(style = 'width: 400px',"docker run --rm -p 3838:80 aghozlane/shaman")),
