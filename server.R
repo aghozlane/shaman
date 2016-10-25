@@ -1,8 +1,5 @@
 source('LoadPackages.R')
-if(!require(plotly)){
-  install.packages("plotly")
-  library(plotly)  
-}
+
 shinyServer(function(input, output,session) {
 
   hide(id = "loading-content", anim = TRUE, animType = "fade",time=1.5)
