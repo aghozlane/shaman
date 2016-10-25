@@ -5,10 +5,10 @@ if (!require(devtools)) {
   install.packages('devtools')
   library(devtools)
 }
-if(!require(treeWeightD3)){
-  devtools::install_git('https://gitlab.pasteur.fr/plechat/treeWeightD3.git')
-  library(treeWeightD3)
-}
+# if(!require(treeWeightD3)){
+#   devtools::install_git('https://gitlab.pasteur.fr/plechat/treeWeightD3.git')
+#   library(treeWeightD3)
+# }
 if (!require(scatterD3)) {
   devtools::install_github('aghozlane/scatterD3')
   library(scatterD3)
@@ -254,7 +254,10 @@ body <- dashboardBody(
             br(),
              fluidRow(
                 box(title="Select your file format",width = 3,status = "success", solidHeader = TRUE,collapsible = FALSE,
-                  selectInput("FileFormat","",c("Count table & taxonomy (*.csv or *.tsv)"="fileCounts","BIOM file"="fileBiom"),selected="fileCounts")
+                  selectInput("FileFormat","",c("Count table & taxonomy (*.csv or *.tsv)"="fileCounts","BIOM file"="fileBiom"),selected="fileCounts"),
+                  conditionalPanel(condition="input.FileFormat=='fileCounts'",
+                                   checkboxInput("NoTaxoFile","No taxonomy table",value=FALSE)
+                  )
                 ),
                 conditionalPanel(condition="input.FileFormat=='fileCounts'",
                   box(title="Load the count table",width = 3,height = "260px", status = "primary", solidHeader = TRUE,collapsible = FALSE,
@@ -264,27 +267,33 @@ body <- dashboardBody(
                       ),
                       fileInput('fileCounts', h6(strong('Select your file')),width="100%")
                   ),
-                  
-                  box(title="Load the taxonomy file",width = 3,height = "260px", status = "primary", solidHeader = TRUE,collapsible = FALSE,
-                      fluidRow(
-                        column(width=6,radioButtons("TypeTaxo",h6(strong("Format:")),c("Table"="Table","RDP"="RDP"))),
-                        column(width=6,
-                             conditionalPanel(condition="input.TypeTaxo=='RDP'",numericInput("RDP_th",h6(strong("Threshold:")),0.5,step=0.01,min=0.01,max=1))
+                  conditionalPanel(condition="!input.NoTaxoFile",
+                    box(title="Load the taxonomy file",width = 3,height = "260px", status = "primary", solidHeader = TRUE,collapsible = FALSE,
+                        fluidRow(
+                          column(width=6,radioButtons("TypeTaxo",h6(strong("Format:")),c("Table"="Table","RDP"="RDP"))),
+                          column(width=6,
+                               conditionalPanel(condition="input.TypeTaxo=='RDP'",numericInput("RDP_th",h6(strong("Threshold:")),0.5,step=0.01,min=0.01,max=1))
+                          ),
+                          column(width=6,
+                                 conditionalPanel(condition="input.TypeTaxo=='Table'",selectInput("septaxo", h6(strong("Separator:")),
+                                                      c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
+                                 )
                         ),
-                        column(width=6,
-                               conditionalPanel(condition="input.TypeTaxo=='Table'",selectInput("septaxo", h6(strong("Separator:")),
-                                                    c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
-                               )
-                      ),
-                      fileInput('fileTaxo', h6(strong('Select your file')),width="100%")
+                        fileInput('fileTaxo', h6(strong('Select your file')),width="100%")
+                    )
+                  ),
+                  fluidRow(column(width=3,
+                                  uiOutput("InfoCountsFile"),
+                                  uiOutput("InfoTaxoFile")
+                                  )
                   )
-                  
                 ),
                 
                 conditionalPanel(condition="input.FileFormat=='fileBiom'",
                                  box(title="Load the BIOM file",width = 3, status = "primary", solidHeader = TRUE,collapsible = FALSE,
                                      fileInput('fileBiom', h5(strong('Select your file')),width="100%")
-                                 )           
+                                 ),
+                                 fluidRow(uiOutput("InfoBIOM"))
                 )
              ),
               column(12,uiOutput("TabBoxData"))
@@ -612,8 +621,8 @@ body <- dashboardBody(
                                    h5(strong("Select the modalities")),
                                    uiOutput("ModVisu")
                   ),
-                  conditionalPanel(condition="input.PlotVisuSelect=='Tree' ",
-                                   uiOutput("VarIntVisuTree")),
+#                   conditionalPanel(condition="input.PlotVisuSelect=='Tree' ",
+#                                    uiOutput("VarIntVisuTree")),
                   conditionalPanel(condition="input.PlotVisuSelect=='Scatterplot' ",
                                    uiOutput("VarIntVisuScatter"),
                                    radioButtons("TransDataScatter","Data transformation",c("Log2 +1" = "log2","None" = "none"),inline=TRUE),

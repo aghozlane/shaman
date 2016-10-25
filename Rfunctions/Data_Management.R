@@ -52,39 +52,51 @@ CheckCountsTable <- function(counts)
 {
   Error = NULL
   Warning = NULL
-  numTest = FALSE%in%sapply(counts,is.numeric)
-  if(ncol(counts)<=1){Error = "The number of columns of the counts table must be at least 2" }
-  if(nrow(counts)<=1){Error = "The number of rows of the counts table must be at least 2" }
-  if(numTest){Error = "The counts table must contain only numeric values" }
-  if(!numTest)
+  
+  if(is.null(counts) && is.null(Error)){Error = "There is no counts table" }
+  
+
+  if(ncol(counts)<=1 && is.null(Error)){Error = "The number of columns of the counts table must be at least 2" }
+  if(nrow(counts)<=1 && is.null(Error)){Error = "The number of rows of the counts table must be at least 2" }
+  
+  if(is.null(Error)) 
   {
-    if(0%in%colSums(counts)){Error = "At least one of the column of the counts table is 0" }
-    if(min(counts)<0){Error = "The counts table must contain only positive values" }
+    numTest = FALSE%in%sapply(counts,is.numeric)
+    if(numTest) Error = "The counts table must contain only numeric values" 
+    if(!numTest)
+    {
+      if(0%in%colSums(counts)){Error = "At least one of the column of the counts table is 0" }
+      if(min(counts)<0){Error = "The counts table must contain only positive values" }
+    }
   }
-  if(TRUE%in%sapply(counts,is.na)){Warning = "NA values are considered as 0 is the counts table"; counts[sapply(counts,is.na)]=0}
+  if(TRUE%in%sapply(counts,is.na) && is.null(Error)){Warning = "NA values are considered as 0 is the counts table"; counts[sapply(counts,is.na)]=0}
   
   
   return(list(Error=Error,Warning=Warning,counts=counts))
 }
 
 ## Check the format of the taxonomy table
-CheckTaxoTable <- function(taxo,counts)
+CheckTaxoTable <- function(taxo,counts,taxoCreated = FALSE)
 {
   Error = NULL
   Warning = NULL
-  if(ncol(taxo)<1){Error = "The number of columns of the taxonomy table must be at least 1" }
-  if(nrow(taxo)<=1){Error = "The number of rows if the taxonomy table must be at least 2" }
-  if(TRUE%in%is.numeric(taxo)){Error = "The taxonomy table must contain only character" }
+  if(taxoCreated){Warning = "No taxonomy table has been uploaded, the analysis can only be done at the OTU/gene level"}
+  if(ncol(taxo)<1 && is.null(Error)){Error = "The number of columns of the taxonomy table must be at least 1" }
+  if(nrow(taxo)<=1 && is.null(Error)){Error = "The number of rows if the taxonomy table must be at least 2" }
+  if(TRUE%in%is.numeric(taxo) && is.null(Error) ){Error = "The taxonomy table must contain only character" }
   
-  for(i in 1:ncol(taxo))
+  if(is.null(Error))
   {
-    level = levels(taxo[,i])
-    nb = length(level)
-    if(nb==1 && level=="NA"){ Error = "At least one column contains only NA"}
+    for(i in 1:ncol(taxo))
+    {
+      level = levels(taxo[,i])
+      nb = length(level)
+      if(nb==1 && level=="NA"){ Error = "At least one column contains only NA"}
+    }
   }
   
   ## Annotated features without counts
-  if(!any(rownames(taxo)%in%rownames(counts))){ Error = "Some annotated features are not in the count table"}
+  if(!any(rownames(taxo)%in%rownames(counts)) && is.null(Error)){ Error = "Some annotated features are not in the count table"}
   
   return(list(Error=Error,Warning=Warning))
 }
@@ -172,28 +184,41 @@ PercentAnnot <- function(counts,taxo)
 ## Get the counts and the taxo tables from the BIOM format file.
 GetDataFromBIOM <-function(dataBIOM)
 {
+  taxo = NULL
+  counts = NULL
+  taxoCreated = FALSE
   ## Counts table
   counts = biom_data(dataBIOM)
-  counts = as.matrix(counts)
-  ## Change of - to . is risky
-  colnames(counts) = gsub("-",".",colnames(counts))
-  counts = as.data.frame(counts)
+  if(!is.null(counts))
+  {
+    counts = as.matrix(counts)
+    ## Change of - to . is risky
+    colnames(counts) = gsub("-",".",colnames(counts))
+    counts = as.data.frame(counts)
+  }
   CheckCounts = CheckCountsTable(counts)
   counts = CheckCounts$counts
   
   ## Taxonomy table
-  taxo = as.data.frame(observation_metadata(dataBIOM))
-  OTUnames = rownames(taxo)
-  ## Modif taxo table (remove p__,... and change the colnames)
-  taxo = as.data.frame(sapply(taxo,gsub,pattern="^.*__",replacement=""))
-  colnames(taxo) = c("Kingdom", "Phylum","Class","Order","Family","Genus","Species")
-  rownames(taxo) = OTUnames
-  ## Remove empty row
-  taxo[taxo==""] = NA
-  taxo[taxo=="Unassigned"] = NA
-  taxo=taxo[rowSums(is.na(taxo))!=dim(taxo)[2], ]
+  tmp = observation_metadata(dataBIOM)
+  if(!is.null(tmp))
+  {
+    if(is.data.frame(tmp)) taxo = as.data.frame(tmp)
+    if(!is.data.frame(tmp)) taxo = as.data.frame(t(sapply(observation_metadata(dataBIOM),FUN=function(x){x[1:7]})))
+    
+    OTUnames = rownames(taxo)
+    ## Modif taxo table (remove p__,... and change the colnames)
+    taxo = as.data.frame(sapply(taxo,gsub,pattern="^.*__",replacement=""))
+    colnames(taxo) = c("Kingdom", "Phylum","Class","Order","Family","Genus","Species")
+    rownames(taxo) = OTUnames
+    ## Remove empty row
+    taxo[taxo==""] = NA
+    taxo[taxo=="Unassigned"] = NA
+    taxo=taxo[rowSums(is.na(taxo))!=dim(taxo)[2], ]
+  }
+  if(is.null(tmp) && !is.null(counts)) {taxo = data.frame(rownames(counts),row.names = rownames(counts));names(taxo)=NA; taxoCreated = TRUE}
   
-  CheckTaxo = CheckTaxoTable(taxo,counts)
+  CheckTaxo = CheckTaxoTable(taxo,counts,taxoCreated)
   
   ## Pourcentage of annotation
   tmp = PercentAnnot(counts,taxo)
@@ -209,6 +234,8 @@ GetDataFromCT <-function(dataC,dataT)
   counts = dataC
   CheckCounts = CheckCountsTable(counts)
   counts = CheckCounts$counts
+  
+  
   ## Taxonomy table
   taxo = as.data.frame(dataT)
   CheckTaxo = CheckTaxoTable(taxo,counts)
@@ -316,8 +343,8 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
     # merged_table = merge(CT, taxo[order(rownames(CT)),], by="row.names")
 
     merged_table = merge(CT, taxo, by="row.names")
-    CT = merged_table[,2: (dim(CT)[2]+1)]
-    taxo = merged_table[,(dim(CT)[2]+2):dim(merged_table)[2]]
+    CT = as.data.frame(merged_table[,2: (dim(CT)[2]+1)])
+    taxo = as.data.frame(merged_table[,(dim(CT)[2]+2):dim(merged_table)[2]])
     
     rownames(CT) = merged_table[,1]
     rownames(taxo) = merged_table[,1]

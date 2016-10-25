@@ -25,16 +25,19 @@ shinyServer(function(input, output,session) {
   ## Counts file
   dataInputCounts <-reactive({ 
     
+    data = NULL
     inFile <- input$fileCounts
     
     if (is.null(inFile)) return(NULL)
     
-    data = read.csv(inFile$datapath,sep=input$sepcount,header=TRUE,check.names=FALSE)
-    colnames(data) = gsub("-",".",colnames(data))
     
-    ## Rownames
-    if(!TRUE%in%duplicated(data[,1])) rownames(data)=data[,1];data=data[,-1]
-    
+    try(read.csv(inFile$datapath,sep=input$sepcount,header=TRUE,check.names=FALSE)->data,silent=T)
+
+    if(!is.null(data)){
+      colnames(data) = gsub("-",".",colnames(data))
+      ## Rownames
+      if(!TRUE%in%duplicated(data[,1])) rownames(data)=data[,1];data=data[,-1]
+    }
     return(as.data.frame(data))
   })
   
@@ -49,15 +52,18 @@ shinyServer(function(input, output,session) {
     
     if(input$TypeTaxo=="Table") 
     {
-      data = read.csv(inFile$datapath,sep=input$septaxo,header=TRUE)
-      
+      try(read.csv(inFile$datapath,sep=input$septaxo,header=TRUE)->data,silent=T)
+    
       ## Rownames
-      if(!TRUE%in%duplicated(data[,1])){ 
-        DataNames=data[,1]
-        colNames=colnames(data)[-1]
-        data=as.matrix(data[,-1])
-        rownames(data)=DataNames
-        colnames(data) = colNames
+      if(!is.null(data))
+      {
+        if(!TRUE%in%duplicated(data[,1])){ 
+          DataNames=data[,1]
+          colNames=colnames(data)[-1]
+          data=as.matrix(data[,-1])
+          rownames(data)=DataNames
+          colnames(data) = colNames
+        }
       }
     }
     
@@ -78,10 +84,11 @@ shinyServer(function(input, output,session) {
   ## BIOM File
   dataInputBiom <-reactive({ 
     
+    data = NULL
     inFile <- input$fileBiom
     
     if (is.null(inFile)) return(NULL)
-    data = read_biom(inFile$datapath)
+    try(read_biom(inFile$datapath)->data,silent=T)
     
     return(data)
   })
@@ -94,11 +101,14 @@ shinyServer(function(input, output,session) {
     data = NULL
     check = NULL
     percent = NULL
-    
+    Taxo = NULL
+    Counts = NULL
     if(input$FileFormat=="fileCounts")
     {
       Counts = dataInputCounts()
-      Taxo = dataInputTaxo()
+      if(!input$NoTaxoFile) Taxo = dataInputTaxo()
+      if(!is.null(Counts) && input$NoTaxoFile) {Taxo = data.frame(rownames(Counts),row.names = rownames(Counts));names(Taxo)=NA}
+      
       if(!is.null(Counts) && !is.null(Taxo))
       { 
         tmp = GetDataFromCT(Counts,Taxo)
@@ -243,7 +253,7 @@ shinyServer(function(input, output,session) {
     data = tmp$data
     check = tmp$check
     cond = (!is.null(data$taxo) && nrow(data$taxo)>0)
-    res =infoBox(h6(strong("Taxonomy table")), subtitle = h6("Load the taxonomy table") ,color = "light-blue",width=NULL,fill=TRUE, icon = icon("upload"))
+    res = infoBox(h6(strong("Taxonomy table")), subtitle = h6("Load the taxonomy table") ,color = "light-blue",width=NULL,fill=TRUE, icon = icon("upload"))
     
     if(cond)
     {
@@ -252,6 +262,7 @@ shinyServer(function(input, output,session) {
       if(is.null(check$CheckTaxo$Error) && is.null(check$CheckTaxo$Warning)) res = infoBox(h6(strong("Taxonomy table")), subtitle = h6(paste("Format of the taxonomy table seems to be OK")), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
     }
     
+    if(input$NoTaxoFile && input$FileFormat=="fileCounts") res = infoBox(h6(strong("Taxonomy table")), subtitle = h6("No taxonomy table has been uploaded, the analysis can only be done at the OTU/gene level"), icon = icon("warning"),color = "orange",width=NULL,fill=TRUE)
     return(res)
   })
   
@@ -264,7 +275,7 @@ shinyServer(function(input, output,session) {
     check = tmp$check
     cond = (!is.null(data$counts) && nrow(data$counts)>0 && !is.null(data$taxo) && nrow(data$taxo)>0)
     res = valueBox(paste0(0, "%"),h6(strong("Annotated features")), color = "light-blue",width=NULL,icon = icon("list"))
-    
+
     if(cond)
     {
       percent = round(100*tmp$percent,2)
@@ -348,7 +359,6 @@ shinyServer(function(input, output,session) {
     
     ## Check error in the counts and taxonomy table 
     CheckOK = (is.null(check$CheckCounts$Error) && is.null(check$CheckTaxo$Error)  && is.null(check$CheckPercent))
-    
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && CheckOK)
     {
 
@@ -365,7 +375,7 @@ shinyServer(function(input, output,session) {
                  tabName = "Visu"),
         menuItem("Perspective plots", icon = icon("pie-chart"), tabName = "Krona")
       )
-    }
+    } else{ sidebarMenu(id = "side",NULL)}
 
   })
   
@@ -1120,6 +1130,8 @@ shinyServer(function(input, output,session) {
     if(!is.null(data$taxo) && nrow(data$taxo)>0)
     { 
       tmp = colnames(data$taxo)
+      ind = which(is.na(tmp))
+      if(length(ind)>0) tmp = tmp[-which(is.na(tmp))]
       selectInput("TaxoSelect",h6(strong("Select the taxonomy level")),c("...",tmp,"OTU/Gene"))
     }
     else selectInput("TaxoSelect",h6(strong("Select the taxonomy level")),c("..."))
@@ -1202,6 +1214,61 @@ shinyServer(function(input, output,session) {
     }
     
   })
+  
+  
+  output$InfoBIOM<- renderUI({
+    
+    if(input$FileFormat=="fileBiom")
+    {
+      inFile <- input$fileBiom
+      tmpBIOM = dataInputBiom()
+      
+      if(!is.null(inFile) && is.null(tmpBIOM)) {   
+        box(title = "Error", status = "danger",width = 3,
+            h5(strong("This file can not be loaded.")),br(),
+            em("The loaded file is not in the biom format or its format is not currently supported by SHAMAN software")
+        )
+      }
+    }
+  })
+  
+  
+  output$InfoCountsFile<- renderUI({
+    
+    if(input$FileFormat=="fileCounts")
+    {
+      inFile <- input$fileCounts
+      Counts = dataInputCounts()
+      
+      if(!is.null(inFile) && is.null(Counts)) {   
+        box(title = "Error", status = "danger",width = 3,
+            h5(strong("This file can not be loaded.")),br(),
+            em("The count table file is not in the correct format for SHAMAN software")
+        )
+      }
+    }
+  })
+  
+  
+  output$InfoTaxoFile<- renderUI({
+    
+    if(input$FileFormat=="fileCounts")
+    {
+      inFile <- input$fileTaxo
+      Taxo = dataInputTaxo()
+      
+      if(!is.null(inFile) && !input$NoTaxoFile && is.null(Taxo)) {   
+        box(title = "Error", status = "danger",width = 3,
+            h5(strong("This file can not be loaded.")),br(),
+            em("The taxonomy table file is not in the correct format for SHAMAN software")
+        )
+      }
+    }
+  })
+  
+  
+
+  
   
   
   
@@ -1596,16 +1663,16 @@ shinyServer(function(input, output,session) {
   ##
   #####################################################
   
-  output$PlotVisuTree <- renderTreeWeightD3({
-    resDiff = ResDiffAnal()
-    taxo_table = dataInput()$data$taxo
-    CT_Norm_OTU = dataMergeCounts()$CT_Norm
-    res = NULL
-    if(!is.null(resDiff$dds) && length(input$VisuVarInt)>=1) res = Plot_Visu_Tree(input,resDiff,CT_Norm_OTU,taxo_table)
-    return(res)
-    
-  })
-  
+#   output$PlotVisuTree <- renderTreeWeightD3({
+#     resDiff = ResDiffAnal()
+#     taxo_table = dataInput()$data$taxo
+#     CT_Norm_OTU = dataMergeCounts()$CT_Norm
+#     res = NULL
+#     if(!is.null(resDiff$dds) && length(input$VisuVarInt)>=1) res = Plot_Visu_Tree(input,resDiff,CT_Norm_OTU,taxo_table)
+#     return(res)
+#     
+#   })
+#   
   
   output$PlotVisuBar <- renderChart({
     resDiff = ResDiffAnal()
@@ -1797,7 +1864,7 @@ shinyServer(function(input, output,session) {
     if(input$PlotVisuSelect=="Barplot") res =  showOutput("PlotVisuBar")
     if(input$PlotVisuSelect=="Heatmap") res =  d3heatmapOutput("heatmap", height = input$heightVisu+10)
     if(input$PlotVisuSelect=="Boxplot") res = plotOutput("Boxplot", height = input$heightVisu+10)
-    if(input$PlotVisuSelect=="Tree") res = treeWeightD3Output('PlotVisuTree', height = input$heightVisu+10,width="100%")
+    # if(input$PlotVisuSelect=="Tree") res = treeWeightD3Output('PlotVisuTree', height = input$heightVisu+10,width="100%")
     if(input$PlotVisuSelect=="Scatterplot" && !input$AddRegScatter) res = scatterD3Output("ScatterplotD3", height = input$heightVisu+10)
     if(input$PlotVisuSelect=="Scatterplot" && input$AddRegScatter) res = plotOutput("Scatterplotgg", height = input$heightVisu+10)
     
@@ -2041,28 +2108,28 @@ shinyServer(function(input, output,session) {
   })
   
   
-  output$VarIntVisuTree <- renderUI({
-    
-    target=dataInputTarget()$target
-    data = dataInput()$data 
-    taxo = input$TaxoSelect
-    resDiff = ResDiffAnal()
-    res = NULL
-    
-    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target)) 
-    {
-      counts = dataMergeCounts()$counts
-  
-      Available_x = sort(rownames(counts))
-      
-      res = selectizeInput("TaxoTree",h6(strong(paste("Select a specific",taxo,sep=" "))),c("...",Available_x),multiple = FALSE)
-
-    }
-    
-    return(res)
-    
-  })
-  
+#   output$VarIntVisuTree <- renderUI({
+#     
+#     target=dataInputTarget()$target
+#     data = dataInput()$data 
+#     taxo = input$TaxoSelect
+#     resDiff = ResDiffAnal()
+#     res = NULL
+#     
+#     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target)) 
+#     {
+#       counts = dataMergeCounts()$counts
+#   
+#       Available_x = sort(rownames(counts))
+#       
+#       res = selectizeInput("TaxoTree",h6(strong(paste("Select a specific",taxo,sep=" "))),c("...",Available_x),multiple = FALSE)
+# 
+#     }
+#     
+#     return(res)
+#     
+#   })
+#   
   #####################################################
   ##
   ##                KRONA
