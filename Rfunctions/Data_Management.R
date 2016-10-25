@@ -297,7 +297,7 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
   
     ## Create the dds object
     dds <- DESeqDataSetFromMatrix(countData=CT, colData=target, design=design,ignoreRank=TRUE)
-    save(dds,file="testdds.RData")
+    #save(dds,file="testdds.RData")
     if(is.null(VarNorm)){
       ## Counts normalisation
       ## Normalisation with or without 0
