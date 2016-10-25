@@ -293,7 +293,7 @@ shinyServer(function(input, output,session) {
     res = NULL
     counts = isolate(dataMergeCounts()$counts)
     tot = rowSums(counts)
-    save(counts,tot,file="testFilter.RData")
+    #save(counts,tot,file="testFilter.RData")
     withProgress({tmp = SelectThreshAb(counts,lambda=max(round(sum(counts)/nrow(counts)*0.05),min(tot)+1),graph=FALSE)},message="Loading...")
     
     res = sliderInput("SliderThAb","Threshold on the total abundance (in log)",min=0,max=round(max(log(tot+1)),1),value = log(tmp+1))
