@@ -25,10 +25,6 @@ if(!require(shinyjs)){
   install.packages("shinyjs")
   library(shinyjs)  
 }
-if(!require(plotly)){
-  install.packages("plotly")
-  library(plotly)  
-}
 
 function(request) {
 sidebar <- dashboardSidebar(
