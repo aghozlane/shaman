@@ -130,7 +130,10 @@ if (!require(scales)) {
   install.packages('scales')
   library(scales)
 }
-
+# if(!require(plotly)){
+#   install.packages("plotly")
+#   library(plotly)  
+# }
 
 # Allow to upload 50M files only shaman server
 if(Sys.info()["nodename"] == "shaman"){
