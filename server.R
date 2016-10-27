@@ -1228,9 +1228,7 @@ shinyServer(function(input, output,session) {
     
     ## Return NULL if there is no error
     if(!is.null(target)) ChTM = CheckTargetModel(input,target,labeled,CT)
-    print(ChTM$Error)
     if(!is.null(ChTM$Error)) {   
-      print("OK")
       box(title = "Error", status = "danger",width = 6,
           h6(strong(ChTM$Error)),
           footer = em("Reminder: Your target file must contain at least 2 columns and 2 rows. NA's values are not allowed and the variables must not be collinear.")
