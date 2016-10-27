@@ -1,5 +1,5 @@
 #@ This file contains all the functions needed to
-#@ to load, check and transform the data
+#@ to load, check, filter and transform the data 
 
 ## Add news to the home page
 addNews <- function(date ="",title="",text="")
@@ -166,6 +166,25 @@ CheckTargetModel <- function(input,target,labeled,CT)
   return(list(Error=Error,HowTo=HowTo))
 }
 
+
+
+
+CheckContrast <- function(contrastFile,dds)
+{
+  Error = NULL
+  Warning = NULL
+  parameterNames = resultsNames(dds)
+  if(is.null(contrastFile) && is.null(Error)){Error = "The format of the contrast file is not supported by SHAMAN" }
+  
+  
+  if(ncol(contrastFile)<1 && is.null(Error)){Error = "The contrast file seems to be empty" }
+  if(nrow(contrastFile)!=length(parameterNames) && is.null(Error)){Error = "The contrast file does not fit with the model parameters" }
+
+  if(TRUE%in%sapply(contrastFile,is.na) && is.null(Error)){Error = "NA values are considered as 0 is the counts table"; contrastFile[sapply(contrastFile,is.na)]=0}
+  
+  
+  return(list(Error=Error,Warning=Warning,contrastFile=contrastFile))
+}
 
 
 ## Get the percentage of annotated OTU
@@ -488,6 +507,9 @@ Filtered_feature <- function(counts,th.samp,th.abund)
   
   return(list(ind=ind,Tot_abundance=Tot_abundance,ind.ab=ind.ab,counts.bin=counts.bin,ind.samp=ind.samp,nbSampByFeat=nbSampByFeat))
 }
+
+
+
 
 
 

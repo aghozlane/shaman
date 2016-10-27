@@ -17,7 +17,7 @@ TableDiff_print <- function(input,BaseContrast,resDiff, info = NULL)
   cooksCutoff = ifelse(input$CooksCutOff!='Auto',ifelse(input$CooksCutOff!=Inf,input$CutOffVal,Inf),TRUE)
   result[[input$ContrastList_table]] <- results(dds,contrast=BaseContrast[,input$ContrastList_table],pAdjustMethod=input$AdjMeth,
                                                 cooksCutoff=cooksCutoff,
-                                                independentFiltering=input$IndFiltering,alpha=alpha)
+                                                independentFiltering=input$IndFiltering,alpha=alpha,parallel = TRUE)
   
   #names(result) <- gsub("_", " ", names(result))
   if (is.null(info))  info <- data.frame(Id = rownames(result[[1]]))

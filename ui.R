@@ -83,7 +83,7 @@ body <- dashboardBody(
                               A presentation about SHAMAN is available", a("here",target="_blank",href="shaman_presentation.pdf")," and a poster", a("here.",target="_blank",href="shaman_poster.pdf"), br(),
                               "SHAMAN is compatible with standard formats for metagenomic analysis. We also provide a complete pipeline for OTU picking and annotation named",a("MASQUE", href="https://github.com/aghozlane/masque") ,"used in production at Institut Pasteur.",style = "font-family: 'times'; font-si16pt"),
                             p("Hereafter is the global workflow of the SHAMAN application:"),
-                            div(img(src = "Workflow.png",width = "100%",style="max-width: 600px"),Align="center")
+                            div(img(src = "Workflow_sh.png",width = "100%",height = "100%",style="max-width: 800px;"),Align="center")
                             ),
                    tabPanel("Authors", h3("The main contributors to SHAMAN:"),
                             p(a("Stevenn Volant", href="mailto:stevenn.volant@pasteur.fr"), "(Initiator, coding, testing, documentation, evaluation)"),
@@ -332,9 +332,9 @@ body <- dashboardBody(
                 uiOutput("BoxTarget"),
                 uiOutput("BoxCountsMerge")
               ),
-       
+              
               column(width=7,
-                box(title="Options",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
+                  box(title="Options",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
                     tabBox(title="", id="tabsetOption", width=NULL,
                            tabPanel("Statistical model", 
                                     fluidRow(
@@ -402,18 +402,23 @@ body <- dashboardBody(
                                     )
                            )
                     )
-                ),
-                fluidRow(
-                column(width=8,
-                        uiOutput("contrastBox"),
-                       uiOutput("contrastBoxAdvanced")
-                       ),
-                column(width=4,
-                       uiOutput("contrastDefined")
-                )
-                )
+                  ),
+                  fluidRow(
+                    column(width=8,
+                            uiOutput("contrastBox"),
+                           uiOutput("contrastBoxAdvanced")
+                           ),
+                    column(width=4,
+                      
+                           uiOutput("contrastDefined"),
+                           uiOutput("InfoContrast_box")
+                      )
+                  )
+                  
               )
             )
+              
+            
     ),
     tabItem(tabName = "DiagPlotTab",
             fluidRow(

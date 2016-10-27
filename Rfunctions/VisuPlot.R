@@ -235,12 +235,14 @@ Plot_Visu_Scatterplot<- function(input,resDiff,export=FALSE,lmEst = FALSE,CorEst
   ColBy = input$ColorBy
   PchBy = input$PchBy
   PointSize = input$PointSize
+  NamesData = colnames(data)
+  x_var = NULL; y_var = NULL; col_var = NULL; symbol_var = NULL; size_var = NULL
   
-  x_var = if (is.null(Xvar)) NULL else data[,Xvar]
-  y_var = if (is.null(Yvar)) NULL else data[,Yvar]
-  col_var = if (ColBy== "None" || is.null(ColBy)) NULL else data[,ColBy]
-  symbol_var = if (PchBy == "None" || is.null(PchBy)) NULL else data[,PchBy]
-  size_var = if (PointSize == "None" || is.null(PointSize))  NULL else data[,PointSize]
+  if (!is.null(Xvar)) {if(Xvar%in%NamesData){x_var = data[,Xvar]}}
+  if (!is.null(Yvar)) {if(Yvar%in%NamesData){ y_var = data[,Yvar]}}
+  if (!is.null(ColBy)) {if(ColBy%in%NamesData){ col_var = data[,ColBy]}}
+  if (!is.null(PchBy)) {if(PchBy%in%NamesData){ symbol_var = data[,PchBy]}}
+  if (!is.null(PointSize)) {if(PointSize%in%NamesData){ size_var = data[,PointSize]}}
   
   if(!export && !input$AddRegScatter && !lmEst && !CorEst && !is.null(x_var) && !is.null(y_var)){
     plot = scatterD3(x = x_var,

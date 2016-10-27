@@ -36,16 +36,24 @@ GetInteraction2 <- function(target,VarInt)
 Get_dds_object <- function(input,counts,target,design,normFactorsOTU,CT_noNorm,CT_Norm)
 {
   dds <- DESeqDataSetFromMatrix(countData=counts, colData=target, design=design,ignoreRank = TRUE)
-  
   sizeFactors(dds) = normFactorsOTU
-  dds <- estimateDispersions(dds, fitType=input$fitType)
+ 
+#   dds <- estimateDispersions(dds, fitType=input$fitType)
+#   if(as.numeric(R.Version()$major)>=3 && as.numeric(R.Version()$minor) >=1.3){
+#     dds <- nbinomWaldTest(dds)
+#   }else{
+#     dds <- nbinomWaldTest(dds,modelMatrixType = "expanded")
+#   }
+#   countsNorm = counts(dds, normalized = TRUE)
+
   if(as.numeric(R.Version()$major)>=3 && as.numeric(R.Version()$minor) >=1.3){
-    dds <- nbinomWaldTest(dds)
+    dds <-   dds <- DESeq(dds,fitType=input$fitType,parallel = TRUE,minReplicatesForReplace = Inf)
   }else{
-    dds <- nbinomWaldTest(dds,modelMatrixType = "expanded")
+    dds <-   dds <- DESeq(dds,fitType=input$fitType,modelMatrixType = "expanded",parallel = TRUE)
   }
   countsNorm = counts(dds, normalized = TRUE)
   
+    
   #save(dds,file="dds.RData")
   return(list(dds = dds,raw_counts=counts,countsNorm=countsNorm,target=target,design=design,normFactors = normFactorsOTU,CT_noNorm=CT_noNorm,CT_Norm=CT_Norm))
 }

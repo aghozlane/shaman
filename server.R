@@ -786,20 +786,28 @@ shinyServer(function(input, output,session) {
   AddContFromFile <-eventReactive(input$fileContrast,{ 
     
     res = ReadContrastFile()
-    createdCont = NULL
-    filesize = file.info(namesfile)[,"size"]
-    if(is.na(filesize)){filesize=0}
-    if(filesize!=0){ createdCont = read.table(namesfile,header=TRUE) }
+    resDiff = ResDiffAnal()
+    dds = resDiff$dds
+    CheckCont = CheckContrast(res,dds)
     
-    if(!is.null(res))
-    { 
-      if(!is.null(createdCont)) res = cbind(res,createdCont)
-      updateSelectInput(session, "ContrastList","Contrasts",colnames(res))
-      updateSelectInput(session, "ContrastList_table","Contrasts",colnames(res))
-      updateSelectInput(session, "ContrastList_table_Visu","For which contrasts",colnames(res))
-      updateSelectInput(session, "ContrastList_table_VisuComp","For which contrasts",colnames(res))
-      updateSelectInput(session, "ContrastList_table_FC","Contrasts (Min = 2)",colnames(res))
-      write.table(res,namesfile,row.names=FALSE)
+    if(is.null(CheckCont$Error))
+    {
+      res = CheckCont$contrastFile
+      createdCont = NULL
+      if(!is.null(res))
+      { 
+        filesize = file.info(namesfile)[,"size"]
+        if(is.na(filesize)){filesize=0}
+        if(filesize!=0){ createdCont = read.table(namesfile,header=TRUE) }
+      
+        if(!is.null(createdCont)) res = cbind(res,createdCont)
+        updateSelectInput(session, "ContrastList","Contrasts",colnames(res))
+        updateSelectInput(session, "ContrastList_table","Contrasts",colnames(res))
+        updateSelectInput(session, "ContrastList_table_Visu","For which contrasts",colnames(res))
+        updateSelectInput(session, "ContrastList_table_VisuComp","For which contrasts",colnames(res))
+        updateSelectInput(session, "ContrastList_table_FC","Contrasts (Min = 2)",colnames(res))
+        write.table(res,namesfile,row.names=FALSE)
+      }
     }
   })
   
@@ -867,25 +875,59 @@ shinyServer(function(input, output,session) {
     input$RemoveContrast
     input$fileContrast
     resDiff = ResDiffAnal()
+    dds = resDiff$dds
     res=NULL
+    tmpFile = NULL
+    
     if(!is.null(resDiff)){
       
       res = infoBox("Contrasts", subtitle = h6("At least one contrast (non null) must be defined"), icon = icon("warning"),color = "light-blue",width=NULL,fill=TRUE)
-      test = FALSE
+      
       filesize = isolate(file.info(namesfile)[,"size"])
-      
+
       if(is.na(filesize)){filesize=0}
-      if(filesize!=0) 
+      if(filesize!=0) tmpFile = read.table(namesfile,header=TRUE)
+      if(!is.null(tmpFile))
       {
-        tmp = read.table(namesfile,header=TRUE)
-        if(any(as.vector(tmp)!=0)) test = TRUE
-      }
+        CheckCont = CheckContrast(tmpFile,dds)
+        if(!is.null(CheckCont$Warning)) res = infoBox(h6(strong("Contrasts")), subtitle = h6(CheckCont$Warning), icon = icon("warning"),color = "orange",width=NULL,fill=TRUE)
+        if(!is.null(CheckCont$Error)) res = infoBox(h6(strong("Contrasts")), subtitle = h6(CheckCont$Error), icon = icon("thumbs-o-down"),color = "red",width=NULL,fill=TRUE)
+        if(is.null(CheckCont$Error) && is.null(CheckCont$Warning))  res = infoBox("Contrasts", subtitle = h6("Contrasts OK"), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
       
-      if(test) res = infoBox("Contrasts", subtitle = h6("Contrasts OK"), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
+      }
+      ## if user load a bad contrast file after having define one or more good contrasts
+#       if(!is.null(input$fileContrast)){
+#         tmpRead = ReadContrastFile()
+#         CheckCont_new = CheckContrast(tmpRead,dds)
+#         if(!is.null(CheckCont_new$Warning)) info("test1")
+#         if(!is.null(CheckCont_new$Error)) info("test2")
+#       }
     }
     return(res)
   })
   
+  
+  # Infobox Contrast
+  output$InfoContrast_box <- renderUI({
+    resDiff = ResDiffAnal()
+    dds = resDiff$dds
+    
+    if(!is.null(resDiff)){
+
+      if(!is.null(input$fileContrast)){
+        tmpRead = ReadContrastFile()
+        CheckCont_new = CheckContrast(tmpRead,dds)
+        if(!is.null(CheckCont_new$Warning)){      
+          box(title = "Warning", status = "warning",width = NULL,
+              h6(strong(CheckCont_new$Warning)))
+        }
+        if(!is.null(CheckCont_new$Error)){      
+          box(title = "Warning", status = "warning",width = NULL,
+              h6(strong(CheckCont_new$Error)))
+        }
+      }
+    }
+  })
   
   
   output$contrastBox <- renderUI({
@@ -1011,8 +1053,11 @@ shinyServer(function(input, output,session) {
     { 
       box(title="Contrasts (advanced user)",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = FALSE,
           fluidRow(
-            column(width=12,
-                   fileInput('fileContrast', h6(strong('Select a file of contrasts')),width="60%")
+            column(width=9,
+                   fileInput('fileContrast', h6(strong('Select a file of contrasts')),width="80%")
+            ),
+            column(width=3,
+                   column(width=12,selectInput("sepContFile", h6(strong("Separator:")), c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";","Space"= " "),selected = " "))
             ),
             hr(),
             column(width=12,h6(strong("Define contrasts by yourself"))),
@@ -1054,7 +1099,7 @@ shinyServer(function(input, output,session) {
     
     if (is.null(inFile)) return(NULL)
     
-    res = read.csv(inFile$datapath,sep=" ",header=TRUE)
+    try(read.csv(inFile$datapath,header=TRUE,sep=input$sepContFile)->res,silent=T)
     
     return(res)
   })
@@ -1186,13 +1231,14 @@ shinyServer(function(input, output,session) {
     
     ## Return NULL if there is no error
     if(!is.null(target)) ChTM = CheckTargetModel(input,target,labeled,CT)
-    
+    print(ChTM$Error)
     if(!is.null(ChTM$Error)) {   
+      print("OK")
       box(title = "Error", status = "danger",width = 6,
           h6(strong(ChTM$Error)),
           footer = em("Reminder: Your target file must contain at least 2 columns and 2 rows. NA's values are not allowed and the variables must not be collinear.")
       )
-    }
+    } else return(NULL)
     
   })
   
@@ -2091,11 +2137,18 @@ shinyServer(function(input, output,session) {
       ## Get numeric variables from target
       typesTarget = sapply(target,class)
       numInd = (typesTarget=="numeric")[2:ncol(target)]
-      Available_x = list(x1 = c(sort(rownames(counts))),"Diversity" = c("Alpha div","Shannon div","Inv.Simpson div","Simpson div"))
-      names(Available_x)[1] = taxo
-      if(any(numInd)) Available_x$Variables = namesTarget[numInd]
+      ## Using list slows down the application if the number of rows too high
+      if(nrow(counts)<300) 
+      {
+        Available_x = list(x1 = c(sort(rownames(counts))),"Diversity" = c("Alpha div","Shannon div","Inv.Simpson div","Simpson div"))
+        names(Available_x)[1] = taxo
+        if(any(numInd)) Available_x$Variables = namesTarget[numInd]
+      } else{
+        Available_x = c(sort(rownames(counts)),"Alpha div","Shannon div","Inv.Simpson div","Simpson div")
+        if(any(numInd)) Available_x = c(Available_x,namesTarget[numInd])
+      }
       Available_y = Available_x
-      
+    
       res[[1]] = selectizeInput("Xscatter",h6(strong("X variable")),Available_x, selected = Available_x[1],multiple = FALSE)
       res[[2]] = selectizeInput("Yscatter",h6(strong("Y variable")),Available_y, selected = Available_x[2],multiple = FALSE)
       res[[3]] = selectizeInput("ColorBy",h6(strong("Color variable")),c("None"="None",namesTarget[!numInd]),multiple = FALSE)
