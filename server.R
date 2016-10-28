@@ -935,7 +935,7 @@ shinyServer(function(input, output,session) {
     if(!is.null(resDiff))
     { 
       ## Check the R version
-      # if(as.numeric(R.Version()$major)<=3 && as.numeric(R.Version()$minor) <=1.2){
+       if(as.numeric(R.Version()$major)<=3 && as.numeric(R.Version()$minor) <=1.2){
         box(title="Contrasts (New)",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = FALSE,
             fluidRow(
               column(width=3,selectInput("Select1_contrast","Compare","")),
@@ -944,7 +944,7 @@ shinyServer(function(input, output,session) {
               column(width=3,br(),actionButton("AddContrastEasy","Add",icon = icon("plus")))
             )
         )
-      # }
+      }
     }
     
     
