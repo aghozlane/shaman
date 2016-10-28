@@ -123,7 +123,6 @@ CheckTargetModel <- function(input,target,labeled,CT)
     HowTo = "Add at least one variable in the 'Select the variables' widget"
   }
   
-  
   ## Names of samples correct ?
   if(is.null(Error) && labeled==0){
     Error = "The names of the samples in the target file do not fit the counts table" 
@@ -134,8 +133,13 @@ CheckTargetModel <- function(input,target,labeled,CT)
   if(is.null(Error) && ncol(target)<2){
     Error = "The number of columns of the target file must be at least 2"
     HowTo = "Add at least one additional variable to describe your samples"
-
-    }
+  }
+  
+  if(is.null(Error) && min(sapply(apply(target,2,unique),length)) <=1){
+    Error = "One of the variable has the same value for all the samples" 
+    HowTo = "Remove the variable from the target file"
+  }
+  
   
   ## Number of rows
   if(is.null(Error) && nrow(target)<=1){

@@ -480,46 +480,50 @@ shinyServer(function(input, output,session) {
     
     inFile <- input$fileTarget
     counts = dataInput()$data$counts
-    
+    labeled = 0
     
     if (is.null(inFile)) return(NULL)
     
+    ## Read the data
+    try(read.csv(inFile$datapath,sep=input$septarget,header=TRUE)->data,silent=TRUE)
     
-    data = read.csv(inFile$datapath,sep=input$septarget,header=TRUE)
-    data = as.data.frame(data)
-    names = colnames(data)
-    
-    ## Change the rownames
-    rownames(data) <- as.character(data[, 1])
-    
-    ## Keep only the row which are in the count table
-    ind = which(rownames(data)%in%colnames(counts))
-    data = as.data.frame(data[ind,])
-    colnames(data) = names
-    ## Replace "-" by "."
-    if(ncol(data)>1 && nrow(data)>1){
-      ind_num = which(sapply(as.data.frame(data[,-1]),is.numeric)) + 1
-      if(length(ind_num)>0){
-        data_tmp =cbind( as.data.frame(apply(as.data.frame(data[,-ind_num]),2,gsub,pattern = "-",replacement = ".")),data[,ind_num])
-        colnames(data_tmp) = c(colnames(data)[-ind_num],colnames(data)[ind_num])
-        data = data_tmp
+    if(!is.null(data))
+    {
+      data = as.data.frame(data)
+      names = colnames(data)
+      
+      ## Change the rownames
+      rownames(data) <- as.character(data[, 1])
+      
+      ## Keep only the row which are in the count table
+      ind = which(rownames(data)%in%colnames(counts))
+      data = as.data.frame(data[ind,])
+      colnames(data) = names
+      ## Replace "-" by "."
+      if(ncol(data)>1 && nrow(data)>1){
+        ind_num = which(sapply(as.data.frame(data[,-1]),is.numeric)) + 1
+        if(length(ind_num)>0){
+          data_tmp =cbind( as.data.frame(apply(as.data.frame(data[,-ind_num]),2,gsub,pattern = "-",replacement = ".")),data[,ind_num])
+          colnames(data_tmp) = c(colnames(data)[-ind_num],colnames(data)[ind_num])
+          data = data_tmp
+        }
+        if(length(ind_num)==0){data = as.data.frame(apply(data,2,gsub,pattern = "-",replacement = "."))}
       }
-      if(length(ind_num)==0){data = as.data.frame(apply(data,2,gsub,pattern = "-",replacement = "."))}
+      target = as.data.frame(data)
+      
+      # target = as.data.frame(apply(target,2,gsub,pattern = "-",replacement = "."))
+      
+      #ord = order(rownames(data))
+      #data = data[ord,]
+      ### A SUPPRIMER 
+      #rownames(data) <- colnames(counts)
+      
+      # Percent annotated
+      #     print(ind)
+      #     print(colnames(counts))
+      #     print(rownames(data))
+      labeled = length(ind)/length(colnames(counts))*100.0
     }
-    target = as.data.frame(data)
-    
-    # target = as.data.frame(apply(target,2,gsub,pattern = "-",replacement = "."))
-    
-    #ord = order(rownames(data))
-    #data = data[ord,]
-    ### A SUPPRIMER 
-    #rownames(data) <- colnames(counts)
-    
-    # Percent annotated
-    #     print(ind)
-    #     print(colnames(counts))
-    #     print(rownames(data))
-    labeled = length(ind)/length(colnames(counts))*100.0
     
     return(list(target = target, labeled=labeled))
   })
