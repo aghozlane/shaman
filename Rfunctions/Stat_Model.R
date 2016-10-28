@@ -130,14 +130,16 @@ BaseContrastEasy <- function(input,names,namesfile,target)
   ## Get the selected modalities
   M1 = input$Select1_contrast
   M2 = input$Select2_contrast
+  print(M1)
+  print(M2)
   
   if(length(input$Interaction2)>0) F1 = input$Select3_contrast
   ## Get the name of the parameter corresponding to the modalities
   InterVar = input$InterestVar
-  Sel_Var = InterVar[which(unlist(lapply(target[,InterVar],FUN = function(x){M1%in%x})))]
+  if(length(InterVar)>1) {Sel_Var = InterVar[which(unlist(lapply(target[,InterVar],FUN = function(x){M1%in%x})))]} else Sel_Var = InterVar
   names1dds = paste(Sel_Var,M1,sep="")
   names2dds = paste(Sel_Var,M2,sep="")
-  
+
   ## fill the vector
   ind1 = which(names%in%names1dds)
   ind2 = which(names%in%names2dds)
