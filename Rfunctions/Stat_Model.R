@@ -130,9 +130,7 @@ BaseContrastEasy <- function(input,names,namesfile,target)
   ## Get the selected modalities
   M1 = input$Select1_contrast
   M2 = input$Select2_contrast
-  print(M1)
-  print(M2)
-  
+
   if(length(input$Interaction2)>0) F1 = input$Select3_contrast
   ## Get the name of the parameter corresponding to the modalities
   InterVar = input$InterestVar
