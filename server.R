@@ -203,30 +203,25 @@ shinyServer(function(input, output,session) {
     target = isolate(dataInputTarget()$target)
     labeled= isolate(dataInputTarget()$labeled)
     taxo = isolate(input$TaxoSelect)
-    
     withProgress(
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target)) 
     {
       design = GetDesign(isolate(input),target)
       ChTM = CheckTargetModel(input,target,labeled,data$counts)$Error
-      
       if(!is.null(design) && is.null(ChTM))
       {
         tmp = isolate(GetCountsMerge(input,data,taxo,target,design))
         counts = tmp$counts
-        
         ## Filtering the counts
         if(isolate(input$AddFilter) && !is.null(isolate(input$SliderThSamp)) && !is.null(isolate(input$SliderThAb)))
         {
           ind.filter =Filtered_feature(counts,isolate(input$SliderThSamp),isolate(input$SliderThAb))$ind
           counts = counts[-ind.filter,]
         }
-        
         CheckTarget = tmp$CheckTarget
         #target = tmp$target
         #labeled = tmp$labeled
         normFactors = tmp$normFactors
-        
         ## OTU table, norm and no norm
         CT_noNorm = tmp$CT_noNorm
         CT_Norm = tmp$CT_Norm
@@ -1471,9 +1466,9 @@ shinyServer(function(input, output,session) {
     filename <- function() { paste(input$DiagPlot,paste('SHAMAN',input$Exp_format,sep="."),sep="_") },
     content <- function(file) {
       if(input$Exp_format=="png") png(file, width = input$widthDiagExport, height = input$heightDiagExport)
-      if(input$Exp_format=="pdf") pdf(file, width = input$widthDiagExport/96, height = input$heightDiagExport/96)
-      if(input$Exp_format=="eps") postscript(file, width = input$widthDiagExport/96, height = input$heightDiagExport/96)
-      if(input$Exp_format=="svg") svg(file, width = input$widthDiagExport/96, height = input$heightDiagExport/96)
+      else if(input$Exp_format=="pdf") pdf(file, width = input$widthDiagExport/96, height = input$heightDiagExport/96)
+      else if(input$Exp_format=="eps") postscript(file, width = input$widthDiagExport/96, height = input$heightDiagExport/96)
+      else if(input$Exp_format=="svg") svg(file, width = input$widthDiagExport/96, height = input$heightDiagExport/96)
       
       print(Plot_diag(input,ResDiffAnal()))
       dev.off()
@@ -1495,16 +1490,16 @@ shinyServer(function(input, output,session) {
       taxo = input$TaxoSelect
       
       if(input$Exp_format_Visu=="png") png(file, width = input$widthVisuExport, height = input$heightVisuExport)
-      if(input$Exp_format_Visu=="pdf") pdf(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96)
-      if(input$Exp_format_Visu=="eps") postscript(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96,paper="special")
-      if(input$Exp_format_Visu=="svg") svg(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96)
+      else if(input$Exp_format_Visu=="pdf") pdf(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96)
+      else if(input$Exp_format_Visu=="eps") postscript(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96,paper="special")
+      else if(input$Exp_format_Visu=="svg") svg(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96)
       
       if(input$PlotVisuSelect=="Barplot") print(Plot_Visu_Barplot(input,ResDiffAnal())$gg)
-      if(input$PlotVisuSelect=="Heatmap") Plot_Visu_Heatmap(input,ResDiffAnal(),export=TRUE)
-      if(input$PlotVisuSelect=="Boxplot") print(Plot_Visu_Boxplot(input,ResDiffAnal(),alpha=ifelse(input$Exp_format_Visu=="eps",1,0.7)))
-      if(input$PlotVisuSelect=="Scatterplot") print(Plot_Visu_Scatterplot(input,ResDiffAnal(),export=TRUE,lmEst = FALSE))
-      if(input$PlotVisuSelect=="Diversity") print(Plot_Visu_Diversity(input,ResDiffAnal())$plot)
-      if(input$PlotVisuSelect=="Rarefaction") print( Plot_Visu_Rarefaction(input,ResDiffAnal(),ranges$x,ranges$y,ylab=taxo))
+      else if(input$PlotVisuSelect=="Heatmap") Plot_Visu_Heatmap(input,ResDiffAnal(),export=TRUE)
+      else if(input$PlotVisuSelect=="Boxplot") print(Plot_Visu_Boxplot(input,ResDiffAnal(),alpha=ifelse(input$Exp_format_Visu=="eps",1,0.7)))
+      else if(input$PlotVisuSelect=="Scatterplot") print(Plot_Visu_Scatterplot(input,ResDiffAnal(),export=TRUE,lmEst = FALSE))
+      else if(input$PlotVisuSelect=="Diversity") print(Plot_Visu_Diversity(input,ResDiffAnal())$plot)
+      else if(input$PlotVisuSelect=="Rarefaction") print( Plot_Visu_Rarefaction(input,ResDiffAnal(),ranges$x,ranges$y,ylab=taxo))
       dev.off()
       
     }
@@ -1520,9 +1515,9 @@ shinyServer(function(input, output,session) {
       taxo = input$TaxoSelect
       
       if(input$Exp_format_VisuComp=="png") png(file, width = input$widthVisuExportComp, height = input$heightVisuExportComp)
-      if(input$Exp_format_VisuComp=="pdf") pdf(file, width = input$widthVisuExportComp/96, height = input$heightVisuExportComp/96)
-      if(input$Exp_format_VisuComp=="eps") postscript(file, width = input$widthVisuExportComp/96, height = input$heightVisuExportComp/96,paper="special")
-      if(input$Exp_format_VisuComp=="svg") svg(file, width = input$widthVisuExportComp/96, height = input$heightVisuExportComp/96)
+      else if(input$Exp_format_VisuComp=="pdf") pdf(file, width = input$widthVisuExportComp/96, height = input$heightVisuExportComp/96)
+      else if(input$Exp_format_VisuComp=="eps") postscript(file, width = input$widthVisuExportComp/96, height = input$heightVisuExportComp/96,paper="special")
+      else if(input$Exp_format_VisuComp=="svg") svg(file, width = input$widthVisuExportComp/96, height = input$heightVisuExportComp/96)
       
       BaseContrast = read.table(namesfile,header=TRUE)
       filesize = file.info(namesfile)[,"size"]
@@ -1723,16 +1718,16 @@ shinyServer(function(input, output,session) {
   ##
   #####################################################
   
-#   output$PlotVisuTree <- renderTreeWeightD3({
-#     resDiff = ResDiffAnal()
-#     taxo_table = dataInput()$data$taxo
-#     CT_Norm_OTU = dataMergeCounts()$CT_Norm
-#     res = NULL
-#     if(!is.null(resDiff$dds) && length(input$VisuVarInt)>=1) res = Plot_Visu_Tree(input,resDiff,CT_Norm_OTU,taxo_table)
-#     return(res)
-#     
-#   })
-#   
+  output$PlotVisuTree <- renderTreeWeightD3({
+    resDiff = ResDiffAnal()
+    taxo_table = dataInput()$data$taxo
+    CT_Norm_OTU = dataMergeCounts()$CT_Norm
+    res = NULL
+    if(!is.null(resDiff$dds) && length(input$VisuVarInt)>=1) res = Plot_Visu_Tree(input,resDiff,CT_Norm_OTU,taxo_table)
+    return(res)
+
+  })
+
   
   output$PlotVisuBar <- renderChart({
     resDiff = ResDiffAnal()
@@ -1924,7 +1919,7 @@ shinyServer(function(input, output,session) {
     if(input$PlotVisuSelect=="Barplot") res =  showOutput("PlotVisuBar")
     if(input$PlotVisuSelect=="Heatmap") res =  d3heatmapOutput("heatmap", height = input$heightVisu+10)
     if(input$PlotVisuSelect=="Boxplot") res = plotOutput("Boxplot", height = input$heightVisu+10)
-    # if(input$PlotVisuSelect=="Tree") res = treeWeightD3Output('PlotVisuTree', height = input$heightVisu+10,width="100%")
+    if(input$PlotVisuSelect=="Tree") res = treeWeightD3Output('PlotVisuTree', height = input$heightVisu+10,width="100%")
     if(input$PlotVisuSelect=="Scatterplot" && !input$AddRegScatter) res = scatterD3Output("ScatterplotD3", height = input$heightVisu+10)
     if(input$PlotVisuSelect=="Scatterplot" && input$AddRegScatter) res = plotOutput("Scatterplotgg", height = input$heightVisu+10)
     
@@ -2175,28 +2170,28 @@ shinyServer(function(input, output,session) {
   })
   
   
-#   output$VarIntVisuTree <- renderUI({
-#     
-#     target=dataInputTarget()$target
-#     data = dataInput()$data 
-#     taxo = input$TaxoSelect
-#     resDiff = ResDiffAnal()
-#     res = NULL
-#     
-#     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target)) 
-#     {
-#       counts = dataMergeCounts()$counts
-#   
-#       Available_x = sort(rownames(counts))
-#       
-#       res = selectizeInput("TaxoTree",h6(strong(paste("Select a specific",taxo,sep=" "))),c("...",Available_x),multiple = FALSE)
-# 
-#     }
-#     
-#     return(res)
-#     
-#   })
-#   
+  output$VarIntVisuTree <- renderUI({
+
+    target=dataInputTarget()$target
+    data = dataInput()$data
+    taxo = input$TaxoSelect
+    resDiff = ResDiffAnal()
+    res = NULL
+
+    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target))
+    {
+      counts = dataMergeCounts()$counts
+
+      Available_x = sort(rownames(counts))
+
+      res = selectizeInput("TaxoTree",h6(strong(paste("Select a specific",taxo,sep=" "))),c("...",Available_x),multiple = FALSE)
+
+    }
+
+    return(res)
+
+  })
+
   #####################################################
   ##
   ##                KRONA

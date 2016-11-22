@@ -5,10 +5,10 @@ if (!require(devtools)) {
   install.packages('devtools')
   library(devtools)
 }
-# if(!require(treeWeightD3)){
-#   devtools::install_git('https://gitlab.pasteur.fr/plechat/treeWeightD3.git')
-#   library(treeWeightD3)
-# }
+if(!require(treeWeightD3)){
+  devtools::install_github('pierreLec/treeWeightD3')
+  library(treeWeightD3)
+}
 if (!require(scatterD3)) {
   devtools::install_github('aghozlane/scatterD3')
   library(scatterD3)
@@ -607,8 +607,8 @@ body <- dashboardBody(
 
             column(width=3,
               box(title = "Select your plot",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = FALSE,collapsed= FALSE,
-                  # selectizeInput("PlotVisuSelect","",c("Barplot"="Barplot","Heatmap"="Heatmap","Boxplot"="Boxplot","Tree"="Tree","Scatterplot"="Scatterplot","Diversity"="Diversity","Rarefaction"="Rarefaction"),selected = "Tree")
-                  selectizeInput("PlotVisuSelect","",c("Barplot"="Barplot","Heatmap"="Heatmap","Boxplot"="Boxplot","Scatterplot"="Scatterplot","Diversity"="Diversity","Rarefaction"="Rarefaction"),selected = "Barplot")
+                  selectizeInput("PlotVisuSelect","",c("Barplot"="Barplot","Heatmap"="Heatmap","Boxplot"="Boxplot","Tree"="Tree","Scatterplot"="Scatterplot","Diversity"="Diversity","Rarefaction"="Rarefaction"),selected = "Barplot")
+                  #selectizeInput("PlotVisuSelect","",c("Barplot"="Barplot","Heatmap"="Heatmap","Boxplot"="Boxplot","Scatterplot"="Scatterplot","Diversity"="Diversity","Rarefaction"="Rarefaction"),selected = "Barplot")
               ),
 
 
@@ -623,8 +623,8 @@ body <- dashboardBody(
                                    h5(strong("Select the modalities")),
                                    uiOutput("ModVisu")
                   ),
-#                   conditionalPanel(condition="input.PlotVisuSelect=='Tree' ",
-#                                    uiOutput("VarIntVisuTree")),
+                  conditionalPanel(condition="input.PlotVisuSelect=='Tree' ",
+                                    uiOutput("VarIntVisuTree")),
                   conditionalPanel(condition="input.PlotVisuSelect=='Scatterplot' ",
                                    uiOutput("VarIntVisuScatter"),
                                    radioButtons("TransDataScatter","Data transformation",c("Log2 +1" = "log2","None" = "none"),inline=TRUE),
