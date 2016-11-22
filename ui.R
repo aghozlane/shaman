@@ -44,6 +44,7 @@ sidebar <- dashboardSidebar(
     menuItem("Upload your data", tabName = "Upload", icon = icon("upload")),
     # bookmarkButton(),
     menuItemOutput("dymMenu"),
+    
     img(src = "logo.jpg", height = 49, width = 220,style="position:absolute;bottom:0;margin:0 0 15px 10px;")
   )
   )

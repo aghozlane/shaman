@@ -90,6 +90,7 @@ shinyServer(function(input, output,session) {
     return(data)
   })
   
+
   
   
   ## Input data
@@ -100,6 +101,8 @@ shinyServer(function(input, output,session) {
     percent = NULL
     Taxo = NULL
     Counts = NULL
+    inputData = NULL
+    
     if(input$FileFormat=="fileCounts")
     {
       Counts = dataInputCounts()
@@ -126,6 +129,17 @@ shinyServer(function(input, output,session) {
         percent = tmp$Percent
       }
     }
+    
+#     if(input$FileFormat=="fileRData")
+#     {
+#       inFile <- input$fileRData
+#       load(inFile)
+#       if(!is.null(inputData)){
+#         data = inputData$data
+#         check = inputData$check
+#         percent = inputData$percent
+#       }
+#     }
     
     return(list(data=data,check=check,percent=percent))
   })
