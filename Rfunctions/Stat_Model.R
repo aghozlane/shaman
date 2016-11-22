@@ -72,15 +72,17 @@ Get_dds_object <- function(input,counts,target,design,normFactorsOTU,CT_noNorm,C
 
 
 ## Get the design according to the input
-GetDesign <- function(input)
+GetDesign <- function(input,target)
 {
   design = NULL
   Interaction = NULL
   InterVar = input$InterestVar
-  if(length(InterVar)>1) Interaction = input$Interaction2
-  alltmp = c(InterVar,Interaction)
-  if(length(alltmp)>0) design = as.formula(paste("~", paste0(alltmp, collapse= "+")))
-  
+  if(!any(!InterVar%in%colnames(target)))
+  {
+    if(length(InterVar)>1) Interaction = input$Interaction2
+    alltmp = c(InterVar,Interaction)
+    if(length(alltmp)>0) design = as.formula(paste("~", paste0(alltmp, collapse= "+")))
+  }
   return(design)
 }
 
