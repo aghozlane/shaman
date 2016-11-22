@@ -380,6 +380,7 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
     if(taxoSelect=="OTU/Gene") counts = counts_annot
     else{
       if(input$TypeTable == "MGS" && input$FileFormat!="fileBiom"){
+        print("MGS")
         taxoS = taxo[,input$TypeTable]
         counts = aggregate(counts_annot,by=list(Taxonomy = taxoS),mean)
         rownames(counts)=counts[,1]
@@ -388,6 +389,7 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
         rownames(counts_int)=rownames(counts)
         colnames(counts_int)=colnames(counts)
         counts=counts_int
+        print("end")
       }
       if(taxoSelect != "MGS" || input$FileFormat=="fileBiom"){
         #taxoS = taxo[ordOTU,taxoSelect]
