@@ -22,7 +22,8 @@ Plot_Visu_Barplot <- function(input,resDiff)
   if(nbKept==1) namesTax = ind_taxo
   
   dataNull = data.frame(x=c(0,0),y=c(1,2))
-  plotd3 = nvd3Plot(x ~ y , data = dataNull, type = "multiBarChart", id = 'barplotTaxoNyll',height = input$heightVisu,width=input$widthVisu)
+
+  plotd3 = nvd3Plot(x ~ y , data = dataNull, type = "multiBarChart", id = 'barplotTaxoNyll',height = input$heightVisu,width=if(input$modifwidthVisu){input$widthVisu})
   gg = NULL
   
   if(!is.null(counts_tmp_combined) && nrow(counts_tmp_combined)>0 && length(VarInt)>0)
@@ -64,8 +65,16 @@ Plot_Visu_Barplot <- function(input,resDiff)
     if(input$SensPlotVisu == "Vertical") Sens = "multiBarChart"
     if(input$SensPlotVisu == "Horizontal") Sens = "multiBarHorizontalChart"
     
-    plotd3 <- nvd3Plot(Proportions ~ AllVar | Taxonomy, data = dataBarPlot_mat, type = Sens, id = 'barplotTaxo',height = input$heightVisu,width=input$widthVisu)
+    XRotate = input$rotateXLabel
+
+    plotd3 <- nvd3Plot(Proportions ~ AllVar | Taxonomy, data = dataBarPlot_mat, type = Sens, id = 'barplotTaxo', height = input$heightVisu, width=if(input$modifwidthVisu){input$widthVisu})
     plotd3$chart(stacked = TRUE)
+    if(input$SensPlotVisu == "Vertical") {
+      plotd3$chart(reduceXTicks = FALSE)
+      plotd3$xAxis(rotateLabels = XRotate)
+    }
+   
+    
     
     ##################################
     ## Same plot in ggplot2 for export
@@ -106,7 +115,7 @@ Plot_Visu_Heatmap <- function(input,resDiff,export=FALSE){
     counts_tmp_combined = log2(GetDataToPlot(input,resDiff,VarInt,ind_taxo)$counts+1)
     
     col <- switch(input$colors,
-                  "green-blue"=colorRampPalette(brewer.pal(9,"GnBu"))(200),
+                  "green-blue"=colorRampPalette(brewer.pal(9,"GnBu"))(256),
                   "blue-white-red"=colorRampPalette(rev(brewer.pal(9, "RdBu")))(200),
                   "purple-white-orange"=colorRampPalette(rev(brewer.pal(9, "PuOr")))(200),
                   "red-yellow-green"= colorRampPalette(rev(brewer.pal(9,"RdYlGn")))(200))
@@ -114,8 +123,9 @@ Plot_Visu_Heatmap <- function(input,resDiff,export=FALSE){
     ## Transpose matrix if Horizontal
     if(input$SensPlotVisu=="Horizontal") counts_tmp_combined = t(as.matrix(counts_tmp_combined))
     
-    if(!export) plot = d3heatmap(counts_tmp_combined, dendrogram = "none", Rowv = NA, Colv = NA, na.rm = TRUE,width = input$widthVisu, height = input$heightVisu, show_grid = FALSE, colors = col, scale = input$scaleHeatmap,cexRow = 0.6)
-    if(export) plot = heatmap.2(counts_tmp_combined, dendrogram = "none", Rowv = NA, Colv = NA, na.rm = TRUE, density.info="none", margins=c(12,8),trace="none",srtCol=45,col = col, scale = input$scaleHeatmap,cexRow = 0.6)
+    if(!export) plot = d3heatmap(counts_tmp_combined, dendrogram = "none", Rowv = (input$SortHeatRow == "Yes"), Colv = (input$SortHeatColumn == "Yes"), na.rm = TRUE, width=ifelse(input$modifwidthVisu,input$widthVisu, "100%"), height = input$heightVisu, show_grid = FALSE, colors = col, scale = input$scaleHeatmap, cexRow = input$LabelSizeHeatmap, cexCol=input$LabelSizeHeatmap, offsetCol=input$LabelColOffsetHeatmap, offsetRow=input$LabelRowOffsetHeatmap)
+    if(export) plot = heatmap.2(counts_tmp_combined, dendrogram = "none", Rowv = (input$SortHeatRow == "Yes"), Colv = (input$SortHeatColumn == "Yes"), na.rm = TRUE, density.info="none", margins=c(12,8),trace="none", srtCol=45, col = col, scale = input$scaleHeatmap, cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap,symm=FALSE,symkey=TRUE,symbreaks=TRUE)
+    
     return(plot)
   }
 }
@@ -213,7 +223,12 @@ Plot_Visu_Scatterplot<- function(input,resDiff,export=FALSE,lmEst = FALSE,CorEst
   cor.pvalue = NULL
   div = NULL
   dds = resDiff$dds
-  counts = as.data.frame(round(counts(dds, normalized = TRUE)))
+  
+  if(input$NormOrRaw=="norm")
+  {counts = as.data.frame(round(counts(dds, normalized = TRUE)))}
+  else
+  {counts = as.data.frame(round(counts(dds, normalized = FALSE)))}
+
   target = as.data.frame(resDiff$target)
   ## Get the diversity values
   tmp_div = Plot_Visu_Diversity(input,resDiff,ForScatter=TRUE)$dataDiv
@@ -258,6 +273,7 @@ Plot_Visu_Scatterplot<- function(input,resDiff,export=FALSE,lmEst = FALSE,CorEst
                      size_lab = PointSize,
                      key_var = rownames(data),
                      height = input$heightVisu,
+                     width=if(input$modifwidthVisu){input$widthVisu},
                      point_opacity = 0.7,
                      labels_size = input$SizeLabelScatter,
                      transitions = TRUE)
@@ -430,7 +446,11 @@ Plot_Visu_Rarefaction <- function(input,resDiff,xlim,ylim,ylab="Species"){
   dds = resDiff$dds
   
   ## Taxo in columns
-  counts = t(round(counts(dds, normalized = TRUE)))
+  
+  if(input$NormOrRaw=="norm")
+  {counts = t(round(counts(dds, normalized = TRUE)))}
+  else
+  {counts = t(round(counts(dds, normalized = FALSE)))}
   
   if(nrow(counts)>0 && !is.null(counts))
   { 
@@ -497,7 +517,10 @@ GetDataToPlot <- function(input,resDiff,VarInt,ind_taxo,aggregate=TRUE,rarefy=FA
   dds = resDiff$dds
   val = c()
   list.val = list()
-  counts = as.data.frame(round(counts(dds, normalized = TRUE)))
+  if(input$NormOrRaw=="norm")
+  {counts = as.data.frame(round(counts(dds, normalized = TRUE)))}
+  else
+  {counts = as.data.frame(round(counts(dds, normalized = FALSE)))}
   if(rarefy) {set.seed(1234); counts = t(rrarefy(t(counts), min(colSums(counts))))}
   
   target = resDiff$target
@@ -703,7 +726,7 @@ Plot_Visu_Tree <- function(input,resDiff,CT_Norm_OTU,taxo_table)
       conditions <- rownames(tmp$counts)
       nodeFind = input$TaxoTree
       if(input$TaxoTree=="...") nodeFind = NULL
-      res = treeWeightD3(merge_dat,conditions,levels,nodeFind=nodeFind, height =input$heightVisu+10)
+      res = treeWeightD3(merge_dat,conditions,levels,nodeFind=nodeFind, height =input$heightVisu+10, width=if(input$modifwidthVisu){input$widthVisu})
     }
   }
   return(res)

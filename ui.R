@@ -67,7 +67,7 @@ body <- dashboardBody(
     tabItem(tabName = "Home",
             fluidRow(
               column(width=9,
-            div(style="width:100% ; max-width: 1200px",
+            div(style="width:100% ; max-width: 1200px; height: 550px",
                 
               tabBox(title="Welcome to SHAMAN", id="tabset1", width=NULL,
                    tabPanel("About", tags$script(type="text/javascript", language="javascript", src="google-analytics.js"),
@@ -85,13 +85,14 @@ body <- dashboardBody(
                    tabPanel("Authors", h3("The main contributors to SHAMAN:"),
                             p(a("Stevenn Volant", href="mailto:stevenn.volant@pasteur.fr"), "(Initiator, coding, testing, documentation, evaluation)"),
                             p(a("Amine Ghozlane",href="mailto:amine.ghozlane@pasteur.fr"), "(Coding, testing, documentation, evaluation, packaging)"),
-                            p(a("Hugo Varet",href="mailto:hugo.varet@pasteur.fr"), "(Coding, testing, feature suggestions)"),
-                            p(a("Christophe Malabat",href="mailto:christophe.malabat@pasteur.fr"), "(Packaging)"), 
-                            p(a("Marie-Agnès Dillies",href="mailto:marie-agnes.dillies@pasteur.fr"), "(Evaluation)"),
-                            p(a("Sean Kennedy",href="mailto:sean.kennedy@pasteur.fr"), "(Evaluation)"),
+                            p("Hugo Varet", "(Coding, testing, feature suggestions)"),
+                            p("Pierre Lechat", "(Coding, testing, feature suggestions)"),
+                            p("Christophe Malabat", "(Packaging)"), 
+                            p("Marie-Agnès Dillies", "(Evaluation)"),
+                            p("Sean Kennedy", "(Evaluation)"),
                             h3("Acknowledgements"),
                             p("Thanks to the following people for patches and other suggestions for improvements:"),
-                            p(a("Pierre Lechat, ",href="mailto:pierre.lechat@pasteur.fr"),a("Julien Tap, ",href="mailto:julien.tap@danone.com"),a("Anna Zhukova, ",href="mailto:anna.zhukova@pasteur.fr"), a("Rachel Torchet",href="mailto:rachel.torchet@pasteur.fr"))
+                            p("Carine Rey, ","Julien Tap, ","Anna Zhukova, ", "Rachel Torchet.")
                           ),
                    tabPanel("Citing SHAMAN",
                    p("No papers about SHAMAN have been published yet, but a manuscript is in preparation.",style = "font-family: 'times'; font-si16pt"),
@@ -102,18 +103,19 @@ body <- dashboardBody(
               column(width=3,
             box(
               title = "What's new in SHAMAN", width = NULL, status = "primary",
-              div(style = 'overflow-y: scroll; max-height: 400px',
+              div(style = 'overflow-y: scroll; height: 550px',
+                  addNews("Nov 22th 2016","New visualization and bug fix","We have implemented a new visualization called tree abundance. Some bugs have been fixed (thanks Carine Rey from ENS)."),
                   addNews("Oct 12th 2016","Filtering step and bugs fix","You can now apply a filter on the features according to their abundance 
-                          and the number of samples. Bugs on confidence intervals for the alpha diversity have been fixed"),
+                          and the number of samples. Bugs on confidence intervals for the alpha diversity have been fixed."),
                   addNews("Sep 21th 2016","SHAMAN on docker","The install of SHAMAN is now available with docker.
                            The R install is also updated and passed in release candidate state."),
                   addNews("Sep 14th 2016","Download and install SHAMAN","You can install SHAMAN (beta)."),
                   addNews("Sep 9th 2016","PCA/PCOA","You can select the axes for the PCOA and PCA plots."),
                   addNews("Aug 1st 2016","Biom format","SHAMAN can now support all the Biom format versions."),
                   addNews("Jun 24th 2016","Comparisons plots","The venn diagram and the heatmap of foldchange 
-                                                                have been added to compare the results of 2 or more contrasts"),
+                                                                have been added to compare the results of 2 or more contrasts."), 
                   addNews("Jun 17th 2016","Diversity plots","Enhancement of the visualtisation of the diverties. 
-                                                              The shanon and inv. shanon have been added")
+                                                              The shanon and inv. shanon have been added.")
                   )
             )
               )
@@ -491,6 +493,9 @@ body <- dashboardBody(
 #                                      numericInput("NbcolSfactors", h6("Columns"),min=1,value = NA)
 #                     ),
                   sliderInput("heightDiag", "Height",min=100,max=1500,value = 500,step =10),
+                  checkboxInput("modifwidthDiag","Set width",FALSE),
+                  conditionalPanel(condition="input.modifwidthDiag",
+                  sliderInput("widthDiag", "Width",min=100,max=2500,value = 800,step =10)),
 
                   conditionalPanel(condition="input.DiagPlot=='clustPlot'",
                                    h6(strong("Layout")),
@@ -618,6 +623,9 @@ body <- dashboardBody(
               ###
               ########################################################################
               box(title = "Options",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
+                  conditionalPanel(condition="input.PlotVisuSelect",
+                                   radioButtons("NormOrRaw",label = h5(strong("Type of counts")), c("Normalized" = "norm", "Raw" = "raw"),inline=TRUE)
+                  ),
                   conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Scatterplot' ",
                                    uiOutput("VarIntVisu"),
                                    h5(strong("Select the modalities")),
@@ -656,7 +664,9 @@ body <- dashboardBody(
                 ## HEATMAP
                 ##################
                 conditionalPanel(condition="input.PlotVisuSelect=='Heatmap'",
-                                 selectizeInput(inputId = "scaleHeatmap",label = h6(strong("Scale:")),choices = c("None" = "none", "Rows" = "row", "Column" = "col"),selected = "none")
+                                 selectizeInput(inputId = "scaleHeatmap",label = h5(strong("Scale:")),choices = c("None" = "none", "Rows" = "row", "Column" = "col"),selected = "none"),
+                                 radioButtons("SortHeatRow","Row Clustering:", c("Yes" ="Yes","No" = "No"),inline=TRUE),
+                                 radioButtons("SortHeatColumn","Column Clustering:", c("Yes" ="Yes","No" = "No"), inline=TRUE)
                                  
                 ),
                 
@@ -687,6 +697,15 @@ body <- dashboardBody(
               ########################################################################
               box(title = "Appearance",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
                 sliderInput("heightVisu", h6(strong("Height")),min=100,max=4000,value = 800),
+                checkboxInput("modifwidthVisu","Set width",value=FALSE),
+                conditionalPanel(condition="input.modifwidthVisu",
+                sliderInput("widthVisu", h6(strong("Width")),min=100,max=4000,value = 800)),
+                ##################
+                ## BARPLOT
+                ##################
+                conditionalPanel(condition="input.PlotVisuSelect=='Barplot'",
+                                 sliderInput("rotateXLabel", h6(strong("Rotate X labels (Only vertical orientation)")),min=-90, max=90,value = 0, step = 5)  
+                ),
                 ##################
                 ## BOXPLOT
                 ##################
@@ -785,7 +804,9 @@ body <- dashboardBody(
                    
                    box(title = "Appearance",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
                        sliderInput("heightVisuComp", h6(strong("Height")),min=100,max=4000,value = 800),
-                       
+                       checkboxInput("modifwidthComp","Set width",FALSE),
+                       conditionalPanel(condition="input.modifwidthComp",
+                                        sliderInput("widthComp", "Width",min=100,max=2500,value = 800,step =10)),
                        ##################
                        ## HEATMAP
                        ##################
@@ -833,13 +854,7 @@ body <- dashboardBody(
                    a(href = "test_krona.html",target="_blank", "Click Here!")
 #                    tableOutput("krona") 
 
-),
-            column(width=3,
-            p(strong("Tree abundance")),
-            img(src="Tree.png",height = 200, width = 220),
-            a(href = "http://genopole.pasteur.fr/SynTView/flash/TreeAbundance",target="_blank", "Click Here!")
-            )
-        )
+          ))
  #includeHTML("file:///home/aghozlan/workspace/SHAMAN_App/www/text.krona.html")
   )
  )
