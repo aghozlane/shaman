@@ -192,7 +192,7 @@ shinyServer(function(input, output,session) {
     withProgress(
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target)) 
     {
-      design = GetDesign(isolate(input))
+      design = GetDesign(isolate(input),target)
       ChTM = CheckTargetModel(input,target,labeled,data$counts)$Error
       if(!is.null(design) && is.null(ChTM))
       {
@@ -476,6 +476,7 @@ shinyServer(function(input, output,session) {
     inFile <- input$fileTarget
     counts = dataInput()$data$counts
     labeled = 0
+    data = NULL
     
     if (is.null(inFile)) return(NULL)
     
@@ -488,7 +489,7 @@ shinyServer(function(input, output,session) {
       names = colnames(data)
       
       ## Change the rownames
-      rownames(data) <- as.character(data[, 1])
+      if(!TRUE%in%duplicated(data[,1])) rownames(data)=as.character(data[,1])
       
       ## Keep only the row which are in the count table
       ind = which(rownames(data)%in%colnames(counts))
@@ -1136,7 +1137,7 @@ shinyServer(function(input, output,session) {
   ResDiffAnal <-eventReactive(input$RunDESeq,withProgress({
     
     target = dataInputTarget()$target
-    design = GetDesign(input)
+    design = GetDesign(input,target)
     dMC = dataMergeCounts()
     counts = dMC$counts
     CT_noNorm = dMC$CT_noNorm

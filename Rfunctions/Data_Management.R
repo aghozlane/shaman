@@ -158,7 +158,7 @@ CheckTargetModel <- function(input,target,labeled,CT)
   ## Full rank matrix
   if(is.null(Error) && length(InterVar)>0)
   {
-    design = GetDesign(input)
+    design = GetDesign(input,target)
     testRank = CheckMatrixRank(design,target)
     if(!testRank){
         Error = "The model matrix is not full rank. One or more variables or interaction terms 
