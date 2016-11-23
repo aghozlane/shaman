@@ -112,6 +112,11 @@ CheckTargetModel <- function(input,target,labeled,CT)
   labels = rownames(target)
   ind = which(colnames(CT)%in%labels)
   
+  InterVar = input$InterestVar
+  
+  uniq_column = (length(which(sapply(target[InterVar], function(x) length(unique(x))) == 1)) > 0)
+  uniq_column_names = names(which(sapply(target[InterVar], function(x) length(unique(x))) == 1))
+  
   ## At least one variable selected
   if(is.null(Error) && length(ind)<=1){
     Error = "Less than two samples names fit with the counts table" 
@@ -153,7 +158,13 @@ CheckTargetModel <- function(input,target,labeled,CT)
     HowTo = "Remove all the samples for which one or more variables are NA or missing"
   }
   
-
+  ## contrasts can be applied only to factors with 2 or more levels
+  
+  if(is.null(Error) && (uniq_column)){
+    Error = "Contrasts can be applied only to factors with 2 or more levels."
+    HowTo = paste("Remove all variables with only one factor:", uniq_column_names, sep=" ")
+  }
+  
   
   ## Full rank matrix
   if(is.null(Error) && length(InterVar)>0)
@@ -380,7 +391,6 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
     if(taxoSelect=="OTU/Gene") counts = counts_annot
     else{
       if(input$TypeTable == "MGS" && input$FileFormat!="fileBiom"){
-        print("MGS")
         taxoS = taxo[,input$TypeTable]
         counts = aggregate(counts_annot,by=list(Taxonomy = taxoS),mean)
         rownames(counts)=counts[,1]
@@ -389,7 +399,6 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
         rownames(counts_int)=rownames(counts)
         colnames(counts_int)=colnames(counts)
         counts=counts_int
-        print("end")
       }
       if(taxoSelect != "MGS" || input$FileFormat=="fileBiom"){
         #taxoS = taxo[ordOTU,taxoSelect]

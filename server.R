@@ -445,9 +445,21 @@ shinyServer(function(input, output,session) {
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0)
     {
       taxo = rbind(taxo,rep(NA,ncol(taxo)))
-      tmpPercent = round(apply(is.na(taxo),2,table)["FALSE",]/(nrow(taxo)-1)*100,2)
+      #tmpPercent = round(apply(is.na(taxo),2,table)["FALSE",]/(nrow(taxo)-1)*100,2)
       
-      #print(tmpPercent)
+      tmp = apply(is.na(taxo),2,table)
+      
+      if (class(tmp) == "list") {
+        tmp2 = sapply(tmp, function (x) {if (! "FALSE" %in% names(x)) {x["FALSE"] = 0} ; return(x["FALSE"])})
+      }
+      else
+      {
+        tmp2 = tmp["FALSE",]
+      }
+      
+      tmpPercent = round(tmp2/(nrow(taxo)-1)*100,2)
+      
+      
       df <- data.frame(Label = colnames(taxo),Value = tmpPercent)
       
       res = gvisGauge(df,options=list(min=0, max=100, greenFrom=80,
@@ -1353,7 +1365,7 @@ shinyServer(function(input, output,session) {
     
     resDiff = isolate(ResDiffAnal())
     Plot_diag(input,resDiff)
-  },height = reactive(input$heightDiag))
+  },height = reactive(input$heightDiag), width = reactive(ifelse(input$modifwidthDiag,input$widthDiag,"auto")))
   
   
   
@@ -1721,9 +1733,13 @@ shinyServer(function(input, output,session) {
   output$PlotVisuTree <- renderTreeWeightD3({
     resDiff = ResDiffAnal()
     taxo_table = dataInput()$data$taxo
-    CT_Norm_OTU = dataMergeCounts()$CT_Norm
+
+    
     res = NULL
-    if(!is.null(resDiff$dds) && length(input$VisuVarInt)>=1) res = Plot_Visu_Tree(input,resDiff,CT_Norm_OTU,taxo_table)
+    if(!is.null(resDiff$dds) && length(input$VisuVarInt)>=1){
+      if(input$NormOrRaw=="norm") res = Plot_Visu_Tree(input,resDiff,dataMergeCounts()$CT_Norm,taxo_table)
+      else res = Plot_Visu_Tree(input,resDiff,dataMergeCounts()$CT_noNorm,taxo_table)
+    } 
     return(res)
 
   })
@@ -1917,14 +1933,14 @@ shinyServer(function(input, output,session) {
     
     res=NULL
     if(input$PlotVisuSelect=="Barplot") res =  showOutput("PlotVisuBar")
-    if(input$PlotVisuSelect=="Heatmap") res =  d3heatmapOutput("heatmap", height = input$heightVisu+10)
-    if(input$PlotVisuSelect=="Boxplot") res = plotOutput("Boxplot", height = input$heightVisu+10)
-    if(input$PlotVisuSelect=="Tree") res = treeWeightD3Output('PlotVisuTree', height = input$heightVisu+10,width="100%")
-    if(input$PlotVisuSelect=="Scatterplot" && !input$AddRegScatter) res = scatterD3Output("ScatterplotD3", height = input$heightVisu+10)
-    if(input$PlotVisuSelect=="Scatterplot" && input$AddRegScatter) res = plotOutput("Scatterplotgg", height = input$heightVisu+10)
+    if(input$PlotVisuSelect=="Heatmap") res =  d3heatmapOutput("heatmap", height = input$heightVisu+10, width=ifelse(input$modifwidthVisu,input$widthVisu,"100%"))
+    if(input$PlotVisuSelect=="Boxplot") res = plotOutput("Boxplot", height = input$heightVisu+10, width=if(input$modifwidthVisu){input$widthVisu})
+    if(input$PlotVisuSelect=="Tree") res = treeWeightD3Output('PlotVisuTree', height = input$heightVisu+10,width=ifelse(input$modifwidthVisu,input$widthVisu,"100%"))
+    if(input$PlotVisuSelect=="Scatterplot" && !input$AddRegScatter) res = scatterD3Output("ScatterplotD3", height = input$heightVisu+10, width=ifelse(input$modifwidthVisu,input$widthVisu,"100%"))
+    if(input$PlotVisuSelect=="Scatterplot" && input$AddRegScatter) res = plotOutput("Scatterplotgg", height = input$heightVisu+10,width=if(input$modifwidthVisu){input$widthVisu})
     
-    if(input$PlotVisuSelect=="Diversity") res =  plotOutput("DiversityPlot", height = input$heightVisu+10)
-    if(input$PlotVisuSelect=="Rarefaction") res = plotOutput("RarefactionPlot",dblclick = "RarefactionPlot_dblclick",brush = brushOpts(id = "RarefactionPlot_brush",resetOnNew = TRUE), height = input$heightVisu+10)
+    if(input$PlotVisuSelect=="Diversity") res =  plotOutput("DiversityPlot", height = input$heightVisu+10, width=if(input$modifwidthVisu){input$widthVisu})
+    if(input$PlotVisuSelect=="Rarefaction") res = plotOutput("RarefactionPlot",dblclick = "RarefactionPlot_dblclick",brush = brushOpts(id = "RarefactionPlot_brush",resetOnNew = TRUE), height = input$heightVisu+10, width=if(input$modifwidthVisu){input$widthVisu})
     return(res)
   })
   
@@ -1932,8 +1948,8 @@ shinyServer(function(input, output,session) {
   output$plotVisuComp <- renderUI({
     
     res=NULL
-    if(input$PlotVisuSelectComp=="Heatmap_comp") res =  d3heatmapOutput("heatmap_comp", height = input$heightVisuComp+10)
-    if(input$PlotVisuSelectComp=="Venn") res =  d3vennROutput("VennD3", height = input$heightVisuComp+10)
+    if(input$PlotVisuSelectComp=="Heatmap_comp") res =  d3heatmapOutput("heatmap_comp", height = input$heightVisuComp+10, width=ifelse(input$modifwidthComp,input$widthComp,"100%"))
+    if(input$PlotVisuSelectComp=="Venn") res =  d3vennROutput("VennD3", height = input$heightVisuComp+10, width=ifelse(input$modifwidthComp,input$widthComp,"100%"))
     return(res)
   })
   
