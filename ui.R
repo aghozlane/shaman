@@ -264,7 +264,8 @@ body <- dashboardBody(
                         column(width=6,radioButtons("TypeTable",h6(strong("Type:")),c("OTU/Gene table"="OTU","MGS table"="MGS"))),
                         column(width=6,selectInput("sepcount", h6(strong("Separator:")),c("Tab" = "\t", "Comma" = ",","Semi-colon" = ";")))
                       ),
-                      fileInput('fileCounts', h6(strong('Select your file')),width="100%")
+                      fileInput('fileCounts', h6(strong('Select your file')),width="100%"),
+                      tags$script('$( "#fileCounts" ).on( "click", function() { this.value = null; });')
                   ),
                   conditionalPanel(condition="!input.NoTaxoFile",
                     box(title="Load the taxonomy file",width = 3,height = "260px", status = "primary", solidHeader = TRUE,collapsible = FALSE,
@@ -278,7 +279,8 @@ body <- dashboardBody(
                                                       c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
                                  )
                         ),
-                        fileInput('fileTaxo', h6(strong('Select your file')),width="100%")
+                        fileInput('fileTaxo', h6(strong('Select your file')),width="100%"),
+                        tags$script('$( "#fileTaxo" ).on( "click", function() { this.value = null; });')
                     )
                   ),
                   fluidRow(column(width=3,
@@ -290,7 +292,8 @@ body <- dashboardBody(
                 
                 conditionalPanel(condition="input.FileFormat=='fileBiom'",
                                  box(title="Load the BIOM file",width = 3, status = "primary", solidHeader = TRUE,collapsible = FALSE,
-                                     fileInput('fileBiom', h5(strong('Select your file')),width="100%")
+                                     fileInput('fileBiom', h5(strong('Select your file')),width="100%"),
+                                     tags$script('$( "#fileBiom" ).on( "click", function() { this.value = null; });')
                                  ),
                                  fluidRow(uiOutput("InfoBIOM"))
                 )
@@ -315,7 +318,8 @@ body <- dashboardBody(
               column(width=5,
                 box(title="Experimental design",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = FALSE,
                   fluidRow(
-                    column(width=5,fileInput('fileTarget', h6(strong('Select your target file')),width="100%")
+                    column(width=5,fileInput('fileTarget', h6(strong('Select your target file')),width="100%"),
+                           tags$script('$( "#fileTarget" ).on( "click", function() { this.value = null; });')
                            ),
                     column(width=3,selectInput("septarget", h6(strong("Separator:")), c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";"))),
                     column(width=4,uiOutput("SelectTaxo"))
@@ -373,7 +377,8 @@ body <- dashboardBody(
                                       column(width=3,
                                              uiOutput("SelectVarNorm")),
                                       column(width=3,
-                                             fileInput('fileSizeFactors', h6(strong('Define your own size factors')),width="100%")
+                                             fileInput('fileSizeFactors', h6(strong('Define your own size factors')),width="100%"),
+                                             tags$script('$( "#fileSizeFactors" ).on( "click", function() { this.value = null; });')
                                       ),
                                       column(width=3, selectInput("sepsize", h6(strong("Separator:")), c("Tab" = "\t", "," = "Comma", "Semicolon" = ";"))),
                                       column(width=3,br(),htmlOutput("InfoSizeFactor"))
