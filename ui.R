@@ -251,7 +251,7 @@ body <- dashboardBody(
             br(),
              fluidRow(
                 box(title="Select your file format",width = 3,status = "success", solidHeader = TRUE,collapsible = FALSE,
-                  selectInput("FileFormat","",c("Count table & taxonomy (*.csv or *.tsv)"="fileCounts","BIOM file"="fileBiom"),selected="fileCounts"),
+                  selectInput("FileFormat","",c("Count table & taxonomy (*.csv or *.tsv)"="fileCounts","BIOM file"="fileBiom","Saved project"="fileRData"),selected="fileCounts"),
                   conditionalPanel(condition="input.FileFormat=='fileCounts'",
                                    checkboxInput("NoTaxoFile","No taxonomy table",value=FALSE)
                   )
@@ -313,7 +313,8 @@ body <- dashboardBody(
               column(width=5,
                 box(title="Experimental design",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = FALSE,
                   fluidRow(
-                    column(width=5,fileInput('fileTarget', h6(strong('Select your target file')),width="100%")),
+                    column(width=5,fileInput('fileTarget', h6(strong('Select your target file')),width="100%")
+                           ),
                     column(width=3,selectInput("septarget", h6(strong("Separator:")), c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";"))),
                     column(width=4,uiOutput("SelectTaxo"))
                   ),
