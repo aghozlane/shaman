@@ -8,7 +8,7 @@ if(!require(shiny)){
   library(shiny)
 }
 if(!require(shinydashboard)){
-  install.packages('shinydashboard')
+  devtools::install_github('aghozlane/shinydashboard')
   library(shinydashboard)
 }
 

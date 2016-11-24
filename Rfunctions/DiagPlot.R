@@ -341,12 +341,13 @@ PCoAPlot_meta <-function (input, dds, group_init, col = c("SpringGreen","dodgerb
     if(input$CountsType=="Normalized") counts.norm = as.data.frame(round(counts(dds, normalized = TRUE)))
     # was removed
     counts.norm = counts.norm[,ind_kept]
-    print(head(counts.norm))
+    # print(head(counts.norm))
     ## Get the distance
     if(input$DistClust!="sere") dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
     if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts.norm))
     
     
+    # save(counts.norm,dist.counts.norm,file="testNMDS.RData")
     ## Do PCoA
     pco.counts.norm = dudi.pco(d = dist.counts.norm, scannf = FALSE,nf=ncol(counts.norm))
     
@@ -687,8 +688,11 @@ NMDSPlot <-function (input, dds, group_init, col = c("SpringGreen","dodgerblue",
     if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts.norm))
     
     
-    ## Do PCoA
-    pco.counts.norm = dudi.pco(d = dist.counts.norm, scannf = FALSE,nf=ncol(counts.norm))
+    ## Do NMDS
+    nmds.counts.norm = metaMDS(dist.counts.norm,k=round(ncol(counts.norm)/2), trymax = 25)
+                               
+    
+      dudi.pco(d = dist.counts.norm, scannf = FALSE,nf=ncol(counts.norm))
     
     ## Get eigen values
     eigen=(pco.counts.norm$eig/sum(pco.counts.norm$eig))*100

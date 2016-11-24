@@ -14,9 +14,10 @@ if (!require(scatterD3)) {
   library(scatterD3)
 }
 if(!require(shinydashboard)){
-  installed.packages("shinydashboard")
-  library(shinydashboard)  
+  devtools::install_github('aghozlane/shinydashboard')
+  library(shinydashboard)
 }
+
 if(!require(shinythemes)){
   install.packages("shinythemes")
   library(shinythemes)
