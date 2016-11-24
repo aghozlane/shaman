@@ -28,7 +28,7 @@ content: 'An error occurred. Please contact us at shaman@pasteur.fr'; }
 appCSS <- "
 #loading-content {
 position: absolute;
-background: #000000;
+background: #182b42;
 opacity: 0.9;
 z-index: 100;
 left: 0;
@@ -40,7 +40,7 @@ color: #FFFFFF;
 }
 #loading-content-bar {
 position: absolute;
-background: #000000;
+background: #182b42;
 opacity: 0.9;
 z-index: 100;
 left: 0;

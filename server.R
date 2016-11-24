@@ -14,11 +14,14 @@ shinyServer(function(input, output,session) {
   rand = floor(runif(1,0,1e9))
   namesfile = tempfile(pattern = "BaseContrast", tmpdir = tempdir(), fileext = "")
   file.create(namesfile,showWarnings=FALSE)
+  target = NULL
   
   ## Popup messages
   observe(if(input$AddRegScatter) info("By adding the regression line, you will lose interactivity."))
   
-
+  ## Reactive target
+  values <- reactiveValues(TargetWorking = target,labeled=NULL)
+  
   ## Counts file
   dataInputCounts <-reactive({ 
     
@@ -200,8 +203,8 @@ shinyServer(function(input, output,session) {
     CT_Norm = NULL
     ChTM = NULL
     data = isolate(dataInput()$data)
-    target = isolate(dataInputTarget()$target)
-    labeled= isolate(dataInputTarget()$labeled)
+    target = isolate(values$TargetWorking)
+    labeled= isolate(values$labeled)
     taxo = isolate(input$TaxoSelect)
     withProgress(
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target)) 
@@ -497,7 +500,7 @@ shinyServer(function(input, output,session) {
   
   
   ## Load target file
-  dataInputTarget <-reactive({ 
+  observe({ 
     
     inFile <- input$fileTarget
     counts = dataInput()$data$counts
@@ -531,8 +534,9 @@ shinyServer(function(input, output,session) {
         }
         if(length(ind_num)==0){data = as.data.frame(apply(data,2,gsub,pattern = "-",replacement = "."))}
       }
-      target = as.data.frame(data)
-      
+      values$TargetWorking = as.data.frame(data)
+#       ind_sel = Target_selection()
+#       if(length(ind))
       # target = as.data.frame(apply(target,2,gsub,pattern = "-",replacement = "."))
       
       #ord = order(rownames(data))
@@ -544,18 +548,32 @@ shinyServer(function(input, output,session) {
       #     print(ind)
       #     print(colnames(counts))
       #     print(rownames(data))
-      labeled = length(ind)/length(colnames(counts))*100.0
+      values$labeled = length(ind)/length(colnames(counts))*100.0
     }
     
-    return(list(target = target, labeled=labeled))
+    # return(list(target = target, labeled=labeled))
   })
+  
+  
+  observeEvent(input$deleteRows,{
+    
+    if (!is.null(input$DataTarget_rows_selected)) {
+      
+      if(nrow(values$TargetWorking)!=0) values$labeled <- (nrow(values$TargetWorking)-length(input$DataTarget_rows_selected))*values$labeled/nrow(values$TargetWorking)
+      else values$labeled <- 0
+      values$TargetWorking <- values$TargetWorking[-as.numeric(input$DataTarget_rows_selected),]
+      
+    }
+  })
+  
+  
   
   
   
   ## Interest Variables
   output$SelectInterestVar <- renderUI({
     
-    target=dataInputTarget()$target
+    target=values$TargetWorking
     if(!is.null(target)) 
     {
       namesTarget = colnames(target)[2:ncol(target)]
@@ -567,7 +585,7 @@ shinyServer(function(input, output,session) {
   ## Interactions
   output$SelectInteraction2 <- renderUI({
     
-    target = dataInputTarget()$target
+    target = values$TargetWorking
     VarInt = input$InterestVar
     res = NULL
     if(!is.null(target) && length(input$InterestVar)>1) 
@@ -584,7 +602,7 @@ shinyServer(function(input, output,session) {
   ## Var for normalization
   output$SelectVarNorm <- renderUI({
     
-    target=dataInputTarget()$target
+    target=values$TargetWorking
     res = selectInput("VarNorm",h6(strong("Normalization by:")),NULL,multiple=TRUE)
     if(!is.null(target)) 
     {
@@ -602,7 +620,7 @@ shinyServer(function(input, output,session) {
   ## Reference radio buttons
   output$RefSelect <- renderUI({
     
-    target = dataInputTarget()$target
+    target = values$TargetWorking
     RB=list()
     if(!is.null(target)) 
     {
@@ -626,7 +644,7 @@ shinyServer(function(input, output,session) {
   output$RowTarget <- renderInfoBox({
     #target = dataInputTarget()
     #labeled = dataMergeCounts()$labeled
-    labeled = dataInputTarget()$labeled
+    labeled = values$labeled
     if(!is.null(labeled)) 
     {
       #### Ajout fontion check target
@@ -646,10 +664,16 @@ shinyServer(function(input, output,session) {
   
   ## target table
   output$DataTarget <- DT::renderDataTable(
-    dataInputTarget()$target,
+    values$TargetWorking,
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE, processing=FALSE
+                   pageLength = 10,scrollX=TRUE, processing=FALSE,server=TRUE
     ))
+  
+  Target_selection <- reactive ({
+    input$DataTarget_rows_selected
+  })
+  
+   
   
   ## Counts table for the selected taxonomy level
   output$CountsMerge <- DT::renderDataTable(
@@ -694,16 +718,23 @@ shinyServer(function(input, output,session) {
     content = function(file){write.table(SizeFactor_table(), file,quote=FALSE,row.names = FALSE,sep=input$sepsizef)}
   )
   
+  ## Export in .csv
+  output$ExportTarget <- downloadHandler(
+    filename = function() { 'Target.csv' },
+    content = function(file){write.table(values$TargetWorking, file,sep="\t",quote=FALSE,row.names = FALSE,col.names = TRUE)}
+  )
   
   ## Box for target visualisation
   output$BoxTarget <- renderUI({
     
-    target = dataInputTarget()$target
+    target = values$TargetWorking
     
     if(!is.null(target) &&  nrow(target)>0)
     {
       box(title="Target file overview",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
-          DT::dataTableOutput("DataTarget")
+          DT::dataTableOutput("DataTarget"),
+          actionButton("deleteRows", "Delete samples"),
+          downloadButton('ExportTarget', 'Export target file')
       )  
     }
     
@@ -1162,7 +1193,7 @@ shinyServer(function(input, output,session) {
   ## Get the results from DESeq2
   ResDiffAnal <-eventReactive(input$RunDESeq,withProgress({
     
-    target = dataInputTarget()$target
+    target = values$TargetWorking
     design = GetDesign(input,target)
     dMC = dataMergeCounts()
     counts = dMC$counts
@@ -1231,7 +1262,7 @@ shinyServer(function(input, output,session) {
 #                   subtitle = h6(strong("Your target file must contain at least 2 columns and 2 rows. NA's values are not allowed and the variables must not be collinear.")), 
 #                   icon = icon("book"),color = "green",width=NULL,fill=TRUE)
 #     
-#     target = dataInputTarget()$target
+#     target = values$TargetWorking
 #     taxo = input$TaxoSelect
 #     ChTM = NULL
 #     
@@ -1247,8 +1278,8 @@ shinyServer(function(input, output,session) {
   output$InfoModel<- renderUI({
     
     CT = dataInput()$data$counts
-    target = dataInputTarget()$target
-    labeled = dataInputTarget()$labeled
+    target = values$TargetWorking
+    labeled = values$labeled
     taxo = input$TaxoSelect
     ChTM = NULL
     
@@ -1266,8 +1297,8 @@ shinyServer(function(input, output,session) {
   output$InfoModelHowTo<- renderUI({
     
     CT = dataInput()$data$counts
-    target = dataInputTarget()$target
-    labeled = dataInputTarget()$labeled
+    target = values$TargetWorking
+    labeled = values$labeled
     taxo = input$TaxoSelect
     ChTM = NULL
     
@@ -1349,7 +1380,7 @@ shinyServer(function(input, output,session) {
   
   output$VarIntDiag <- renderUI({
     
-    target=dataInputTarget()$target
+    target=values$TargetWorking
     
     if(!is.null(target)) 
     {
@@ -1431,7 +1462,7 @@ shinyServer(function(input, output,session) {
   output$ModMat <- renderUI({
     
     VarInt = input$VarInt
-    target = dataInputTarget()$target
+    target = values$TargetWorking
     
     Mod = list()
     
@@ -1451,7 +1482,7 @@ shinyServer(function(input, output,session) {
     Mod = NULL
     
     VisuVarInt = input$VisuVarInt
-    target = dataInputTarget()$target
+    target = values$TargetWorking
     if(!is.null(VisuVarInt))
     {
       Mod = list()
@@ -1708,8 +1739,8 @@ shinyServer(function(input, output,session) {
     
     res = NULL
     ChTM = "Error"
-    target = dataInputTarget()$target
-    labeled = dataInputTarget()$labeled
+    target = values$TargetWorking
+    labeled = values$labeled
     CT = dataInput()$data$counts
     taxo = input$TaxoSelect
     VarInt = input$InterestVar
@@ -2135,7 +2166,7 @@ shinyServer(function(input, output,session) {
     #     if(length(int)>=2) intSel = int[c(1,2)]
     #     else intSel = int[1]
     
-    target=dataInputTarget()$target
+    target=values$TargetWorking
     
     if(!is.null(target)) 
     {
@@ -2148,7 +2179,7 @@ shinyServer(function(input, output,session) {
   
   output$VarIntVisuScatter <- renderUI({
     
-    target=dataInputTarget()$target
+    target=values$TargetWorking
     data = dataInput()$data 
     taxo = input$TaxoSelect
     resDiff = ResDiffAnal()
@@ -2188,7 +2219,7 @@ shinyServer(function(input, output,session) {
   
   output$VarIntVisuTree <- renderUI({
 
-    target=dataInputTarget()$target
+    target=values$TargetWorking
     data = dataInput()$data
     taxo = input$TaxoSelect
     resDiff = ResDiffAnal()
@@ -2244,8 +2275,8 @@ shinyServer(function(input, output,session) {
     counts = dataMergeCounts()$counts
     ChTM = ""
     CT = dataInput()$data$counts
-    target = dataInputTarget()$target
-    labeled= dataInputTarget()$labeled
+    target = values$TargetWorking
+    labeled= values$labeled
     ChTM = CheckTargetModel(input,target,labeled,CT)$Error
     
     if(input$AddFilter && !is.null(input$SliderThSamp) && !is.null(input$SliderThAb) && is.null(ChTM))
@@ -2272,7 +2303,7 @@ shinyServer(function(input, output,session) {
   
   observe({
     taxo = input$TaxoSelect
-    target=dataInputTarget()$target
+    target=values$TargetWorking
     
     if(is.null(target) || taxo =="...") 
     {

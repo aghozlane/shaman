@@ -220,21 +220,21 @@ body <- dashboardBody(
                                   "Then, you will need to install the", a("Docker toolbox.", href="https://www.docker.com/products/docker-toolbox"),
                                   "Once installed, run ‘Docker Quickstart Terminal’ application."),
                                 p("- Running SHAMAN:"),
-                                wellPanel(div(style = 'width: 400px',"docker pull aghozlane/shaman && docker run --rm -p 80:80 aghozlane/shaman")),
+                                wellPanel(div(style = 'max-width: 900px',"docker pull aghozlane/shaman && docker run --rm -p 80:80 aghozlane/shaman")),
                                 p("Then connect to http://0.0.0.0/ with your favorite web navigator."),
                                 p("Failed: port is already allocated ?"),
-                                wellPanel(div(style = 'width: 400px',"docker run --rm -p 3838:80 aghozlane/shaman")),
+                                wellPanel(div(style = 'max-width: 900px',"docker run --rm -p 3838:80 aghozlane/shaman")),
                                 p("Then connect to http://0.0.0.0:3838/."),
                                 p("- Docker update after an update of SHAMAN:"),
-                                wellPanel("docker pull aghozlane/shaman")
+                                wellPanel(div(style = 'max-width: 900px',"docker pull aghozlane/shaman"))
                                 ),
                                 tabPanel("R install (RC)",
                                          p("SHAMAN is available for R>3.1.2. The installation, download and execution can all be performed with a small R script :",style = "font-family: 'times'; font-si16pt"),
-                                         wellPanel(div(style = 'width: 400px',"# Load shiny packages",br(),
+                                         wellPanel(div(style = 'max-width: 900px',"# Load shiny packages",br(),
                                            "if(!require('shiny')){",br(),"  install.packages('shiny')",br(),"  library(shiny)",br(),"}",br(),
                                               br(),"# Install dependencies,",br(),"# download last version from github,",br(),"# and run SHAMAN in one command:",br(),"runGitHub('aghozlane/shaman')")),
                                          p("This script can also be dowloaded", a("here", target="_blank", href="shamanapp.R"), "and executed as following :"),
-                                         wellPanel("chmod +x ./shamanapp.R && Rscript ./shamanapp.R"),
+                                         wellPanel(div(style = 'max-width: 900px',"chmod +x ./shamanapp.R && Rscript ./shamanapp.R")),
                                          p("Of note, the R version has an impact on the contrast definition. DESeq2 contrast are harder to define on R>3.2."),
                                          p("Contribution to SHAMAN code are always welcome and can be performed with the", a("github deposit.",href="https://github.com/aghozlane/shaman"))
                                 ))
