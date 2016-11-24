@@ -576,7 +576,10 @@ body <- dashboardBody(
                        conditionalPanel(condition="input.PlotVisuSelect=='Boxplot' || input.PlotVisuSelect=='Diversity' || input.PlotVisuSelect=='Rarefaction'",   
                                           tags$img(src = "gears.gif",id ="loading-spinner")
                                         ),
-                       uiOutput("plotVisu")
+                       uiOutput("plotVisu"),
+                       conditionalPanel(condition="input.PlotVisuSelect=='Scatterplot' && !input.AddRegScatter",
+                                        p(actionButton("scatterD3-reset-zoom", HTML ("<span class='glyphicon glyphicon-search' aria-hidden='true'></span> Reset Zoom")),Align="right")
+                       )
                    ),
                    
                    
@@ -595,7 +598,6 @@ body <- dashboardBody(
                    conditionalPanel(condition="input.PlotVisuSelect=='Scatterplot'",
                                     useShinyjs(),
                                     br(),
-                                    p(actionButton("scatterD3-reset-zoom", HTML("<span class='glyphicon glyphicon-search' aria-hidden='true'></span> Reset Zoom")),Align="right"),
                                     box(title = "Correlation table",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
                                         DT::dataTableOutput("CorTable")
                                     )

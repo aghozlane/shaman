@@ -341,7 +341,7 @@ PCoAPlot_meta <-function (input, dds, group_init, col = c("SpringGreen","dodgerb
     if(input$CountsType=="Normalized") counts.norm = as.data.frame(round(counts(dds, normalized = TRUE)))
     # was removed
     counts.norm = counts.norm[,ind_kept]
-    
+    print(head(counts.norm))
     ## Get the distance
     if(input$DistClust!="sere") dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
     if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts.norm))
@@ -634,5 +634,124 @@ Get_pca_table <-function(input,dds, group_init, n = min(500, nrow(counts(dds))),
     return(pca$x)
   }
 }
+
+
+
+
+
+
+
+
+### NMDS
+NMDSPlot <-function (input, dds, group_init, col = c("SpringGreen","dodgerblue","black","firebrick1")) 
+{
+  cval=c()
+  time_set = 0
+  # Set of shape
+  shape=c(19,17,15,18)
+  
+  ## Var of interest
+  VarInt  = input$VarInt
+  
+  ## Group
+  group = as.character(apply(group_init,1,paste, collapse = "-"))
+  
+  ## Keep only some sample 
+  val = c()
+  for(i in 1:length(VarInt))
+  { 
+    Tinput = paste("input$","Mod",VarInt[i],sep="")
+    expr=parse(text=Tinput)
+    ## All the modalities for all the var of interest
+    val = c(val,eval(expr))
+  }
+  if(length(VarInt)>1) Kval = apply(expand.grid(val,val),1,paste, collapse = "-")
+  else Kval = val
+  ind_kept = which(as.character(group)%in%Kval)
+  
+  ## Get the group corresponding to the modalities
+  group = group[ind_kept]
+  nb = length(unique((group)))
+  group = as.factor(group)
+  
+  if(nlevels(group)!=0 && !is.null(input$PCaxe1) && !is.null(input$PCaxe2))
+  { 
+    ## Get the norm data
+    counts.norm = as.data.frame(round(counts(dds)))
+    if(input$CountsType=="Normalized") counts.norm = as.data.frame(round(counts(dds, normalized = TRUE)))
+    # was removed
+    counts.norm = counts.norm[,ind_kept]
+    
+    ## Get the distance
+    if(input$DistClust!="sere") dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
+    if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts.norm))
+    
+    
+    ## Do PCoA
+    pco.counts.norm = dudi.pco(d = dist.counts.norm, scannf = FALSE,nf=ncol(counts.norm))
+    
+    ## Get eigen values
+    eigen=(pco.counts.norm$eig/sum(pco.counts.norm$eig))*100
+    
+    ## xlim and ylim of the plot
+    min = min(pco.counts.norm$li)
+    max = max(pco.counts.norm$li)
+    
+    ## get condition set
+    condition_set=val[which(val %in% unique(group_init$condition))]
+    time_set=val[which(val %in% unique(group_init$time))]
+    
+    ## Colors
+    if(length(col)<length(condition_set) * length(time_set))# && !input$colorgroup)
+    {
+      col = rainbow(length(condition_set) * length(time_set))
+    }
+    #else if(length(col)<length(condition_set) * length(time_set) && input$colorgroup){
+    #  col = rep(col[1:length(condition_set)], length(time_set))
+    #}
+    if (length(time_set) == 1 && length(condition_set) <= 4){
+      cval = apply(expand.grid(condition_set,time_set),1,paste, collapse = "-")
+      cval = sort(cval)
+    }
+    
+    # to reactivate
+    #pco.counts.norm$li = pco.counts.norm$li[ind_kept,]
+    if (plot == "pcoa"){
+      par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
+      ## Plot axis, label and circles
+      v_axes = c(as.numeric(gsub("PC","",input$PCaxe1)),as.numeric(gsub("PC","",input$PCaxe2)))
+      
+      plot(pco.counts.norm$li[v_axes], 
+           xlab=paste(input$PCaxe1, ": ",round(eigen[v_axes[1]],1),"%") , 
+           ylab=paste(input$PCaxe2, ": ",round(eigen[v_axes[2]],1),"%"),
+           xlim=c(min+0.25*min,max+0.25*max), ylim=c(min-0.1,max+0.1), 
+           cex.axis=1, cex.lab=1,lwd=2, type="n",main='Principal Coordinates Analysis ')
+      # Set different shapes
+      if(input$labelPCOA == "Group"){
+        if(!is.null(cval)){
+          for (i in 1:length(cval)){
+            points(pco.counts.norm$li[which(group==cval[i]),v_axes],pch=shape[i],col=col[i], cex=input$cexpoint)
+          }
+          s.class(dfxy = pco.counts.norm$li[v_axes], fac = group, col = col, label = levels(group),
+                  add.plot = TRUE, cpoint = 0, cell=input$cexcircle, clabel=input$cexLabelDiag,  cstar = input$cexstar)
+        }else s.class(dfxy = pco.counts.norm$li[v_axes], fac = group, col = col, label = levels(group),
+                      add.plot = TRUE, cpoint = input$cexpoint, cell=input$cexcircle, clabel=input$cexLabelDiag,  cstar = input$cexstar)
+      }  
+      else{
+        s.label(pco.counts.norm$li, clabel = input$cexLabelDiag,boxes=FALSE, add.plot = TRUE)
+        s.class(dfxy = pco.counts.norm$li, fac = group, col = col, label = levels(group), add.plot = TRUE, cpoint = 0, clabel = 0, cstar = input$cexstar, cell=input$cexcircle)
+      }
+    }else{
+      v_axes = c(as.numeric(gsub("PC","",input$PCaxe1)),as.numeric(gsub("PC","",input$PCaxe2)))
+      nbBar = max(7,max(v_axes))
+      col = rep("grey",nbBar)
+      col[v_axes] = "black"
+      barplot(eigen[1:nbBar], xlab="Dimensions", ylab="Eigenvalues (%)", names.arg = 1:nbBar, col = col, ylim=c(0,max(eigen)+5), cex.axis=1.2, cex.lab=1.4,cex.names=1.2)
+    }
+  }
+  
+}
+
+
 
 

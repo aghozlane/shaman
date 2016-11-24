@@ -111,11 +111,10 @@ CheckTargetModel <- function(input,target,labeled,CT)
   
   labels = rownames(target)
   ind = which(colnames(CT)%in%labels)
-  
-  InterVar = input$InterestVar
-  
-  uniq_column = (length(which(sapply(target[InterVar], function(x) length(unique(x))) == 1)) > 0)
-  uniq_column_names = names(which(sapply(target[InterVar], function(x) length(unique(x))) == 1))
+
+#   InterVar%in%
+#   uniq_column = (length(which(sapply(target[InterVar], function(x) length(unique(x))) == 1)) > 0)
+#   uniq_column_names = names(which(sapply(target[InterVar], function(x) length(unique(x))) == 1))
   
   ## At least one variable selected
   if(is.null(Error) && length(ind)<=1){
@@ -160,11 +159,11 @@ CheckTargetModel <- function(input,target,labeled,CT)
   
   ## contrasts can be applied only to factors with 2 or more levels
   
-  if(is.null(Error) && (uniq_column)){
-    Error = "Contrasts can be applied only to factors with 2 or more levels."
-    HowTo = paste("Remove all variables with only one factor:", uniq_column_names, sep=" ")
-  }
-  
+#   if(is.null(Error) && (uniq_column)){
+#     Error = "Contrasts can be applied only to factors with 2 or more levels."
+#     HowTo = paste("Remove all variables with only one factor:", uniq_column_names, sep=" ")
+#   }
+#   
   
   ## Full rank matrix
   if(is.null(Error) && length(InterVar)>0)
