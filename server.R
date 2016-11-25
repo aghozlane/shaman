@@ -1451,6 +1451,31 @@ shinyServer(function(input, output,session) {
     
   })
   
+  
+  output$ResPermaTestBox <- renderUI({
+    
+    resDiff = ResDiffAnal()
+    resTest = Perma_test_Diag(input,resDiff)
+    resBox = NULL
+    print(resTest)
+    if(!is.null(resDiff) && !is.null(resTest))
+    {    
+      res = list()
+      ## Title
+      res$title = paste("<center><b><font size='+3'>","Permanova test","</font></b></center><br/>")
+      ## Subtitle
+      res$subtitle = paste("<center><em>","Analysis of variance using distance matrices","</em></center><br/>")
+      ## Pvalue   
+      res$ccl = paste("<center><b><font size='+1'>p-value :",round(resTest,5),"</font></b></center><br/>")
+      
+      resBox = box(title="Permanova ",width = 6, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = FALSE,
+          HTML(unlist(res))
+      )
+    } 
+    return(resBox)
+  })
+  
+  
   output$SizeFactTable <- DT::renderDataTable(
     SizeFactor_table(),
     options = list(scrollX=TRUE,searching = FALSE, processing=FALSE
