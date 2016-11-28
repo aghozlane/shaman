@@ -67,8 +67,6 @@ CheckCountsTable <- function(counts, MGSTable=FALSE)
     {
       if(0%in%colSums(counts)){Error = "At least one of the column of the counts table is 0" }
       if(min(counts)<0){Error = "The counts table must contain only positive values" }
-      print(length(which(toupper(colnames(counts))%in%"SIZE")))
-      print(which(toupper(colnames(counts))%in%"SIZE"))
       if(MGSTable && length(which(toupper(colnames(counts))%in%"SIZE")) != 1){Error="The counts table must contain a column named SIZE providing the length of each gene"}
     }
   }
