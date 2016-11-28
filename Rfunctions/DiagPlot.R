@@ -40,13 +40,51 @@ Plot_diag <- function(input,resDiff,getTable=FALSE)
     if(input$DiagPlot=="SfactorsVStot") res = diagSFactors(input,normFactors,resDiff$raw_counts) 
     if(input$DiagPlot=="pcaPlot") res = PCAPlot_meta(input,dds, group,  type.trans = input$TransType, col = colors)
     if(input$DiagPlot=="pcoaPlot") res = PCoAPlot_meta(input,dds, group, col = colors) 
+    if(input$DiagPlot=="nmdsPlot") res = NMDSPlot(input, dds, group, col = colors) 
     if(input$DiagPlot=="clustPlot") res = HCPlot(input,dds,group,type.trans=input$TransType,counts,col=colors)
   }
   if(getTable && input$DiagPlot=="pcaPlot") res = Get_pca_table(input,dds, group,  type.trans = input$TransType)
-  if(getTable && input$DiagPlot=="pcoaPlot") res = Get_pcoa_table(input,dds, group)
+  if(getTable && input$DiagPlot=="pcoaPlot") res = Get_pcoa_table(input,dds, group)$table
+  if(getTable && input$DiagPlot=="nmdsPlot") res = Get_nmds_table(input,dds, group)$table
   return(res)
 }
 
+
+
+
+##############################################################
+##
+##        Permanova test
+##
+##############################################################
+
+Perma_test_Diag <- function(input,resDiff)
+{
+  
+  VarInt = input$VarInt
+  dds = resDiff$dds
+  counts = resDiff$raw_counts
+  if(input$CountsType=="Normalized") counts = resDiff$countsNorm
+  target = resDiff$target
+  normFactors = resDiff$normFactors
+  
+  ## Counts at the OTU level
+  CT = resDiff$CT_noNorm
+  if(input$CountsType=="Normalized") CT = resDiff$CT_Norm
+  
+  group = as.data.frame(target[,VarInt])
+  rownames(group) = rownames(target)
+  res = NULL
+  
+  if(ncol(group)>0 && !is.null(dds))
+  { 
+    
+    if(input$DiagPlot=="pcoaPlot") res = Get_pcoa_table(input,dds, group)$test$aov.tab$`Pr(>F)`[1]
+    if(input$DiagPlot=="nmdsPlot") res = Get_nmds_table(input,dds, group)$test$aov.tab$`Pr(>F)`[1]
+  }
+
+  return(res)
+}
 
 
 ##############################################################
@@ -463,9 +501,9 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
       prp <- round(prp, 2)
       ncol1 <- ncol(group) == 1
       
-      abs = range(pca$x[, 1])
+      abs = range(proj[, as.numeric(gsub("PC","",input$PCaxe1))])
       abs = abs(abs[2] - abs[1])/25
-      ord = range(pca$x[, 2])
+      ord = range(proj[, as.numeric(gsub("PC","",input$PCaxe2))])
       ord = abs(ord[2] - ord[1])/25
       
       
@@ -583,11 +621,12 @@ Get_pcoa_table <-function (input, dds, group_init)
     if(input$DistClust!="sere") dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
     if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts.norm))
     
-    
+    permanova_test = adonis(dist.counts.norm~group)
+    print(permanova_test)
     ## Do PCoA
     pco.counts.norm = dudi.pco(d = dist.counts.norm, scannf = FALSE,nf=ncol(counts.norm))
     
-    return(pco.counts.norm$li)
+    return(list(table = pco.counts.norm$li,test=permanova_test))
   }
 }
 
@@ -637,25 +676,13 @@ Get_pca_table <-function(input,dds, group_init, n = min(500, nrow(counts(dds))),
 }
 
 
-
-
-
-
-
-
-### NMDS
-NMDSPlot <-function (input, dds, group_init, col = c("SpringGreen","dodgerblue","black","firebrick1")) 
+Get_nmds_table <-function(input,dds, group_init) 
 {
-  cval=c()
-  time_set = 0
-  # Set of shape
-  shape=c(19,17,15,18)
-  
   ## Var of interest
   VarInt  = input$VarInt
   
-  ## Group
   group = as.character(apply(group_init,1,paste, collapse = "-"))
+  group_init = group
   
   ## Keep only some sample 
   val = c()
@@ -675,7 +702,11 @@ NMDSPlot <-function (input, dds, group_init, col = c("SpringGreen","dodgerblue",
   nb = length(unique((group)))
   group = as.factor(group)
   
-  if(nlevels(group)!=0 && !is.null(input$PCaxe1) && !is.null(input$PCaxe2))
+  ## To select the colors
+  indgrp =as.integer(as.factor(group_init))[ind_kept]
+  
+  
+  if(nlevels(group)!=0)
   { 
     ## Get the norm data
     counts.norm = as.data.frame(round(counts(dds)))
@@ -687,71 +718,85 @@ NMDSPlot <-function (input, dds, group_init, col = c("SpringGreen","dodgerblue",
     if(input$DistClust!="sere") dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
     if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts.norm))
     
-    
+    permanova_test = adonis(dist.counts.norm~group)
     ## Do NMDS
-    nmds.counts.norm = metaMDS(dist.counts.norm,k=round(ncol(counts.norm)/2), trymax = 25)
+    nmds.counts.norm = metaMDS(dist.counts.norm,k=min(round((nrow(counts.norm)-1)/2-1),round(ncol(counts.norm)/2)), trymax = 1)
+    
+    proj = nmds.counts.norm$points
+    
+    return(list(table = proj,test=permanova_test))
+  }
+}
+
+
+
+
+
+### NMDS
+NMDSPlot <-function (input, dds, group_init, col = c("SpringGreen","dodgerblue","black","firebrick1")) 
+{
+  ## Var of interest
+  VarInt  = input$VarInt
+  
+  group = as.character(apply(group_init,1,paste, collapse = "-"))
+  group_init = group
+  
+  ## Keep only some sample 
+  val = c()
+  for(i in 1:length(VarInt))
+  { 
+    Tinput = paste("input$","Mod",VarInt[i],sep="")
+    expr=parse(text=Tinput)
+    ## All the modalities for all the var of interest
+    val = c(val,eval(expr))
+  }
+  if(length(VarInt)>1) Kval = apply(expand.grid(val,val),1,paste, collapse = "-")
+  else Kval = val
+  ind_kept = which(as.character(group)%in%Kval)
+  
+  ## Get the group corresponding to the modalities
+  group = group[ind_kept]
+  nb = length(unique((group)))
+  group = as.factor(group)
+  
+  ## To select the colors
+  indgrp =as.integer(as.factor(group_init))[ind_kept]
+  
+  
+  if(nlevels(group)!=0 && !is.null(input$PCaxe1) && !is.null(input$PCaxe2))
+  { 
+    
+    ## Get the norm data
+    counts.norm = as.data.frame(round(counts(dds)))
+    if(input$CountsType=="Normalized") counts.norm = as.data.frame(round(counts(dds, normalized = TRUE)))
+    # was removed
+    counts.norm = counts.norm[,ind_kept]
+    
+    ## Get the distance
+    if(input$DistClust!="sere") dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
+    if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts.norm))
+    
+    save(indgrp,counts.norm,dist.counts.norm,group,group_init,file="testNMDS.RData")
+    ## Do NMDS
+    nmds.counts.norm = metaMDS(dist.counts.norm,k=min(round((nrow(counts.norm)-1)/2-1),round(ncol(counts.norm)/2)), trymax = 25)
                                
-    
-      dudi.pco(d = dist.counts.norm, scannf = FALSE,nf=ncol(counts.norm))
-    
-    ## Get eigen values
-    eigen=(pco.counts.norm$eig/sum(pco.counts.norm$eig))*100
+    proj = nmds.counts.norm$points
     
     ## xlim and ylim of the plot
-    min = min(pco.counts.norm$li)
-    max = max(pco.counts.norm$li)
+    min = min(proj); max = max(proj)
+    abs = range(proj[, as.numeric(gsub("PC","",input$PCaxe1))])
+    abs = abs(abs[2] - abs[1])/25
+    ord = range(proj[, as.numeric(gsub("PC","",input$PCaxe2))])
+    ord = abs(ord[2] - ord[1])/25
     
-    ## get condition set
-    condition_set=val[which(val %in% unique(group_init$condition))]
-    time_set=val[which(val %in% unique(group_init$time))]
-    
-    ## Colors
-    if(length(col)<length(condition_set) * length(time_set))# && !input$colorgroup)
-    {
-      col = rainbow(length(condition_set) * length(time_set))
-    }
-    #else if(length(col)<length(condition_set) * length(time_set) && input$colorgroup){
-    #  col = rep(col[1:length(condition_set)], length(time_set))
-    #}
-    if (length(time_set) == 1 && length(condition_set) <= 4){
-      cval = apply(expand.grid(condition_set,time_set),1,paste, collapse = "-")
-      cval = sort(cval)
-    }
-    
-    # to reactivate
-    #pco.counts.norm$li = pco.counts.norm$li[ind_kept,]
-    if (plot == "pcoa"){
-      par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
-      ## Plot axis, label and circles
-      v_axes = c(as.numeric(gsub("PC","",input$PCaxe1)),as.numeric(gsub("PC","",input$PCaxe2)))
-      
-      plot(pco.counts.norm$li[v_axes], 
-           xlab=paste(input$PCaxe1, ": ",round(eigen[v_axes[1]],1),"%") , 
-           ylab=paste(input$PCaxe2, ": ",round(eigen[v_axes[2]],1),"%"),
-           xlim=c(min+0.25*min,max+0.25*max), ylim=c(min-0.1,max+0.1), 
-           cex.axis=1, cex.lab=1,lwd=2, type="n",main='Principal Coordinates Analysis ')
-      # Set different shapes
-      if(input$labelPCOA == "Group"){
-        if(!is.null(cval)){
-          for (i in 1:length(cval)){
-            points(pco.counts.norm$li[which(group==cval[i]),v_axes],pch=shape[i],col=col[i], cex=input$cexpoint)
-          }
-          s.class(dfxy = pco.counts.norm$li[v_axes], fac = group, col = col, label = levels(group),
-                  add.plot = TRUE, cpoint = 0, cell=input$cexcircle, clabel=input$cexLabelDiag,  cstar = input$cexstar)
-        }else s.class(dfxy = pco.counts.norm$li[v_axes], fac = group, col = col, label = levels(group),
-                      add.plot = TRUE, cpoint = input$cexpoint, cell=input$cexcircle, clabel=input$cexLabelDiag,  cstar = input$cexstar)
-      }  
-      else{
-        s.label(pco.counts.norm$li, clabel = input$cexLabelDiag,boxes=FALSE, add.plot = TRUE)
-        s.class(dfxy = pco.counts.norm$li, fac = group, col = col, label = levels(group), add.plot = TRUE, cpoint = 0, clabel = 0, cstar = input$cexstar, cell=input$cexcircle)
-      }
-    }else{
-      v_axes = c(as.numeric(gsub("PC","",input$PCaxe1)),as.numeric(gsub("PC","",input$PCaxe2)))
-      nbBar = max(7,max(v_axes))
-      col = rep("grey",nbBar)
-      col[v_axes] = "black"
-      barplot(eigen[1:nbBar], xlab="Dimensions", ylab="Eigenvalues (%)", names.arg = 1:nbBar, col = col, ylim=c(0,max(eigen)+5), cex.axis=1.2, cex.lab=1.4,cex.names=1.2)
-    }
+    plot(proj[,as.numeric(gsub("PC","",input$PCaxe1))],proj[,as.numeric(gsub("PC","",input$PCaxe2))], las = 1, cex = input$cexTitleDiag, col = col[indgrp], 
+         pch = 16,
+         xlab = paste("MDS",gsub("PC","",input$PCaxe1)),
+         ylab = paste("MDS",gsub("PC","",input$PCaxe2)),
+         main = "Non-metric multidimensional scaling"
+    )
+    abline(h = 0, v = 0, lty = 2, col = "lightgray")
+    text(proj[,as.numeric(gsub("PC","",input$PCaxe1))] - ifelse(proj[,as.numeric(gsub("PC","",input$PCaxe1))] > 0, abs, -abs), proj[,as.numeric(gsub("PC","",input$PCaxe2))] - ifelse(proj[,as.numeric(gsub("PC","",input$PCaxe2))] > 0, ord, -ord), colnames(counts.norm), col = col[indgrp],cex=input$cexLabelDiag)
   }
   
 }

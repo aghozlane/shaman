@@ -445,24 +445,29 @@ body <- dashboardBody(
                     tags$style(type='text/css', "#ExportSizeFactor { margin-top: 37px;}")
                   )
                 ),
-                  
+                  fluidRow(
                 conditionalPanel(condition="input.DiagPlot=='pcaPlot'",
                                  box(title = "Eigen values",  width = 6, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
                                     plotOutput("PlotEigen",height="100%")
                                  )
                 ),
+                
                 conditionalPanel(condition="input.DiagPlot=='pcoaPlot'",
                                  box(title = "Eigen values",  width = 6, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
                                      plotOutput("PlotpcoaEigen",height="100%")
                                  )
+                ),
+                conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='nmdsPlot'",
+                                 uiOutput("ResPermaTestBox")
                 )
+                  )
                 
               ),
               column(width=3,
                 box(title = "Select your plot",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = FALSE,collapsed= FALSE,
                   selectInput("DiagPlot","",c("Total barplot"="barplotTot","Nul barplot"="barplotNul",
                                               "Maj. taxonomy"="MajTax","Boxplots" = "boxplotNorm", "Density"="densityPlot", "Dispersion" = "DispPlot",
-                                              "Size factors VS total"="SfactorsVStot", "PCA"="pcaPlot", "PCoA"="pcoaPlot","Clustering" = "clustPlot"))
+                                              "Size factors VS total"="SfactorsVStot", "PCA"="pcaPlot", "PCoA"="pcoaPlot","NMDS"="nmdsPlot","Clustering" = "clustPlot"))
                     ),
                 box(title = "Options",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
                     conditionalPanel(condition="input.DiagPlot!='clustPlot' && input.DiagPlot!='pcaPlot' && input.DiagPlot!='SfactorsVStot' && input.DiagPlot!='DispPlot'",
@@ -472,7 +477,7 @@ body <- dashboardBody(
                                     checkboxInput("RemoveNullValue","Remove 0",value = TRUE)
                                     ),
                     conditionalPanel(condition="input.DiagPlot!='Sfactors' && input.DiagPlot!='SfactorsVStot' ",uiOutput("VarIntDiag")),
-                    conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='pcaPlot'",
+                    conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='pcaPlot' || input.DiagPlot=='nmdsPlot'",
                                      h5(strong("Select the modalities")),
                                      uiOutput("ModMat"),
                                      fluidRow(
@@ -481,7 +486,7 @@ body <- dashboardBody(
                                        column(width=5,uiOutput("PC2_sel"))
                                      )
                                     ),
-                    conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='SERE' || input.DiagPlot=='clustPlot' ",
+                    conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='nmdsPlot' || input.DiagPlot=='SERE' || input.DiagPlot=='clustPlot' ",
                                       selectInput("DistClust","Distance",c("euclidean", "SERE"="sere", "canberra", "bray", "kulczynski", "jaccard", 
                                                   "gower", "altGower", "morisita", "horn","mountford","raup","binomial",
                                                   "chao","cao","mahalanobis"),selected="canberra")
@@ -523,7 +528,7 @@ body <- dashboardBody(
                   fluidRow(
                     column(width=12, p(strong("Size"))),
                     column(width=6,sliderInput("cexTitleDiag", h6("Axis"),min=0,max=5,value = 1,step =0.1)),
-                    conditionalPanel(condition="input.DiagPlot=='SfactorsVStot' || input.DiagPlot=='pcaPlot' || input.DiagPlot=='pcoaPlot'",column(width=6,sliderInput("cexLabelDiag", h6("Points"),min=0,max=5,value = 1,step =0.1)))
+                    conditionalPanel(condition="input.DiagPlot=='SfactorsVStot' || input.DiagPlot=='pcaPlot' || input.DiagPlot=='pcoaPlot' || input.DiagPlot=='nmdsPlot' ",column(width=6,sliderInput("cexLabelDiag", h6("Points"),min=0,max=5,value = 1,step =0.1)))
                     
                   )
 
