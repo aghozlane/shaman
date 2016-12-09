@@ -49,10 +49,10 @@ TableDiff_print <- function(input,BaseContrast,resDiff, info = NULL)
     ### ??????????
     
     res.name <- data.frame(Id = rownames(result[[name]]), 
-                           FC = round(2^(result[[name]][, "log2FoldChange"]), 3),
+                           FoldChange = format(2^(result[[name]][, "log2FoldChange"]),scientific = TRUE),
                            log2FoldChange = round(result[[name]][, "log2FoldChange"], 3),
                            pvalue = result[[name]][, "pvalue"], 
-                           padj = result[[name]][, "padj"])
+                           pvalue_adjusted = result[[name]][, "padj"])
     complete.name <- merge(complete.name, res.name, by = "Id")
     mcols.add <- data.frame(Id = rownames(counts(dds)), 
                             dispGeneEst = mcols(dds)$dispGeneEst, dispFit = mcols(dds)$dispFit, 
@@ -66,16 +66,16 @@ TableDiff_print <- function(input,BaseContrast,resDiff, info = NULL)
     mcols.add$outlier <- ifelse(mcols(dds)$maxCooks > cooksCutoff, "Yes", "No")
     complete.name <- merge(complete.name, mcols.add, by = "Id")
     complete[[name]] <- complete.name
-    complete.name=complete.name[order(complete.name$padj),]
-    significant.name <- complete.name[which(complete.name$padj <= alpha & complete.name$betaConv), ]
-    up.name <- complete.name[which(complete.name$padj <= alpha & complete.name$betaConv & complete.name$log2FoldChange>=0.0), ]
+    complete.name=complete.name[order(complete.name$pvalue_adjusted),]
+    significant.name <- complete.name[which(complete.name$pvalue_adjusted <= alpha & complete.name$betaConv), ]
+    up.name <- complete.name[which(complete.name$pvalue_adjusted <= alpha & complete.name$betaConv & complete.name$log2FoldChange>=0.0), ]
     ## useless order
-    #up.name <- up.name[order(up.name$padj), ]
-    down.name <- complete.name[which(complete.name$padj<=alpha & complete.name$betaConv & complete.name$log2FoldChange<=0.0), ]
-    #down.name <- down.name[order(down.name$padj), ]
+    #up.name <- up.name[order(up.name$pvalue_adjusted), ]
+    down.name <- complete.name[which(complete.name$pvalue_adjusted<=alpha & complete.name$betaConv & complete.name$log2FoldChange<=0.0), ]
+    #down.name <- down.name[order(down.name$pvalue_adjusted), ]
     
     name <- gsub(" ", "", name)
-    keep <- c("Id","baseMean","FC","log2FoldChange","padj")
+    keep <- c("Id","baseMean","FoldChange","log2FoldChange","pvalue_adjusted")
     #       complete.complete[, paste(name, keep, sep = ".")] <- complete.name[, keep]
   }
   #return(list(complete=complete.name,up=up.name,down=down.name))

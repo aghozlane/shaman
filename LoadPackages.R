@@ -14,10 +14,21 @@ if(!require(shinydashboard)){
 
 if(!require(rjson)){
   install.packages('rjson')
+  library(rjson)
+}
+if(!require(ape)){
+  install.packages('ape')
+  library(ape)
+}
+
+if(!require(GUniFrac)){
+  install.packages('GUniFrac')
+  library(GUniFrac)
 }
 
 if(!require(devtools)){
   install.packages('devtools')
+  library(devtools)
 }
 
 if (!require(psych)) {
@@ -132,6 +143,14 @@ if (!require(scales)) {
   install.packages('scales')
   library(scales)
 }
+
+if (!require(phytools)) {
+  install.packages('phytools')
+  library(phytools)
+}
+
+
+
 # if(!require(plotly)){
 #   install.packages("plotly")
 #   library(plotly)  

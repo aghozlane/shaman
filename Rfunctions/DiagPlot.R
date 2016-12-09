@@ -8,7 +8,7 @@
 ##
 ##############################################################
 
-Plot_diag <- function(input,resDiff,getTable=FALSE)
+Plot_diag <- function(input,resDiff,tree,getTable=FALSE)
 {
   
   VarInt = input$VarInt
@@ -39,13 +39,13 @@ Plot_diag <- function(input,resDiff,getTable=FALSE)
     if(input$DiagPlot=="MajTax") res = majTaxPlot(input,counts, group = group, col=colors)
     if(input$DiagPlot=="SfactorsVStot") res = diagSFactors(input,normFactors,resDiff$raw_counts) 
     if(input$DiagPlot=="pcaPlot") res = PCAPlot_meta(input,dds, group,  type.trans = input$TransType, col = colors)
-    if(input$DiagPlot=="pcoaPlot") res = PCoAPlot_meta(input,dds, group, col = colors) 
-    if(input$DiagPlot=="nmdsPlot") res = NMDSPlot(input, dds, group, col = colors) 
-    if(input$DiagPlot=="clustPlot") res = HCPlot(input,dds,group,type.trans=input$TransType,counts,col=colors)
+    if(input$DiagPlot=="pcoaPlot") res = PCoAPlot_meta(input,dds, group,CT,tree, col = colors) 
+    if(input$DiagPlot=="nmdsPlot") res = NMDSPlot(input, dds, group,CT,tree, col = colors) 
+    if(input$DiagPlot=="clustPlot") res = HCPlot(input,dds,group,type.trans=input$TransType,counts,CT,tree,col=colors)
   }
   if(getTable && input$DiagPlot=="pcaPlot") res = Get_pca_table(input,dds, group,  type.trans = input$TransType)
-  if(getTable && input$DiagPlot=="pcoaPlot") res = Get_pcoa_table(input,dds, group)$table
-  if(getTable && input$DiagPlot=="nmdsPlot") res = Get_nmds_table(input,dds, group)$table
+  if(getTable && input$DiagPlot=="pcoaPlot") res = Get_pcoa_table(input,dds, group,CT,tree)$table
+  if(getTable && input$DiagPlot=="nmdsPlot") res = Get_nmds_table(input,dds, group,CT,tree)$table
   return(res)
 }
 
@@ -58,19 +58,18 @@ Plot_diag <- function(input,resDiff,getTable=FALSE)
 ##
 ##############################################################
 
-Perma_test_Diag <- function(input,resDiff)
+Perma_test_Diag <- function(input,resDiff,tree)
 {
   
   VarInt = input$VarInt
   dds = resDiff$dds
-  counts = resDiff$raw_counts
-  if(input$CountsType=="Normalized") counts = resDiff$countsNorm
-  target = resDiff$target
-  normFactors = resDiff$normFactors
   
   ## Counts at the OTU level
   CT = resDiff$CT_noNorm
   if(input$CountsType=="Normalized") CT = resDiff$CT_Norm
+  
+  target = resDiff$target
+  normFactors = resDiff$normFactors
   
   group = as.data.frame(target[,VarInt])
   rownames(group) = rownames(target)
@@ -78,9 +77,8 @@ Perma_test_Diag <- function(input,resDiff)
   
   if(ncol(group)>0 && !is.null(dds))
   { 
-    
-    if(input$DiagPlot=="pcoaPlot") res = Get_pcoa_table(input,dds, group)$test$aov.tab$`Pr(>F)`[1]
-    if(input$DiagPlot=="nmdsPlot") res = Get_nmds_table(input,dds, group)$test$aov.tab$`Pr(>F)`[1]
+    if(input$DiagPlot=="pcoaPlot") res = Get_pcoa_table(input,dds, group,CT,tree)$test$aov.tab$`Pr(>F)`[1]
+    if(input$DiagPlot=="nmdsPlot") res = Get_nmds_table(input,dds, group,CT,tree)$test$aov.tab$`Pr(>F)`[1]
   }
 
   return(res)
@@ -95,7 +93,7 @@ Perma_test_Diag <- function(input,resDiff)
 
 
 ## Hierarchical clustering
-HCPlot <- function (input,dds,group,type.trans,counts,col = c("lightblue", "orange", "MediumVioletRed", "SpringGreen")) 
+HCPlot <- function (input,dds,group,type.trans,counts,CT,tree,col = c("lightblue", "orange", "MediumVioletRed", "SpringGreen")) 
 {
   
   res = NULL
@@ -109,30 +107,44 @@ HCPlot <- function (input,dds,group,type.trans,counts,col = c("lightblue", "oran
   nb = length(unique((group)))
   
   ## Get the dendrogram
-  if(input$DistClust!="sere") dist = vegdist(t(counts), method = input$DistClust)
+  if(input$DistClust!="sere" && input$DistClust!="Unifrac") dist = vegdist(t(counts), method = input$DistClust)
   if(input$DistClust=="sere") dist = as.dist(SEREcoef(counts))
-  hc <- hclust(dist, method = "ward.D")
+  if(input$DistClust=="Unifrac") {
+    tmp = UniFracDist(CT,tree)
+    if(is.null(tree) || is.null(tmp)) dist = NULL
+    if(!is.null(tree)) {dist = switch(input$DistClustUnifrac,
+                                                  "WU" = as.dist(tmp[, , "d_1"]), 
+                                                  "UWU" = as.dist(tmp[, , "d_UW"]),
+                                                  "VAWU" = as.dist(tmp[, , "d_VAW"])
+    )
+    }
   
-  dend = as.dendrogram(hc)
+  }
   
-  ## Get the type of dendrogram
-  type <- input$typeHculst
-  
-  dend <- set(dend, "labels_cex", input$cexLabelDiag)
-  if(input$colorHC) labels_colors(dend)<-col[as.integer(as.factor(group))][order.dendrogram(dend)]
-  if(type=="hori") 
-  { 
-    par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
-    res = plot(dend, main = "Cluster dendrogram",xlab = paste(input$DistClust,"distance, Ward criterion",sep=" "),cex=input$cexLabelDiag)
-  }  
-  if(type!="hori")
+  if(!is.null(dist))
   {
-    par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
-    res = circlize_dendrogram(dend, labels_track_height = 0.2, dend_track_height = .3, main = "Cluster dendrogram",xlab = paste(input$DistClust,"distance, Ward criterion",sep=" "))
+    hc <- hclust(dist, method = "ward.D")
+    
+    dend = as.dendrogram(hc)
+    
+    ## Get the type of dendrogram
+    type <- input$typeHculst
+    
+    dend <- set(dend, "labels_cex", input$cexLabelDiag)
+    if(input$colorHC) labels_colors(dend)<-col[as.integer(as.factor(group))][order.dendrogram(dend)]
+    if(type=="hori") 
+    { 
+      par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
+      res = plot(dend, main = "Cluster dendrogram",xlab = paste(input$DistClust,"distance, Ward criterion",sep=" "),cex=input$cexLabelDiag)
+    }  
+    if(type!="hori")
+    {
+      par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
+      res = circlize_dendrogram(dend, labels_track_height = 0.2, dend_track_height = .3, main = "Cluster dendrogram",xlab = paste(input$DistClust,"distance, Ward criterion",sep=" "))
+    }
   }
   return(res)
 }
-
 
 ## PCA Eigen value
 Plot_diag_Eigen <- function(input,resDiff)
@@ -153,7 +165,7 @@ Plot_diag_Eigen <- function(input,resDiff)
 
 
 ## PCOA Eigen value
-Plot_diag_pcoaEigen = function(input,resDiff)
+Plot_diag_pcoaEigen = function(input,resDiff,tree)
 {
   colors = c("SpringGreen","dodgerblue","black","firebrick1")
   VarInt = input$VarInt
@@ -161,8 +173,26 @@ Plot_diag_pcoaEigen = function(input,resDiff)
   target = resDiff$target
   group = as.data.frame(target[,VarInt])
   rownames(group) = rownames(target)
-  PCoAPlot_meta(input,dds, group, col = colors, plot = "eigen") 
+  CT = resDiff$CT_noNorm
+  if(input$CountsType=="Normalized") CT = resDiff$CT_Norm
+  PCoAPlot_meta(input,dds, group,CT=CT,tree, col = colors, plot = "eigen") 
 }
+
+
+## NMDS stress plot
+Plot_diag_nmdsStress = function(input,resDiff,tree)
+{
+  VarInt = input$VarInt
+  dds = resDiff$dds
+  target = resDiff$target
+  group = as.data.frame(target[,VarInt])
+  rownames(group) = rownames(target)
+  CT = resDiff$CT_noNorm
+  if(input$CountsType=="Normalized") CT = resDiff$CT_Norm
+  NMDSPlot(input,dds, group,CT=CT,tree=tree, plot = "stress") 
+}
+
+
 
 
 ## Boxplot for the counts normalized/no normalized
@@ -341,7 +371,7 @@ diagSFactors<-function (input,normFactors,counts)
 
 
 ### PCoA
-PCoAPlot_meta <-function (input, dds, group_init, col = c("SpringGreen","dodgerblue","black","firebrick1"), plot = "pcoa") 
+PCoAPlot_meta <-function (input, dds, group_init, CT,tree,col = c("SpringGreen","dodgerblue","black","firebrick1"), plot = "pcoa") 
 {
   cval=c()
   time_set = 0
@@ -381,71 +411,93 @@ PCoAPlot_meta <-function (input, dds, group_init, col = c("SpringGreen","dodgerb
     counts.norm = counts.norm[,ind_kept]
     # print(head(counts.norm))
     ## Get the distance
-    if(input$DistClust!="sere") dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
+    if(input$DistClust!="sere" && input$DistClust!="Unifrac") dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
     if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts.norm))
-    
-    
-    # save(counts.norm,dist.counts.norm,file="testNMDS.RData")
-    ## Do PCoA
-    pco.counts.norm = dudi.pco(d = dist.counts.norm, scannf = FALSE,nf=ncol(counts.norm))
-    
-    ## Get eigen values
-    eigen=(pco.counts.norm$eig/sum(pco.counts.norm$eig))*100
-    
-    ## xlim and ylim of the plot
-    min = min(pco.counts.norm$li)
-    max = max(pco.counts.norm$li)
-    
-    ## get condition set
-    condition_set=val[which(val %in% unique(group_init$condition))]
-    time_set=val[which(val %in% unique(group_init$time))]
-    
-    ## Colors
-    if(length(col)<length(condition_set) * length(time_set))# && !input$colorgroup)
+    if(input$DistClust=="Unifrac")
     {
-      col = rainbow(length(condition_set) * length(time_set))
-    }
-    #else if(length(col)<length(condition_set) * length(time_set) && input$colorgroup){
-    #  col = rep(col[1:length(condition_set)], length(time_set))
-    #}
-    if (length(time_set) == 1 && length(condition_set) <= 4){
-      cval = apply(expand.grid(condition_set,time_set),1,paste, collapse = "-")
-      cval = sort(cval)
-    }
-    
-    # to reactivate
-    #pco.counts.norm$li = pco.counts.norm$li[ind_kept,]
-    if (plot == "pcoa"){
-      par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
-      ## Plot axis, label and circles
-      v_axes = c(as.numeric(gsub("PC","",input$PCaxe1)),as.numeric(gsub("PC","",input$PCaxe2)))
-      
-      plot(pco.counts.norm$li[v_axes], 
-           xlab=paste(input$PCaxe1, ": ",round(eigen[v_axes[1]],1),"%") , 
-           ylab=paste(input$PCaxe2, ": ",round(eigen[v_axes[2]],1),"%"),
-           xlim=c(min+0.25*min,max+0.25*max), ylim=c(min-0.1,max+0.1), 
-           cex.axis=1, cex.lab=1,lwd=2, type="n",main='Principal Coordinates Analysis ')
-      # Set different shapes
-      if(input$labelPCOA == "Group"){
-        if(!is.null(cval)){
-          for (i in 1:length(cval)){
-            points(pco.counts.norm$li[which(group==cval[i]),v_axes],pch=shape[i],col=col[i], cex=input$cexpoint)
-          }
-          s.class(dfxy = pco.counts.norm$li[v_axes], fac = group, col = col, label = levels(group),
-                  add.plot = TRUE, cpoint = 0, cell=input$cexcircle, clabel=input$cexLabelDiag,  cstar = input$cexstar)
-        }else s.class(dfxy = pco.counts.norm$li[v_axes], fac = group, col = col, label = levels(group),
-                      add.plot = TRUE, cpoint = input$cexpoint, cell=input$cexcircle, clabel=input$cexLabelDiag,  cstar = input$cexstar)
-      }  
-      else{
-        s.label(pco.counts.norm$li, clabel = input$cexLabelDiag,boxes=FALSE, add.plot = TRUE)
-        s.class(dfxy = pco.counts.norm$li, fac = group, col = col, label = levels(group), add.plot = TRUE, cpoint = 0, clabel = 0, cstar = input$cexstar, cell=input$cexcircle)
+      tmp = UniFracDist(CT,tree)
+      if(is.null(tree) || is.null(tmp)) dist.counts.norm = NULL
+      if(!is.null(tree))
+      {
+        dist.counts.norm = switch(input$DistClustUnifrac,
+                                                    "WU" = as.dist(tmp[, , "d_1"]), 
+                                                    "UWU" = as.dist(tmp[, , "d_UW"]),
+                                                    "VAWU" = as.dist(tmp[, , "d_VAW"])
+                                )
       }
-    }else{
-      v_axes = c(as.numeric(gsub("PC","",input$PCaxe1)),as.numeric(gsub("PC","",input$PCaxe2)))
-      nbBar = max(7,max(v_axes))
-      col = rep("grey",nbBar)
-      col[v_axes] = "black"
-      barplot(eigen[1:nbBar], xlab="Dimensions", ylab="Eigenvalues (%)", names.arg = 1:nbBar, col = col, ylim=c(0,max(eigen)+5), cex.axis=1.2, cex.lab=1.4,cex.names=1.2)
+    
+    }
+   
+    if(!is.null(dist.counts.norm))
+    {
+      ## Do PCoA
+      pco.counts.norm = dudi.pco(d = dist.counts.norm, scannf = FALSE,nf=ncol(counts.norm))
+      
+      ## Get eigen values
+      eigen=(pco.counts.norm$eig/sum(pco.counts.norm$eig))*100
+      
+      ## xlim and ylim of the plot
+      min = min(pco.counts.norm$li)
+      max = max(pco.counts.norm$li)
+      
+      ## get condition set
+      condition_set=val[which(val %in% unique(group_init$condition))]
+      time_set=val[which(val %in% unique(group_init$time))]
+      
+      ## Colors
+      if(length(col)<length(condition_set) * length(time_set))# && !input$colorgroup)
+      {
+        col = rainbow(length(condition_set) * length(time_set))
+      }
+      #else if(length(col)<length(condition_set) * length(time_set) && input$colorgroup){
+      #  col = rep(col[1:length(condition_set)], length(time_set))
+      #}
+      if (length(time_set) == 1 && length(condition_set) <= 4){
+        cval = apply(expand.grid(condition_set,time_set),1,paste, collapse = "-")
+        cval = sort(cval)
+      }
+      
+      # to reactivate
+      #pco.counts.norm$li = pco.counts.norm$li[ind_kept,]
+      if (plot == "pcoa"){
+        par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
+        ## Plot axis, label and circles
+        v_axes = c(as.numeric(gsub("PC","",input$PCaxe1)),as.numeric(gsub("PC","",input$PCaxe2)))
+        
+        plot(pco.counts.norm$li[v_axes], 
+             xlab=paste(input$PCaxe1, ": ",round(eigen[v_axes[1]],1),"%") , 
+             ylab=paste(input$PCaxe2, ": ",round(eigen[v_axes[2]],1),"%"),
+             xlim=c(min+0.25*min,max+0.25*max), ylim=c(min-0.1,max+0.1), 
+             cex.axis=1, cex.lab=1,lwd=2, type="n")
+        
+        title(main='Principal Coordinates Analysis ',cex.main=1.5)
+        ## Add a subtitle
+        par(font.main=3)
+        if(input$DistClust!="Unifrac") title(main=paste("\n","\n",input$DistClust,"distance",sep=" "),cex.main=1)
+        if(input$DistClust=="Unifrac") title(main=paste("\n","\n",input$DistClustUnifrac,"distance",sep=" "),cex.main=1)
+        
+        # Set different shapes
+        if(input$labelPCOA == "Group"){
+          if(!is.null(cval)){
+            for (i in 1:length(cval)){
+              points(pco.counts.norm$li[which(group==cval[i]),v_axes],pch=shape[i],col=col[i], cex=input$cexpoint)
+            }
+            s.class(dfxy = pco.counts.norm$li[v_axes], fac = group, col = col, label = levels(group),
+                    add.plot = TRUE, cpoint = 0, cell=input$cexcircle, clabel=input$cexLabelDiag,  cstar = input$cexstar)
+          }else s.class(dfxy = pco.counts.norm$li[v_axes], fac = group, col = col, label = levels(group),
+                        add.plot = TRUE, cpoint = input$cexpoint, cell=input$cexcircle, clabel=input$cexLabelDiag,  cstar = input$cexstar)
+        }  
+        else{
+          s.label(pco.counts.norm$li, clabel = input$cexLabelDiag,boxes=FALSE, add.plot = TRUE)
+          s.class(dfxy = pco.counts.norm$li, fac = group, col = col, label = levels(group), add.plot = TRUE, cpoint = 0, clabel = 0, cstar = input$cexstar, cell=input$cexcircle)
+        }
+      }else{
+        v_axes = c(as.numeric(gsub("PC","",input$PCaxe1)),as.numeric(gsub("PC","",input$PCaxe2)))
+        nbBar = max(7,max(v_axes))
+        col = rep("grey",nbBar)
+        col[v_axes] = "black"
+        barplot(eigen[1:nbBar], xlab="Dimensions", ylab="Eigenvalues (%)", names.arg = 1:nbBar, col = col, ylim=c(0,max(eigen)+5), cex.axis=1.2, cex.lab=1.4,cex.names=1.2)
+      }
     }
   }
   
@@ -500,10 +552,10 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
       prp <- pca$sdev^2 * 100/sum(pca$sdev^2)
       prp <- round(prp, 2)
       ncol1 <- ncol(group) == 1
-      
-      abs = range(proj[, as.numeric(gsub("PC","",input$PCaxe1))])
+
+      abs = range(pca$x[, as.numeric(gsub("PC","",input$PCaxe1))])
       abs = abs(abs[2] - abs[1])/25
-      ord = range(proj[, as.numeric(gsub("PC","",input$PCaxe2))])
+      ord = range(pca$x[, as.numeric(gsub("PC","",input$PCaxe2))])
       ord = abs(ord[2] - ord[1])/25
       
       
@@ -578,7 +630,7 @@ my.boxplot <- function(x, pol.col = 1, pol.density = NULL, pol.angle = 45,
 
 
 ### Get PCOA table (useful to get the number of axes)
-Get_pcoa_table <-function (input, dds, group_init) 
+Get_pcoa_table <-function (input, dds, group_init,CT,tree) 
 {
   cval=c()
   time_set = 0
@@ -593,6 +645,8 @@ Get_pcoa_table <-function (input, dds, group_init)
   
   ## Keep only some sample 
   val = c()
+  permanova_test = NULL
+  
   for(i in 1:length(VarInt))
   { 
     Tinput = paste("input$","Mod",VarInt[i],sep="")
@@ -618,15 +672,29 @@ Get_pcoa_table <-function (input, dds, group_init)
     counts.norm = counts.norm[,ind_kept]
     
     ## Get the distance
-    if(input$DistClust!="sere") dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
+    if(input$DistClust!="sere" && input$DistClust!="Unifrac") dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
     if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts.norm))
+    if(input$DistClust=="Unifrac") {
+      tmp = UniFracDist(CT,tree)
+      if(is.null(tree) || is.null(tmp)) dist.counts.norm = NULL
+      if(!is.null(tree)) {dist.counts.norm = switch(input$DistClustUnifrac,
+                                "WU" = as.dist(tmp[, , "d_1"]), 
+                                "UWU" = as.dist(tmp[, , "d_UW"]),
+                                "VAWU" = as.dist(tmp[, , "d_VAW"])
+      )
+      }
+    }
     
-    permanova_test = adonis(dist.counts.norm~group)
-    print(permanova_test)
-    ## Do PCoA
-    pco.counts.norm = dudi.pco(d = dist.counts.norm, scannf = FALSE,nf=ncol(counts.norm))
+    if(!is.null(dist.counts.norm)){ 
+      ## To get always the same result 
+      set.seed(666)
+      permanova_test = adonis(dist.counts.norm~group)
+  
+      ## Do PCoA
+      pco.counts.norm = dudi.pco(d = dist.counts.norm, scannf = FALSE,nf=ncol(counts.norm))
+      return(list(table = pco.counts.norm$li,test=permanova_test))
+    } else return(list(table = NULL,test=NULL))
     
-    return(list(table = pco.counts.norm$li,test=permanova_test))
   }
 }
 
@@ -676,7 +744,7 @@ Get_pca_table <-function(input,dds, group_init, n = min(500, nrow(counts(dds))),
 }
 
 
-Get_nmds_table <-function(input,dds, group_init) 
+Get_nmds_table <-function(input,dds, group_init,CT,tree) 
 {
   ## Var of interest
   VarInt  = input$VarInt
@@ -715,16 +783,34 @@ Get_nmds_table <-function(input,dds, group_init)
     counts.norm = counts.norm[,ind_kept]
     
     ## Get the distance
-    if(input$DistClust!="sere") dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
+    if(input$DistClust!="sere" && input$DistClust!="Unifrac") dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
     if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts.norm))
+    if(input$DistClust=="Unifrac") {
+      tmp = UniFracDist(CT,tree)
+      if(is.null(tree) || is.null(tmp)) dist.counts.norm = NULL
+      if(!is.null(tree)) {dist.counts.norm = switch(input$DistClustUnifrac,
+                                                    "WU" = as.dist(tmp[, , "d_1"]), 
+                                                    "UWU" = as.dist(tmp[, , "d_UW"]),
+                                                    "VAWU" = as.dist(tmp[, , "d_VAW"])
+      )
+      }
     
-    permanova_test = adonis(dist.counts.norm~group)
-    ## Do NMDS
-    nmds.counts.norm = metaMDS(dist.counts.norm,k=min(round((nrow(counts.norm)-1)/2-1),round(ncol(counts.norm)/2)), trymax = 1)
+    }
     
-    proj = nmds.counts.norm$points
+    if(!is.null(dist.counts.norm)){ 
+      
+      ## To get always the same result 
+      set.seed(666)
+      permanova_test = adonis(dist.counts.norm~group)
+      
+      ## Do NMDS
+      # nmds.counts.norm = metaMDS(dist.counts.norm,k=min(round((nrow(counts.norm)-1)/2-1),round(ncol(counts.norm)/2)), trymax = 1)
+      nmds.counts.norm = metaMDS(dist.counts.norm,k=3, trymax = 1)
+      proj = nmds.counts.norm$points
+      return(list(table = proj,test=permanova_test,nmds=nmds.counts.norm))
+      
+    } else return(list(table = NULL,test=NULL))
     
-    return(list(table = proj,test=permanova_test))
   }
 }
 
@@ -733,7 +819,7 @@ Get_nmds_table <-function(input,dds, group_init)
 
 
 ### NMDS
-NMDSPlot <-function (input, dds, group_init, col = c("SpringGreen","dodgerblue","black","firebrick1")) 
+NMDSPlot <-function (input, dds, group_init, CT,tree,col = c("SpringGreen","dodgerblue","black","firebrick1"),plot="nmds") 
 {
   ## Var of interest
   VarInt  = input$VarInt
@@ -773,34 +859,67 @@ NMDSPlot <-function (input, dds, group_init, col = c("SpringGreen","dodgerblue",
     counts.norm = counts.norm[,ind_kept]
     
     ## Get the distance
-    if(input$DistClust!="sere") dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
+    if(input$DistClust!="sere" && input$DistClust!="Unifrac") dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
     if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts.norm))
+    if(input$DistClust=="Unifrac") {
+      tmp = UniFracDist(CT,tree)
+      if(is.null(tree) || is.null(tmp)) dist.counts.norm = NULL
+      if(!is.null(tree)) {dist.counts.norm = switch(input$DistClustUnifrac,
+                                                    "WU" = as.dist(tmp[, , "d_1"]), 
+                                                    "UWU" = as.dist(tmp[, , "d_UW"]),
+                                                    "VAWU" = as.dist(tmp[, , "d_VAW"])
+      )
+      }
     
-    save(indgrp,counts.norm,dist.counts.norm,group,group_init,file="testNMDS.RData")
-    ## Do NMDS
-    nmds.counts.norm = metaMDS(dist.counts.norm,k=min(round((nrow(counts.norm)-1)/2-1),round(ncol(counts.norm)/2)), trymax = 25)
-                               
-    proj = nmds.counts.norm$points
-    
-    ## xlim and ylim of the plot
-    min = min(proj); max = max(proj)
-    abs = range(proj[, as.numeric(gsub("PC","",input$PCaxe1))])
-    abs = abs(abs[2] - abs[1])/25
-    ord = range(proj[, as.numeric(gsub("PC","",input$PCaxe2))])
-    ord = abs(ord[2] - ord[1])/25
-    
-    plot(proj[,as.numeric(gsub("PC","",input$PCaxe1))],proj[,as.numeric(gsub("PC","",input$PCaxe2))], las = 1, cex = input$cexTitleDiag, col = col[indgrp], 
-         pch = 16,
-         xlab = paste("MDS",gsub("PC","",input$PCaxe1)),
-         ylab = paste("MDS",gsub("PC","",input$PCaxe2)),
-         main = "Non-metric multidimensional scaling"
-    )
-    abline(h = 0, v = 0, lty = 2, col = "lightgray")
-    text(proj[,as.numeric(gsub("PC","",input$PCaxe1))] - ifelse(proj[,as.numeric(gsub("PC","",input$PCaxe1))] > 0, abs, -abs), proj[,as.numeric(gsub("PC","",input$PCaxe2))] - ifelse(proj[,as.numeric(gsub("PC","",input$PCaxe2))] > 0, ord, -ord), colnames(counts.norm), col = col[indgrp],cex=input$cexLabelDiag)
+    }
+
+    if(!is.null(dist.counts.norm)){ 
+      
+      ## Do NMDS
+      # nmds.counts.norm = metaMDS(dist.counts.norm,k=min(round((nrow(counts.norm)-1)/2-1),round(ncol(counts.norm)/2)), trymax = 25)
+      nmds.counts.norm = metaMDS(dist.counts.norm,k=3, trymax = 25)
+      if(plot =="nmds") {
+
+        proj = nmds.counts.norm$points
+        
+        ## xlim and ylim of the plot
+        min = min(proj); max = max(proj)
+        abs = range(proj[, as.numeric(gsub("PC","",input$PCaxe1))])
+        abs = abs(abs[2] - abs[1])/25
+        ord = range(proj[, as.numeric(gsub("PC","",input$PCaxe2))])
+        ord = abs(ord[2] - ord[1])/25
+        
+        plot(proj[,as.numeric(gsub("PC","",input$PCaxe1))],proj[,as.numeric(gsub("PC","",input$PCaxe2))], las = 1, cex = input$cexTitleDiag, col = col[indgrp], 
+             pch = 16,
+             xlab = paste("MDS",gsub("PC","",input$PCaxe1)),
+             ylab = paste("MDS",gsub("PC","",input$PCaxe2))
+        )
+        title(main= "Non-metric multidimensional scaling",cex.main=1.5)
+        par(font.main=3)
+        if(input$DistClust!="Unifrac") title(main=paste("\n","\n",input$DistClust,"distance",sep=" "),cex.main=1)
+        if(input$DistClust=="Unifrac") title(main=paste("\n","\n",input$DistClustUnifrac,"distance",sep=" "),cex.main=1)
+        
+        abline(h = 0, v = 0, lty = 2, col = "lightgray")
+        text(proj[,as.numeric(gsub("PC","",input$PCaxe1))] - ifelse(proj[,as.numeric(gsub("PC","",input$PCaxe1))] > 0, abs, -abs), proj[,as.numeric(gsub("PC","",input$PCaxe2))] - ifelse(proj[,as.numeric(gsub("PC","",input$PCaxe2))] > 0, ord, -ord), colnames(counts.norm), col = col[indgrp],cex=input$cexLabelDiag)
+      }
+      if(plot=="stress") stressplot(nmds.counts.norm,pch=16,p.col="black")
+    }
   }
   
 }
 
 
+
+### Unifrac distance 
+UniFracDist<-function(counts,tree)
+{
+  counts_otu = round(t(as.matrix(counts)),0)
+  # unifracs = vegdist(counts_otu) ## Default value
+  unifracs = NULL
+  if(!is.null(counts_otu) && !is.null(tree)){
+    unifracs <- GUniFrac(counts_otu, tree, alpha=c(0, 0.5, 1))$unifracs
+  }
+  return(unifracs) 
+}
 
 

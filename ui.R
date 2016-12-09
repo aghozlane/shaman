@@ -249,7 +249,8 @@ body <- dashboardBody(
             fluidRow(
               column(width=3,valueBoxOutput("valueErrorPercent",width=NULL)),
               column(width=3,infoBoxOutput("InfoErrorCounts",width=NULL)),
-              column(width=3,infoBoxOutput("InfoErrorTaxo",width=NULL))
+              column(width=3,infoBoxOutput("InfoErrorTaxo",width=NULL)),
+              column(width=3,infoBoxOutput("InfoTreePhylo_box",width=NULL))
             ),
             br(),
              fluidRow(
@@ -259,6 +260,7 @@ body <- dashboardBody(
                                    checkboxInput("NoTaxoFile","No taxonomy table",value=FALSE)
                   )
                 ),
+                
                 conditionalPanel(condition="input.FileFormat=='fileCounts'",
                   box(title="Load the count table",width = 3,height = "260px", status = "primary", solidHeader = TRUE,collapsible = FALSE,
                       fluidRow(
@@ -283,11 +285,6 @@ body <- dashboardBody(
                         fileInput('fileTaxo', h6(strong('Select your file')),width="100%"),
                         tags$script('$( "#fileTaxo" ).on( "click", function() { this.value = null; });')
                     )
-                  ),
-                  fluidRow(column(width=3,
-                                  uiOutput("InfoCountsFile"),
-                                  uiOutput("InfoTaxoFile")
-                                  )
                   )
                 ),
                 
@@ -295,9 +292,22 @@ body <- dashboardBody(
                                  box(title="Load the BIOM file",width = 3, status = "primary", solidHeader = TRUE,collapsible = FALSE,
                                      fileInput('fileBiom', h5(strong('Select your file')),width="100%"),
                                      tags$script('$( "#fileBiom" ).on( "click", function() { this.value = null; });')
-                                 ),
-                                 fluidRow(uiOutput("InfoBIOM"))
+                                 )
+                ),
+                
+                box(title="Load phylogenetic tree (optional)",width = 3, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
+                    fileInput('fileTree', h6(strong('Select your file (tree)')),width="100%"),
+                    tags$script('$( "#fileTree" ).on( "click", function() { this.value = null; });')
+                ),
+                
+                fluidRow(column(width=3,
+                                uiOutput("InfoCountsFile"),
+                                uiOutput("InfoTaxoFile"),
+                                uiOutput("InfoBIOM")
                 )
+                )
+                
+                
              ),
               column(12,uiOutput("TabBoxData"))
 
@@ -310,7 +320,6 @@ body <- dashboardBody(
     tabItem(tabName = "RunDiff",
             fluidRow(
               column(width=3,valueBoxOutput("RowTarget",width=NULL)),
-              #column(width=3,infoBoxOutput("RowTarget",width=NULL)),
               column(width=3,infoBoxOutput("InfoTaxo",width=NULL)),
               column(width=3,infoBoxOutput("InfoDESeq",width=NULL)),
               column(width=3,infoBoxOutput("InfoContrast",width=NULL))
@@ -457,6 +466,11 @@ body <- dashboardBody(
                                      plotOutput("PlotpcoaEigen",height="100%")
                                  )
                 ),
+                conditionalPanel(condition="input.DiagPlot=='nmdsPlot'",
+                                 box(title = "Stress plot",  width = 6, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
+                                     plotOutput("PlotnmdsStress",height="100%")
+                                 )
+                ),
                 conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='nmdsPlot'",
                                  uiOutput("ResPermaTestBox")
                 )
@@ -487,10 +501,13 @@ body <- dashboardBody(
                                      )
                                     ),
                     conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='nmdsPlot' || input.DiagPlot=='SERE' || input.DiagPlot=='clustPlot' ",
-                                      selectInput("DistClust","Distance",c("euclidean", "SERE"="sere", "canberra", "bray", "kulczynski", "jaccard", 
-                                                  "gower", "altGower", "morisita", "horn","mountford","raup","binomial",
-                                                  "chao","cao","mahalanobis"),selected="canberra")
-                                    )
+                                      uiOutput("DistList")
+                                    ),
+                    conditionalPanel(condition="input.DistClust=='Unifrac' && (input.DiagPlot=='pcoaPlot' || input.DiagPlot=='nmdsPlot'  || input.DiagPlot=='clustPlot')",
+                      column(width=12,
+                           selectInput("DistClustUnifrac","Which unifrac distance ?",c("Weighted UniFrac"="WU", "Unweighted UniFrac"="UWU", "Variance adjusted weighted UniFrac"="VAWU"))
+                      )
+                    )
                     
 
 #                 conditionalPanel(condition="input.RadioPlotBi=='Nuage'",selectInput("ColorBiplot", "Couleur",choices=c("Bleue" = 'blue',"Rouge"='red',"Vert"='green', "Noir"='black'),width="50%")),
@@ -498,6 +515,7 @@ body <- dashboardBody(
 #                 conditionalPanel(condition="input.RadioPlotBi!='Nuage'", radioButtons("SensGraphBi","Sens du graph",choices=c("Vertical"="Vert","Horizontal"="Hori"))),
 #                 conditionalPanel(condition="input.RadioPlotBi=='box'", checkboxInput("CheckAddPointsBoxBi","Ajouter les données",value=FALSE)) 
                ),
+
                 box(
                   title = "Appearance",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
 #                     conditionalPanel(condition="input.DiagPlot=='Sfactors'",
@@ -514,6 +532,7 @@ body <- dashboardBody(
                                    selectInput("typeHculst", h6("Type"),c("Horizontal"="hori","Fan"="fan")),
                                    checkboxInput("colorHC","Add color",value=TRUE)
                   ),
+
                   conditionalPanel(condition="input.DiagPlot=='pcoaPlot'",  selectInput("labelPCOA","Label type",c("Group", "Sample"),selected="Group"),
                                    #checkboxInput("colorgroup","Same color for the group",value=FALSE),
                                    sliderInput("cexcircle", "Circle size",min=0,max=2,value = 0.9,step =0.1),
@@ -521,6 +540,7 @@ body <- dashboardBody(
                                    sliderInput("cexstar", "Star height",min=0,max=1,value = 0.95,step =0.1)
                                    
                   ),
+
                   conditionalPanel(condition="input.DiagPlot=='SfactorsVStot'",
                     checkboxInput("addLabelSFact","Add label",FALSE)
                   ),
@@ -529,7 +549,6 @@ body <- dashboardBody(
                     column(width=12, p(strong("Size"))),
                     column(width=6,sliderInput("cexTitleDiag", h6("Axis"),min=0,max=5,value = 1,step =0.1)),
                     conditionalPanel(condition="input.DiagPlot=='SfactorsVStot' || input.DiagPlot=='pcaPlot' || input.DiagPlot=='pcoaPlot' || input.DiagPlot=='nmdsPlot' ",column(width=6,sliderInput("cexLabelDiag", h6("Points"),min=0,max=5,value = 1,step =0.1)))
-                    
                   )
 
 #                   sliderInput("widthDiag", "width",min=100,max=1500,value = 1000,step =10)
@@ -566,7 +585,7 @@ body <- dashboardBody(
                            column(width=8,selectInput("WhichExportTable", "Select the table to export",c("Significant"="Significant","Complete"="Complete","Up"="Up","Down"="Down"))),
                            column(width=4,selectInput("sepexpdiff", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
                          ),
-                         uiOutput("ExportTableButton")   
+                         uiOutput("ExportTableButton")
                      )
             )
             ) 

@@ -33,7 +33,7 @@ GetInteraction2 <- function(target,VarInt)
 
 
 ## Get the dds object of DESeq2
-Get_dds_object <- function(input,counts,target,design,normFactorsOTU,CT_noNorm,CT_Norm)
+Get_dds_object <- function(input,counts,target,design,normFactorsOTU,CT_noNorm,CT_Norm,tree=NULL)
 {
   dds <- DESeqDataSetFromMatrix(countData=counts, colData=target, design=design,ignoreRank = TRUE)
   sizeFactors(dds) = normFactorsOTU
@@ -65,7 +65,7 @@ Get_dds_object <- function(input,counts,target,design,normFactorsOTU,CT_noNorm,C
   }
   countsNorm = counts(dds, normalized = TRUE)
   
-    
+  
   #save(dds,file="dds.RData")
   return(list(dds = dds,raw_counts=counts,countsNorm=countsNorm,target=target,design=design,normFactors = normFactorsOTU,CT_noNorm=CT_noNorm,CT_Norm=CT_Norm))
 }

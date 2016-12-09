@@ -201,6 +201,19 @@ CheckContrast <- function(contrastFile,dds)
 }
 
 
+## Check the format of the tree file (for Unifrac distance)
+CheckTreeFile <- function(tree)
+{
+  Error = NULL
+  Warning = NULL
+  if(!is.phylo(tree) && is.null(Error)){Error = "The loaded file is not a phylogenetic tree"; tree = NULL}
+  if(!is.rooted(tree) && is.null(Error) ){Warning = "The tree has been rooted using midpoint method"; tree = midpoint.root(tree)}
+  return(list(Error=Error,Warning=Warning,tree=tree))
+}
+
+
+
+
 ## Get the percentage of annotated OTU
 PercentAnnot <- function(counts,taxo)
 {
@@ -295,6 +308,7 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
   ## Counts and taxo tables
   CT = dataInput$counts
   taxo = dataInput$taxo
+  namesTaxo = colnames(taxo)
   # save(CT,target,taxo,file="testMerge.RData")
   
   ## Select cols in the target
@@ -303,6 +317,7 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
   
   ## Get the normalization variable (normalization can be done according to this variable)
   VarNorm = input$VarNorm
+  
   
   if(length(ind)==length(labels))
   { 
@@ -328,8 +343,19 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
     CT_noNorm = CT
     RowProd = sum(apply(CT_noNorm,1,prod))
   
+    merged_table = merge(CT, taxo, by="row.names")
+    CT = as.data.frame(merged_table[,2: (dim(CT)[2]+1)])
+    taxo = as.data.frame(merged_table[,(dim(CT)[2]+2):dim(merged_table)[2]])
+    
+    rownames(CT) = merged_table[,1]
+    rownames(taxo) = merged_table[,1]
+    colnames(taxo) = namesTaxo
+    #ordOTU = order(rownames(taxo))
+    counts_annot = CT
+    
     ## Create the dds object
     dds <- DESeqDataSetFromMatrix(countData=CT, colData=target, design=design,ignoreRank=TRUE)
+  
     #save(dds,file="testdds.RData")
     if(is.null(VarNorm)){
       ## Counts normalisation
@@ -375,14 +401,14 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
     # Only interesting OTU
     # merged_table = merge(CT, taxo[order(rownames(CT)),], by="row.names")
 
-    merged_table = merge(CT, taxo, by="row.names")
-    CT = as.data.frame(merged_table[,2: (dim(CT)[2]+1)])
-    taxo = as.data.frame(merged_table[,(dim(CT)[2]+2):dim(merged_table)[2]])
-    
-    rownames(CT) = merged_table[,1]
-    rownames(taxo) = merged_table[,1]
-    #ordOTU = order(rownames(taxo))
-    counts_annot = CT
+#     merged_table = merge(CT, taxo, by="row.names")
+#     CT = as.data.frame(merged_table[,2: (dim(CT)[2]+1)])
+#     taxo = as.data.frame(merged_table[,(dim(CT)[2]+2):dim(merged_table)[2]])
+#     
+#     rownames(CT) = merged_table[,1]
+#     rownames(taxo) = merged_table[,1]
+#     #ordOTU = order(rownames(taxo))
+#     counts_annot = CT
     #       ordOTU = order(rownames(taxo))
     #       indOTU_annot = which(rownames(CT)%in%rownames(taxo))
     #       counts_annot = CT[indOTU_annot[ordOTU],]

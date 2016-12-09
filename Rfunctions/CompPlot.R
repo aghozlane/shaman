@@ -252,7 +252,6 @@ GetData_venn <-function(input,SelContrast,BaseContrast,resDiff)
     }
     
   }
-  print(df.tot)
   return(list(res=res,df.tot=df.tot))
 }
 

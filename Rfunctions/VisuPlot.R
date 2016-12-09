@@ -646,6 +646,7 @@ CreateTableTree <- function(input,resDiff,CT_Norm_OTU,taxo_table,VarInt,ind_taxo
     }
     if (!is.null(val) && !is.null(list.val))
     {
+      # save(val,list.val,VarInt,target,Taxonomy,counts,ind_taxo,file="testTree.RData")
       
       ## Create the variable to plot
       targetInt = as.data.frame(target[,VarInt])
@@ -669,19 +670,21 @@ CreateTableTree <- function(input,resDiff,CT_Norm_OTU,taxo_table,VarInt,ind_taxo
       if(nrow(counts_tmp)>0 && nrow(targetInt)>0)
       { 
         counts_tmp_combined = aggregate(t(counts_tmp),by=list(targetInt$AllVar),mean)
-        rownames(counts_tmp_combined) = counts_tmp_combined$Group.1
         namesCounts = counts_tmp_combined$Group.1
+        rownames(counts_tmp_combined) = namesCounts
+        
         counts_tmp_combined = as.matrix(counts_tmp_combined[,-1])
       }
 
       
       ## Ordering the counts
-      if(!is.null(counts_tmp_combined))
-      {
-        MeanCounts = apply(counts_tmp_combined,2,mean)
-        ord = order(MeanCounts,decreasing=TRUE)
-        counts_tmp_combined = as.matrix(counts_tmp_combined[,ord])
-      }
+#       if(!is.null(counts_tmp_combined))
+#       {
+#         MeanCounts = apply(counts_tmp_combined,2,mean)
+#         ord = order(MeanCounts,decreasing=TRUE)
+#         counts_tmp_combined = as.matrix(counts_tmp_combined[,ord])
+#         
+#       }
       
     }
   }
@@ -707,7 +710,7 @@ Plot_Visu_Tree <- function(input,resDiff,CT_Norm_OTU,taxo_table)
   ## Get Input for BarPlot
   VarInt = input$VisuVarInt
   ind_taxo = input$selectTaxoPlot
-
+  nodeFind = input$TaxoTree
   ## Removed column with only 1 modality
   ind = which(apply(taxo_table,2,FUN = function(x) length(unique(x[!is.na(x)])))==1)
   if(length(ind)>0) taxo_table = taxo_table[,-ind]
@@ -716,11 +719,17 @@ Plot_Visu_Tree <- function(input,resDiff,CT_Norm_OTU,taxo_table)
   if(nrow(CT_Norm_OTU)>0 && !is.null(CT_Norm_OTU) && nrow(taxo_table)>0 && !is.null(taxo_table))
   { 
     tmp = CreateTableTree(input,resDiff,CT_Norm_OTU,taxo_table,VarInt)
-    
+  
     if(nrow(tmp$counts)>0 && !is.null(tmp$counts) && !is.null(input$TaxoTree))
     {
+      save(tmp,taxo_table,nodeFind,file="testTree.RData")
       merge_dat = merge(taxo_table,round(t(tmp$counts)),by="row.names")
-    
+      
+      
+      
+      
+      
+      
       colnames(merge_dat)[1] = "OTU"
       levels <- c("OTU", colnames(taxo_table))
       conditions <- rownames(tmp$counts)

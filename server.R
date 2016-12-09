@@ -95,6 +95,50 @@ shinyServer(function(input, output,session) {
   
 
   
+  ## Unifrac File (tree)
+  dataInputTree <-reactive({ 
+    
+    data = NULL
+    inFile <- input$fileTree
+    
+    if (is.null(inFile)) return(NULL)
+    try(read.tree(inFile$datapath)->data,silent=T)
+    CheckTree = CheckTreeFile(data)
+    
+    data = CheckTree$tree
+    
+    return(list(data=data,Error = CheckTree$Error,Warning = CheckTree$Warning))
+  })
+  
+  
+  # Infobox Tree (Unifrac)
+  output$InfoTreePhylo_box <- renderInfoBox({
+    input$fileTree
+    tree_tmp = isolate(dataInputTree())
+    tree = tree_tmp$data
+    
+    res = infoBox(h6(strong("Phylogenetic tree")), subtitle = h6(strong("Load the phylogenetic tree (optional)")) ,color = "light-blue",width=NULL,fill=TRUE, icon = icon("upload"))
+    if(!is.null(tree)){
+      if(!is.null(isolate(input$fileTree))){
+        
+        res = infoBox(h6(strong("Phylogenetic tree")), subtitle = h6("The phylogenetic has been loaded") ,color = "green",width=NULL,fill=TRUE, icon = icon("thumbs-o-up"))
+        
+        if(!is.null(tree_tmp$Warning)){      
+          res = infoBox(h6(strong("Phylogenetic tree")), subtitle = h6(tree_tmp$Warning) ,color = "orange",width=NULL,fill=TRUE, icon = icon("warning"))
+        }
+        if(!is.null(tree_tmp$Error)){      
+          res = infoBox(h6(strong("Phylogenetic tree")), subtitle = h6(tree_tmp$Error),color = "red",width=NULL,fill=TRUE, icon = icon("thumbs-o-down"))
+        }
+      }
+    } 
+    return(res)
+    
+  })
+  
+  
+  
+  
+  
   
   ## Input data
   dataInput <-reactive({ 
@@ -518,12 +562,14 @@ shinyServer(function(input, output,session) {
       names = colnames(data)
       
       ## Change the rownames
-      if(!TRUE%in%duplicated(data[,1])) rownames(data)=as.character(data[,1])
+      if(!TRUE%in%duplicated(data[,1])) rownames(data)=gsub(pattern = "-",replacement = ".",as.character(data[,1]))
       
       ## Keep only the row which are in the count table
       ind = which(rownames(data)%in%colnames(counts))
       data = as.data.frame(data[ind,])
       colnames(data) = names
+      
+      
       ## Replace "-" by "."
       if(ncol(data)>1 && nrow(data)>1){
         ind_num = which(sapply(as.data.frame(data[,-1]),is.numeric)) + 1
@@ -534,6 +580,7 @@ shinyServer(function(input, output,session) {
         }
         if(length(ind_num)==0){data = as.data.frame(apply(data,2,gsub,pattern = "-",replacement = "."))}
       }
+      
       values$TargetWorking = as.data.frame(data)
 #       ind_sel = Target_selection()
 #       if(length(ind))
@@ -1395,7 +1442,10 @@ shinyServer(function(input, output,session) {
     input$RunDESeq
     
     resDiff = isolate(ResDiffAnal())
-    Plot_diag(input,resDiff)
+    ## Phylogenetic tree
+    tree = dataInputTree()$data
+    
+    Plot_diag(input,resDiff,tree)
   },height = reactive(input$heightDiag), width = reactive(ifelse(input$modifwidthDiag,input$widthDiag,"auto")))
   
   
@@ -1404,9 +1454,11 @@ shinyServer(function(input, output,session) {
   output$PC1_sel <-renderUI ({
     res = NULL
     resDiff = ResDiffAnal()
+    ## Phylogenetic tree
+    tree = dataInputTree()$data
     
     if(!is.null(resDiff)){ 
-      pca_tab = Plot_diag(input,resDiff,getTable=TRUE)
+      pca_tab = Plot_diag(input,resDiff,tree,getTable=TRUE)
       if(!is.null(pca_tab)) 
       {
         pc_axes = paste("PC",seq(1,ncol(pca_tab)),sep="")
@@ -1419,9 +1471,11 @@ shinyServer(function(input, output,session) {
   output$PC2_sel <-renderUI ({
     res = NULL
     resDiff = ResDiffAnal()
+    ## Phylogenetic tree
+    tree = dataInputTree()$data
     
     if(!is.null(resDiff)){ 
-      pca_tab = Plot_diag(input,resDiff,getTable=TRUE)
+      pca_tab = Plot_diag(input,resDiff,tree,getTable=TRUE)
       if(!is.null(pca_tab)) 
       {
         pc_axes = paste("PC",seq(1,ncol(pca_tab)),sep="")
@@ -1431,19 +1485,32 @@ shinyServer(function(input, output,session) {
     return(res)
   })
   
+  output$PlotnmdsStress <- renderPlot({
+    
+    resDiff = ResDiffAnal()
+    ## Phylogenetic tree
+    tree = dataInputTree()$data
+    
+    Plot_diag_nmdsStress(input,resDiff,tree)
+  },height = 400)
   
   
   output$PlotpcoaEigen <- renderPlot({
     
     resDiff = ResDiffAnal()
-    Plot_diag_pcoaEigen(input,resDiff)
+    ## Phylogenetic tree
+    tree = dataInputTree()$data
+    
+    Plot_diag_pcoaEigen(input,resDiff,tree)
   },height = 400)
+  
   
   output$PlotEigen <- renderPlot({
     
     resDiff = ResDiffAnal()
     Plot_diag_Eigen(input,resDiff)
   },height =400)
+  
   
   SizeFactor_table <-reactive({ 
     res = ResDiffAnal()
@@ -1453,11 +1520,13 @@ shinyServer(function(input, output,session) {
   
   
   output$ResPermaTestBox <- renderUI({
-    
+
     resDiff = ResDiffAnal()
-    resTest = Perma_test_Diag(input,resDiff)
+    ## Phylogenetic tree
+    tree = dataInputTree()$data
+    
+    resTest = Perma_test_Diag(input,resDiff,tree)
     resBox = NULL
-    print(resTest)
     if(!is.null(resDiff) && !is.null(resTest))
     {    
       res = list()
@@ -1473,6 +1542,28 @@ shinyServer(function(input, output,session) {
       )
     } 
     return(resBox)
+  })
+  
+  
+  
+  output$DistList <-renderUI ({
+    tree = dataInputTree()$data
+    ErrorTree = dataInputTree()$Error
+    TaxoSelect = input$TaxoSelect
+    
+    res = selectInput("DistClust","Distance",c("euclidean", "SERE"="sere", "canberra", "bray", "kulczynski", "jaccard", 
+                                         "gower", "altGower", "morisita", "horn","mountford","raup","binomial",
+                                         "chao","cao","mahalanobis"),selected="canberra")
+    
+    ## Add the unifrac distance
+    if(!is.null(tree) && !is.null(input$fileTree) && is.null(ErrorTree)  && TaxoSelect == "OTU/Gene")
+    {
+      res = selectInput("DistClust","Distance",c("euclidean", "SERE"="sere", "canberra", "bray", "kulczynski", "jaccard", 
+                                                 "gower", "altGower", "morisita", "horn","mountford","raup","binomial",
+                                                 "chao","cao","mahalanobis","Unifrac"),selected="canberra")
+    }
+    
+    return(res)
   })
   
   
@@ -1537,8 +1628,11 @@ shinyServer(function(input, output,session) {
       else if(input$Exp_format=="pdf") pdf(file, width = input$widthDiagExport/96, height = input$heightDiagExport/96)
       else if(input$Exp_format=="eps") postscript(file, width = input$widthDiagExport/96, height = input$heightDiagExport/96)
       else if(input$Exp_format=="svg") svg(file, width = input$widthDiagExport/96, height = input$heightDiagExport/96)
+      resDiff = ResDiffAnal()
+      tree = isolate(dataInputTree()$data)
+
       
-      print(Plot_diag(input,ResDiffAnal()))
+      print(Plot_diag(input,resDiff,tree))
       dev.off()
     }
   )
@@ -1927,7 +2021,7 @@ shinyServer(function(input, output,session) {
   ## Export Diversitytable in .csv
   output$ExportDiversitytable <- downloadHandler(
     filename = function() { 
-      if(input$sepdiversity) 'SHAMAN_Diversity.tsv'
+      if(input$sepdiversity=="\t") 'SHAMAN_Diversity.tsv'
       else 'SHAMAN_Diversity.csv'
     },
     content = function(file){
