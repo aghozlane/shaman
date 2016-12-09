@@ -105,6 +105,8 @@ body <- dashboardBody(
             box(
               title = "What's new in SHAMAN", width = NULL, status = "primary",
               div(style = 'overflow-y: scroll; height: 550px',
+                  addNews("Dev 9th 2016","Phylogenetic tree and stress plot","You can now upload a phylogenetic tree to calculate the unifrac distance (only available at the OTU level). 
+                          The stress plot has been added to evaluate the goodness of fit of the NMDS."),
                   addNews("Nov 22th 2016","New visualization and bug fix","We have implemented a new visualization called tree abundance. Some bugs have been fixed (thanks Carine Rey from ENS)."),
                   addNews("Oct 12th 2016","Filtering step and bugs fix","You can now apply a filter on the features according to their abundance 
                           and the number of samples. Bugs on confidence intervals for the alpha diversity have been fixed."),
