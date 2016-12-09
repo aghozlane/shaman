@@ -86,14 +86,14 @@ body <- dashboardBody(
                    tabPanel("Authors", h3("The main contributors to SHAMAN:"),
                             p(a("Stevenn Volant", href="mailto:stevenn.volant@pasteur.fr"), "(Initiator, coding, testing, documentation, evaluation)"),
                             p(a("Amine Ghozlane",href="mailto:amine.ghozlane@pasteur.fr"), "(Coding, testing, documentation, evaluation, packaging)"),
-                            p("Hugo Varet", "(Coding, testing, feature suggestions)"),
                             p("Pierre Lechat", "(Coding, testing, feature suggestions)"),
+                            p("Hugo Varet", "(Coding, testing, feature suggestions)"),
                             p("Christophe Malabat", "(Packaging)"), 
                             p("Marie-Agnès Dillies", "(Evaluation)"),
                             p("Sean Kennedy", "(Evaluation)"),
                             h3("Acknowledgements"),
                             p("Thanks to the following people for patches and other suggestions for improvements:"),
-                            p("Carine Rey, ","Julien Tap, ","Anna Zhukova, ", "Rachel Torchet.")
+                            p("Carine Rey, ","Alexis Criscuolo, ","Julien Tap, ","Anna Zhukova, ", "Rachel Torchet.")
                           ),
                    tabPanel("Citing SHAMAN",
                    p("No papers about SHAMAN have been published yet, but a manuscript is in preparation.",style = "font-family: 'times'; font-si16pt"),

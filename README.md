@@ -54,13 +54,13 @@ If you have any comments, questions or suggestions, or need help to use SHAMAN, 
 
 ## Acknowledgements
 
-The main contributors to SHAMAN:  
-Hugo Varet (Coding, testing, feature suggestions)  
+The main contributors to SHAMAN:
 Pierre Lechat (Coding, testing, feature suggestions)
+Hugo Varet (Coding, testing, feature suggestions)  
 Christophe Malabat (Packaging)
 Marie-Agnès Dillies (Evaluation)  
 Sean Kennedy (Evaluation)  
 
 Thanks to the following people for patches and other suggestions for improvements:  
-Carine Rey, Julien Tap, Anna Zhukova, Rachel Torchet
+Carine Rey, Alexis Criscuolo, Julien Tap, Anna Zhukova, Rachel Torchet
 
