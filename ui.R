@@ -257,7 +257,8 @@ body <- dashboardBody(
             br(),
              fluidRow(
                 box(title="Select your file format",width = 3,status = "success", solidHeader = TRUE,collapsible = FALSE,
-                  selectInput("FileFormat","",c("Count table & taxonomy (*.csv or *.tsv)"="fileCounts","BIOM file"="fileBiom","Saved project"="fileRData"),selected="fileCounts"),
+                  # selectInput("FileFormat","",c("Count table & taxonomy (*.csv or *.tsv)"="fileCounts","BIOM file"="fileBiom","Saved project"="fileRData"),selected="fileCounts"),
+                  selectInput("FileFormat","",c("Count table & taxonomy (*.csv or *.tsv)"="fileCounts","BIOM file"="fileBiom"),selected="fileCounts"),
                   conditionalPanel(condition="input.FileFormat=='fileCounts'",
                                    checkboxInput("NoTaxoFile","No taxonomy table",value=FALSE)
                   )
