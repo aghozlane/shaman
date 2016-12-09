@@ -158,7 +158,7 @@ shinyServer(function(input, output,session) {
       
       if(!is.null(Counts) && !is.null(Taxo))
       { 
-        tmp = GetDataFromCT(Counts,Taxo)
+        tmp = GetDataFromCT(Counts,Taxo, ifelse(input$TypeTable=="MGS" && input$FileFormat!="fileBiom", TRUE, FALSE))
         data = list(counts=tmp$counts,taxo=tmp$taxo)
         check = list(CheckCounts=tmp$CheckCounts,CheckTaxo=tmp$CheckTaxo,CheckPercent=tmp$CheckPercent)
         percent = tmp$Percent

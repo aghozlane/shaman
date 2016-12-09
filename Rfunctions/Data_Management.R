@@ -48,7 +48,7 @@ read_rdp <- function(filename, threshold_annot)
 
 
 ## Check the format of the counts table
-CheckCountsTable <- function(counts)
+CheckCountsTable <- function(counts, MGSTable=FALSE)
 {
   Error = NULL
   Warning = NULL
@@ -67,16 +67,16 @@ CheckCountsTable <- function(counts)
     {
       if(0%in%colSums(counts)){Error = "At least one of the column of the counts table is 0" }
       if(min(counts)<0){Error = "The counts table must contain only positive values" }
+      if(MGSTable && length(which(toupper(colnames(counts))%in%"SIZE")) != 1){Error="The counts table must contain a column named SIZE providing the length of each gene"}
     }
   }
   if(TRUE%in%sapply(counts,is.na) && is.null(Error)){Warning = "NA values are considered as 0 is the counts table"; counts[sapply(counts,is.na)]=0}
-  
   
   return(list(Error=Error,Warning=Warning,counts=counts))
 }
 
 ## Check the format of the taxonomy table
-CheckTaxoTable <- function(taxo,counts,taxoCreated = FALSE)
+CheckTaxoTable <- function(taxo,counts, MGSTable=FALSE, taxoCreated=FALSE)
 {
   Error = NULL
   Warning = NULL
@@ -93,6 +93,7 @@ CheckTaxoTable <- function(taxo,counts,taxoCreated = FALSE)
       nb = length(level)
       if(nb==1 && level=="NA"){ Error = "At least one column contains only NA"}
     }
+    if(MGSTable && length(which(toupper(colnames(taxo))%in%"MGS")) != 1){Error="The taxonomy table must contain a column named MGS providing the MGS association of each gene"}
   }
   
   ## Annotated features without counts
@@ -273,18 +274,18 @@ GetDataFromBIOM <-function(dataBIOM)
 }
 
 ## Check the data
-GetDataFromCT <-function(dataC,dataT)
+GetDataFromCT <-function(dataC,dataT, MGSTable)
 {
   
   ## Counts table
   counts = dataC
-  CheckCounts = CheckCountsTable(counts)
+  CheckCounts = CheckCountsTable(counts, MGSTable)
   counts = CheckCounts$counts
   
   
   ## Taxonomy table
   taxo = as.data.frame(dataT)
-  CheckTaxo = CheckTaxoTable(taxo,counts)
+  CheckTaxo = CheckTaxoTable(taxo,counts, MGSTable)
   
   ## Pourcentage of annotation
   tmp = PercentAnnot(counts,taxo)
@@ -416,7 +417,8 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
     if(taxoSelect=="OTU/Gene") counts = counts_annot
     else{
       if(input$TypeTable == "MGS" && input$FileFormat!="fileBiom"){
-        taxoS = taxo[,input$TypeTable]
+        MGS_taxocol = which(toupper(colnames(taxo))%in%"MGS")
+        taxoS = taxo[,MGS_taxocol]
         counts = aggregate(counts_annot,by=list(Taxonomy = taxoS),mean)
         rownames(counts)=counts[,1]
         counts=counts[,-1]
