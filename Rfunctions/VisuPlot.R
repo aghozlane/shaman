@@ -722,7 +722,7 @@ Plot_Visu_Tree <- function(input,resDiff,CT_Norm_OTU,taxo_table)
   
     if(nrow(tmp$counts)>0 && !is.null(tmp$counts) && !is.null(input$TaxoTree))
     {
-      save(tmp,taxo_table,nodeFind,file="testTree.RData")
+      #save(tmp,taxo_table,nodeFind,file="testTree.RData")
       merge_dat = merge(taxo_table,round(t(tmp$counts)),by="row.names")
       
       
