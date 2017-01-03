@@ -71,7 +71,8 @@ body <- dashboardBody(
             div(style="width:100% ; max-width: 1200px; height: 550px",
                 
               tabBox(title="Welcome to SHAMAN", id="tabset1", width=NULL,
-                   tabPanel("About", tags$script(type="text/javascript", language="javascript", src="google-analytics.js"),
+                   # tags$script(type="text/javascript", language="javascript", src="google-analytics.js"),
+                   tabPanel("About", 
                             p("SHAMAN is a SHiny application for Metagenomic ANalysis including the normalization,
                                        the differential analysis and mutiple visualization.",style = "font-family: 'times'; font-si16pt"),
                             p("SHAMAN is based on DESeq2 R package", a("[Anders and Huber 2010]", href="http://www.ncbi.nlm.nih.gov/pubmed/20979621"), "for the analysis of metagenomic data, as suggested in", a("[McMurdie and Holmes 2014,",href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3974642/"),a("Jonsson2016]",href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC4727335/"),
