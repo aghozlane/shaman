@@ -571,6 +571,7 @@ GetDataToPlot <- function(input,resDiff,VarInt,ind_taxo,aggregate=TRUE,rarefy=FA
       counts_tmp = counts_tmp[,colnames(counts_tmp)%in%rownames(targetInt)]
       
       ## Proportions over all the taxonomies
+      ## Proportion verified
       prop_all = t(counts)/rowSums(t(counts))
       prop_all = as.data.frame(prop_all[,Taxonomy%in%ind_taxo])
       prop_all = as.matrix(prop_all[rownames(prop_all)%in%rownames(targetInt),])
@@ -586,6 +587,7 @@ GetDataToPlot <- function(input,resDiff,VarInt,ind_taxo,aggregate=TRUE,rarefy=FA
       }
       if(!aggregate && nrow(counts_tmp)>0 && nrow(targetInt)>0)
       {  
+        ## Proportion verified
         counts_tmp_combined = t(counts_tmp)
         prop_tmp_combined = counts_tmp_combined/colSums(counts_tmp)
         rownames(counts_tmp_combined) = targetInt$AllVar

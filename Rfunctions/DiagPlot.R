@@ -411,9 +411,19 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree,col = c("SpringGreen",
     counts.norm = counts.norm[,ind_kept]
     # print(head(counts.norm))
     ## Get the distance
-    if(input$DistClust!="sere" && input$DistClust!="Unifrac") dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
     if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts.norm))
-    if(input$DistClust=="Unifrac")
+    else if(input$DistClust=="jsd"){
+      #dist_jsd = JSD(sweep(counts.norm,2,colSums(counts.norm)))
+      dist_jsd = JSD(t(sweep(counts.norm,2,colSums(counts.norm),`/`)))
+      dist_jsd[is.na(dist_jsd)]=0
+      dist.counts.norm = as.dist(dist_jsd)
+    }
+    else if(input$DistClust=="kl"){
+      dist_kl = KL(t(sweep(counts.norm,2,colSums(counts.norm),`/`)))
+      dist_kl[is.na(dist_kl)]=0
+      dist.counts.norm = as.dist(dist_kl)
+    }
+    else if(input$DistClust=="Unifrac")
     {
       tmp = UniFracDist(CT,tree)
       if(is.null(tree) || is.null(tmp)) dist.counts.norm = NULL
@@ -427,7 +437,10 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree,col = c("SpringGreen",
       }
     
     }
-   
+    else{
+      dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
+    }
+    
     if(!is.null(dist.counts.norm))
     {
       ## Do PCoA
@@ -672,9 +685,18 @@ Get_pcoa_table <-function (input, dds, group_init,CT,tree)
     counts.norm = counts.norm[,ind_kept]
     
     ## Get the distance
-    if(input$DistClust!="sere" && input$DistClust!="Unifrac") dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
     if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts.norm))
-    if(input$DistClust=="Unifrac") {
+    else if(input$DistClust=="jsd"){
+      dist_jsd = JSD(t(sweep(counts.norm,2,colSums(counts.norm),`/`)))
+      dist_jsd[is.na(dist_jsd)]=0.0
+      dist.counts.norm = as.dist(dist_jsd)
+    }
+    else if(input$DistClust=="kl"){
+      dist_kl = KL(t(sweep(counts.norm,2,colSums(counts.norm),`/`)))
+      dist_kl[is.na(dist_kl)]=0.0
+      dist.counts.norm = as.dist(dist_kl)
+    }
+    else if(input$DistClust=="Unifrac") {
       tmp = UniFracDist(CT,tree)
       if(is.null(tree) || is.null(tmp)) dist.counts.norm = NULL
       if(!is.null(tree)) {dist.counts.norm = switch(input$DistClustUnifrac,
@@ -683,6 +705,9 @@ Get_pcoa_table <-function (input, dds, group_init,CT,tree)
                                 "VAWU" = as.dist(tmp[, , "d_VAW"])
       )
       }
+    }
+    else {
+      dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
     }
     
     if(!is.null(dist.counts.norm)){ 

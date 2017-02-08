@@ -756,7 +756,7 @@ shinyServer(function(input, output,session) {
   ## Export in .csv
   output$ExportRelative <- downloadHandler(
     filename = function() { 'RelativeAb.csv' },
-    content = function(file){write.csv(dataMergeCounts()$counts/colSums(dataMergeCounts()$counts), file)}
+    content = function(file){write.csv(sweep(dataMergeCounts()$counts,2,colSums(dataMergeCounts()$counts),`/`), file)}
   )
   
   ## Export size factors
@@ -1551,16 +1551,16 @@ shinyServer(function(input, output,session) {
     ErrorTree = dataInputTree()$Error
     TaxoSelect = input$TaxoSelect
     
-    res = selectInput("DistClust","Distance",c("euclidean", "SERE"="sere", "canberra", "bray", "kulczynski", "jaccard", 
-                                         "gower", "altGower", "morisita", "horn","mountford","raup","binomial",
-                                         "chao","cao","mahalanobis"),selected="canberra")
+    res = selectInput("DistClust","Distance", c("altGower", "binomial", "bray", "canberra", "cao", "chao", "euclidean","gower", "horn",
+                                                "jaccard","jsd","kl", "kulczynski",  "mahalanobis", "morisita", "mountford","raup",
+                                                "SERE"="sere"),selected="bray")
     
     ## Add the unifrac distance
     if(!is.null(tree) && !is.null(input$fileTree) && is.null(ErrorTree)  && TaxoSelect == "OTU/Gene")
     {
-      res = selectInput("DistClust","Distance",c("euclidean", "SERE"="sere", "canberra", "bray", "kulczynski", "jaccard", 
-                                                 "gower", "altGower", "morisita", "horn","mountford","raup","binomial",
-                                                 "chao","cao","mahalanobis","Unifrac"),selected="canberra")
+      res = selectInput("DistClust","Distance",c("altGower", "binomial", "bray", "canberra", "cao", "chao", "euclidean","gower", "horn",
+                                                 "jaccard","jsd","kl", "kulczynski",  "mahalanobis", "morisita", "mountford","raup",
+                                                 "SERE"="sere","Unifrac"),selected="bray")
     }
     
     return(res)

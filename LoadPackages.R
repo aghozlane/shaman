@@ -149,6 +149,10 @@ if (!require(phytools)) {
   library(phytools)
 }
 
+if(!require(philentropy)){
+  devtools::install_github("HajkD/philentropy", build_vignettes = TRUE, dependencies = TRUE)
+  library(philentropy)
+}
 
 
 # if(!require(plotly)){
