@@ -1551,16 +1551,19 @@ shinyServer(function(input, output,session) {
     ErrorTree = dataInputTree()$Error
     TaxoSelect = input$TaxoSelect
     
-    res = selectInput("DistClust","Distance", c("altGower", "binomial", "bray", "canberra", "cao", "chao", "euclidean","gower", "horn",
-                                                "jaccard","jsd","kl", "kulczynski",  "mahalanobis", "morisita", "mountford","raup",
-                                                "SERE"="sere"),selected="bray")
+    dist_phyl = getDistMethods()[!getDistMethods() %in% c("additive_symm", "jensen-shannon", "jensen_difference", "minkowski", "topsoe")]
+    
+    
+    res = selectInput("DistClust","Distance", unique(sort(c("altGower", "binomial", "bray", "canberra", "cao", "chao", "euclidean","gower", "horn",
+                                                "jaccard", "kulczynski",  "mahalanobis", "morisita", "mountford","raup",
+                                                "SERE"="sere", dist_phyl))),selected="bray")
     
     ## Add the unifrac distance
     if(!is.null(tree) && !is.null(input$fileTree) && is.null(ErrorTree)  && TaxoSelect == "OTU/Gene")
     {
-      res = selectInput("DistClust","Distance",c("altGower", "binomial", "bray", "canberra", "cao", "chao", "euclidean","gower", "horn",
-                                                 "jaccard","jsd","kl", "kulczynski",  "mahalanobis", "morisita", "mountford","raup",
-                                                 "SERE"="sere","Unifrac"),selected="bray")
+      res = selectInput("DistClust","Distance",unique(sort(c("altGower", "binomial", "bray", "canberra", "cao", "chao", "euclidean","gower", "horn",
+                                                 "jaccard","kulczynski",  "mahalanobis", "morisita", "mountford", "raup",
+                                                 "SERE"="sere","Unifrac", dist_phyl))),selected="bray")
     }
     
     return(res)

@@ -412,35 +412,26 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree,col = c("SpringGreen",
     # print(head(counts.norm))
     ## Get the distance
     if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts.norm))
-    else if(input$DistClust=="jsd"){
-      #dist_jsd = JSD(sweep(counts.norm,2,colSums(counts.norm)))
-      dist_jsd = JSD(t(sweep(counts.norm,2,colSums(counts.norm),`/`)))
-      dist_jsd[is.na(dist_jsd)]=0
-      dist.counts.norm = as.dist(dist_jsd)
-    }
-    else if(input$DistClust=="kl"){
-      dist_kl = KL(t(sweep(counts.norm,2,colSums(counts.norm),`/`)))
-      dist_kl[is.na(dist_kl)]=0
-      dist.counts.norm = as.dist(dist_kl)
-    }
-    else if(input$DistClust=="Unifrac")
-    {
+    else if(input$DistClust=="Unifrac"){
       tmp = UniFracDist(CT,tree)
       if(is.null(tree) || is.null(tmp)) dist.counts.norm = NULL
       if(!is.null(tree))
       {
         dist.counts.norm = switch(input$DistClustUnifrac,
-                                                    "WU" = as.dist(tmp[, , "d_1"]), 
-                                                    "UWU" = as.dist(tmp[, , "d_UW"]),
-                                                    "VAWU" = as.dist(tmp[, , "d_VAW"])
-                                )
+                                  "WU" = as.dist(tmp[, , "d_1"]), 
+                                  "UWU" = as.dist(tmp[, , "d_UW"]),
+                                  "VAWU" = as.dist(tmp[, , "d_VAW"])
+        )
       }
-    
+      
     }
-    else{
-      dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
+    else if(input$DistClust  %in% getDistMethods()){
+      dist = as.dist(distance(t(sweep(counts.norm,2,colSums(counts.norm),`/`)), method=input$DistClust))
+      dist[is.na(dist)]=0.0
+      dist.counts.norm = dist
     }
-    
+    else  dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
+    #"additive_symm"
     if(!is.null(dist.counts.norm))
     {
       ## Do PCoA
@@ -486,8 +477,8 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree,col = c("SpringGreen",
         title(main='Principal Coordinates Analysis ',cex.main=1.5)
         ## Add a subtitle
         par(font.main=3)
-        if(input$DistClust!="Unifrac") title(main=paste("\n","\n",input$DistClust,"distance",sep=" "),cex.main=1)
         if(input$DistClust=="Unifrac") title(main=paste("\n","\n",input$DistClustUnifrac,"distance",sep=" "),cex.main=1)
+        else title(main=paste("\n","\n",input$DistClust,"distance",sep=" "),cex.main=1)
         
         # Set different shapes
         if(input$labelPCOA == "Group"){
@@ -649,7 +640,7 @@ Get_pcoa_table <-function (input, dds, group_init,CT,tree)
   time_set = 0
   # Set of shape
   shape=c(19,17,15,18)
-  
+
   ## Var of interest
   VarInt  = input$VarInt
   
@@ -686,16 +677,6 @@ Get_pcoa_table <-function (input, dds, group_init,CT,tree)
     
     ## Get the distance
     if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts.norm))
-    else if(input$DistClust=="jsd"){
-      dist_jsd = JSD(t(sweep(counts.norm,2,colSums(counts.norm),`/`)))
-      dist_jsd[is.na(dist_jsd)]=0.0
-      dist.counts.norm = as.dist(dist_jsd)
-    }
-    else if(input$DistClust=="kl"){
-      dist_kl = KL(t(sweep(counts.norm,2,colSums(counts.norm),`/`)))
-      dist_kl[is.na(dist_kl)]=0.0
-      dist.counts.norm = as.dist(dist_kl)
-    }
     else if(input$DistClust=="Unifrac") {
       tmp = UniFracDist(CT,tree)
       if(is.null(tree) || is.null(tmp)) dist.counts.norm = NULL
@@ -705,6 +686,11 @@ Get_pcoa_table <-function (input, dds, group_init,CT,tree)
                                 "VAWU" = as.dist(tmp[, , "d_VAW"])
       )
       }
+    }
+    else if(input$DistClust  %in% getDistMethods()){
+      dist = as.dist(distance(t(sweep(counts.norm,2,colSums(counts.norm),`/`)), method=input$DistClust))
+      dist[is.na(dist)]=0.0
+      dist.counts.norm = dist
     }
     else {
       dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
