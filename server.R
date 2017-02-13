@@ -106,7 +106,9 @@ shinyServer(function(input, output,session) {
     CheckTree = CheckTreeFile(data)
     
     data = CheckTree$tree
-    
+    print(CheckTree$Error)
+    print(CheckTree$Warning)
+    print(data)
     return(list(data=data,Error = CheckTree$Error,Warning = CheckTree$Warning))
   })
   

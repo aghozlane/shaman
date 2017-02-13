@@ -208,11 +208,23 @@ CheckTreeFile <- function(tree)
   Error = NULL
   Warning = NULL
   if(!is.phylo(tree) && is.null(Error)){Error = "The loaded file is not a phylogenetic tree"; tree = NULL}
-  if(!is.rooted(tree) && is.null(Error) ){Warning = "The tree has been rooted using midpoint method"; tree = midpoint.root(tree)}
+  if(!is.rooted(tree) && is.null(Error) ){
+    Warning = "The tree has been rooted using midpoint method";
+    roottree = try(midpoint.root(tree), TRUE)
+    if (class(roottree) == "try-error"){
+      D <- cophenetic(tree)
+      dd <- max(D)
+      ii <- which(D == dd)[1]
+      ii <- c(ceiling(ii/nrow(D)), ii%%nrow(D))
+      if (ii[2] == 0) ii[2] <- nrow(D)
+      spp <- rownames(D)[ii]
+      nn <- which(tree$tip.label == spp[2])
+      tree <- reroot(tree, nn, tree$edge.length[which(tree$edge[,2] == nn)])
+    } 
+    else tree=roottree
+  }
   return(list(Error=Error,Warning=Warning,tree=tree))
 }
-
-
 
 
 ## Get the percentage of annotated OTU
