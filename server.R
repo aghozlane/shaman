@@ -104,11 +104,7 @@ shinyServer(function(input, output,session) {
     if (is.null(inFile)) return(NULL)
     try(read.tree(inFile$datapath)->data,silent=T)
     CheckTree = CheckTreeFile(data)
-    
     data = CheckTree$tree
-    print(CheckTree$Error)
-    print(CheckTree$Warning)
-    print(data)
     return(list(data=data,Error = CheckTree$Error,Warning = CheckTree$Warning))
   })
   
@@ -1561,7 +1557,7 @@ shinyServer(function(input, output,session) {
                                                 "SERE"="sere", dist_phyl))),selected="bray")
     
     ## Add the unifrac distance
-    if(!is.null(tree) && !is.null(input$fileTree) && is.null(ErrorTree)  && TaxoSelect == "OTU/Gene")
+    if(!is.null(tree) && !is.null(input$fileTree) && is.null(ErrorTree)  && TaxoSelect %in% c("OTU/Gene", "MGS"))
     {
       res = selectInput("DistClust","Distance",unique(sort(c("altGower", "binomial", "bray", "canberra", "cao", "chao", "euclidean","gower", "horn",
                                                  "jaccard","kulczynski",  "mahalanobis", "morisita", "mountford", "raup",
@@ -2341,27 +2337,27 @@ shinyServer(function(input, output,session) {
   })
   
   
-  output$VarIntVisuTree <- renderUI({
-
-    target=values$TargetWorking
-    data = dataInput()$data
-    taxo = input$TaxoSelect
-    resDiff = ResDiffAnal()
-    res = NULL
-
-    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target))
-    {
-      counts = dataMergeCounts()$counts
-
-      Available_x = sort(rownames(counts))
-
-      res = selectizeInput("TaxoTree",h6(strong(paste("Select a specific",taxo,sep=" "))),c("...",Available_x),multiple = FALSE)
-
-    }
-
-    return(res)
-
-  })
+  # output$VarIntVisuTree <- renderUI({
+  # 
+  #   target=values$TargetWorking
+  #   data = dataInput()$data
+  #   taxo = input$TaxoSelect
+  #   resDiff = ResDiffAnal()
+  #   res = NULL
+  # 
+  #   if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target))
+  #   {
+  #     counts = dataMergeCounts()$counts
+  # 
+  #     Available_x = sort(rownames(counts))
+  # 
+  #     res = selectizeInput("TaxoTree",h6(strong(paste("Select a specific",taxo,sep=" "))),c("...",Available_x),multiple = TRUE)
+  # 
+  #   }
+  # 
+  #   return(res)
+  # 
+  # })
 
   #####################################################
   ##

@@ -107,20 +107,26 @@ HCPlot <- function (input,dds,group,type.trans,counts,CT,tree,col = c("lightblue
   nb = length(unique((group)))
   
   ## Get the dendrogram
-  if(input$DistClust!="sere" && input$DistClust!="Unifrac") dist = vegdist(t(counts), method = input$DistClust)
-  if(input$DistClust=="sere") dist = as.dist(SEREcoef(counts))
-  if(input$DistClust=="Unifrac") {
+  if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts.norm))
+  else if(input$DistClust=="Unifrac"){
     tmp = UniFracDist(CT,tree)
-    if(is.null(tree) || is.null(tmp)) dist = NULL
-    if(!is.null(tree)) {dist = switch(input$DistClustUnifrac,
-                                                  "WU" = as.dist(tmp[, , "d_1"]), 
-                                                  "UWU" = as.dist(tmp[, , "d_UW"]),
-                                                  "VAWU" = as.dist(tmp[, , "d_VAW"])
-    )
+    if(is.null(tree) || is.null(tmp)) dist.counts.norm = NULL
+    else
+    {
+      dist.counts.norm = switch(input$DistClustUnifrac,
+                                "WU" = as.dist(tmp[, , "d_1"]), 
+                                "UWU" = as.dist(tmp[, , "d_UW"]),
+                                "VAWU" = as.dist(tmp[, , "d_VAW"]))
     }
-  
+    
   }
-  
+  else if(input$DistClust  %in% getDistMethods()){
+    dist = as.dist(distance(t(sweep(counts.norm,2,colSums(counts.norm),`/`)), method=input$DistClust))
+    dist[is.na(dist)]=0.0
+    dist.counts.norm = dist
+  }
+  else  dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
+
   if(!is.null(dist))
   {
     hc <- hclust(dist, method = "ward.D")
@@ -137,7 +143,7 @@ HCPlot <- function (input,dds,group,type.trans,counts,CT,tree,col = c("lightblue
       par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
       res = plot(dend, main = "Cluster dendrogram",xlab = paste(input$DistClust,"distance, Ward criterion",sep=" "),cex=input$cexLabelDiag)
     }  
-    if(type!="hori")
+    else
     {
       par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
       res = circlize_dendrogram(dend, labels_track_height = 0.2, dend_track_height = .3, main = "Cluster dendrogram",xlab = paste(input$DistClust,"distance, Ward criterion",sep=" "))
@@ -413,15 +419,19 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree,col = c("SpringGreen",
     ## Get the distance
     if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts.norm))
     else if(input$DistClust=="Unifrac"){
-      tmp = UniFracDist(CT,tree)
+      saveRDS(counts.norm,file="/home/aghozlan/workspace/shaman/count_matrix.rds")
+      saveRDS(tree,file="/home/aghozlan/workspace/shaman/tree.rds")
+      print(counts.norm)
+      print(tree)
+      #tmp = UniFracDist(CT,tree)
+      tmp = UniFracDist(counts.norm,tree)
       if(is.null(tree) || is.null(tmp)) dist.counts.norm = NULL
-      if(!is.null(tree))
+      else
       {
         dist.counts.norm = switch(input$DistClustUnifrac,
                                   "WU" = as.dist(tmp[, , "d_1"]), 
                                   "UWU" = as.dist(tmp[, , "d_UW"]),
-                                  "VAWU" = as.dist(tmp[, , "d_VAW"])
-        )
+                                  "VAWU" = as.dist(tmp[, , "d_VAW"]))
       }
       
     }
@@ -678,13 +688,13 @@ Get_pcoa_table <-function (input, dds, group_init,CT,tree)
     ## Get the distance
     if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts.norm))
     else if(input$DistClust=="Unifrac") {
-      tmp = UniFracDist(CT,tree)
+      tmp = UniFracDist(counts.norm,tree)
       if(is.null(tree) || is.null(tmp)) dist.counts.norm = NULL
-      if(!is.null(tree)) {dist.counts.norm = switch(input$DistClustUnifrac,
+      else{
+          dist.counts.norm = switch(input$DistClustUnifrac,
                                 "WU" = as.dist(tmp[, , "d_1"]), 
                                 "UWU" = as.dist(tmp[, , "d_UW"]),
-                                "VAWU" = as.dist(tmp[, , "d_VAW"])
-      )
+                                "VAWU" = as.dist(tmp[, , "d_VAW"]))
       }
     }
     else if(input$DistClust  %in% getDistMethods()){
@@ -907,9 +917,8 @@ NMDSPlot <-function (input, dds, group_init, CT,tree,col = c("SpringGreen","dodg
         )
         title(main= "Non-metric multidimensional scaling",cex.main=1.5)
         par(font.main=3)
-        if(input$DistClust!="Unifrac") title(main=paste("\n","\n",input$DistClust,"distance",sep=" "),cex.main=1)
         if(input$DistClust=="Unifrac") title(main=paste("\n","\n",input$DistClustUnifrac,"distance",sep=" "),cex.main=1)
-        
+        else title(main=paste("\n","\n",input$DistClust,"distance",sep=" "),cex.main=1)
         abline(h = 0, v = 0, lty = 2, col = "lightgray")
         text(proj[,as.numeric(gsub("PC","",input$PCaxe1))] - ifelse(proj[,as.numeric(gsub("PC","",input$PCaxe1))] > 0, abs, -abs), proj[,as.numeric(gsub("PC","",input$PCaxe2))] - ifelse(proj[,as.numeric(gsub("PC","",input$PCaxe2))] > 0, ord, -ord), colnames(counts.norm), col = col[indgrp],cex=input$cexLabelDiag)
       }

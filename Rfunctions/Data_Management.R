@@ -82,8 +82,8 @@ CheckTaxoTable <- function(taxo,counts, MGSTable=FALSE, taxoCreated=FALSE)
   Warning = NULL
   if(taxoCreated){Warning = "No taxonomy table has been uploaded, the analysis can only be done at the OTU/gene level"}
   if(ncol(taxo)<1 && is.null(Error)){Error = "The number of columns of the taxonomy table must be at least 1" }
-  if(nrow(taxo)<=1 && is.null(Error)){Error = "The number of rows if the taxonomy table must be at least 2" }
-  if(TRUE%in%is.numeric(taxo) && is.null(Error) ){Error = "The taxonomy table must contain only character" }
+  else if(nrow(taxo)<=1 && is.null(Error)){Error = "The number of rows if the taxonomy table must be at least 2" }
+  if(is.numeric(taxo) && is.null(Error) ){Error = "The taxonomy table must contain only character" }
   
   if(is.null(Error))
   {
@@ -93,7 +93,9 @@ CheckTaxoTable <- function(taxo,counts, MGSTable=FALSE, taxoCreated=FALSE)
       nb = length(level)
       if(nb==1 && level=="NA"){ Error = "At least one column contains only NA"}
     }
-    if(MGSTable && length(which(toupper(colnames(taxo))%in%"MGS")) != 1){Error="The taxonomy table must contain a column named MGS providing the MGS association of each gene"}
+    if(MGSTable && length(which(toupper(colnames(taxo))%in%"MGS")) != 1){
+      Error="The taxonomy table must contain a column named MGS providing the MGS association of each gene"
+      }
   }
   
   ## Annotated features without counts

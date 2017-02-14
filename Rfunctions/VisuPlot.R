@@ -19,7 +19,7 @@ Plot_Visu_Barplot <- function(input,resDiff)
   SamplesNames = tmp_combined$namesCounts
   
   if(nbKept>1) namesTax = colnames(counts_tmp_combined)
-  if(nbKept==1) namesTax = ind_taxo
+  else if(nbKept==1) namesTax = ind_taxo
   
   dataNull = data.frame(x=c(0,0),y=c(1,2))
 
@@ -63,7 +63,7 @@ Plot_Visu_Barplot <- function(input,resDiff)
     colnames(dataBarPlot_mat) = c("Taxonomy","Proportions","AllVar")
     dataBarPlot_mat[,2] = tmp_counts
     if(input$SensPlotVisu == "Vertical") Sens = "multiBarChart"
-    if(input$SensPlotVisu == "Horizontal") Sens = "multiBarHorizontalChart"
+    else Sens = "multiBarHorizontalChart"
     
     XRotate = input$rotateXLabel
 
@@ -655,7 +655,7 @@ CreateTableTree <- function(input,resDiff,CT_Norm_OTU,taxo_table,VarInt,ind_taxo
       rownames(targetInt)=rownames(target)  
       ## Combining the Varint
       if(length(VarInt)>1){targetInt$AllVar = apply(targetInt,1,paste, collapse = "-"); targetInt$AllVar = factor(targetInt$AllVar,levels =  expand.grid2.list(list.val))}
-      if(length(VarInt)<=1){targetInt$AllVar = target[,VarInt]; targetInt$AllVar = factor(targetInt$AllVar,levels = val)}
+      else{targetInt$AllVar = target[,VarInt]; targetInt$AllVar = factor(targetInt$AllVar,levels = val)}
       colnames(targetInt) = c(VarInt,"AllVar")
       
       ## Keep only the selected modalities
@@ -707,7 +707,6 @@ CreateTableTree <- function(input,resDiff,CT_Norm_OTU,taxo_table,VarInt,ind_taxo
 
 Plot_Visu_Tree <- function(input,resDiff,CT_Norm_OTU,taxo_table)
 {
-  
   res = NULL
   ## Get Input for BarPlot
   VarInt = input$VisuVarInt
@@ -722,21 +721,16 @@ Plot_Visu_Tree <- function(input,resDiff,CT_Norm_OTU,taxo_table)
   { 
     tmp = CreateTableTree(input,resDiff,CT_Norm_OTU,taxo_table,VarInt)
   
-    if(nrow(tmp$counts)>0 && !is.null(tmp$counts) && !is.null(input$TaxoTree))
+    if(nrow(tmp$counts)>0 && !is.null(tmp$counts))
     {
       #save(tmp,taxo_table,nodeFind,file="testTree.RData")
       merge_dat = merge(taxo_table,round(t(tmp$counts)),by="row.names")
-      
-      
-      
-      
-      
-      
       colnames(merge_dat)[1] = "OTU"
       levels <- c("OTU", colnames(taxo_table))
       conditions <- rownames(tmp$counts)
-      nodeFind = input$TaxoTree
-      if(input$TaxoTree=="...") nodeFind = NULL
+      #nodeFind = input$TaxoTree
+      nodeFind =input$selectTaxoPlot
+      if(length(input$selectTaxoPlot) == 0) nodeFind = NULL
       res = treeWeightD3(merge_dat,conditions,levels,nodeFind=nodeFind, height =input$heightVisu+10, width=if(input$modifwidthVisu){input$widthVisu})
     }
   }
