@@ -105,7 +105,8 @@ shinyServer(function(input, output,session) {
     try(read.tree(inFile$datapath)->data,silent=T)
     CheckTree = CheckTreeFile(data)
     data = CheckTree$tree
-    return(list(data=data,Error = CheckTree$Error,Warning = CheckTree$Warning))
+    try(readLines(inFile$datapath)->treeseq,silent=T)
+    return(list(data=data,Error = CheckTree$Error,Warning = CheckTree$Warning, treeseq=treeseq))
   })
   
   
@@ -130,13 +131,8 @@ shinyServer(function(input, output,session) {
       }
     } 
     return(res)
-    
   })
-  
-  
-  
-  
-  
+
   
   ## Input data
   dataInput <-reactive({ 
@@ -188,9 +184,6 @@ shinyServer(function(input, output,session) {
     
     return(list(data=data,check=check,percent=percent))
   })
-  
-  
-  
   
   
   ## Size factor file (optional)
@@ -467,10 +460,19 @@ shinyServer(function(input, output,session) {
   
   ## Tab box for data visualisation
   output$TabBoxData <- renderUI({
-    
+    tree = dataInputTree()$data
     data=dataInput()$data
-    
-    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0)
+    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(tree))
+    {
+      tabBox(width = NULL, selected = "Count table",
+             tabPanel("Count table",DT::dataTableOutput("DataCounts")),
+             tabPanel("Taxonomy",DT::dataTableOutput("DataTaxo")),
+             tabPanel("Summary",h5(strong("Percentage of annotation")),htmlOutput("SummaryView"),
+                      br(),h5(strong("Number of features by level:")),plotOutput("SummaryViewBarplot",width = 1200,height=500)),
+             tabPanel("Phylogeny", PhyloTreeMetaROutput('PhyloTreeMetaR'))
+      )
+    }
+    else if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0)
     {
       tabBox(width = NULL, selected = "Count table",
              tabPanel("Count table",DT::dataTableOutput("DataCounts")),
@@ -480,6 +482,10 @@ shinyServer(function(input, output,session) {
       )
     }
     
+  })
+  
+  output$PhyloTreeMetaR <- renderPhyloTreeMetaR({
+    PhyloTreeMetaR(dataInputTree()$treeseq,NULL)
   })
   
   output$SummaryView <- renderGvis({

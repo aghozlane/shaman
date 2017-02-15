@@ -83,7 +83,7 @@ CheckTaxoTable <- function(taxo,counts, MGSTable=FALSE, taxoCreated=FALSE)
   if(taxoCreated){Warning = "No taxonomy table has been uploaded, the analysis can only be done at the OTU/gene level"}
   if(ncol(taxo)<1 && is.null(Error)){Error = "The number of columns of the taxonomy table must be at least 1" }
   else if(nrow(taxo)<=1 && is.null(Error)){Error = "The number of rows if the taxonomy table must be at least 2" }
-  if(is.numeric(taxo) && is.null(Error) ){Error = "The taxonomy table must contain only character" }
+  if(TRUE%in%is.numeric(taxo) && is.null(Error) ){Error = "The taxonomy table must contain only character" }
   
   if(is.null(Error))
   {

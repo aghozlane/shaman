@@ -154,6 +154,11 @@ if(!require(philentropy)){
   library(philentropy)
 }
 
+if(!require(PhyloTreeMetaR)){
+  devtools::install_github("https://github.com/pierreLec/PhyloTreeMetaR.git")
+  library(PhyloTreeMetaR)
+}
+
 
 # if(!require(plotly)){
 #   install.packages("plotly")
