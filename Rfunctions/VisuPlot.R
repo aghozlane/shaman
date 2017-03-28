@@ -209,7 +209,80 @@ Plot_Visu_Boxplot <- function(input,resDiff,alpha=0.7){
   return(gg)
 }
 
+##############################
+##          KRONA
+##############################
+Plot_Visu_Krona <- function(input,resDiff,CT_OTU,taxo_table){
+  
+  res = NULL
+  ## Get Input for Krona
+  VarInt = input$VisuVarInt
+  ind_taxo = input$selectTaxoPlot
+  
+  ## Removed column with only 1 modality
+  ind = which(apply(taxo_table,2,FUN = function(x) length(unique(x[!is.na(x)])))==1)
+  if(length(ind)>0) taxo_table = taxo_table[,-ind]
+  
+  #print(counts_tmp_combined)
+  if(nrow(CT_OTU)>0 && !is.null(CT_OTU) && nrow(taxo_table)>0 && !is.null(taxo_table))
+  { 
+    tmp = CreateTableTree(input,resDiff,CT_OTU,taxo_table,VarInt)
+    
+    if(nrow(tmp$counts)>0 && !is.null(tmp$counts))
+    {
+      merge_dat = c()
+      for(cond in tmp$levelsMod){
+        merge_dat = rbind(merge_dat, cbind(cond, merge(round(tmp$counts[cond,]), taxo_table, by="row.names")))
+      }
+      # Reorder columns
+      merge_dat=merge_dat[, c(3,1,4:dim(merge_dat)[2],2)]
+      # Remove zero counts 
+      # Required for Krona
+      res = merge_dat[merge_dat[,1]>0,]
+    }
+  }
+  return(res)
+}
 
+##############################
+##      Phylo PLOT
+##############################
+Plot_Visu_Phylotree = function(input, resDiff, CT_OTU, taxo_table, treeseq){
+  res = NULL
+  VarInt = input$VisuVarInt
+  ind_taxo = input$selectTaxoPlot
+  
+  ## Removed column with only 1 modality
+  ind = which(apply(taxo_table,2,FUN = function(x) length(unique(x[!is.na(x)])))==1)
+  if(length(ind)>0) taxo_table = taxo_table[,-ind]
+  
+  #print(counts_tmp_combined)
+  if(nrow(CT_OTU)>0 && !is.null(CT_OTU) && nrow(taxo_table)>0 && !is.null(taxo_table))
+  { 
+    tmp = CreateTableTree(input,resDiff,CT_OTU,taxo_table,VarInt)
+    
+    if(nrow(tmp$counts)>0 && !is.null(tmp$counts))
+    {
+      #merge_dat = c()
+      #for(cond in tmp$levelsMod){
+      #  merge_dat = rbind(merge_dat, cbind(cond, merge(round(tmp$counts[cond,]), taxo_table, by="row.names")))
+      #}
+      # Reorder columns
+      #merge_dat=merge_dat[, c(3,1,4:dim(merge_dat)[2],2)]
+      # Remove zero counts 
+      # Required for Krona
+      #res = merge_dat[merge_dat[,1]>0,]
+      counts=round(t(tmp$counts))
+      data = as.data.frame(rbind(c("#name",colnames(counts)),cbind(rownames(counts),counts)))
+      res = PhyloTreeMetaR(treeseq, data)
+    }
+  }
+  #if(input$TransDataPhyloTree =="log2") data = cbind(target,log2(t(counts)+1),div)
+  #else if(input$TransDataPhyloTree =="none") data = cbind(target,t(counts),div)
+  #print(counts)
+  return(res)
+}
+  
 
 ##############################
 ##      SCATTER PLOT
@@ -241,7 +314,7 @@ Plot_Visu_Scatterplot<- function(input,resDiff,export=FALSE,lmEst = FALSE,CorEst
     colnames(div) = c("Alpha div","Shannon div","Inv.Simpson div","Simpson div")
   }
   if(input$TransDataScatter =="log2") data = cbind(target,log2(t(counts)+1),div)
-  if(input$TransDataScatter =="none") data = cbind(target,t(counts),div)
+  else if(input$TransDataScatter =="none") data = cbind(target,t(counts),div)
   
   
   ## Get Input for ScatterPlot
@@ -669,13 +742,16 @@ CreateTableTree <- function(input,resDiff,CT_Norm_OTU,taxo_table,VarInt,ind_taxo
       counts_tmp = counts_tmp[,colnames(counts_tmp)%in%rownames(targetInt)]
       
       ## Be careful transposition !
+      # Group per condition
       if(nrow(counts_tmp)>0 && nrow(targetInt)>0)
       { 
+        print(t(counts_tmp)[1:2,])
         counts_tmp_combined = aggregate(t(counts_tmp),by=list(targetInt$AllVar),mean)
         namesCounts = counts_tmp_combined$Group.1
         rownames(counts_tmp_combined) = namesCounts
         
         counts_tmp_combined = as.matrix(counts_tmp_combined[,-1])
+        print(counts_tmp_combined[1:2,])
       }
 
       

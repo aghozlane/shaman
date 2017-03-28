@@ -159,7 +159,6 @@ if(!require(PhyloTreeMetaR)){
   library(PhyloTreeMetaR)
 }
 
-
 # if(!require(plotly)){
 #   install.packages("plotly")
 #   library(plotly)  

@@ -37,6 +37,7 @@ shinyServer(function(input, output,session) {
       colnames(data) = gsub("-",".",colnames(data))
       ## Rownames
       if(!TRUE%in%duplicated(data[,1])) rownames(data)=data[,1];data=data[,-1]
+      try(round(data, 0)->data, silent=T)
     }
     return(as.data.frame(data))
   })
@@ -416,8 +417,8 @@ shinyServer(function(input, output,session) {
         menuItem("Visualization",icon = icon("area-chart"),
                  menuSubItem("Global views",tabName="GlobVisu"),
                  menuSubItem("Comparison plots",tabName="CompPlot"),
-                 tabName = "Visu"),
-        menuItem("Perspective plots", icon = icon("pie-chart"), tabName = "Krona")
+                 tabName = "Visu")
+        #menuItem("Perspective plots", icon = icon("pie-chart"), tabName = "Krona")
       )
     } else{ sidebarMenu(id = "side",NULL)}
 
@@ -737,7 +738,8 @@ shinyServer(function(input, output,session) {
   ## Box for merged counts
   output$BoxCountsMerge <- renderUI({
     input$RunDESeq
-    counts = isolate(dataMergeCounts()$counts)
+    #counts = isolate(dataMergeCounts()$counts)
+    counts = isolate(dataMergeCounts()$CT_Norm)
     taxo = input$TaxoSelect
     
     if(!is.null(counts) && taxo != "...")
@@ -754,13 +756,14 @@ shinyServer(function(input, output,session) {
   ## Export in .csv
   output$ExportCounts <- downloadHandler(
     filename = function() { 'NormCounts.csv' },
-    content = function(file){write.csv(dataMergeCounts()$counts, file)}
+    #content = function(file){write.csv(dataMergeCounts()$counts, file)}
+    content = function(file){write.csv(dataMergeCounts()$CT_Norm, file)}
   )
   
   ## Export in .csv
   output$ExportRelative <- downloadHandler(
     filename = function() { 'RelativeAb.csv' },
-    content = function(file){write.csv(sweep(dataMergeCounts()$counts,2,colSums(dataMergeCounts()$counts),`/`), file)}
+    content = function(file){write.csv(sweep(dataMergeCounts()$CT_Norm,2,colSums(dataMergeCounts()$CT_Norm),`/`), file)}
   )
   
   ## Export size factors
@@ -1887,6 +1890,21 @@ shinyServer(function(input, output,session) {
   ##
   #####################################################
   
+  
+  output$PhyloTreeMetaR2 <- renderPhyloTreeMetaR({
+     resDiff = ResDiffAnal()
+     taxo_table = dataInput()$data$taxo
+     treeseq = dataInputTree()$treeseq
+     
+     
+     if(!is.null(resDiff$dds) && length(input$VisuVarInt)>=1 ) 
+       if(input$NormOrRaw=="norm") withProgress(message="Loading...", Plot_Visu_Phylotree(input, resDiff, dataMergeCounts()$CT_Norm, taxo_table, treeseq))
+       else withProgress(message="Loading...", Plot_Visu_Phylotree(input, resDiff, dataMergeCounts()$CT_noNorm, taxo_table, treeseq))
+       
+       
+  })
+  
+  
   output$PlotVisuTree <- renderTreeWeightD3({
     resDiff = ResDiffAnal()
     taxo_table = dataInput()$data$taxo
@@ -1900,8 +1918,22 @@ shinyServer(function(input, output,session) {
     return(res)
 
   })
-
   
+  KronaR =function(){
+    resDiff = ResDiffAnal()
+    taxo_table = dataInput()$data$taxo
+    
+    res = NULL
+    if(!is.null(resDiff$dds) && length(input$VisuVarInt)>=1){
+      if(input$NormOrRaw=="norm") res = Plot_Visu_Krona(input,resDiff,dataMergeCounts()$CT_Norm,taxo_table)
+      else res = Plot_Visu_Krona(input,resDiff,dataMergeCounts()$CT_noNorm,taxo_table)
+    }
+    temp = tempfile(pattern = "file", tmpdir = tempdir(), fileext =".tsv")
+    write.table(res, file=temp, quote=F, sep="\t", row.names =F, col.names=F)
+    
+    return(temp)
+  }
+
   output$PlotVisuBar <- renderChart({
     resDiff = ResDiffAnal()
     res = NULL
@@ -2087,17 +2119,18 @@ shinyServer(function(input, output,session) {
   
   
   output$plotVisu <- renderUI({
-    
     res=NULL
     if(input$PlotVisuSelect=="Barplot") res =  showOutput("PlotVisuBar")
-    if(input$PlotVisuSelect=="Heatmap") res =  d3heatmapOutput("heatmap", height = input$heightVisu+10, width=ifelse(input$modifwidthVisu,input$widthVisu,"100%"))
-    if(input$PlotVisuSelect=="Boxplot") res = plotOutput("Boxplot", height = input$heightVisu+10, width=if(input$modifwidthVisu){input$widthVisu})
-    if(input$PlotVisuSelect=="Tree") res = treeWeightD3Output('PlotVisuTree', height = input$heightVisu+10,width=ifelse(input$modifwidthVisu,input$widthVisu,"100%"))
-    if(input$PlotVisuSelect=="Scatterplot" && !input$AddRegScatter) res = scatterD3Output("ScatterplotD3", height = input$heightVisu+10, width=ifelse(input$modifwidthVisu,input$widthVisu,"100%"))
-    if(input$PlotVisuSelect=="Scatterplot" && input$AddRegScatter) res = plotOutput("Scatterplotgg", height = input$heightVisu+10,width=if(input$modifwidthVisu){input$widthVisu})
-    
-    if(input$PlotVisuSelect=="Diversity") res =  plotOutput("DiversityPlot", height = input$heightVisu+10, width=if(input$modifwidthVisu){input$widthVisu})
-    if(input$PlotVisuSelect=="Rarefaction") res = plotOutput("RarefactionPlot",dblclick = "RarefactionPlot_dblclick",brush = brushOpts(id = "RarefactionPlot_brush",resetOnNew = TRUE), height = input$heightVisu+10, width=if(input$modifwidthVisu){input$widthVisu})
+    else if(input$PlotVisuSelect=="Heatmap") res =  d3heatmapOutput("heatmap", height = input$heightVisu+10, width=ifelse(input$modifwidthVisu,input$widthVisu,"100%"))
+    else if(input$PlotVisuSelect=="Boxplot") res = plotOutput("Boxplot", height = input$heightVisu+10, width=if(input$modifwidthVisu){input$widthVisu})
+    else if(input$PlotVisuSelect=="Krona") res= tags$iframe(src=paste0("http://127.0.0.1:5438/?parameter=",KronaR()), height = input$heightVisu+10, width=ifelse(input$modifwidthVisu,input$widthVisu,"100%"), seamless=NA)
+    else if(input$PlotVisuSelect=="Tree") res = treeWeightD3Output('PlotVisuTree', height = input$heightVisu+10,width=ifelse(input$modifwidthVisu,input$widthVisu,"100%"))
+    else if(input$PlotVisuSelect=="Scatterplot" && !input$AddRegScatter) res = scatterD3Output("ScatterplotD3", height = input$heightVisu+10, width=ifelse(input$modifwidthVisu,input$widthVisu,"100%"))
+    else if(input$PlotVisuSelect=="Scatterplot" && input$AddRegScatter) res = plotOutput("Scatterplotgg", height = input$heightVisu+10,width=if(input$modifwidthVisu){input$widthVisu})
+    else if(input$PlotVisuSelect=="Diversity") res =  plotOutput("DiversityPlot", height = input$heightVisu+10, width=if(input$modifwidthVisu){input$widthVisu})
+    else if(input$PlotVisuSelect=="Rarefaction") res = plotOutput("RarefactionPlot",dblclick = "RarefactionPlot_dblclick",brush = brushOpts(id = "RarefactionPlot_brush",resetOnNew = TRUE), height = input$heightVisu+10, width=if(input$modifwidthVisu){input$widthVisu})
+    else if(input$PlotVisuSelect=="Phylogeny") res = PhyloTreeMetaROutput('PhyloTreeMetaR2')
+    #print(res)
     return(res)
   })
   
@@ -2311,7 +2344,7 @@ shinyServer(function(input, output,session) {
     resDiff = ResDiffAnal()
     res = list()
     namesTarget = colnames(target)[2:ncol(target)]
-    
+
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target)) 
     {
       counts = dataMergeCounts()$counts
@@ -2370,21 +2403,24 @@ shinyServer(function(input, output,session) {
   ##                KRONA
   ##
   #####################################################
-  output$krona <- renderTable({
-    data = dataInput()$data 
-    taxo = input$TaxoSelect
-    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="...") 
-    {
+  #output$kronar <- renderTable({
+  #  data = dataInput()$data 
+  #  taxo = input$TaxoSelect
+  #  if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="...") 
+  #  {
+  #    print(counts)
+  #    print(data)
+      #KronaR(dat) 
       #print(data$counts)
-      krona_table=tempfile(pattern = "krona", tmpdir = tempdir(), fileext = "")
-      url=paste(krona_table, ".html", sep="")
+      #krona_table=tempfile(pattern = "krona", tmpdir = tempdir(), fileext = "")
+      #url=paste(krona_table, ".html", sep="")
       #system(paste("export PERL5LIB=/home/aghozlan/workspace/SHAMAN_App/KronaTools-2.6/lib:$PERL5LIB; /home/aghozlan/workspace/META10S_App/krona_bin/bin/ktImportText", krona_table))
-      system(paste("ktImportText", krona_table))
-      refs <- paste0("<a href='",  url, "' target='_blank'>krona</a>")
+      #system(paste("ktImportText", krona_table))
+      #refs <- paste0("<a href='",  url, "' target='_blank'>krona</a>")
       
-      data.frame(refs)
-    }
-  }, sanitize.text.function = function(x) x)
+      #data.frame(refs)
+  #  }
+  #}, sanitize.text.function = function(x) x)
   
   
   #####################################################

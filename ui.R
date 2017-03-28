@@ -606,6 +606,8 @@ body <- dashboardBody(
                                           tags$img(src = "gears.gif",id ="loading-spinner")
                                         ),
                        uiOutput("plotVisu"),
+                       #conditionalPanel(condition="input.PlotVisuSelect!='Krona'",),
+                       #conditionalPanel(condition="input.PlotVisuSelect=='Krona'",tags$script(uiOutput("plotVisu"))),
                        conditionalPanel(condition="input.PlotVisuSelect=='Scatterplot' && !input.AddRegScatter",
                                         p(actionButton("scatterD3-reset-zoom", HTML ("<span class='glyphicon glyphicon-search' aria-hidden='true'></span> Reset Zoom")),Align="right")
                        )
@@ -649,7 +651,7 @@ body <- dashboardBody(
 
             column(width=3,
               box(title = "Select your plot",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = FALSE,collapsed= FALSE,
-                  selectizeInput("PlotVisuSelect","",c("Barplot"="Barplot","Heatmap"="Heatmap","Boxplot"="Boxplot","Tree"="Tree","Scatterplot"="Scatterplot","Diversity"="Diversity","Rarefaction"="Rarefaction"),selected = "Barplot")
+                  selectizeInput("PlotVisuSelect","",c("Barplot"="Barplot","Heatmap"="Heatmap","Boxplot"="Boxplot","Tree"="Tree","Scatterplot"="Scatterplot","Diversity"="Diversity","Rarefaction"="Rarefaction","Krona"="Krona", "Phylogeny"="Phylogeny"),selected = "Barplot")
               ),
 
 
@@ -676,14 +678,14 @@ body <- dashboardBody(
                                    radioButtons("CorMeth","Correlation method",c("Pearson" = "pearson", "Spearman" = "spearman"),inline=TRUE),
                                    checkboxInput("AddRegScatter","Add regression line",FALSE)
                   ),                 
-                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && input.PlotVisuSelect!='Scatterplot'",
+                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && input.PlotVisuSelect!='Scatterplot' && input.PlotVisuSelect!='Krona'",
                                    radioButtons("SelectSpecifTaxo","Select the features",c("Most abundant"="Most","All"="All", "Differential features" = "Diff", "Non differential features" = "NoDiff"))
                   ),
-                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && input.PlotVisuSelect!='Scatterplot' && (input.SelectSpecifTaxo=='Diff' || input.SelectSpecifTaxo=='NoDiff') ",
+                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && input.PlotVisuSelect!='Scatterplot' && (input.SelectSpecifTaxo=='Diff' || input.SelectSpecifTaxo=='NoDiff') && input.PlotVisuSelect!='Krona' ",
                                    selectizeInput("ContrastList_table_Visu","",choices = "", multiple = TRUE),
                                    radioButtons("UnionInterContrasts","Union or intersection ?",c("Union"="Union","Intersection"="Inter"),inline = TRUE)
                   ),
-                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && input.PlotVisuSelect!='Scatterplot'",
+                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && input.PlotVisuSelect!='Scatterplot' && input.PlotVisuSelect!='Krona'",
                                    uiOutput("TaxoToPlotVisu")
                   ),
 
@@ -788,23 +790,25 @@ body <- dashboardBody(
                 ##################
                 ## ALL
                 ##################
-                conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Scatterplot'",
+                conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Scatterplot' && input.PlotVisuSelect!='Krona' && input.PlotVisuSelect!='Phylogeny'",
                                  radioButtons(inputId = "SensPlotVisu",label = h6(strong("Orientation")),choices = c("Vertical" = "Vertical", "Horizontal" = "Horizontal"),selected = "Vertical",inline = TRUE)
                 )
               ),
-              box(title = "Export",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
-                  ##################
-                  ## BARPLOT
-                  ##################
-                  conditionalPanel(condition="input.PlotVisuSelect=='Barplot'",
-                                   radioButtons("positionBarPlot","Position",c("Grouped"="fill","Stacked"="dodge"),inline=TRUE)
-                  ),
-                  selectInput("Exp_format_Visu",h5(strong("Export format")),c("png"="png","pdf"="pdf","eps"="eps","svg"="svg"), multiple = FALSE),
-                  fluidRow(
-                    column(width=6,numericInput("heightVisuExport", "Height (in px)",min=100,max=NA,value = 500,step =1)),
-                    column(width=6,numericInput("widthVisuExport", "Width (in px)",min=100,max=NA,value = 500,step =1))
-                  ),
-                  downloadButton("exportVisu", "Export")
+              conditionalPanel(condition="input.PlotVisuSelect!='Krona' && input.PlotVisuSelect!='Phylogeny'",
+                box(title = "Export",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
+                    ##################
+                    ## BARPLOT
+                    ##################
+                    conditionalPanel(condition="input.PlotVisuSelect=='Barplot'",
+                                     radioButtons("positionBarPlot","Position",c("Grouped"="fill","Stacked"="dodge"),inline=TRUE)
+                    ),
+                    selectInput("Exp_format_Visu",h5(strong("Export format")),c("png"="png","pdf"="pdf","eps"="eps","svg"="svg"), multiple = FALSE),
+                    fluidRow(
+                      column(width=6,numericInput("heightVisuExport", "Height (in px)",min=100,max=NA,value = 500,step =1)),
+                      column(width=6,numericInput("widthVisuExport", "Width (in px)",min=100,max=NA,value = 500,step =1))
+                    ),
+                    downloadButton("exportVisu", "Export")
+                )
               )
             )
           )
