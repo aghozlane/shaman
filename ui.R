@@ -648,12 +648,12 @@ body <- dashboardBody(
                    ) 
                                     
                    ),
-
+            
             column(width=3,
               box(title = "Select your plot",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = FALSE,collapsed= FALSE,
-                  selectizeInput("PlotVisuSelect","",c("Barplot"="Barplot","Heatmap"="Heatmap","Boxplot"="Boxplot","Tree"="Tree","Scatterplot"="Scatterplot","Diversity"="Diversity","Rarefaction"="Rarefaction","Krona"="Krona", "Phylogeny"="Phylogeny"),selected = "Barplot")
+                  selectizeInput("PlotVisuSelect","",c("Barplot"="Barplot","Heatmap"="Heatmap","Boxplot"="Boxplot","Tree"="Tree","Scatterplot"="Scatterplot","Diversity"="Diversity","Rarefaction"="Rarefaction","Krona"="Krona"),selected = "Barplot")
               ),
-
+            
 
               ########################################################################
               ###

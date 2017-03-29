@@ -860,7 +860,7 @@ shinyServer(function(input, output,session) {
     AddCont()
     
   },priority=1)
-  
+
   
   ## Add contrast function
   AddContEasy <-eventReactive(input$AddContrastEasy,{
@@ -1220,7 +1220,13 @@ shinyServer(function(input, output,session) {
     }
   )
   
-  
+  ## Add Phylogenetic tree in the result
+  observeEvent(input$fileTree,{
+    updateSelectizeInput(session, "PlotVisuSelect", "", 
+                         c("Barplot"="Barplot","Heatmap"="Heatmap","Boxplot"="Boxplot",
+                           "Tree"="Tree","Scatterplot"="Scatterplot","Diversity"="Diversity",
+                           "Rarefaction"="Rarefaction","Krona"="Krona","Phylogeny"="Phylogeny"))
+  }, priority=1)
   
   
   #####################################################

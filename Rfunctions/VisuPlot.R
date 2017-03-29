@@ -745,13 +745,11 @@ CreateTableTree <- function(input,resDiff,CT_Norm_OTU,taxo_table,VarInt,ind_taxo
       # Group per condition
       if(nrow(counts_tmp)>0 && nrow(targetInt)>0)
       { 
-        print(t(counts_tmp)[1:2,])
         counts_tmp_combined = aggregate(t(counts_tmp),by=list(targetInt$AllVar),mean)
         namesCounts = counts_tmp_combined$Group.1
         rownames(counts_tmp_combined) = namesCounts
         
         counts_tmp_combined = as.matrix(counts_tmp_combined[,-1])
-        print(counts_tmp_combined[1:2,])
       }
 
       
