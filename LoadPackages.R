@@ -155,7 +155,7 @@ if(!require(philentropy)){
 }
 
 if(!require(PhyloTreeMetaR)){
-  devtools::install_github("https://github.com/pierreLec/PhyloTreeMetaR.git")
+  devtools::install_github("pierreLec/PhyloTreeMetaR")
   library(PhyloTreeMetaR)
 }
 
@@ -165,7 +165,7 @@ if(!require(PhyloTreeMetaR)){
 # }
 
 # Allow to upload 50M files only shaman server
-if(Sys.info()["nodename"] == "shaman"){
+if(Sys.info()["nodename"] == "ShinyPro"){
   options(shiny.maxRequestSize=50*1024^2)
 }else{
   # No limit

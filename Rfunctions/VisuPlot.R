@@ -239,6 +239,8 @@ Plot_Visu_Krona <- function(input,resDiff,CT_OTU,taxo_table){
       # Remove zero counts 
       # Required for Krona
       res = merge_dat[merge_dat[,1]>0,]
+      #print(input$TaxoSelect)
+      #print(res)
     }
   }
   return(res)
@@ -693,7 +695,6 @@ CreateTableTree <- function(input,resDiff,CT_Norm_OTU,taxo_table,VarInt,ind_taxo
   val = c()
   list.val = list()
   counts = CT_Norm_OTU
-
   target = resDiff$target
   counts_tmp_combined = NULL
   prop_tmp_combined = NULL

@@ -103,11 +103,11 @@ shinyServer(function(input, output,session) {
     inFile <- input$fileTree
     
     if (is.null(inFile)) return(NULL)
-    try(read.tree(inFile$datapath)->data,silent=T)
+    try(read.tree(inFile$datapath)->data, silent=T)
     CheckTree = CheckTreeFile(data)
     data = CheckTree$tree
-    try(readLines(inFile$datapath)->treeseq,silent=T)
-    return(list(data=data,Error = CheckTree$Error,Warning = CheckTree$Warning, treeseq=treeseq))
+    try(readLines(inFile$datapath)->treeseq, silent=T)
+    return(list(data=data, Error=CheckTree$Error, Warning=CheckTree$Warning, treeseq=treeseq))
   })
   
   
@@ -120,9 +120,7 @@ shinyServer(function(input, output,session) {
     res = infoBox(h6(strong("Phylogenetic tree")), subtitle = h6(strong("Load the phylogenetic tree (optional)")) ,color = "light-blue",width=NULL,fill=TRUE, icon = icon("upload"))
     if(!is.null(tree)){
       if(!is.null(isolate(input$fileTree))){
-        
         res = infoBox(h6(strong("Phylogenetic tree")), subtitle = h6("The phylogenetic has been loaded") ,color = "green",width=NULL,fill=TRUE, icon = icon("thumbs-o-up"))
-        
         if(!is.null(tree_tmp$Warning)){      
           res = infoBox(h6(strong("Phylogenetic tree")), subtitle = h6(tree_tmp$Warning) ,color = "orange",width=NULL,fill=TRUE, icon = icon("warning"))
         }
@@ -2129,7 +2127,14 @@ shinyServer(function(input, output,session) {
     if(input$PlotVisuSelect=="Barplot") res =  showOutput("PlotVisuBar")
     else if(input$PlotVisuSelect=="Heatmap") res =  d3heatmapOutput("heatmap", height = input$heightVisu+10, width=ifelse(input$modifwidthVisu,input$widthVisu,"100%"))
     else if(input$PlotVisuSelect=="Boxplot") res = plotOutput("Boxplot", height = input$heightVisu+10, width=if(input$modifwidthVisu){input$widthVisu})
-    else if(input$PlotVisuSelect=="Krona") res= tags$iframe(src=paste0("http://127.0.0.1:5438/?parameter=",KronaR()), height = input$heightVisu+10, width=ifelse(input$modifwidthVisu,input$widthVisu,"100%"), seamless=NA)
+    else if(input$PlotVisuSelect=="Krona"){
+      if(Sys.info()["nodename"] == "ShinyPro"){
+        res= tags$iframe(src=paste0("http://hub05.hosting.pasteur.fr/plechat/KronaRShy/?parameter=",KronaR()), height = input$heightVisu+10, width=ifelse(input$modifwidthVisu,input$widthVisu,"100%"), seamless=NA)
+      }
+      else{
+        res= tags$iframe(src=paste0("http://127.0.0.1:5438/?parameter=",KronaR()), height = input$heightVisu+10, width=ifelse(input$modifwidthVisu,input$widthVisu,"100%"), seamless=NA)  
+      }
+    }
     else if(input$PlotVisuSelect=="Tree") res = treeWeightD3Output('PlotVisuTree', height = input$heightVisu+10,width=ifelse(input$modifwidthVisu,input$widthVisu,"100%"))
     else if(input$PlotVisuSelect=="Scatterplot" && !input$AddRegScatter) res = scatterD3Output("ScatterplotD3", height = input$heightVisu+10, width=ifelse(input$modifwidthVisu,input$widthVisu,"100%"))
     else if(input$PlotVisuSelect=="Scatterplot" && input$AddRegScatter) res = plotOutput("Scatterplotgg", height = input$heightVisu+10,width=if(input$modifwidthVisu){input$widthVisu})

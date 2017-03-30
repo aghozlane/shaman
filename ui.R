@@ -106,6 +106,7 @@ body <- dashboardBody(
             box(
               title = "What's new in SHAMAN", width = NULL, status = "primary",
               div(style = 'overflow-y: scroll; height: 550px',
+                  addNews("March 30th 2017","Krona, Phylogeny and bug fixes","Krona and phylogenetic tree plots are now available in visualisation. Several new distance are available in PCOA. The import float count matrices is now ok. We have finaly debugged the export of the relative abundance/normalized matrices."),
                   addNews("Dec 9th 2016","Phylogenetic tree and stress plot","You can now upload a phylogenetic tree to calculate the unifrac distance (only available at the OTU level). 
                           The stress plot has been added to evaluate the goodness of fit of the NMDS."),
                   addNews("Nov 22th 2016","New visualization and bug fix","We have implemented a new visualization called tree abundance. Some bugs have been fixed (thanks Carine Rey from ENS)."),
