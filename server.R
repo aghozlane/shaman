@@ -2129,7 +2129,7 @@ shinyServer(function(input, output,session) {
     else if(input$PlotVisuSelect=="Boxplot") res = plotOutput("Boxplot", height = input$heightVisu+10, width=if(input$modifwidthVisu){input$widthVisu})
     else if(input$PlotVisuSelect=="Krona"){
       if(Sys.info()["nodename"] == "ShinyPro"){
-        res= tags$iframe(src=paste0("http://hub05.hosting.pasteur.fr/plechat/KronaRShy/?parameter=",KronaR()), height = input$heightVisu+10, width=ifelse(input$modifwidthVisu,input$widthVisu,"100%"), seamless=NA)
+        res= tags$iframe(src=paste0("http://hub05.hosting.pasteur.fr/aghozlane/KronaRShy/?parameter=",KronaR()), height = input$heightVisu+10, width=ifelse(input$modifwidthVisu,input$widthVisu,"100%"), seamless=NA)
       }
       else{
         res= tags$iframe(src=paste0("http://127.0.0.1:5438/?parameter=",KronaR()), height = input$heightVisu+10, width=ifelse(input$modifwidthVisu,input$widthVisu,"100%"), seamless=NA)  
