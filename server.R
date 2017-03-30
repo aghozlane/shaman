@@ -1932,9 +1932,11 @@ shinyServer(function(input, output,session) {
       if(input$NormOrRaw=="norm") res = Plot_Visu_Krona(input,resDiff,dataMergeCounts()$CT_Norm,taxo_table)
       else res = Plot_Visu_Krona(input,resDiff,dataMergeCounts()$CT_noNorm,taxo_table)
     }
-    temp = tempfile(pattern = "file", fileext =".tsv")
+    tempdir = tempdir()
+    temp = tempfile(pattern = "file", tmpdir=tempdir, fileext =".tsv")
     write.table(res, file=temp, quote=F, sep="\t", row.names =F, col.names=F)
-    Sys.chmod(temp, mode = "7333", use_umask = TRUE)
+    Sys.chmod(tempdir, mode = "0777")
+    Sys.chmod(temp, mode = "0777")
     
     return(temp)
   }
