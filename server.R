@@ -1934,6 +1934,7 @@ shinyServer(function(input, output,session) {
     }
     temp = tempfile(pattern = "file", tmpdir = tempdir(), fileext =".tsv")
     write.table(res, file=temp, quote=F, sep="\t", row.names =F, col.names=F)
+    Sys.chmod(temp, mode = "7777", use_umask = TRUE)
     
     return(temp)
   }
