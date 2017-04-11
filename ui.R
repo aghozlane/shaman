@@ -1,32 +1,3 @@
-options(shiny.sanitize.errors = FALSE)
-source("css/owncss.R")
-source("Rfunctions/Data_Management.R")
-if (!require(devtools)) {
-  install.packages('devtools')
-  library(devtools)
-}
-if(!require(treeWeightD3)){
-  devtools::install_github('pierreLec/treeWeightD3')
-  library(treeWeightD3)
-}
-if (!require(scatterD3)) {
-  devtools::install_github('aghozlane/scatterD3')
-  library(scatterD3)
-}
-if(!require(shinydashboard)){
-  devtools::install_github('aghozlane/shinydashboard')
-  library(shinydashboard)
-}
-
-if(!require(shinythemes)){
-  install.packages("shinythemes")
-  library(shinythemes)
-}
-if(!require(shinyjs)){
-  install.packages("shinyjs")
-  library(shinyjs)  
-}
-
 function(request) {
 sidebar <- dashboardSidebar(
   useShinyjs(),
@@ -42,6 +13,7 @@ sidebar <- dashboardSidebar(
     menuItem("Home", tabName = "Home", icon = icon("home")),
     menuItem("Tutorial", tabName = "Tutorial", icon = icon("book")),
     menuItem("Download/Install", tabName = "Download", icon = icon("download")),
+    menuItem("Raw data", tabName = "RawData", icon = icon("upload")),
     menuItem("Upload your data", tabName = "Upload", icon = icon("upload")),
     # bookmarkButton(),
     menuItemOutput("dymMenu"),
@@ -248,7 +220,52 @@ body <- dashboardBody(
                      )
               )
             ),
-    
+    tabItem(tabName = "RawData",
+                        tags$style(type='text/css', ".well { max-width: 20em; }"),
+                        fluidRow(
+                          HTML('<center><h1>MASQUE : Metagenomic Analysis with a Quantitative pipeline</h1></center>'),
+
+                          column(width=8,
+                            div(style="background-color: white; padding-left:20px;",
+                            HTML('
+                           <h2>Introduction</h2>
+
+                                 <p>The aim of this part is to provide an easy cluster interface to perform <b>targeted metagenomic analysis</b>. This analysis will be done using the MASQUE pipeline which allows :</p>
+
+                                 <ul>
+                                 <li>to analyse 16S/18S/23S/28S/ITS data. It builds a count matrix, an annotation table and a phylogeny of the OTU.</li>
+                                 <li>to perform to use a set of parameters already tested on serveral projects for the numerous software used to perform the clustering and the annotation.</li>
+                                 <li>to perform an "uptodate" analysis considering the scientific litterature.</li>
+                                 </ul>
+
+                                  <hr></hr>
+                                 <h2>Process</h2>
+
+                                 <p>We follow the recommandation described by Robert C. Edgar in <a href="http://www.nature.com/nmeth/journal/v10/n10/full/nmeth.2604.html" target="_blank" >Uparse</a> supplementary paper.<br>
+                                   The clustering process in MASQUE is performed as the following :<br>
+                                   1.  Read quality control<br>
+                                   2.  Dereplication<br>
+                                   3.  Chimera filtering<br>
+                                   4.  Clustering<br>
+                                   5.  Realignment/mapping<br>
+                                   6.  Taxonomical annotation of the OTU<br>
+                                   7.  Quality check of every step  </p>
+
+                                   <p>You can find more information in the presentation <a href="/aghozlane/masque/blob/master/tp/Targeted_metagenomics.pdf">here</a>. We try to describe the idea behind each step and a complete TP to do it on your own.</p>'
+                              )
+            #
+            #
+            #                      <\ui> to analyse 16S/18S/23S/28S/ITS data. It builds a count matrix, an annotation table and a phylogeny of the OTU.
+            #                      to perform to use a set of parameters already tested on serveral projects for the numerous software used to perform the clustering and the annotation.
+            #                      to perform an uptodate analysis considering the scientific litterature."
+                          ))),
+                      fluidRow(directoryInput('directory', label = 'select a directory')),
+
+                        br(),
+                        fluidRow(
+                        )
+            ),
+
     tabItem(tabName = "Upload",
             tags$style(type='text/css', ".well { max-width: 20em; }"),
             fluidRow(

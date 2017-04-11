@@ -1,5 +1,3 @@
-source('LoadPackages.R')
-
 shinyServer(function(input, output,session) {
 
   hide(id = "loading-content", anim = TRUE, animType = "fade",time=1.5)
@@ -9,6 +7,8 @@ shinyServer(function(input, output,session) {
   ##                    LOAD FILES
   ##
   #####################################################
+  
+  
   
   ## Create base for contrast
   rand = floor(runif(1,0,1e9))
@@ -604,6 +604,25 @@ shinyServer(function(input, output,session) {
     # return(list(target = target, labeled=labeled))
   })
   
+  
+  ## Select a folder (for MASQUE)
+  observeEvent(
+    ignoreNULL = TRUE,
+    eventExpr = {
+      input$directory
+    },
+    handlerExpr = {
+      if (input$directory > 0) {
+        # condition prevents handler execution on initial app launch
+        
+        # launch the directory selection dialog with initial path read from the widget
+        path = choose.dir(default = readDirectoryInput(session, 'directory'))
+        
+        # update the widget value
+        updateDirectoryInput(session, 'directory', value = path)
+      }
+    }
+  )
   
   observeEvent(input$deleteRows,{
     
