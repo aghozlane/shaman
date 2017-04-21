@@ -16,11 +16,16 @@ shinyServer(function(input, output,session) {
   file.create(namesfile,showWarnings=FALSE)
   target = NULL
   
+  
+  ## JSON name for masque
+  curdir  = getwd()
+  json_name = tempfile(pattern = "file", tmpdir = paste(curdir,"www","masque","todo",sep= .Platform$file.sep),  fileext = ".json")
+  
   ## Popup messages
   observe(if(input$AddRegScatter) info("By adding the regression line, you will lose interactivity."))
   
   ## Reactive target
-  values <- reactiveValues(TargetWorking = target,labeled=NULL,fastq_names_only=NULL,R1fastQ=NULL,R2fastQ=NULL)
+  values <- reactiveValues(TargetWorking = target,labeled=NULL,fastq_names_only=NULL,R1fastQ=NULL,R2fastQ=NULL,json_name=json_name)
   
   ## Counts file
   dataInputCounts <-reactive({ 
@@ -707,7 +712,7 @@ shinyServer(function(input, output,session) {
       }
       
       ## Create JSON file
-      withProgress(message = 'Creating JSON file...',{CreateJSON(input)})
+      withProgress(message = 'Creating JSON file...',{CreateJSON(input,values$json_name)})
     }
     
   })
@@ -875,6 +880,17 @@ shinyServer(function(input, output,session) {
     } else return(NULL)
     
   })
+  
+  
+  output$gaugeMasque <-renderGauge({
+    
+    values$json_name
+    num = 0
+    gauge(num, 0,100,symbol = '%')
+    
+  })
+  
+  
   
   ######################## END MASQUE #################################
   

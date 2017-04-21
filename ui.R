@@ -258,7 +258,12 @@ body <- dashboardBody(
             #                      <\ui> to analyse 16S/18S/23S/28S/ITS data. It builds a count matrix, an annotation table and a phylogeny of the OTU.
             #                      to perform to use a set of parameters already tested on serveral projects for the numerous software used to perform the clustering and the annotation.
             #                      to perform an uptodate analysis considering the scientific litterature."
-                          ))),
+                          )),
+            
+            column(width=4,
+                   gaugeOutput("gaugeMasque", width = "100%", height = "100%")
+                   )
+            ),
             
             hr(),
             HTML('<center><h2 style="color:#053383;"><b>Start your analysis</b></h2></center>'),
