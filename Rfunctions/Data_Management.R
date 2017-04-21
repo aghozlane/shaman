@@ -317,9 +317,9 @@ SamplesMasque <- function(input,values)
 
 
 CreateJSON <- function(input){
+  curdir <- getwd()
+  tmpjson = tempfile(pattern = "file", tmpdir = paste(curdir,"www","masque","todo",sep= .Platform$file.sep),  fileext = ".json")
   
-  tmpjson = tempfile(pattern = "file", tmpdir = "/Volumes/@home/Projets Hub/Metagenomique/meta16s/www/masque/todo",  fileext = ".json")
-  file.create(tmpjson,showWarnings=FALSE)
   
   if(input$PairedOrNot=='n')
   {

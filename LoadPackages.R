@@ -1,17 +1,24 @@
 options(download.file.method = 'wget')
 
+if (!require("backports")){
+  install.packages("backports")
+  library(backports)
+}
 
 if (!require("readr")){
   install.packages("readr")
+  library(readr)
 }
 
 if (!require("jsonlite")){
   install.packages("jsonlite")
+  library(jsonlite)
 }
 
 
 if (!require("shinyFiles")){
   install.packages("shinyFiles")
+  library(shinyFiles)
 }
 
 
@@ -173,6 +180,7 @@ if(!require(PhyloTreeMetaR)){
   devtools::install_github("pierreLec/PhyloTreeMetaR")
   library(PhyloTreeMetaR)
 }
+
 
 # if(!require(plotly)){
 #   install.packages("plotly")
