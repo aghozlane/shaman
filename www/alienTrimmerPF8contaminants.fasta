@@ -1,0 +1,965 @@
+####################################################################################################
+#                                                                                                  #
+# LAST UPDATE: 07 June 2013                                                                        #
+#                                                                                                  #
+# This file contains a list a putative contaminant oligonucleotides that could occur in both ends  #
+# of NGS reads.  This file is  formatted to be  used by  AlienTrimmer  in order to  trim off such  #
+# contaminant oligonucleotides from FASTQ formatted read files.                                    #
+# If you wish to add new contaminant sequences, use the FASTA format to name them, and be careful  #
+# to always write one sequence per line (lower and/or uppercase characters).  Comment lines could  #
+# be written by  using '#' as  the first character.  If you wish  to not trim  off some of  these  #
+# sequences when using AlienTrimmer, comment these lines with '#'.                                 #
+#                                                                                                  #
+# CONTENTS:                                                                                        #
+# 1.  Homopolymers                                                                                 #
+# 2.  Nextera DNA Sample Preparation Kit (Illumina)                                                #
+# 3.  Nextera Index Kit- PCR Primers                                                               #
+# 4.  Nextera DNA Sample Prep Kit (Epicentre Biotechnologies)                                      #
+# 5.  TruSeq RNA and DNA Sample Prep Kits (v1 and v2)                                              #
+# 6.  Oligonucleotide sequences for TruSeq Small RNA Sample Prep Kit                               #
+# 7.  Illumina oligonucleotide sequences for Genomic DNA                                           #
+# 8.  Illumina Paired End DNA oligonucleotide sequences                                            #
+# 9.  Illumina Oligonucleotide sequences for the Multiplexing Sample Prep Oligo Only Kit           #
+# 10. Illumina DpnII expression                                                                    #
+# 11. Illumina DpnII Gex                                                                           #
+# 12. Illumina NlaIII expression                                                                   #
+# 13. Illumina Small RNA Kits v1 and v1.5                                                          #
+# 14. SOLID 3 System Oligo                                                                         #
+# 15. Roche 454 Adaptors, Linkiers and Adapters                                                    #
+# 16. Ion Torrent adapter sequences                                                                #
+#                                                                                                  #
+####################################################################################################
+
+
+
+###################################################################################################
+### 1. Homopolymers ###############################################################################
+###################################################################################################
+
+>poly-A
+AAAAAAAAAAAAAAAAAAAA
+>poly-C
+CCCCCCCCCCCCCCCCCCCC
+>poly-G
+GGGGGGGGGGGGGGGGGGGG
+>poly-T
+TTTTTTTTTTTTTTTTTTTT 
+
+
+###################################################################################################
+### 2. Nextera(R) DNA Sample Preparation Kit (Illumina) ###########################################
+###################################################################################################
+
+>Nextera Transposase Sequence (FC-121-1031)
+TCGTCGGCAGCGTCAGATGTGTATAAGAGACAG
+>Nextera Transposase Sequence (FC-121-1030)
+GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAG
+
+
+###################################################################################################
+### 3. Nextera Index Kit- PCR Primers #############################################################
+###################################################################################################
+
+>Nextera Index Kit- PCR primer (FC-121-1012, Index N501)
+AATGATACGGCGACCACCGAGATCTACACtagatcgcTCGTCGGCAGCGTC
+>Nextera Index Kit- PCR primer (FC-121-1012, Index N502)
+AATGATACGGCGACCACCGAGATCTACACctctctatTCGTCGGCAGCGTC
+>Nextera Index Kit- PCR primer (FC-121-1012, Index N503)
+AATGATACGGCGACCACCGAGATCTACACtatcctctTCGTCGGCAGCGTC
+>Nextera Index Kit- PCR primer (FC-121-1012, Index N504)
+AATGATACGGCGACCACCGAGATCTACACagagtagaTCGTCGGCAGCGTC
+>Nextera Index Kit- PCR primer (FC-121-1012, Index N505)
+AATGATACGGCGACCACCGAGATCTACACgtaaggagTCGTCGGCAGCGTC
+>Nextera Index Kit- PCR primer (FC-121-1012, Index N506)
+AATGATACGGCGACCACCGAGATCTACACgctgcataTCGTCGGCAGCGTC
+>Nextera Index Kit- PCR primer (FC-121-1012, Index N507)
+AATGATACGGCGACCACCGAGATCTACACaaggagtaTCGTCGGCAGCGTC
+>Nextera Index Kit- PCR primer (FC-121-1012, Index N508)
+AATGATACGGCGACCACCGAGATCTACACctaagcctTCGTCGGCAGCGTC
+>Nextera Index Kit- PCR primer (FC-121-1011, Index N701)
+CAAGCAGAAGACGGCATACGAGATtaaggcgaGTCTCGTGGGCTCGG
+>Nextera Index Kit- PCR primer (FC-121-1011, Index N702)
+CAAGCAGAAGACGGCATACGAGATcgtactagGTCTCGTGGGCTCGG
+>Nextera Index Kit- PCR primer (FC-121-1011, Index N703)
+CAAGCAGAAGACGGCATACGAGATaggcagaaGTCTCGTGGGCTCGG
+>Nextera Index Kit- PCR primer (FC-121-1011, Index N704)
+CAAGCAGAAGACGGCATACGAGATtcctgagcGTCTCGTGGGCTCGG
+>Nextera Index Kit- PCR primer (FC-121-1011, Index N705)
+CAAGCAGAAGACGGCATACGAGATggactcctGTCTCGTGGGCTCGG
+>Nextera Index Kit- PCR primer (FC-121-1011, Index N706)
+CAAGCAGAAGACGGCATACGAGATtaggcatgGTCTCGTGGGCTCGG
+>Nextera Index Kit- PCR primer (FC-121-1011, Index N707)
+CAAGCAGAAGACGGCATACGAGATctctctacGTCTCGTGGGCTCGG
+>Nextera Index Kit- PCR primer (FC-121-1011, Index N708)
+CAAGCAGAAGACGGCATACGAGATcagagaggGTCTCGTGGGCTCGG
+>Nextera Index Kit- PCR primer (FC-121-1011, Index N709)
+CAAGCAGAAGACGGCATACGAGATgctacgctGTCTCGTGGGCTCGG
+>Nextera Index Kit- PCR primer (FC-121-1011, Index N710)
+CAAGCAGAAGACGGCATACGAGATcgaggctgGTCTCGTGGGCTCGG
+>Nextera Index Kit- PCR primer (FC-121-1011, Index N711)
+CAAGCAGAAGACGGCATACGAGATaagaggcaGTCTCGTGGGCTCGG
+>Nextera Index Kit- PCR primer (FC-121-1011, Index N712)
+CAAGCAGAAGACGGCATACGAGATgtagaggaGTCTCGTGGGCTCGG
+
+
+#########################################################################################################
+### 4. Nextera DNA Sample Prep Kit (Epicentre Biotechnologies) ##########################################
+#########################################################################################################
+
+>Transposon Sequence 1
+GCCTCCCTCGCGCCATCAGAGATGTGTATAAGAGACAG
+>Transposon Sequence 2
+GCCTTGCCAGCCCGCTCAGAGATGTGTATAAGAGACAG
+>Adapter 1
+AATGATACGGCGACCACCGAGATCTACACGCCTCCCTCGCGCCATCAG
+>Adapter 2, Bar Code IDX1
+CAAGCAGAAGACGGCATACGAGATcgtgatCGGTCTGCCTTGCCAGCCCGCTCAG
+>Adapter 2, Bar Code IDX2
+CAAGCAGAAGACGGCATACGAGATacatcgCGGTCTGCCTTGCCAGCCCGCTCAG
+>Adapter 2, Bar Code IDX3
+CAAGCAGAAGACGGCATACGAGATgcctaaCGGTCTGCCTTGCCAGCCCGCTCAG
+>Adapter 2, Bar Code IDX4
+CAAGCAGAAGACGGCATACGAGATtggtcaCGGTCTGCCTTGCCAGCCCGCTCAG
+>Adapter 2, Bar Code IDX5
+CAAGCAGAAGACGGCATACGAGATcactgtCGGTCTGCCTTGCCAGCCCGCTCAG
+>Adapter 2, Bar Code IDX6
+CAAGCAGAAGACGGCATACGAGATattggcCGGTCTGCCTTGCCAGCCCGCTCAG
+>Adapter 2, Bar Code IDX7
+CAAGCAGAAGACGGCATACGAGATgatctgCGGTCTGCCTTGCCAGCCCGCTCAG
+>Adapter 2, Bar Code IDX8
+CAAGCAGAAGACGGCATACGAGATtcaagtCGGTCTGCCTTGCCAGCCCGCTCAG
+>Adapter 2, Bar Code IDX9
+CAAGCAGAAGACGGCATACGAGATctgatcCGGTCTGCCTTGCCAGCCCGCTCAG
+>Adapter 2, Bar Code IDX10
+CAAGCAGAAGACGGCATACGAGATaagctaCGGTCTGCCTTGCCAGCCCGCTCAG
+>Adapter 2, Bar Code IDX11
+CAAGCAGAAGACGGCATACGAGATgtagccCGGTCTGCCTTGCCAGCCCGCTCAG
+>Adapter 2, Bar Code IDX12
+CAAGCAGAAGACGGCATACGAGATtacaagCGGTCTGCCTTGCCAGCCCGCTCAG
+>PCR Primer 1
+AATGATACGGCGACCACCGA
+>PCR Primer 2
+CAAGCAGAAGACGGCATACGA
+
+
+#########################################################################################################
+### 5. TruSeq RNA and DNA Sample Prep Kits (v1 and v2) ##################################################
+#########################################################################################################
+
+>TruSeq Universal Adapter
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCT
+>TruSeq Adapter, Index 1
+GATCGGAAGAGCACACGTCTGAACTCCAGTCACatcacgATCTCGTATGCCGTCTTCTGCTTG
+>TruSeq Adapter, Index 2
+GATCGGAAGAGCACACGTCTGAACTCCAGTCACcgatgtATCTCGTATGCCGTCTTCTGCTTG
+>TruSeq Adapter, Index 3
+GATCGGAAGAGCACACGTCTGAACTCCAGTCACttaggcATCTCGTATGCCGTCTTCTGCTTG
+>TruSeq Adapter, Index 4
+GATCGGAAGAGCACACGTCTGAACTCCAGTCACtgaccaATCTCGTATGCCGTCTTCTGCTTG
+>TruSeq Adapter, Index 5
+GATCGGAAGAGCACACGTCTGAACTCCAGTCACacagtgATCTCGTATGCCGTCTTCTGCTTG
+>TruSeq Adapter, Index 6
+GATCGGAAGAGCACACGTCTGAACTCCAGTCACgccaatATCTCGTATGCCGTCTTCTGCTTG
+>TruSeq Adapter, Index 7
+GATCGGAAGAGCACACGTCTGAACTCCAGTCACcagatcATCTCGTATGCCGTCTTCTGCTTG
+>TruSeq Adapter, Index 8
+GATCGGAAGAGCACACGTCTGAACTCCAGTCACacttgaATCTCGTATGCCGTCTTCTGCTTG
+>TruSeq Adapter, Index 9
+GATCGGAAGAGCACACGTCTGAACTCCAGTCACgatcagATCTCGTATGCCGTCTTCTGCTTG
+>TruSeq Adapter, Index 10
+GATCGGAAGAGCACACGTCTGAACTCCAGTCACtagcttATCTCGTATGCCGTCTTCTGCTTG
+>TruSeq Adapter, Index 11
+GATCGGAAGAGCACACGTCTGAACTCCAGTCACggctacATCTCGTATGCCGTCTTCTGCTTG
+>TruSeq Adapter, Index 12
+GATCGGAAGAGCACACGTCTGAACTCCAGTCACcttgtaATCTCGTATGCCGTCTTCTGCTTG
+>TruSeq Adapter, Index 13
+GATCGGAAGAGCACACGTCTGAACTCCAGTCACagtcaaCAATCTCGTATGCCGTCTTCTGCTTG
+>TruSeq Adapter, Index 14
+GATCGGAAGAGCACACGTCTGAACTCCAGTCACagttccGTATCTCGTATGCCGTCTTCTGCTTG
+>TruSeq Adapter, Index 15
+GATCGGAAGAGCACACGTCTGAACTCCAGTCACatgtcaGAATCTCGTATGCCGTCTTCTGCTTG
+>TruSeq Adapter, Index 16
+GATCGGAAGAGCACACGTCTGAACTCCAGTCACccgtccCGATCTCGTATGCCGTCTTCTGCTTG
+>TruSeq Adapter, Index 18
+GATCGGAAGAGCACACGTCTGAACTCCAGTCACgtccgcACATCTCGTATGCCGTCTTCTGCTTG
+>TruSeq Adapter, Index 19
+GATCGGAAGAGCACACGTCTGAACTCCAGTCACgtgaaaCGATCTCGTATGCCGTCTTCTGCTTG
+>TruSeq Adapter, Index 20
+GATCGGAAGAGCACACGTCTGAACTCCAGTCACgtggccTTATCTCGTATGCCGTCTTCTGCTTG
+>TruSeq Adapter, Index 21
+GATCGGAAGAGCACACGTCTGAACTCCAGTCACgtttcgGAATCTCGTATGCCGTCTTCTGCTTG
+>TruSeq Adapter, Index 22
+GATCGGAAGAGCACACGTCTGAACTCCAGTCACcgtacgTAATCTCGTATGCCGTCTTCTGCTTG
+>TruSeq Adapter, Index 23
+GATCGGAAGAGCACACGTCTGAACTCCAGTCACgagtggATATCTCGTATGCCGTCTTCTGCTTG
+>TruSeq Adapter, Index 25
+GATCGGAAGAGCACACGTCTGAACTCCAGTCACactgatATATCTCGTATGCCGTCTTCTGCTTG
+>TruSeq Adapter, Index 27
+GATCGGAAGAGCACACGTCTGAACTCCAGTCACattcctTTATCTCGTATGCCGTCTTCTGCTTG
+
+
+#########################################################################################################
+### 6. Oligonucleotide sequences for TruSeq Small RNA Sample Prep Kit ###################################
+#########################################################################################################
+
+>RNA 3’ Adapter (RA3), part # 15013207
+TGGAATTCTCGGGTGCCAAGG
+>RNA RT Primer (RTP), part # 15013981
+GCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer,  (RP1), part # 15005505
+AATGATACGGCGACCACCGAGATCTACACGTTCAGAGTTCTACAGTCCGA
+>RNA PCR Primer, Index 1  (RPI1)
+CAAGCAGAAGACGGCATACGAGATcgtgatGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 2  (RPI2)
+CAAGCAGAAGACGGCATACGAGATacatcgGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 3  (RPI3)
+CAAGCAGAAGACGGCATACGAGATgcctaaGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 4  (RPI4)
+CAAGCAGAAGACGGCATACGAGATtggtcaGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 5  (RPI5)
+CAAGCAGAAGACGGCATACGAGATcactgtGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 6  (RPI6)
+CAAGCAGAAGACGGCATACGAGATattggcGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 7  (RPI7)
+CAAGCAGAAGACGGCATACGAGATgatctgGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 8  (RPI8)
+CAAGCAGAAGACGGCATACGAGATtcaagtGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 9  (RPI9)
+CAAGCAGAAGACGGCATACGAGATctgatcGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 10 (RPI10)
+CAAGCAGAAGACGGCATACGAGATaagctaGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 11 (RPI11)
+CAAGCAGAAGACGGCATACGAGATgtagccGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 12 (RPI12)
+CAAGCAGAAGACGGCATACGAGATtacaagGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 13 (RPI13)
+CAAGCAGAAGACGGCATACGAGATttgactGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 14 (RPI14)
+CAAGCAGAAGACGGCATACGAGATggaactGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 15 (RPI15)
+CAAGCAGAAGACGGCATACGAGATtgacatGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 16 (RPI16)
+CAAGCAGAAGACGGCATACGAGATggacggGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 17 (RPI17)
+CAAGCAGAAGACGGCATACGAGATctctacGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 18 (RPI18)
+CAAGCAGAAGACGGCATACGAGATgcggacGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 19 (RPI19)
+CAAGCAGAAGACGGCATACGAGATtttcacGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 20 (RPI20)
+CAAGCAGAAGACGGCATACGAGATggccacGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 21 (RPI21)
+CAAGCAGAAGACGGCATACGAGATcgaaacGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 22 (RPI22)
+CAAGCAGAAGACGGCATACGAGATcgtacgGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 23 (RPI23)
+CAAGCAGAAGACGGCATACGAGATccactcGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 24 (RPI24)
+CAAGCAGAAGACGGCATACGAGATgctaccGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 25 (RPI25)
+CAAGCAGAAGACGGCATACGAGATatcagtGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 26 (RPI26)
+CAAGCAGAAGACGGCATACGAGATgctcatGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 27 (RPI27)
+CAAGCAGAAGACGGCATACGAGATaggaatGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 28 (RPI28)
+CAAGCAGAAGACGGCATACGAGATcttttgGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 29 (RPI29)
+CAAGCAGAAGACGGCATACGAGATtagttgGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 30 (RPI30)
+CAAGCAGAAGACGGCATACGAGATccggtgGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 31 (RPI31)
+CAAGCAGAAGACGGCATACGAGATatcgtgGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 32 (RPI32)
+CAAGCAGAAGACGGCATACGAGATtgagtgGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 33 (RPI33)
+CAAGCAGAAGACGGCATACGAGATcgcctgGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 34 (RPI34)
+CAAGCAGAAGACGGCATACGAGATgccatgGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 35 (RPI35)
+CAAGCAGAAGACGGCATACGAGATaaaatgGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 36 (RPI36)
+CAAGCAGAAGACGGCATACGAGATtgttggGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 37 (RPI37)
+CAAGCAGAAGACGGCATACGAGATattccgGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 38 (RPI38)
+CAAGCAGAAGACGGCATACGAGATagctagGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 39 (RPI39)
+CAAGCAGAAGACGGCATACGAGATgtatagGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 40 (RPI40)
+CAAGCAGAAGACGGCATACGAGATtctgagGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 41 (RPI41)
+CAAGCAGAAGACGGCATACGAGATgtcgtcGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 42 (RPI42)
+CAAGCAGAAGACGGCATACGAGATcgattaGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 43 (RPI43)
+CAAGCAGAAGACGGCATACGAGATgctgtaGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 44 (RPI44)
+CAAGCAGAAGACGGCATACGAGATattataGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 45 (RPI45)
+CAAGCAGAAGACGGCATACGAGATgaatgaGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 46 (RPI46)
+CAAGCAGAAGACGGCATACGAGATtcgggaGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 47 (RPI47)
+CAAGCAGAAGACGGCATACGAGATcttcgaGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+>RNA PCR Primer, Index 48 (RPI48)
+CAAGCAGAAGACGGCATACGAGATtgccgaGTGACTGGAGTTCCTTGGCACCCGAGAATTCCA
+
+
+#########################################################################################################
+### 7. Illumina oligonucleotide sequences for Genomic DNA ###############################################
+#########################################################################################################
+
+>Adapter 1
+GATCGGAAGAGCTCGTATGCCGTCTTCTGCTTG
+>Adapter 2
+ACACTCTTTCCCTACACGACGCTCTTCCGATCT
+>PCR Primer 1
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCT
+>PCR Primer 2
+CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT
+>Genomic DNA Sequencing Primer
+ACACTCTTTCCCTACACGACGCTCTTCCGATCT
+
+
+##########################################################################################################
+### 8. Illumina Paired End DNA oligonucleotide sequences #################################################
+##########################################################################################################
+
+>PE Adapter 1
+GATCGGAAGAGCGGTTCAGCAGGAATGCCGAG
+>PE Adapter 2
+ACACTCTTTCCCTACACGACGCTCTTCCGATCT
+>PE PCR Primer 1.0
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCT
+>PE PCR Primer 2.0
+CAAGCAGAAGACGGCATACGAGATCGGTCTCGGCATTCCTGCTGAACCGCTCTTCCGATCT
+>PE Read 1 Sequencing Primer
+ACACTCTTTCCCTACACGACGCTCTTCCGATCT
+>PE Read 2 Sequencing Primer
+CGGTCTCGGCATTCCTGCTGAACCGCTCTTCCGATCT
+
+
+#########################################################################################################
+### 9. Illumina Oligonucleotide sequences for the Multiplexing Sample Prep Oligo Only Kit ###############
+#########################################################################################################
+
+>Multiplexing Adapter 1
+GATCGGAAGAGCACACGTCT
+>Multiplexing Adapter 2
+ACACTCTTTCCCTACACGACGCTCTTCCGATCT
+>Multiplexing PCR Primer 1.0
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCT
+>Multiplexing PCR Primer 2.0
+GTGACTGGAGTTCAGACGTGTGCTCTTCCGATCT
+>Multiplexing Read 1 Sequencing Primer
+ACACTCTTTCCCTACACGACGCTCTTCCGATCT
+>Multiplexing Index Read Sequencing Primer
+GATCGGAAGAGCACACGTCTGAACTCCAGTCAC
+>Multiplexing Read 2 Sequencing Primer
+GTGACTGGAGTTCAGACGTGTGCTCTTCCGATCT
+>PCR Primer, Index 1
+CAAGCAGAAGACGGCATACGAGATCGTGATGTGACTGGAGTTC
+>PCR Primer, Index 2
+CAAGCAGAAGACGGCATACGAGATACATCGGTGACTGGAGTTC
+>PCR Primer, Index 3
+CAAGCAGAAGACGGCATACGAGATGCCTAAGTGACTGGAGTTC
+>PCR Primer, Index 4
+CAAGCAGAAGACGGCATACGAGATTGGTCAGTGACTGGAGTTC
+>PCR Primer, Index 5
+CAAGCAGAAGACGGCATACGAGATCACTGTGTGACTGGAGTTC
+>PCR Primer, Index 6
+CAAGCAGAAGACGGCATACGAGATATTGGCGTGACTGGAGTTC
+>PCR Primer, Index 7
+CAAGCAGAAGACGGCATACGAGATGATCTGGTGACTGGAGTTC
+>PCR Primer, Index 8
+CAAGCAGAAGACGGCATACGAGATTCAAGTGTGACTGGAGTTC
+>PCR Primer, Index 9
+CAAGCAGAAGACGGCATACGAGATCTGATCGTGACTGGAGTTC
+>PCR Primer, Index 10
+CAAGCAGAAGACGGCATACGAGATAAGCTAGTGACTGGAGTTC
+>PCR Primer, Index 11
+CAAGCAGAAGACGGCATACGAGATGTAGCCGTGACTGGAGTTC
+>PCR Primer, Index 12
+CAAGCAGAAGACGGCATACGAGATTACAAGGTGACTGGAGTTC
+
+
+##########################################################################################################
+### 10. Illumina DpnII expression                                          ###############################
+### from  http://www.omicsoft.com/downloads/ngs/contamination_list/v1.txt  ###############################
+##########################################################################################################
+
+>Illumina DpnII expression Adapter 1
+ACAGGTTCAGAGTTCTACAGTCCGAC
+>Illumina DpnII expression Adapter 2
+CAAGCAGAAGACGGCATACGA
+>Illumina DpnII expression PCR Primer 1
+CAAGCAGAAGACGGCATACGA
+>Illumina DpnII expression PCR Primer 2
+AATGATACGGCGACCACCGACAGGTTCAGAGTTCTACAGTCCGA
+>Illumina DpnII expression Sequencing Primer
+CGACAGGTTCAGAGTTCTACAGTCCGACGATC
+
+
+#########################################################################################################
+### 11. Illumina DpnII Gex                                                 ##############################
+### from  http://www.omicsoft.com/downloads/ngs/contamination_list/v1.txt  ##############################
+#########################################################################################################
+
+>Illumina DpnII Gex Adapter 1
+GATCGTCGGACTGTAGAACTCTGAAC
+>Illumina DpnII Gex Adapter 1.01
+ACAGGTTCAGAGTTCTACAGTCCGAC
+>Illumina DpnII Gex Adapter 2
+CAAGCAGAAGACGGCATACGA
+>Illumina DpnII Gex Adapter 2.01
+TCGTATGCCGTCTTCTGCTTG
+>Illumina DpnII Gex PCR Primer 1
+CAAGCAGAAGACGGCATACGA
+>Illumina DpnII Gex PCR Primer 2
+AATGATACGGCGACCACCGACAGGTTCAGAGTTCTACAGTCCGA
+>Illumina DpnII Gex Sequencing Primer
+CGACAGGTTCAGAGTTCTACAGTCCGACGATC
+
+
+##########################################################################################################
+### 12. Illumina NlaIII expression                                         ###############################
+### from  http://www.omicsoft.com/downloads/ngs/contamination_list/v1.txt  ###############################
+##########################################################################################################
+>Illumina NlaIII expression Adapter 1
+ACAGGTTCAGAGTTCTACAGTCCGACATG
+>Illumina NlaIII expression Adapter 2
+CAAGCAGAAGACGGCATACGA
+>Illumina NlaIII expression PCR Primer 1
+CAAGCAGAAGACGGCATACGA
+>Illumina NlaIII expression PCR Primer 2
+AATGATACGGCGACCACCGACAGGTTCAGAGTTCTACAGTCCGA
+>Illumina NlaIII expression Sequencing Primer
+CCGACAGGTTCAGAGTTCTACAGTCCGACATG
+
+
+#########################################################################################################
+### 13. Illumina Small RNA Kits v1 and v1.5                                ##############################
+### from  http://www.omicsoft.com/downloads/ngs/contamination_list/v1.txt  ##############################
+#########################################################################################################
+>Illumina Small RNA Adapter 1
+GTTCAGAGTTCTACAGTCCGACGATC
+>Illumina Small RNA Adapter 2
+TCGTATGCCGTCTTCTGCTTGT
+>Illumina Small RNA RT Primer
+CAAGCAGAAGACGGCATACGA
+>Illumina Small RNA PCR Primer 1
+CAAGCAGAAGACGGCATACGA
+>Illumina Small RNA PCR Primer 2
+AATGATACGGCGACCACCGACAGGTTCAGAGTTCTACAGTCCGA
+>Illumina Small RNA Sequencing Primer
+CGACAGGTTCAGAGTTCTACAGTCCGACGATC
+
+
+########################################################################################################
+### 14. SOLID 3 System Oligo                                                              ##############
+### from  http://www.omicsoft.com/downloads/ngs/contamination_list/v1.txt                 ##############
+###       SOLiD Fragment Library Barcoding Kit 1–96 protocol (Part Number 4448274 Rev. A) ##############
+########################################################################################################
+
+>ABI Dynabead EcoP Oligo
+CTGATCTAGAGGTACCGGATCCCAGCAGT
+>ABI Solid3 Adapter A
+CTGCCCCGGGTTCCTCATTCTCTCAGCAGCATG
+>ABI Solid3 Adapter B - Multiplex Library PCR-1
+CCACTACGCCTCCGCTTTCCTCTCTATGGGCAGTCGGTGAT
+>ABI Solid3 5' AMP Primer
+CCACTACGCCTCCGCTTTCCTCTCTATG
+>ABI Solid3 3' AMP Primer - Multiplex Library PCR-2
+CTGCCCCGGGTTCCTCATTCT
+>ABI Solid3 EF1 alpha Sense Primer 
+CATGTGTGTTGAGAGCTTC
+>ABI Solid3 EF1 alpha Antisense Primer
+GAAAACCAAAGTGGTCCAC
+>ABI Solid3 GAPDH Forward Primer
+TTAGCACCCCTGGCCAAGG
+>ABI Solid3 GAPDH Reverse Primer
+CTTACTCCTTGGAGGCCATG
+>SOLID Multiplex Library P1 Adaptor
+ATCACCGACTGCCCATAGAGAGGTT
+
+
+########################################################################################################
+### 15. Roche 454 Adaptors                                                                        ######
+### from  http://nebc.nerc.ac.uk/bioinformatics/documentation/mira/html/mira_faq.html#section_5   ######
+###       http://sourceforge.net/apps/mediawiki/wgs-assembler/index.php?title=SffToCA             ######
+###       ftp://ftp.ncbi.nih.gov/pub/UniVec/UniVec
+########################################################################################################
+
+>5' 454 adaptor
+GCCTCCCTCGCGCCATCAGATCGTAGGCACCTGAAA
+>3' 454 adaptor
+GCCTTGCCAGCCCGCTCAGATTGATGGTGCCTACAG
+>454 Adaptor A
+CTGAGACAGGGAGGGAACAGATGGGACACGCAGGGATGAGATGG
+>454 Adaptor B
+CTGAGACACGCAACAGGGGATAGGCAAGGCACACAGGGGATAGG
+>gnl|uv|NGB00599.1:1-47 Evrogen Mint 454 PCR Primer
+ACGCAGAGTGGCCGAGGCGGCCTTTTGTCTTTTCTTCTGTTTCTTTT
+>gnl|uv|NGB00385.1:1-44 454 FLX linker
+GTTGGAACCGAAAGGGTTTGAATTCAAACCCTTTCGGTTCCAAC
+>gnl|uv|NGB00386.1:1-42 454 Titanium linker
+TCGTATAACTTCGTATAATGTATGCTATACGAAGTTATTACG
+>gnl|uv|NGB00417.1:1-40 454 Life Sciences GS FLX Titanium MID-1 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGACGAGTGCGT
+>Ti-MID1-Aprime
+ACGCACTCGTCTGAGTCGGAGA
+>gnl|uv|NGB00418.1:1-40 454 Life Sciences GS FLX Titanium MID-2 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGACGCTCGACA
+>gnl|uv|NGB00419.1:1-40 454 Life Sciences GS FLX Titanium MID-3 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGAGACGCACTC
+>gnl|uv|NGB00420.1:1-40 454 Life Sciences GS FLX Titanium MID-4 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGAGCACTGTAG
+>gnl|uv|NGB00421.1:1-40 454 Life Sciences GS FLX Titanium MID-5 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGATCAGACACG
+>gnl|uv|NGB00422.1:1-40 454 Life Sciences GS FLX Titanium MID-6 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGATATCGCGAG
+>gnl|uv|NGB00423.1:1-40 454 Life Sciences GS FLX Titanium MID-7 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCGTGTCTCTA
+>gnl|uv|NGB00424.1:1-40 454 Life Sciences GS FLX Titanium MID-8 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCTCGCGTGTC
+>gnl|uv|NGB00425.1:1-40 454 Life Sciences GS FLX Titanium MID-10 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTCTCTATGCG
+>gnl|uv|NGB00426.1:1-40 454 Life Sciences GS FLX Titanium MID-11 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTGATACGTCT
+>gnl|uv|NGB00427.1:1-40 454 Life Sciences GS FLX Titanium MID-13 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCATAGTAGTG
+>gnl|uv|NGB00428.1:1-40 454 Life Sciences GS FLX Titanium MID-14 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCGAGAGATAC
+>gnl|uv|NGB00429.1:1-40 454 Life Sciences GS FLX Titanium MID-15 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGATACGACGTA
+>gnl|uv|NGB00430.1:1-40 454 Life Sciences GS FLX Titanium MID-16 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTCACGTACTA
+>gnl|uv|NGB00431.1:1-40 454 Life Sciences GS FLX Titanium MID-17 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCGTCTAGTAC
+>gnl|uv|NGB00432.1:1-40 454 Life Sciences GS FLX Titanium MID-18 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTCTACGTAGC
+>gnl|uv|NGB00433.1:1-40 454 Life Sciences GS FLX Titanium MID-19 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTGTACTACTC
+>gnl|uv|NGB00434.1:1-40 454 Life Sciences GS FLX Titanium MID-20 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGACGACTACAG
+>gnl|uv|NGB00435.1:1-40 454 Life Sciences GS FLX Titanium MID-21 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCGTAGACTAG
+>gnl|uv|NGB00436.1:1-40 454 Life Sciences GS FLX Titanium MID-22 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTACGAGTATG
+>gnl|uv|NGB00437.1:1-40 454 Life Sciences GS FLX Titanium MID-23 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTACTCTCGTG
+>gnl|uv|NGB00438.1:1-40 454 Life Sciences GS FLX Titanium MID-24 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTAGAGACGAG
+>gnl|uv|NGB00439.1:1-40 454 Life Sciences GS FLX Titanium MID-25 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTCGTCGCTCG
+>gnl|uv|NGB00440.1:1-40 454 Life Sciences GS FLX Titanium MID-26 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGACATACGCGT
+>gnl|uv|NGB00441.1:1-40 454 Life Sciences GS FLX Titanium MID-27 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGACGCGAGTAT
+>gnl|uv|NGB00442.1:1-40 454 Life Sciences GS FLX Titanium MID-28 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGACTACTATGT
+>gnl|uv|NGB00443.1:1-40 454 Life Sciences GS FLX Titanium MID-29 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGACTGTACAGT
+>gnl|uv|NGB00444.1:1-40 454 Life Sciences GS FLX Titanium MID-30 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGAGACTATACT
+>gnl|uv|NGB00445.1:1-40 454 Life Sciences GS FLX Titanium MID-31 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGAGCGTCGTCT
+>gnl|uv|NGB00446.1:1-40 454 Life Sciences GS FLX Titanium MID-32 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGAGTACGCTAT
+>gnl|uv|NGB00447.1:1-40 454 Life Sciences GS FLX Titanium MID-33 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGATAGAGTACT
+>gnl|uv|NGB00448.1:1-40 454 Life Sciences GS FLX Titanium MID-34 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCACGCTACGT
+>gnl|uv|NGB00449.1:1-40 454 Life Sciences GS FLX Titanium MID-35 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCAGTAGACGT
+>gnl|uv|NGB00450.1:1-40 454 Life Sciences GS FLX Titanium MID-36 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCGACGTGACT
+>gnl|uv|NGB00451.1:1-40 454 Life Sciences GS FLX Titanium MID-37 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTACACACACT
+>gnl|uv|NGB00452.1:1-40 454 Life Sciences GS FLX Titanium MID-38 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTACACGTGAT
+>gnl|uv|NGB00453.1:1-40 454 Life Sciences GS FLX Titanium MID-39 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTACAGATCGT
+>gnl|uv|NGB00454.1:1-40 454 Life Sciences GS FLX Titanium MID-40 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTACGCTGTCT
+>gnl|uv|NGB00455.1:1-40 454 Life Sciences GS FLX Titanium MID-41 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTAGTGTAGAT
+>gnl|uv|NGB00456.1:1-40 454 Life Sciences GS FLX Titanium MID-42 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTCGATCACGT
+>gnl|uv|NGB00457.1:1-40 454 Life Sciences GS FLX Titanium MID-43 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTCGCACTAGT
+>gnl|uv|NGB00458.1:1-40 454 Life Sciences GS FLX Titanium MID-44 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTCTAGCGACT
+>gnl|uv|NGB00459.1:1-40 454 Life Sciences GS FLX Titanium MID-45 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTCTATACTAT
+>gnl|uv|NGB00460.1:1-40 454 Life Sciences GS FLX Titanium MID-46 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTGACGTATGT
+>gnl|uv|NGB00461.1:1-40 454 Life Sciences GS FLX Titanium MID-47 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTGTGAGTAGT
+>gnl|uv|NGB00462.1:1-40 454 Life Sciences GS FLX Titanium MID-48 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGACAGTATATA
+>gnl|uv|NGB00463.1:1-40 454 Life Sciences GS FLX Titanium MID-49 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGACGCGATCGA
+>gnl|uv|NGB00464.1:1-40 454 Life Sciences GS FLX Titanium MID-50 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGACTAGCAGTA
+>gnl|uv|NGB00465.1:1-40 454 Life Sciences GS FLX Titanium MID-51 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGAGCTCACGTA
+>gnl|uv|NGB00466.1:1-40 454 Life Sciences GS FLX Titanium MID-52 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGAGTATACATA
+>gnl|uv|NGB00467.1:1-40 454 Life Sciences GS FLX Titanium MID-53 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGAGTCGAGAGA
+>gnl|uv|NGB00468.1:1-40 454 Life Sciences GS FLX Titanium MID-54 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGAGTGCTACGA
+>gnl|uv|NGB00469.1:1-40 454 Life Sciences GS FLX Titanium MID-55 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCGATCGTATA
+>gnl|uv|NGB00470.1:1-40 454 Life Sciences GS FLX Titanium MID-56 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCGCAGTACGA
+>gnl|uv|NGB00471.1:1-40 454 Life Sciences GS FLX Titanium MID-57 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCGCGTATACA
+>gnl|uv|NGB00472.1:1-40 454 Life Sciences GS FLX Titanium MID-58 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCGTACAGTCA
+>gnl|uv|NGB00473.1:1-40 454 Life Sciences GS FLX Titanium MID-59 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCGTACTCAGA
+>gnl|uv|NGB00474.1:1-40 454 Life Sciences GS FLX Titanium MID-60 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCTACGCTCTA
+>gnl|uv|NGB00475.1:1-40 454 Life Sciences GS FLX Titanium MID-61 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCTATAGCGTA
+>gnl|uv|NGB00476.1:1-40 454 Life Sciences GS FLX Titanium MID-62 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTACGTCATCA
+>gnl|uv|NGB00477.1:1-40 454 Life Sciences GS FLX Titanium MID-63 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTAGTCGCATA
+>gnl|uv|NGB00478.1:1-40 454 Life Sciences GS FLX Titanium MID-64 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTATATATACA
+>gnl|uv|NGB00479.1:1-40 454 Life Sciences GS FLX Titanium MID-65 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTATGCTAGTA
+>gnl|uv|NGB00480.1:1-40 454 Life Sciences GS FLX Titanium MID-66 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTCACGCGAGA
+>gnl|uv|NGB00481.1:1-40 454 Life Sciences GS FLX Titanium MID-67 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTCGATAGTGA
+>gnl|uv|NGB00482.1:1-40 454 Life Sciences GS FLX Titanium MID-68 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTCGCTGCGTA
+>gnl|uv|NGB00483.1:1-40 454 Life Sciences GS FLX Titanium MID-69 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTCTGACGTCA
+>gnl|uv|NGB00484.1:1-40 454 Life Sciences GS FLX Titanium MID-70 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTGAGTCAGTA
+>gnl|uv|NGB00485.1:1-40 454 Life Sciences GS FLX Titanium MID-71 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTGTAGTGTGA
+>gnl|uv|NGB00486.1:1-40 454 Life Sciences GS FLX Titanium MID-72 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTGTCACACGA
+>gnl|uv|NGB00487.1:1-40 454 Life Sciences GS FLX Titanium MID-73 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTGTCGTCGCA
+>gnl|uv|NGB00488.1:1-40 454 Life Sciences GS FLX Titanium MID-74 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGACACATACGC
+>gnl|uv|NGB00489.1:1-40 454 Life Sciences GS FLX Titanium MID-75 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGACAGTCGTGC
+>gnl|uv|NGB00490.1:1-40 454 Life Sciences GS FLX Titanium MID-76 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGACATGACGAC
+>gnl|uv|NGB00491.1:1-40 454 Life Sciences GS FLX Titanium MID-77 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGACGACAGCTC
+>gnl|uv|NGB00492.1:1-40 454 Life Sciences GS FLX Titanium MID-78 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGACGTCTCATC
+>gnl|uv|NGB00493.1:1-40 454 Life Sciences GS FLX Titanium MID-79 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGACTCATCTAC
+>gnl|uv|NGB00494.1:1-40 454 Life Sciences GS FLX Titanium MID-80 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGACTCGCGCAC
+>gnl|uv|NGB00495.1:1-40 454 Life Sciences GS FLX Titanium MID-81 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGAGAGCGTCAC
+>gnl|uv|NGB00496.1:1-40 454 Life Sciences GS FLX Titanium MID-82 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGAGCGACTAGC
+>gnl|uv|NGB00497.1:1-40 454 Life Sciences GS FLX Titanium MID-83 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGAGTAGTGATC
+>gnl|uv|NGB00498.1:1-40 454 Life Sciences GS FLX Titanium MID-84 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGAGTGACACAC
+>gnl|uv|NGB00499.1:1-40 454 Life Sciences GS FLX Titanium MID-85 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGAGTGTATGTC
+>gnl|uv|NGB00500.1:1-40 454 Life Sciences GS FLX Titanium MID-86 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGATAGATAGAC
+>gnl|uv|NGB00501.1:1-40 454 Life Sciences GS FLX Titanium MID-87 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGATATAGTCGC
+>gnl|uv|NGB00502.1:1-40 454 Life Sciences GS FLX Titanium MID-88 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGATCTACTGAC
+>gnl|uv|NGB00503.1:1-40 454 Life Sciences GS FLX Titanium MID-89 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCACGTAGATC
+>gnl|uv|NGB00504.1:1-40 454 Life Sciences GS FLX Titanium MID-90 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCACGTGTCGC
+>gnl|uv|NGB00505.1:1-40 454 Life Sciences GS FLX Titanium MID-91 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCATACTCTAC
+>gnl|uv|NGB00506.1:1-40 454 Life Sciences GS FLX Titanium MID-92 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCGACACTATC
+>gnl|uv|NGB00507.1:1-40 454 Life Sciences GS FLX Titanium MID-93 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCGAGACGCGC
+>gnl|uv|NGB00508.1:1-40 454 Life Sciences GS FLX Titanium MID-94 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCGTATGCGAC
+>gnl|uv|NGB00509.1:1-40 454 Life Sciences GS FLX Titanium MID-95 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCGTCGATCTC
+>gnl|uv|NGB00510.1:1-40 454 Life Sciences GS FLX Titanium MID-96 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCTACGACTGC
+>gnl|uv|NGB00511.1:1-40 454 Life Sciences GS FLX Titanium MID-97 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCTAGTCACTC
+>gnl|uv|NGB00512.1:1-40 454 Life Sciences GS FLX Titanium MID-98 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCTCTACGCTC
+>gnl|uv|NGB00513.1:1-40 454 Life Sciences GS FLX Titanium MID-99 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCTGTACATAC
+>gnl|uv|NGB00514.1:1-40 454 Life Sciences GS FLX Titanium MID-100 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTAGACTGCAC
+>gnl|uv|NGB00515.1:1-40 454 Life Sciences GS FLX Titanium MID-101 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTAGCGCGCGC
+>gnl|uv|NGB00516.1:1-40 454 Life Sciences GS FLX Titanium MID-102 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTAGCTCTATC
+>gnl|uv|NGB00517.1:1-40 454 Life Sciences GS FLX Titanium MID-103 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTATAGACATC
+>gnl|uv|NGB00518.1:1-40 454 Life Sciences GS FLX Titanium MID-104 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTATGATACGC
+>gnl|uv|NGB00519.1:1-40 454 Life Sciences GS FLX Titanium MID-105 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTCACTCATAC
+>gnl|uv|NGB00520.1:1-40 454 Life Sciences GS FLX Titanium MID-106 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTCATCGAGTC
+>gnl|uv|NGB00521.1:1-40 454 Life Sciences GS FLX Titanium MID-107 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTCGAGCTCTC
+>gnl|uv|NGB00522.1:1-40 454 Life Sciences GS FLX Titanium MID-108 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTCGCAGACAC
+>gnl|uv|NGB00523.1:1-40 454 Life Sciences GS FLX Titanium MID-109 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTCTGTCTCGC
+>gnl|uv|NGB00524.1:1-40 454 Life Sciences GS FLX Titanium MID-110 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTGAGTGACGC
+>gnl|uv|NGB00525.1:1-40 454 Life Sciences GS FLX Titanium MID-111 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTGATGTGTAC
+>gnl|uv|NGB00526.1:1-40 454 Life Sciences GS FLX Titanium MID-112 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTGCTATAGAC
+>gnl|uv|NGB00527.1:1-40 454 Life Sciences GS FLX Titanium MID-113 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTGCTCGCTAC
+>gnl|uv|NGB00528.1:1-40 454 Life Sciences GS FLX Titanium MID-114 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGACGTGCAGCG
+>gnl|uv|NGB00529.1:1-40 454 Life Sciences GS FLX Titanium MID-115 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGACTCACAGAG
+>gnl|uv|NGB00530.1:1-40 454 Life Sciences GS FLX Titanium MID-116 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGAGACTCAGCG
+>gnl|uv|NGB00531.1:1-40 454 Life Sciences GS FLX Titanium MID-117 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGAGAGAGTGTG
+>gnl|uv|NGB00532.1:1-40 454 Life Sciences GS FLX Titanium MID-118 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGAGCTATCGCG
+>gnl|uv|NGB00533.1:1-40 454 Life Sciences GS FLX Titanium MID-119 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGAGTCTGACTG
+>gnl|uv|NGB00534.1:1-40 454 Life Sciences GS FLX Titanium MID-120 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGAGTGAGCTCG
+>gnl|uv|NGB00535.1:1-40 454 Life Sciences GS FLX Titanium MID-121 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGATAGCTCTCG
+>gnl|uv|NGB00536.1:1-40 454 Life Sciences GS FLX Titanium MID-122 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGATCACGTGCG
+>gnl|uv|NGB00537.1:1-40 454 Life Sciences GS FLX Titanium MID-123 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGATCGTAGCAG
+>gnl|uv|NGB00538.1:1-40 454 Life Sciences GS FLX Titanium MID-124 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGATCGTCTGTG
+>gnl|uv|NGB00539.1:1-40 454 Life Sciences GS FLX Titanium MID-125 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGATGTACGATG
+>gnl|uv|NGB00540.1:1-40 454 Life Sciences GS FLX Titanium MID-126 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGATGTGTCTAG
+>gnl|uv|NGB00541.1:1-40 454 Life Sciences GS FLX Titanium MID-127 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCACACGATAG
+>gnl|uv|NGB00542.1:1-40 454 Life Sciences GS FLX Titanium MID-128 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCACTCGCACG
+>gnl|uv|NGB00543.1:1-40 454 Life Sciences GS FLX Titanium MID-129 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCAGACGTCTG
+>gnl|uv|NGB00544.1:1-40 454 Life Sciences GS FLX Titanium MID-130 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCAGTACTGCG
+>gnl|uv|NGB00545.1:1-40 454 Life Sciences GS FLX Titanium MID-131 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCGACAGCGAG
+>gnl|uv|NGB00546.1:1-40 454 Life Sciences GS FLX Titanium MID-132 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCGATCTGTCG
+>gnl|uv|NGB00547.1:1-40 454 Life Sciences GS FLX Titanium MID-133 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCGCGTGCTAG
+>gnl|uv|NGB00548.1:1-40 454 Life Sciences GS FLX Titanium MID-134 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCGCTCGAGTG
+>gnl|uv|NGB00549.1:1-40 454 Life Sciences GS FLX Titanium MID-135 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCGTGATGACG
+>gnl|uv|NGB00550.1:1-40 454 Life Sciences GS FLX Titanium MID-136 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCTATGTACAG
+>gnl|uv|NGB00551.1:1-40 454 Life Sciences GS FLX Titanium MID-137 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCTCGATATAG
+>gnl|uv|NGB00552.1:1-40 454 Life Sciences GS FLX Titanium MID-138 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCTCGCACGCG
+>gnl|uv|NGB00553.1:1-40 454 Life Sciences GS FLX Titanium MID-139 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCTGCGTCACG
+>gnl|uv|NGB00554.1:1-40 454 Life Sciences GS FLX Titanium MID-140 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGCTGTGCGTCG
+>gnl|uv|NGB00555.1:1-40 454 Life Sciences GS FLX Titanium MID-141 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTAGCATACTG
+>gnl|uv|NGB00556.1:1-40 454 Life Sciences GS FLX Titanium MID-142 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTATACATGTG
+>gnl|uv|NGB00557.1:1-40 454 Life Sciences GS FLX Titanium MID-143 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTATCACTCAG
+>gnl|uv|NGB00558.1:1-40 454 Life Sciences GS FLX Titanium MID-144 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTATCTGATAG
+>gnl|uv|NGB00559.1:1-40 454 Life Sciences GS FLX Titanium MID-145 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTCGTGACATG
+>gnl|uv|NGB00560.1:1-40 454 Life Sciences GS FLX Titanium MID-146 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTCTGATCGAG
+>gnl|uv|NGB00561.1:1-40 454 Life Sciences GS FLX Titanium MID-147 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTGACATCTCG
+>gnl|uv|NGB00562.1:1-40 454 Life Sciences GS FLX Titanium MID-148 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTGAGCTAGAG
+>gnl|uv|NGB00563.1:1-40 454 Life Sciences GS FLX Titanium MID-149 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTGATAGAGCG
+>gnl|uv|NGB00564.1:1-40 454 Life Sciences GS FLX Titanium MID-150 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTGCGTGTGCG
+>gnl|uv|NGB00565.1:1-40 454 Life Sciences GS FLX Titanium MID-151 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTGCTAGTCAG
+>gnl|uv|NGB00566.1:1-40 454 Life Sciences GS FLX Titanium MID-152 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTGTATCACAG
+>gnl|uv|NGB00567.1:1-40 454 Life Sciences GS FLX Titanium MID-153 Adaptor A
+CCATCTCATCCCTGCGTGTCTCCGACTCAGTGTGCGCGTG
+>gnl|uv|NGB00569.1:1-33 454 GS FLX Titanium Rapid Library Adaptor B universal segment
+AGTCGACGTCTCTCAAGGCACACAGGGGATAGG
+AGTCGCCGTCTCTCAAGGCACACAGGGGATAGG
+AGTCGGCGTCTCTCAAGGCACACAGGGGATAGG
+AGTCGTCGTCTCTCAAGGCACACAGGGGATAGG
+CGTCGACGTCTCTCAAGGCACACAGGGGATAGG
+CGTCGCCGTCTCTCAAGGCACACAGGGGATAGG
+CGTCGGCGTCTCTCAAGGCACACAGGGGATAGG
+CGTCGTCGTCTCTCAAGGCACACAGGGGATAGG
+GGTCGACGTCTCTCAAGGCACACAGGGGATAGG
+GGTCGCCGTCTCTCAAGGCACACAGGGGATAGG
+GGTCGGCGTCTCTCAAGGCACACAGGGGATAGG
+GGTCGTCGTCTCTCAAGGCACACAGGGGATAGG
+TGTCGACGTCTCTCAAGGCACACAGGGGATAGG
+TGTCGCCGTCTCTCAAGGCACACAGGGGATAGG
+TGTCGGCGTCTCTCAAGGCACACAGGGGATAGG
+TGTCGTCGTCTCTCAAGGCACACAGGGGATAGG
+>gnl|uv|NGB00416.1:1-30 454 Life Sciences GS FLX Titanium MID Adaptor B
+CCTATCCCCTGTGTGCCTTGGCAGTCTCAG
+>Ti-MID-Bprime
+CTGAGACTGCCA
+>gnl|uv|NGB00568.1:1-30 454 GS FLX Titanium Rapid Library Adaptor A universal segment
+CCATCTCATCCCTGCGTGTCTCCGACGACT
+>gnl|uv|NGB00414.1:1-25 454 Life Sciences GS FLX Titanium Primer A-key
+CGTATCGCCTCCCTCGCGCCATCAG
+>gnl|uv|NGB00415.1:1-25 454 Life Sciences GS FLX Titanium Primer B-key
+CTATGCGCCTTGCCAGCCCGCTCAG
+
+
+########################################################################################################
+### 16. Ion Torrent adapter sequences                                      #############################
+### from  V. Caro                                                          #############################
+########################################################################################################
+
+>Ion A Adapter (non barcoded)
+CCATCTCATCCCTGCGTGTCTCCGACTCAG
+>Ion A Adapter (non barcoded)
+GGTAGAGTAGGGACGCACAGAGGCTGAGTC
+>Ion P1 Adapter
+CCACTACGCCTCCGCTTTCCTCTCTATGGGCAGTCGGTGAT
+>Ion P1 Adapter
+GGTGATGCGGAGGCGAAAGGAGAGATACCCGTCAGCCACTA
+
+###################################################################################################
+### 17. 16S primer V1V3  MiSeq ####################################################################
+###################################################################################################
+>PCR1_V1_V3F
+CTCTTTCCCTACACGACGCTCTTCCGATCTAGAGTTTGATCCTGGCTCAG
+>PCR1_V1_V3R
+CTGGAGTTCAGACGTGTGCTCTTCCGATCTGTATTACCGCGGCTGCTGG
+
+###################################################################################################
+### 18. 16S primer V4V5 MiSeq #####################################################################
+###################################################################################################
+>PCR1_515F
+CTTTCCCTACACGACGCTCTTCCGATCTGTGYCAGCMGCCGCGGTA
+>PCR1_928R
+GGAGTTCAGACGTGTGCTCTTCCGATCTCCCCGYCAATTCMTTTRAGT
+
+###################################################################################################
+#### 19. 16S Adapter + primer V5V6  MiSeq #########################################################
+###################################################################################################
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTAACGTGATAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTAAACATCGAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTATGCCTAAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTAGTGGTCAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTACCACTGTAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTACATTGGCAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTCAGATCTGAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTCATCAAGTAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTCGCTGATCAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTACAAGCTAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTCTGTAGCCAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTAGTACAAGAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTAACAACCAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTAACCGAGAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTAACGCTTAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTAAGACGGAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTAAGGTACAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTACACAGAAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTACAGCAGAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTACCTCCAAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTACGCTCGAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTACGTATCAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTACTATGCAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTAGAGTCAAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTAGATCGCAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTAGCAGGAAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTAGTCACTAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTATCCTGTAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTATTGAGGAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTCAACCACAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTGACTAGTAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTCAATGGAAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTCACTTCGAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTCAGCGTTAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTCATACCAAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTCCAGTTCAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTCCGAAGTAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTCCGTGAGAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTCCTCCTGAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTCGAACTTAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTCGACTGGAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTCGCATACAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTCTCAATGAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTCTGAGCCAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTCTGGCATAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTGAATCTGAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTCAAGACTAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTGAGCTGAAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTGATAGACAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTGCCACATAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTGCGAGTAAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTGCTAACGAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTGCTCGGTAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTGGAGAACAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTGGTGCGAAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTGTACGCAAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTGTCGTAGAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTGTCTGTCAAGGATTAGATACCCTGGTA
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCTGTGTTCTAAGGATTAGATACCCTGGTA
+CAAGCAGAAGACGGCATACGAGATGTGACTGGAGTTCAGACGTGTGCTCTTCCGATCTCRRCACGAGCTGACGAC
+
+###################################################################################################
+#### 20. 16S Adapter + primer V3V4 MiSeq ##########################################################
+###################################################################################################
+# Forward primer
+TCGTCGGCAGCGTCAGATGTGTATAAGAGACAGCCTACGGGNGGCWGCAG
+# Reverse primer
+GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAGGACTACHVGGGTATCTAATCC
+
+# 16S Adapter Milieu interieur
+#16Sf (V3F)
+TATGGTAATTGGCCTACGGRAGGCAGCAG
+#16Sr (V4R)
+AGTCAGTCAGCCGGACTACHVGGGTWTCTAAT
+#rc16r
+ATTAGAWACCCBDGTAGTCCGGCTGACTGACT
+
+###################################################################################################
+#### 18S Adapter + Primer MiSeq ###################################################################
+###################################################################################################
+#Forward primer 574
+TCGTCGGCAGCGTCAGATGTGTATAAGAGACAGCGGTAAYTCCAGCTCYV
+# Reverse primer 1132
+GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAGCCGTCAATTHCTTYAART
+
+###################################################################################################
+##### ITS Adapter + Primer MiSeq ##################################################################
+###################################################################################################
+# Reverse primer ITS1
+TCGTCGGCAGCGTCAGATGTGTATAAGAGACAGCTTGGTCATTTAGAGGAAGTAA
+# Reverse primer ITS2
+GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAGGCTGCGTTCTTCATCGATGC
