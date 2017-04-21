@@ -229,6 +229,129 @@ CheckTreeFile <- function(tree)
 }
 
 
+
+## Check Masque Input
+CheckMasque <- function(input,values)
+{
+  Error = NULL
+  HowTo = NULL
+ 
+  ## At least one fastq is detected
+  if(is.null(Error) && input$LoadFiles>0 && length(values$fastq_names_only)==0){
+    Error = "The selected directory must contain at least one file in the following format : fastq, fastq.gz, or fq." 
+    HowTo = "Change the working directory and check the format of the files"
+  }
+  
+  if(is.null(Error) && input$PairedOrNot=='y' && input$MatchFiles_button>0){
+    if(length(values$R2fastQ) !=length(values$R2fastQ)){
+        Error = "The number of fastq files for R1 and R2 must be the same" 
+        HowTo = "Add/Remove some files or change the suffix to identify the pairs"
+    }
+    
+    if(length(values$R2fastQ)>0  && length(values$R2fastQ)>0){
+      tmpR1 = gsub(input$R1files,x=values$R1fastQ,"") 
+      tmpR2 = gsub(input$R2files,x=values$R2fastQ,"")
+      
+      dup_files = c(values$R1fastQ[duplicated(tmpR1)],values$R2fastQ[duplicated(tmpR2)])
+      if(length(dup_files)>0){
+        Error = paste("These fastq files corresponds to the same sample names:" ,dup_files)
+        HowTo = "Change the suffix to identify the pairs"
+      }
+      
+      if(!isValidPrimer(input$R1primer)){ Error = "The primer (forward) must only contain letters from A to Z" }
+      if(!isValidPrimer(input$R2primer)){ Error = "The primer (reverse) must only contain letters from A to Z" }
+      
+    }
+    
+  }
+  if(is.null(Error) && !isValidEmail(input$to)) Error = "The email address is not valid"
+  
+  if(is.null(Error) && !isValidPrimer(input$primerSingle)){ Error = "The primer must only contain letters from A to Z" }
+  
+  if(is.null(Error)) {
+    
+    res = SamplesMasque(input,values)
+    if(length(res$samples)==0) {
+      Error = "0 sample detected"
+      if(input$PairedOrNot=='y') HowTo = "Change the working directory and/or verify the pairs matching"
+      if(input$PairedOrNot=='n') HowTo = "Change the working directory and load fastq files"
+    }
+    
+  }
+  
+  return(list(Error=Error,HowTo=HowTo))
+}
+
+
+
+isValidEmail <- function(x) {
+  grepl("\\<[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\>", as.character(x), ignore.case=TRUE)
+}
+
+isValidPrimer <- function(x) {
+  !any(!grepl("[A-Z]",unlist(strsplit(x,""))))
+}
+
+
+SamplesMasque <- function(input,values)
+{
+  samples_removed = NULL
+  samples = NULL
+  
+  if(input$PairedOrNot=='y')
+  {
+    tmpR1 = gsub(input$R1files,x=values$R1fastQ,"") 
+    tmpR2 = gsub(input$R2files,x=values$R2fastQ,"")
+    
+    
+    R1samples = tmpR1[tmpR1%in%tmpR2]; R1samples_removed = values$R1fastQ[!tmpR1%in%tmpR2]
+    R2samples = tmpR2[tmpR2%in%tmpR1]; R2samples_removed = values$R2fastQ[!tmpR2%in%tmpR1]
+    
+    samples = unique(c(R1samples,R2samples))
+    samples_removed = c(R1samples_removed,R2samples_removed)
+  } else {samples = unique(values$fastq_names_only)}
+  
+  return(list(samples=samples,samples_removed=samples_removed))
+}
+
+
+
+CreateJSON <- function(input){
+  
+  tmpjson = tempfile(pattern = "file", tmpdir = "/Volumes/@home/Projets Hub/Metagenomique/meta16s/www/masque/todo",  fileext = ".json")
+  file.create(tmpjson,showWarnings=FALSE)
+  
+  if(input$PairedOrNot=='n')
+  {
+    path_fastq = paste(tempdir(),"Masque_files",sep= .Platform$file.sep)
+    df = data.frame("paired"=FALSE,
+                    "path"=path_fastq,
+                    "host"=input$HostName,
+                    "type"=input$DataTypeMasque,
+                    "mail"=input$to,
+                    "contaminant"= "/home/aghozlan/workspace/shaman_bioblend/alienTrimmerPF8contaminants.fasta"
+                    )
+
+    df %>% jsonlite::toJSON() %>% write_lines(tmpjson)
+  }
+  if(input$PairedOrNot=='y')
+  {
+    path_fastq_R1 = paste(tempdir(),"Masque_files_R1",sep= .Platform$file.sep)
+    path_fastq_R2 = paste(tempdir(),"Masque_files_R2",sep= .Platform$file.sep)
+
+    df = data.frame("paired"=FALSE,
+                    "path_R1"=path_fastq_R1,
+                    "path_R2"=path_fastq_R2,
+                    "host"=input$HostName,
+                    "type"=input$DataTypeMasque,
+                    "mail"=input$to,
+                    "contaminant"= "/home/aghozlan/workspace/shaman_bioblend/alienTrimmerPF8contaminants.fasta"
+                    )
+    df %>% jsonlite::toJSON() %>% write_lines(tmpjson)
+  }
+}
+
+
 ## Get the percentage of annotated OTU
 PercentAnnot <- function(counts,taxo)
 {

@@ -259,12 +259,78 @@ body <- dashboardBody(
             #                      to perform to use a set of parameters already tested on serveral projects for the numerous software used to perform the clustering and the annotation.
             #                      to perform an uptodate analysis considering the scientific litterature."
                           ))),
-                      fluidRow(directoryInput('directory', label = 'select a directory')),
+            
+            hr(),
+            HTML('<center><h2 style="color:#053383;"><b>Start your analysis</b></h2></center>'),
+            hr(),
+            fluidRow(
+              column(width=2),
+              column(width=8,
+              box(title="About",width = 12, status = "primary",
+  
+                  column(width=6,  radioButtons("DataTypeMasque",label = "Type of data",choices = c("16S/18S" = "16S_18S","23S/28S" = "23S_28S","ITS" = "ITS"),inline = TRUE)),
+                  column(width=6,  radioButtons("PairedOrNot",label = "Paired-end sequencing ?",choices = c('Yes'="y","No"="n"),selected = "n",inline = TRUE)),
+                  column(width=6,  tags$div(title="Enter a valid email address to get your results",textInput("to", "Email address *", value="yyy@xxx"))),
+                  column(width=6,  selectizeInput("HostName",label = "Select the host",
+                                                  choices =   c("None"="", "a.stephensi (mosquito)" = "astephensi"," b.taurus (cow)" = "btaurus", "c.familiaris (dog)" = "cfamiliaris",
+                                                                "chiroptera (bat)" = "chiroptera", "c.sabaeus (Apes)" = "csabaeus" , "d.melanogaster (fly)"="dmelanogaster", 
+                                                                "e.caballus (Horse)" = "ecaballus", "f.catus (cat)" = "fcatus", "hg18 (human)"="hg18", "hg19 (human)"="hg19", 
+                                                                "hg38 (human)" = "hg38", "m.lucifugus (bat)" = "mlucifugus", "mm8 (mouse)"= "mm8", "mm9 (mouse)" = "mm9", 
+                                                                "mm10 (mouse)"="mm10", "p.vampyrus (bat)" = "pvampyrus", "s.scrofa (Boar)" = "sscrofa"))),
+                  column(width=6, tags$div(title="If no, default values are chosen",checkboxInput("primer", "Specify the primer"))),
+                  conditionalPanel(condition="input.primer && input.PairedOrNot=='y'",
+                                   column(width=12,
+                                     textInput("R1primer",label = "Forward primer",value = "TCGTCGGCAGCGTCAGATGTGTATAAGAGACAGCCTACGGGNGGCWGCAG"),
+                                     textInput("R2primer",label = "Reverse primer",value = "GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAGGACTACHVGGGTATCTAATCC")
+                                   )
+                  ),
+                  conditionalPanel(condition="input.primer && input.PairedOrNot=='n'",
+                                   column(width=12,
+                                     textInput("primerSingle",label = "Primer",value = "TCGTCGGCAGCGTCAGATGTGTATAAGAGACAGCCTACGGGNGGCWGCAG")
+                                   )
+                  )
+              ), 
+              
+              box(title="Directory containing the FastQ files ",width = 12, status = "primary",
+                    column(width=12,verbatimTextOutput("dirSel")),
+                    br(),
+                    column(width=12,
+                            shinyDirButton("dir", "Select a directory", "Upload",buttonType = "primary"),
+                            HTML("&nbsp;"),
+                            actionButton("LoadFiles",'Load',icon=icon("refresh"))
+                    ),
+                    conditionalPanel(condition="input.LoadFiles>=1",
+                                     br(),
+                                     hr(),
+                                     br(),
+                                      column(width=12,uiOutput("FastQList_out"))
+                                     )
+                    
+              ),
 
-                        br(),
-                        fluidRow(
-                        )
+              box(id="box-match",title=" Match the paired files (only for paired-end sequencing)",width = 12, status = "primary",
+                      column(width=6,  textInput("R1files",label = "Suffix R1 (Forward)",value = "_R1"),
+                            selectInput("R1filesList",label = "","",multiple =TRUE,selectize=FALSE)),
+                            column(width=6,  
+                                    textInput("R2files",label = "Suffix R2 (Reverse)",value = "_R2"),
+                                    selectInput("R2filesList",label = "","",multiple =TRUE,selectize=FALSE)
+                                   ),
+                            column(width=12,
+                                    actionButton("MatchFiles_button",'Match',icon=icon("exchange"),class="btn-primary",style="color: #fff;"),
+                                    HTML("&nbsp;"),
+                                    actionButton("RemoveFastQbut_R1R2",'Remove file(s)',icon=icon("remove"))
+                                  )
+              ),
+              div(style = "text-align:center;",actionButton("submit", h4(strong("Check and submit")), icon("chevron-circle-right",class="fa-2x"),class="btn-primary",style = "color: #fff"))
             ),
+            column(width=2,
+                   uiOutput("InfoMasque"),
+                   uiOutput("InfoMasqueHowTo")
+                   )
+
+          )
+            
+    ),
 
     tabItem(tabName = "Upload",
             tags$style(type='text/css', ".well { max-width: 20em; }"),

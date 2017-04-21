@@ -20,7 +20,7 @@ shinyServer(function(input, output,session) {
   observe(if(input$AddRegScatter) info("By adding the regression line, you will lose interactivity."))
   
   ## Reactive target
-  values <- reactiveValues(TargetWorking = target,labeled=NULL)
+  values <- reactiveValues(TargetWorking = target,labeled=NULL,fastq_names_only=NULL,R1fastQ=NULL,R2fastQ=NULL)
   
   ## Counts file
   dataInputCounts <-reactive({ 
@@ -605,24 +605,279 @@ shinyServer(function(input, output,session) {
   })
   
   
+  # ## Select a folder (for MASQUE)
+  # observeEvent(
+  #   ignoreNULL = TRUE,
+  #   eventExpr = {
+  #     input$directory
+  #   },
+  #   handlerExpr = {
+  #     # if (input$directory > 0) {
+  #       # condition prevents handler execution on initial app launch
+  #       
+  #       # launch the directory selection dialog with initial path read from the widget
+  #       path = choose.dir(default = readDirectoryInput(session, 'directory'))
+  #       
+  #       # update the widget value
+  #       updateDirectoryInput(session, 'directory', value = path)
+  #     # }
+  #   }
+  # )
+  
+  
+  #############################################################
+  ##
+  ##                        MASQUE
+  ##
+  #############################################################
   ## Select a folder (for MASQUE)
-  observeEvent(
-    ignoreNULL = TRUE,
-    eventExpr = {
-      input$directory
-    },
-    handlerExpr = {
-      if (input$directory > 0) {
-        # condition prevents handler execution on initial app launch
+  shinyDirChoose(input, 'dir', roots = c(home = '~'),filetypes = c('', 'fastq','gz','fgz'))
+  dir <- reactive(input$dir)
+  
+  output$dirSel <- renderText({ 
+    home <- normalizePath("~")
+    path_glob = file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep))
+  })
+  
+  path <- reactive({
+    
+    home <- normalizePath("~")
+    # file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep),"*.pdf")
+    
+   file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep),"*.f*q*")
+  })
+  
+  
+  
+  
+  # observeEvent(input$submit,{
+  #   values$fastq_names_only = NULL
+  #   tmp = tempdir()
+  #   pathTo = paste(tmp,"Masque_files",sep=.Platform$file.sep)
+  # 
+  #   if (dir.exists(pathTo))
+  #     {
+  #       file.remove(list.files(pathTo,full.names =TRUE))
+  #     } else dir.create(pathTo)
+  # 
+  #   file.copy(from=Sys.glob(path()), to=paste(tmp,"Masque_files",sep= .Platform$file.sep))
+  # })
+  # 
+  
+  observeEvent(input$submit,{
+    CMP = CheckMasque(input, values)
+    Error = CMP$Error
+    
+    if(is.null(Error))
+    {
+      tmp = tempdir()
+      home <- normalizePath("~")
+      path_glob = file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep))
+    
+    
+      ## Paired-end
+      if(input$PairedOrNot=="y"){
+        cmp = 0
+        nfiles = length(values$R1fastQ)+length(values$R2fastQ)
         
-        # launch the directory selection dialog with initial path read from the widget
-        path = choose.dir(default = readDirectoryInput(session, 'directory'))
+        withProgress(message = 'Uploading files...', value = 0, {
+          pathToR1 = paste(tmp,"Masque_files_R1",sep=.Platform$file.sep)
+          pathToR2 = paste(tmp,"Masque_files_R2",sep=.Platform$file.sep)
+          
+          if(dir.exists(pathToR1)){file.remove(list.files(pathToR1,full.names =TRUE))} else dir.create(pathToR1)
+          if(dir.exists(pathToR2)){file.remove(list.files(pathToR2,full.names =TRUE))} else dir.create(pathToR2)
         
-        # update the widget value
-        updateDirectoryInput(session, 'directory', value = path)
+        for(i in values$R1fastQ){file.copy(from=paste(path_glob,i,sep=.Platform$file.sep), to=paste(tmp,"Masque_files_R1",sep= .Platform$file.sep));cmp = cmp +1;incProgress(cmp/nfiles, detail = "Forward fastq files...")}
+        for(i in values$R2fastQ){file.copy(from=paste(path_glob,i,sep=.Platform$file.sep), to=paste(tmp,"Masque_files_R2",sep= .Platform$file.sep));cmp = cmp +1;incProgress(cmp/nfiles, detail = "Reverse fastq files...")}
+        })
+        
+      } else{
+        
+        cmp = 0
+        nfiles = length(values$fastq_names_only)
+        
+        withProgress(message = 'Uploading files...', value = 0, {
+            
+          pathTo = paste(tmp,"Masque_files",sep=.Platform$file.sep)
+          
+          if(dir.exists(pathTo)){file.remove(list.files(pathTo,full.names =TRUE))} else dir.create(pathTo)
+          
+          for(i in values$fastq_names_only){file.copy(from=paste(path_glob,i,sep=.Platform$file.sep), to=paste(tmp,"Masque_files",sep= .Platform$file.sep));cmp = cmp +1;incProgress(cmp/nfiles)}
+        })
       }
+      
+      ## Create JSON file
+      withProgress(message = 'Creating JSON file...',{CreateJSON(input)})
     }
-  )
+    
+  })
+  
+  
+  
+  ## FastQ list
+  output$FastQList_out <- renderUI({
+    input$LoadFiles
+    NullBox = h3(strong("0 FastQ file detected"),style="color:red;  text-align: center")
+    res = NullBox
+    
+    home <- normalizePath("~")
+    path_glob = file.path(home, paste(unlist(isolate(dir()$path[-1])), collapse = .Platform$file.sep))
+              
+    fastq_names = Sys.glob(isolate(path()))
+    
+    if(length(fastq_names)>0 && input$LoadFiles>0)
+    {
+      if(is.null(values$fastq_names_only) || length(values$fastq_names_only)==0) values$fastq_names_only = gsub(pattern = path_glob,x = fastq_names,replacement = "")
+      # res = box(title="Select your FastQ files",width = 6, status = "primary",
+      #                 selectInput("FastQList",label = "List of the fastq files in the selected directory",values$fastq_names_only,multiple =TRUE,selectize=FALSE,size = 6),
+      #            actionButton("RemoveFastQbut",'Remove file(s)',icon=icon("remove"))
+      # )
+      res =list(
+                selectInput("FastQList",label = "List of the fastq files in the selected directory",values$fastq_names_only,multiple =TRUE,selectize=FALSE,size = 6),
+                actionButton("RemoveFastQbut",'Remove file(s)',icon=icon("remove"))
+      )
+      
+    } else res = NullBox
+    
+    return(res)
+    
+  })
+  
+  
+  observeEvent(input$LoadFiles,{
+    values$fastq_names_only = NULL
+  })
+
+
+  ## Remove FastQ function
+  RemoveFastQ <-eventReactive(input$RemoveFastQbut,{
+    
+    if(length(input$FastQList)>0)
+    {
+      ind = which(values$fastq_names_only%in% input$FastQList)
+      values$fastq_names_only = values$fastq_names_only[-ind]
+      updateSelectInput(session, "FastQList","List of the fastq files in the selected directory",values$fastq_names_only)
+    }
+  })
+  
+  
+  
+  
+  
+  ## Remove FastQ
+  observeEvent(input$RemoveFastQbut,{  
+    
+    RemoveFastQ()
+    if(input$MatchFiles_button>=1) MatchFiles()
+    
+  },priority=1)
+  
+  
+  
+  ## Update R1 and R2 lists
+  MatchFiles <-reactive({
+    
+    if(length(values$fastq_names_only)>0 && input$PairedOrNot=='y')
+    {
+      indR1 = grep(input$R1files,values$fastq_names_only)
+      indR2 = grep(input$R2files,values$fastq_names_only)
+      
+      ## If some are R1 and R2, removed from both list
+      b12 = intersect(indR1,indR2)
+      if(length(b12)>0) {indR1 = indR1[-which(indR1%in%b12)]; indR2 = indR2[-which(indR2%in%b12)]}
+      
+      
+      if(length(indR1)>0 && length(indR2)>0){
+        
+        values$R1fastQ = values$fastq_names_only[indR1]
+        values$R2fastQ = values$fastq_names_only[indR2]
+        
+        ## If some are only R1 or R2
+        tmpR1 = gsub(input$R1files,x=values$R1fastQ,""); tmpR2 = gsub(input$R2files,x=values$R2fastQ,"")
+        values$R1fastQ = values$R1fastQ[tmpR1%in%tmpR2];values$R2fastQ = values$R2fastQ[tmpR2%in%tmpR1]
+
+        ## Update the files lists
+        updateSelectInput(session, "R1filesList","",values$R1fastQ); updateSelectInput(session, "R2filesList","",values$R2fastQ)
+      } else{updateSelectInput(session, "R1filesList","","");updateSelectInput(session, "R2filesList","","")}
+    } else{updateSelectInput(session, "R1filesList","","");updateSelectInput(session, "R2filesList","","")}
+  })
+  
+  
+  observeEvent(input$MatchFiles_button,{  
+    
+    MatchFiles()
+    
+  },priority=1)
+  
+  
+  
+  ## Remove FastQ function directly from R1, R2
+  RemoveFastQ_R1R2 <-eventReactive(input$RemoveFastQbut_R1R2,{
+    
+    if(length(input$R1filesList)>0)
+    {
+      ind = which(values$R1fastQ%in% input$R1filesList)
+      values$R1fastQ = values$R1fastQ[-ind]
+      updateSelectInput(session, "R1filesList","",values$R1fastQ)
+    }
+    
+    if(length(input$R2filesList)>0)
+    {
+      ind = which(values$R2fastQ%in% input$R2filesList)
+      values$R2fastQ = values$R2fastQ[-ind]
+      updateSelectInput(session, "R2filesList","",values$R2fastQ)
+    }
+    
+    
+  })
+  
+  ## Remove FastQ from R1, R2
+  observeEvent(input$RemoveFastQbut_R1R2,{  
+    
+    RemoveFastQ_R1R2()
+    
+  },priority=1)
+  
+  
+  # observe({
+  #   CMP = CheckMasque(input, values)
+  #   toggleState("submit",condition = is.null(CMP$Error))
+  # })
+  
+  observe({
+    toggleState("box-match",condition = (input$PairedOrNot=="y"))
+  })
+  
+  
+
+  output$InfoMasque<- renderUI({
+    input$submit
+    
+    CMP = isolate(CheckMasque(input, values))
+   
+    if(!is.null(CMP$Error) && input$submit>0) {
+      box(title = "Error", status = "danger",width = 12,
+          h6(strong(CMP$Error))
+      )
+    } else return(NULL)
+
+  })
+  
+  output$InfoMasqueHowTo<- renderUI({
+    input$submit
+    
+    CMP = isolate(CheckMasque(input, values))
+    
+    if(!is.null(CMP$HowTo) && input$submit>0) {
+      box(title = "How To", status = "success",width = 12,
+          h6(strong(CMP$HowTo))
+      )
+    } else return(NULL)
+    
+  })
+  
+  ######################## END MASQUE #################################
+  
   
   observeEvent(input$deleteRows,{
     

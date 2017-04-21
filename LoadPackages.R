@@ -1,5 +1,20 @@
 options(download.file.method = 'wget')
 
+
+if (!require("readr")){
+  install.packages("readr")
+}
+
+if (!require("jsonlite")){
+  install.packages("jsonlite")
+}
+
+
+if (!require("shinyFiles")){
+  install.packages("shinyFiles")
+}
+
+
 if (!require("Rcpp")){
   install.packages("Rcpp")
 }
