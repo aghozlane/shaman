@@ -926,14 +926,14 @@ shinyServer(function(input, output,session) {
   
   
   ## Timer for the gauge
-  Timer <- reactiveTimer(5000)
+  Timer <- reactiveTimer(20000)
   
   ## Check masque progress
   observe({
 
       Timer()
       # values$num = isolate(values$num)*5
-      progress_file = paste(curdir,"www","masque","doing",paste(basename(file_path_sans_ext(json_name)),".txt",sep=""),sep= .Platform$file.sep)
+      progress_file = paste(curdir,"www","masque","doing",paste(basename(file_path_sans_ext(json_name)),"_progress",".txt",sep=""),sep= .Platform$file.sep)
       if(file.exists(progress_file))
       {
         pf = read_lines(progress_file)

@@ -326,7 +326,7 @@ body <- dashboardBody(
                     column(width=12,
                             shinyDirButton("dir", "Select a directory", "Upload",buttonType = "primary"),
                             HTML("&nbsp;"),
-                            actionButton("LoadFiles",'Load',icon=icon("refresh"))
+                            actionButton("LoadFiles",'Load',icon=icon("play"))
                     ),
                     conditionalPanel(condition="input.LoadFiles>=1",
                                      br(),
