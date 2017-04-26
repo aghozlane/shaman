@@ -1,14 +1,28 @@
 options(download.file.method = 'wget')
 
+
+if (!require("sendmailR")){
+  install.packages("sendmailR")
+  library(sendmailR)
+}
+
+if (!require("shinyBS")){
+  install.packages("shinyBS")
+  library(shinyBS)
+}
+
+library(tools)
+
+if (!require("flexdashboard")){
+  install.packages("flexdashboard")
+  library(flexdashboard)
+}
+
 if (!require("backports")){
   install.packages("backports")
   library(backports)
 }
 
-if (!require("backports")){
-  install.packages("backports")
-  
-}
 
 if (!require("readr")){
   install.packages("readr")

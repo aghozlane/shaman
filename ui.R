@@ -222,67 +222,91 @@ body <- dashboardBody(
             ),
     tabItem(tabName = "RawData",
                         tags$style(type='text/css', ".well { max-width: 20em; }"),
-                        fluidRow(
+                        # fluidRow(
                           HTML('<center><h1>MASQUE : Metagenomic Analysis with a Quantitative pipeline</h1></center>'),
-
-                          column(width=8,
-                            div(style="background-color: white; padding-left:20px;",
-                            HTML('
-                           <h2>Introduction</h2>
-
-                                 <p>The aim of this part is to provide an easy cluster interface to perform <b>targeted metagenomic analysis</b>. This analysis will be done using the MASQUE pipeline which allows :</p>
-
-                                 <ul>
-                                 <li>to analyse 16S/18S/23S/28S/ITS data. It builds a count matrix, an annotation table and a phylogeny of the OTU.</li>
-                                 <li>to perform to use a set of parameters already tested on serveral projects for the numerous software used to perform the clustering and the annotation.</li>
-                                 <li>to perform an "uptodate" analysis considering the scientific litterature.</li>
-                                 </ul>
-
-                                  <hr></hr>
-                                 <h2>Process</h2>
-
-                                 <p>We follow the recommandation described by Robert C. Edgar in <a href="http://www.nature.com/nmeth/journal/v10/n10/full/nmeth.2604.html" target="_blank" >Uparse</a> supplementary paper.<br>
-                                   The clustering process in MASQUE is performed as the following :<br>
-                                   1.  Read quality control<br>
-                                   2.  Dereplication<br>
-                                   3.  Chimera filtering<br>
-                                   4.  Clustering<br>
-                                   5.  Realignment/mapping<br>
-                                   6.  Taxonomical annotation of the OTU<br>
-                                   7.  Quality check of every step  </p>
-
-                                   <p>You can find more information in the presentation <a href="/aghozlane/masque/blob/master/tp/Targeted_metagenomics.pdf">here</a>. We try to describe the idea behind each step and a complete TP to do it on your own.</p>'
-                              )
-            #
-            #
-            #                      <\ui> to analyse 16S/18S/23S/28S/ITS data. It builds a count matrix, an annotation table and a phylogeny of the OTU.
-            #                      to perform to use a set of parameters already tested on serveral projects for the numerous software used to perform the clustering and the annotation.
-            #                      to perform an uptodate analysis considering the scientific litterature."
-                          )),
-            
-            column(width=4,
-                   gaugeOutput("gaugeMasque", width = "100%", height = "100%")
-                   )
-            ),
-            
             hr(),
-            HTML('<center><h2 style="color:#053383;"><b>Start your analysis</b></h2></center>'),
-            hr(),
+            #               column(width=8,
+            #                 div(style="background-color: white; padding-left:20px;",
+            #                 HTML('
+            #                <h2>Introduction</h2>
+            # 
+            #                      <p>The aim of this part is to provide an easy cluster interface to perform <b>targeted metagenomic analysis</b>. This analysis will be done using the MASQUE pipeline which allows :</p>
+            # 
+            #                      <ul>
+            #                      <li>to analyse 16S/18S/23S/28S/ITS data. It builds a count matrix, an annotation table and a phylogeny of the OTU.</li>
+            #                      <li>to perform to use a set of parameters already tested on serveral projects for the numerous software used to perform the clustering and the annotation.</li>
+            #                      <li>to perform an "uptodate" analysis considering the scientific litterature.</li>
+            #                      </ul>
+            # 
+            #                       <hr></hr>
+            #                      <h2>Process</h2>
+            # 
+            #                      <p>We follow the recommandation described by Robert C. Edgar in <a href="http://www.nature.com/nmeth/journal/v10/n10/full/nmeth.2604.html" target="_blank" >Uparse</a> supplementary paper.<br>
+            #                        The clustering process in MASQUE is performed as the following :<br>
+            #                        1.  Read quality control<br>
+            #                        2.  Dereplication<br>
+            #                        3.  Chimera filtering<br>
+            #                        4.  Clustering<br>
+            #                        5.  Realignment/mapping<br>
+            #                        6.  Taxonomical annotation of the OTU<br>
+            #                        7.  Quality check of every step  </p>
+            # 
+            #                        <p>You can find more information in the presentation <a href="/aghozlane/masque/blob/master/tp/Targeted_metagenomics.pdf">here</a>. We try to describe the idea behind each step and a complete TP to do it on your own.</p>'
+            #                   )
+            # #
+            # #
+            # #                      <\ui> to analyse 16S/18S/23S/28S/ITS data. It builds a count matrix, an annotation table and a phylogeny of the OTU.
+            # #                      to perform to use a set of parameters already tested on serveral projects for the numerous software used to perform the clustering and the annotation.
+            # #                      to perform an uptodate analysis considering the scientific litterature."
+            #               )),
+            # column(width=4)
+            # # column(width=4,
+            # #         inlineCSS(gaugeCSS),
+            # #         gaugeOutput("gaugeMasque", width = "100%", height = "100%")
+            # #        )
+            # ),
+            
+            # hr(),
+            # HTML('<center><h2 style="color:#053383;"><b>Start your analysis</b></h2></center>'),
+            # hr(),
             fluidRow(
-              column(width=2),
-              column(width=8,
-              box(title="About",width = 12, status = "primary",
+              column(width=3,
+                    box(title = "Enter the key",width=12,status="danger",
+                      inlineCSS(list(.pwdGREEN = "background-color: #DDF0B3",.pwdRED = "background-color: #F0B2AD")),
+                      uiOutput("pass_Arg"),
+                      textInput("password","",value = NULL),
+                      bsTooltip("password", 'Fill in the email field and click the "Get key" button',"bottom",trigger = "hover", options = list(container = "body")),
+                      tags$style(type='text/css', "#password { width:100%; margin-top: 10px;}")
+                    ),
+                    uiOutput("summary_box_masque")
+              ),
+              
+              # column(width=3,
+              #        inlineCSS(gaugeCSS),
+              #        gaugeOutput("gaugeMasque", width = "100%", height = "100%")
+              # 
+              #        ),
+              column(width=6,
+                box(title="About",width = 12, status = "primary",
   
                   column(width=6,  radioButtons("DataTypeMasque",label = "Type of data",choices = c("16S/18S" = "16S_18S","23S/28S" = "23S_28S","ITS" = "ITS"),inline = TRUE)),
                   column(width=6,  radioButtons("PairedOrNot",label = "Paired-end sequencing ?",choices = c('Yes'="y","No"="n"),selected = "n",inline = TRUE)),
-                  column(width=6,  tags$div(title="Enter a valid email address to get your results",textInput("to", "Email address *", value="yyy@xxx"))),
+                  column(width=3,  textInput("to", "Email address *", value="yyy@xxx"),
+                                    bsTooltip("to", "Enter a valid email address to get your results","bottom",trigger = "hover", options = list(container = "body"))
+                         ),
+                  column(width=3,  actionButton("checkMail",label = "  Get key",icon=icon('key')),
+                                   bsTooltip("checkMail", "Click here to get your key by mail","bottom", options = list(container = "body")),
+                                   tags$style(type='text/css', "#checkMail { width:100%; margin-top: 25px;}")
+                         ),
                   column(width=6,  selectizeInput("HostName",label = "Select the host",
                                                   choices =   c("None"="", "a.stephensi (mosquito)" = "astephensi"," b.taurus (cow)" = "btaurus", "c.familiaris (dog)" = "cfamiliaris",
                                                                 "chiroptera (bat)" = "chiroptera", "c.sabaeus (Apes)" = "csabaeus" , "d.melanogaster (fly)"="dmelanogaster", 
                                                                 "e.caballus (Horse)" = "ecaballus", "f.catus (cat)" = "fcatus", "hg18 (human)"="hg18", "hg19 (human)"="hg19", 
                                                                 "hg38 (human)" = "hg38", "m.lucifugus (bat)" = "mlucifugus", "mm8 (mouse)"= "mm8", "mm9 (mouse)" = "mm9", 
                                                                 "mm10 (mouse)"="mm10", "p.vampyrus (bat)" = "pvampyrus", "s.scrofa (Boar)" = "sscrofa"))),
-                  column(width=6, tags$div(title="If no, default values are chosen",checkboxInput("primer", "Specify the primer"))),
+                  column(width=6,checkboxInput("primer", "Specify the primer"),
+                                  bsTooltip("primer", "If no, default values are chosen","bottom", options = list(container = "body"))
+                         ),
                   conditionalPanel(condition="input.primer && input.PairedOrNot=='y'",
                                    column(width=12,
                                      textInput("R1primer",label = "Forward primer",value = "TCGTCGGCAGCGTCAGATGTGTATAAGAGACAGCCTACGGGNGGCWGCAG"),
@@ -294,9 +318,9 @@ body <- dashboardBody(
                                      textInput("primerSingle",label = "Primer",value = "TCGTCGGCAGCGTCAGATGTGTATAAGAGACAGCCTACGGGNGGCWGCAG")
                                    )
                   )
-              ), 
-              
-              box(title="Directory containing the FastQ files ",width = 12, status = "primary",
+                ),
+
+                box(title="Directory containing the FastQ files ",width = 12, status = "primary",
                     column(width=12,verbatimTextOutput("dirSel")),
                     br(),
                     column(width=12,
@@ -311,29 +335,33 @@ body <- dashboardBody(
                                       column(width=12,uiOutput("FastQList_out"))
                                      )
                     
-              ),
-
-              box(id="box-match",title=" Match the paired files (only for paired-end sequencing)",width = 12, status = "primary",
-                      column(width=6,  textInput("R1files",label = "Suffix R1 (Forward)",value = "_R1"),
-                            selectInput("R1filesList",label = "","",multiple =TRUE,selectize=FALSE)),
-                            column(width=6,  
-                                    textInput("R2files",label = "Suffix R2 (Reverse)",value = "_R2"),
-                                    selectInput("R2filesList",label = "","",multiple =TRUE,selectize=FALSE)
-                                   ),
-                            column(width=12,
-                                    actionButton("MatchFiles_button",'Match',icon=icon("exchange"),class="btn-primary",style="color: #fff;"),
-                                    HTML("&nbsp;"),
-                                    actionButton("RemoveFastQbut_R1R2",'Remove file(s)',icon=icon("remove"))
-                                  )
-              ),
-              div(style = "text-align:center;",actionButton("submit", h4(strong("Check and submit")), icon("chevron-circle-right",class="fa-2x"),class="btn-primary",style = "color: #fff"))
-            ),
-            column(width=2,
-                   uiOutput("InfoMasque"),
-                   uiOutput("InfoMasqueHowTo")
-                   )
-
-          )
+                  ),
+    
+                  box(id="box-match",title=" Match the paired files (only for paired-end sequencing)",width = 12, status = "primary",
+                          column(width=6,  textInput("R1files",label = "Suffix R1 (Forward)",value = "_R1"),
+                                selectInput("R1filesList",label = "","",multiple =TRUE,selectize=FALSE)),
+                                column(width=6,  
+                                        textInput("R2files",label = "Suffix R2 (Reverse)",value = "_R2"),
+                                        selectInput("R2filesList",label = "","",multiple =TRUE,selectize=FALSE)
+                                       ),
+                                column(width=12,
+                                        actionButton("MatchFiles_button",'Match',icon=icon("exchange"),class="btn-primary",style="color: #fff;"),
+                                        HTML("&nbsp;"),
+                                        actionButton("RemoveFastQbut_R1R2",'Remove file(s)',icon=icon("remove"))
+                                      )
+                  ),
+                div(style = "text-align:center;",
+                    actionButton("submit", strong("Check and submit"), icon("chevron-circle-right"),class="btn-primary",style = "color: #fff"),
+                    tags$style(type='text/css', "#submit { width:50%; margin-top: 5px;}")
+                )
+                ),
+                column(width=3,
+                       inlineCSS(gaugeCSS),
+                       gaugeOutput("gaugeMasque", width = "100%", height = "100%"),
+                       uiOutput("InfoMasque"),
+                       uiOutput("InfoMasqueHowTo"),
+                       uiOutput("MasqueToShaman_button")
+                       ))
             
     ),
 
@@ -490,9 +518,10 @@ body <- dashboardBody(
                            ),
                            tabPanel("Filtering",
                                     fluidRow(
-                                      tags$div(title="If your count matrix is very sparse, you can add a filter on your data",
-                                               column(width=3,checkboxInput("AddFilter","Add a filtering step",value = FALSE))
-                                      )
+                                          column(width=3,
+                                                  checkboxInput("AddFilter","Add a filtering step",value = FALSE),
+                                                  bsTooltip("AddFilter", "If your count matrix is very sparse, you can add a filter on your data","bottom",trigger = "click", options = list(container = "body"))
+                                          )
                                     ),
                                     fluidRow(
                                       conditionalPanel(condition="input.AddFilter",

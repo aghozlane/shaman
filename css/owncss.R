@@ -50,3 +50,12 @@ text-align: center;
 color: #FFFFFF;
 }
 "
+
+gaugeCSS <- "
+.html-widget.gauge svg {
+    height: 100%;
+margin-top: -10px;
+margin-bottom: -40px;
+}
+"
+

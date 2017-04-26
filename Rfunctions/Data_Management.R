@@ -236,16 +236,32 @@ CheckMasque <- function(input,values)
   Error = NULL
   HowTo = NULL
  
+  ## Check password
+  
+  if(is.null(Error) && input$password == ""){
+    Error = "<h6><strong>Empty key field </strong></h6>"
+    HowTo = "<h6><strong>Make sure that you have click the &laquo Get key &raquo button and that you have pasted the key sent by mail </strong></h6>"
+  }
+  
+  if(is.null(Error) && input$password != ""){
+     
+     pass = toupper(gsub(" ","",input$password))
+     if(!identical(pass,toupper(values$pass))){ 
+       Error = "<h6><strong>Invalid key </strong></h6>"; 
+       HowTo = "<h6><strong>Make sure that you have click the &laquo Get key &raquo button and that you have pasted the key sent by mail</strong></h6>"
+     }
+  }
+  
   ## At least one fastq is detected
   if(is.null(Error) && input$LoadFiles>0 && length(values$fastq_names_only)==0){
-    Error = "The selected directory must contain at least one file in the following format : fastq, fastq.gz, or fq." 
-    HowTo = "Change the working directory and check the format of the files"
+    Error = "<h6><strong>The selected directory must contain at least one file in the following format : fastq, fastq.gz, or fq.</strong></h6>" 
+    HowTo = "<h6><strong>Change the working directory and check the format of the files</strong></h6>"
   }
   
   if(is.null(Error) && input$PairedOrNot=='y' && input$MatchFiles_button>0){
     if(length(values$R2fastQ) !=length(values$R2fastQ)){
-        Error = "The number of fastq files for R1 and R2 must be the same" 
-        HowTo = "Add/Remove some files or change the suffix to identify the pairs"
+        Error = "<h6><strong>The number of fastq files for R1 and R2 must be the same</strong></h6>" 
+        HowTo = "<h6><strong>Add/Remove some files or change the suffix to identify the pairs</strong></h6>"
     }
     
     if(length(values$R2fastQ)>0  && length(values$R2fastQ)>0){
@@ -254,27 +270,30 @@ CheckMasque <- function(input,values)
       
       dup_files = c(values$R1fastQ[duplicated(tmpR1)],values$R2fastQ[duplicated(tmpR2)])
       if(length(dup_files)>0){
-        Error = paste("These fastq files corresponds to the same sample names:" ,dup_files)
-        HowTo = "Change the suffix to identify the pairs"
+        Error = paste("<h6><strong>These fastq files corresponds to the same sample names:</strong></h6>" ,dup_files)
+        HowTo = "<h6><strong>Change the suffix to identify the pairs</strong></h6>"
       }
       
-      if(!isValidPrimer(input$R1primer)){ Error = "The primer (forward) must only contain letters from A to Z" }
-      if(!isValidPrimer(input$R2primer)){ Error = "The primer (reverse) must only contain letters from A to Z" }
+      if(!isValidPrimer(input$R1primer)){ Error = "<h6><strong>The primer (forward) must only contain letters from A to Z</strong></h6>" }
+      if(!isValidPrimer(input$R2primer)){ Error = "<h6><strong>The primer (reverse) must only contain letters from A to Z</strong></h6>" }
       
     }
     
   }
-  if(is.null(Error) && !isValidEmail(input$to)) Error = "The email address is not valid"
+  if(is.null(Error) && !isValidEmail(input$to)) Error = "<h6><strong>The email address is not valid</strong></h6>"
   
-  if(is.null(Error) && !isValidPrimer(input$primerSingle)){ Error = "The primer must only contain letters from A to Z" }
+
+  
+  
+  if(is.null(Error) && !isValidPrimer(input$primerSingle)){ Error = "<h6><strong>The primer must only contain letters from A to Z</strong></h6>" }
   
   if(is.null(Error)) {
     
     res = SamplesMasque(input,values)
     if(length(res$samples)==0) {
-      Error = "0 sample detected"
-      if(input$PairedOrNot=='y') HowTo = "Change the working directory and/or verify the pairs matching"
-      if(input$PairedOrNot=='n') HowTo = "Change the working directory and load fastq files"
+      Error = "<h6><strong>0 sample detected</strong></h6>"
+      if(input$PairedOrNot=='y') HowTo = '<h6><strong>Make sur that you click the &laquo Load &raquo button. <br /> Change the working directory and/or verify the pairs matching.</strong></h6>'
+      if(input$PairedOrNot=='n') HowTo = '<h6><strong>Make sur that you click the &laquo Load &raquo button. <br /> Change the working directory.</strong></h6>'
     }
     
   }
@@ -316,9 +335,8 @@ SamplesMasque <- function(input,values)
 
 
 
-CreateJSON <- function(input){
-  curdir <- getwd()
-  tmpjson = tempfile(pattern = "file", tmpdir = paste(curdir,"www","masque","todo",sep= .Platform$file.sep),  fileext = ".json")
+CreateJSON <- function(input,values){
+
   
   if(input$PairedOrNot=='n')
   {
@@ -327,11 +345,11 @@ CreateJSON <- function(input){
                     "path"=path_fastq,
                     "host"=input$HostName,
                     "type"=input$DataTypeMasque,
-                    "mail"=input$to,
+                    "mail"=values$login_email,
                     "contaminant"= "/home/aghozlan/workspace/shaman_bioblend/alienTrimmerPF8contaminants.fasta"
                     )
 
-    df %>% jsonlite::toJSON() %>% write_lines(tmpjson)
+    df %>% jsonlite::toJSON() %>% write_lines(values$json_name)
   }
   if(input$PairedOrNot=='y')
   {
@@ -343,10 +361,10 @@ CreateJSON <- function(input){
                     "path_R2"=path_fastq_R2,
                     "host"=input$HostName,
                     "type"=input$DataTypeMasque,
-                    "mail"=input$to,
+                    "mail"=values$login_email,
                     "contaminant"= "/home/aghozlan/workspace/shaman_bioblend/alienTrimmerPF8contaminants.fasta"
                     )
-    df %>% jsonlite::toJSON() %>% write_lines(tmpjson)
+    df %>% jsonlite::toJSON() %>% write_lines(values$json_name)
   }
 }
 

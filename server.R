@@ -21,11 +21,16 @@ shinyServer(function(input, output,session) {
   curdir  = getwd()
   json_name = tempfile(pattern = "file", tmpdir = paste(curdir,"www","masque","todo",sep= .Platform$file.sep),  fileext = ".json")
   
+  ## Pass for MASQUE
+  pass = gsub("file","",basename(file_path_sans_ext(json_name)))
+  
   ## Popup messages
   observe(if(input$AddRegScatter) info("By adding the regression line, you will lose interactivity."))
   
   ## Reactive target
-  values <- reactiveValues(TargetWorking = target,labeled=NULL,fastq_names_only=NULL,R1fastQ=NULL,R2fastQ=NULL,json_name=json_name)
+  values <- reactiveValues(TargetWorking = target,labeled=NULL,fastq_names_only=NULL,R1fastQ=NULL,R2fastQ=NULL,
+                           json_name=json_name,num=0,pass=pass,login_email = NULL,is.valid =NULL,
+                           biom_masque = NULL,tree_masque=NULL)
   
   ## Counts file
   dataInputCounts <-reactive({ 
@@ -92,13 +97,19 @@ shinyServer(function(input, output,session) {
     
     data = NULL
     inFile <- input$fileBiom
-    
-    if (is.null(inFile)) return(NULL)
-    try(read_biom(inFile$datapath)->data,silent=T)
+
+    if (!is.null(inFile) && is.null(values$biom_masque)) {
+      try(read_biom(inFile$datapath)->data,silent=T)
+      }
+    if (!is.null(values$biom_masque) && file.exists(values$biom_masque)) try(read_biom(values$biom_masque)->data,silent=T)
     
     return(data)
   })
   
+  
+  observeEvent(input$fileBiom,{
+    values$biom_masque=NULL;
+  })
 
   
   ## Unifrac File (tree)
@@ -107,12 +118,27 @@ shinyServer(function(input, output,session) {
     data = NULL
     inFile <- input$fileTree
     
-    if (is.null(inFile)) return(NULL)
-    try(read.tree(inFile$datapath)->data, silent=T)
-    CheckTree = CheckTreeFile(data)
-    data = CheckTree$tree
-    try(readLines(inFile$datapath)->treeseq, silent=T)
-    return(list(data=data, Error=CheckTree$Error, Warning=CheckTree$Warning, treeseq=treeseq))
+    if (!is.null(inFile) && is.null(values$tree_masque)) {
+      try(read.tree(inFile$datapath)->data, silent=T)
+      CheckTree = CheckTreeFile(data)
+      data = CheckTree$tree
+      try(readLines(inFile$datapath)->treeseq, silent=T)
+      return(list(data=data, Error=CheckTree$Error, Warning=CheckTree$Warning, treeseq=treeseq))
+    }
+    
+    if (!is.null(values$tree_masque) && file.exists(values$tree_masque)) {
+      try(read.tree(values$tree_masque)->data, silent=T)
+      CheckTree = CheckTreeFile(data)
+      data = CheckTree$tree
+      try(readLines(values$tree_masque)->treeseq, silent=T)
+      return(list(data=data, Error=CheckTree$Error, Warning=CheckTree$Warning, treeseq=treeseq))
+    }
+
+  })
+  
+  
+  observeEvent(input$fileTree,{
+    values$tree_masque=NULL;
   })
   
   
@@ -672,6 +698,7 @@ shinyServer(function(input, output,session) {
   observeEvent(input$submit,{
     CMP = CheckMasque(input, values)
     Error = CMP$Error
+    values$num = 0
     
     if(is.null(Error))
     {
@@ -712,10 +739,12 @@ shinyServer(function(input, output,session) {
       }
       
       ## Create JSON file
-      withProgress(message = 'Creating JSON file...',{CreateJSON(input,values$json_name)})
+      withProgress(message = 'Creating JSON file...',{CreateJSON(input,values)})
+      if(file.exists(values$json_name)) values$num = 1
+      info("Your data have been submitted. You will receive an e-mail once the computation over.\nThis can take few hours")
     }
     
-  })
+  },priority = 1)
   
   
   
@@ -862,7 +891,7 @@ shinyServer(function(input, output,session) {
    
     if(!is.null(CMP$Error) && input$submit>0) {
       box(title = "Error", status = "danger",width = 12,
-          h6(strong(CMP$Error))
+          HTML(CMP$Error)
       )
     } else return(NULL)
 
@@ -875,24 +904,194 @@ shinyServer(function(input, output,session) {
     
     if(!is.null(CMP$HowTo) && input$submit>0) {
       box(title = "How To", status = "success",width = 12,
-          h6(strong(CMP$HowTo))
+          HTML(CMP$HowTo)
       )
     } else return(NULL)
     
   })
-  
-  
+
+  ## plot gauge
   output$gaugeMasque <-renderGauge({
+    input$submit
     
-    values$json_name
-    num = 0
-    gauge(num, 0,100,symbol = '%')
+    res = NULL;
+    num = as.numeric(values$num)
     
+    CMP = isolate(CheckMasque(input, values))
+    Error = CMP$Error
+    if(is.null(Error) || num!=0) res = gauge(min(num,100), 0,100,symbol = '%',label= "Progress...")
+
+    return(res)
+  })
+  
+  
+  ## Timer for the gauge
+  Timer <- reactiveTimer(5000)
+  
+  ## Check masque progress
+  observe({
+
+      Timer()
+      # values$num = isolate(values$num)*5
+      progress_file = paste(curdir,"www","masque","doing",paste(basename(file_path_sans_ext(json_name)),".txt",sep=""),sep= .Platform$file.sep)
+      if(file.exists(progress_file))
+      {
+        pf = read_lines(progress_file)
+        pf = as.numeric(pf)
+        if(!is.na(pf)){
+          pf = min(pf,100); pf = max(pf,0)
+          if(isolate(values$num)<pf) {values$num = pf}
+        }
+      }
+    
+  })
+  
+  
+  observe({
+    toggleState("checkMail",condition = isValidEmail(input$to))
+  })
+
+  
+  output$pass_Arg <- renderUI({
+    
+    pass = toupper(gsub(" ","",input$password))
+    passOK = identical(pass,toupper(values$pass))
+    
+    if(!is.null(input$password) && input$password!="" && !passOK){ 
+      removeCssClass(class = 'pwdGREEN', selector = '#password')
+      addCssClass(class = 'pwdRED', selector = '#password')
+    }
+    
+    if(!is.null(input$password) && input$password!="" && passOK){  
+      removeCssClass(class = 'pwdRED', selector = '#password')
+      addCssClass(class = 'pwdGREEN', selector = '#password')
+    }
+    if(is.null(input$password) || input$password==""){    
+      removeCssClass(class = 'pwdRED', selector = '#password')
+      removeCssClass(class = 'pwdGREEN', selector = '#password')
+    }
+    
+  })
+  
+  
+  textMASQUE <- reactive({
+    
+    samp = SamplesMasque(input,values)
+    home <- normalizePath("~")
+    path_glob = file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep))
+    
+    
+    text = paste("<b>Type of data:</b>",input$DataTypeMasque,"<br /> <br /> ",
+                 "<b>Paired-end sequencing:</b>",input$PairedOrNot)
+    text = paste(text,"<br /> <br /> ","<b>Number of samples:</b>",length(samp$samples))
+    text = paste(text,"<br /> <br /> ","<b>Removed samples:</b>",length(samp$samples_removed))
+    text = paste(text,"<br /> <br /> ","<b>Working directory:</b>",path_glob)
+    
+    if(isValidEmail(input$to)) text = paste(text,"<br /> <br /> ","<b>Email:</b>",input$to)
+    
+    if(input$HostName!="") text = paste(text,"<br /> <br /> ","<b>Host:</b>",input$HostName)
+    if(input$primer && input$PairedOrNot=="n") {text = paste(text,"<br /> <br /> ","<b>Primer:</b>",input$primerSingle)}
+    if(input$primer && input$PairedOrNot=="y") {text = paste(text,"<br /> <br /> ","<b>Primer forward:</b>",input$R1primer,
+                                                             "<br /> <br /> ","<b>Primer reverse:</b>",input$R2primer)}
+    
+    return(text)
+  })
+  
+  output$summary_box_masque <- renderUI({
+    
+    text = textMASQUE()
+    
+    res = div(style = "word-wrap: break-word;",box(
+            title = strong("Summary of your analysis"), width = 12, background = "light-blue",
+            HTML(text),
+            div(style = "text-align:right;",
+                downloadButton("printMasque_summary", "Save"),
+                tags$style(type='text/css', "#printMasque_summary {margin-top: 15px;}")
+            )
+          )
+    )
+    return(res)
+  })
+  
+  ## Export MASQUE summary in .txt
+  output$printMasque_summary <- downloadHandler(
+    filename = function() { 'Summary.txt' },
+    content = function(file){
+      txt = textMASQUE()
+      txt = gsub("<br />",replacement = "\n",txt)
+      txt = gsub("</b>",replacement = "",txt)
+      txt = gsub("<b>",replacement = "",txt)
+      write(paste("Summary of your analysis  \n \n ",txt), file)
+    }
+  )
+  
+  
+  ## Send mail with the password
+  observeEvent(input$checkMail,{
+
+    observe( info(paste("You will received a password by email at :",isolate(input$to), '\nThis can take few seconds.')))
+    to <- isolate(input$to)
+    subject <- "SHAMAN Analysis"
+    body <- paste("Hello, \n You are using SHAMAN to run a quantitative metagenomic analysis. Hereafter is the key you need in SHAMAN :
+    \n",values$pass," \n \n Best regards, \n SHAMAN team")
+    mailControl=list(smtpServer="smtp.pasteur.fr")
+    from="<shaman@pasteur.fr>"
+    ## Send mail
+    sendmail(from=from,to=to,subject=subject,msg=body,control=mailControl)
+    
+    ## Store the email 
+    values$login_email = to
+  })
+
+  
+  ## Create button once MASQUE computation is over
+  output$MasqueToShaman_button <- renderUI({
+    input$submit
+    res = NULL
+
+    CMP = isolate(CheckMasque(input, values))
+    Error = CMP$Error
+    if(is.null(Error) && values$num<1){
+      res = box(id="load-masque-res",title="Upload the results",width = 12, status = "success",
+                        selectInput("masque_database","Select the database",choices=c("Silva" = "silva","Greengenes" = "greengenes")),
+                        tags$style(type='text/css', "#masque-database { width:100%; margin-top: 5px;}"),
+                        actionButton("RunResMasque",label = "Upload the results",icon=icon('upload')),
+                        tags$style(type='text/css', "#RunResMasque { width:100%; margin-top: 15px;}")
+            )
+     }
+
+    return(res)    
+  })
+    
+  
+  observe({
+    if(values$num<100) disable("RunResMasque")
+    if(values$num<100) disable("masque_database")
+    
+    if(values$num<100){ addPopover(session,"load-masque-res", 
+                                  title= "Waiting for the results",
+                                  content = paste("Once the computation is over, you will received a password by email at:",values$login_email)
+                                  )
+      } else removePopover(session, "load-masque-res")
+  })
+
+  
+  observeEvent(input$RunResMasque,{
+    updateSelectInput(session, "FileFormat","",selected = "fileBiom")
+    reset("fileBiom"); reset("fileTree")
+    values$biom_masque = paste(curdir,"www","masque","done",basename(file_path_sans_ext(json_name)),paste("shaman_",input$masque_database,".biom",sep=""),sep= .Platform$file.sep)
+    values$tree_masque = paste(curdir,"www","masque","done",basename(file_path_sans_ext(json_name)),paste("shaman_tree_",input$masque_database,".nhx",sep=""),sep= .Platform$file.sep)
+
   })
   
   
   
   ######################## END MASQUE #################################
+  
+  
+  
+  
+  
   
   
   observeEvent(input$deleteRows,{
@@ -1670,7 +1869,7 @@ shinyServer(function(input, output,session) {
       tmpBIOM = dataInputBiom()
       
       if(!is.null(inFile) && is.null(tmpBIOM)) {   
-        box(title = "Error", status = "danger",width = 3,
+        box(title = "Error", status = "danger",width = 12,
             h5(strong("This file can not be loaded.")),br(),
             em("The loaded file is not in the biom format or its format is not currently supported by SHAMAN software")
         )
@@ -1687,7 +1886,7 @@ shinyServer(function(input, output,session) {
       Counts = dataInputCounts()
       
       if(!is.null(inFile) && is.null(Counts)) {   
-        box(title = "Error", status = "danger",width = 3,
+        box(title = "Error", status = "danger",width = 12,
             h5(strong("This file can not be loaded.")),br(),
             em("The count table file is not in the correct format for SHAMAN software")
         )
@@ -1704,7 +1903,7 @@ shinyServer(function(input, output,session) {
       Taxo = dataInputTaxo()
       
       if(!is.null(inFile) && !input$NoTaxoFile && is.null(Taxo)) {   
-        box(title = "Error", status = "danger",width = 3,
+        box(title = "Error", status = "danger",width = 12,
             h5(strong("This file can not be loaded.")),br(),
             em("The taxonomy table file is not in the correct format for SHAMAN software")
         )
