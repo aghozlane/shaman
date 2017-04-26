@@ -698,9 +698,10 @@ shinyServer(function(input, output,session) {
   observeEvent(input$submit,{
     CMP = CheckMasque(input, values)
     Error = CMP$Error
-    values$num = 0
+    values$num = 1
+    isJSONalreadyExist = file.exists(paste(curdir,"www","masque","doing",basename(json_name),sep= .Platform$file.sep))
     
-    if(is.null(Error))
+    if(is.null(Error) && !isJSONalreadyExist)
     {
       tmp = tempdir()
       home <- normalizePath("~")
@@ -915,11 +916,11 @@ shinyServer(function(input, output,session) {
     input$submit
     
     res = NULL;
-    num = as.numeric(values$num)
+    num = round(as.numeric(values$num),1)
     
     CMP = isolate(CheckMasque(input, values))
     Error = CMP$Error
-    if(is.null(Error) || num!=0) res = gauge(min(num,100), 0,100,symbol = '%',label= "Progress...")
+    if(is.null(Error) || num>1) res = gauge(min(num,100), 0,100,symbol = '%',label= "Progress...")
 
     return(res)
   })
@@ -932,7 +933,7 @@ shinyServer(function(input, output,session) {
   observe({
 
       Timer()
-      # values$num = isolate(values$num)*5
+       values$num = isolate(values$num)*5
       progress_file = paste(curdir,"www","masque","doing",paste(basename(file_path_sans_ext(json_name)),"_progress",".txt",sep=""),sep= .Platform$file.sep)
       if(file.exists(progress_file))
       {
@@ -1051,7 +1052,7 @@ shinyServer(function(input, output,session) {
 
     CMP = isolate(CheckMasque(input, values))
     Error = CMP$Error
-    if(is.null(Error) && values$num<1){
+    if(is.null(Error)){
       res = box(id="load-masque-res",title="Upload the results",width = 12, status = "success",
                         selectInput("masque_database","Select the database",choices=c("Silva" = "silva","Greengenes" = "greengenes")),
                         tags$style(type='text/css', "#masque-database { width:100%; margin-top: 5px;}"),
