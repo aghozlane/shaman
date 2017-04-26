@@ -933,7 +933,7 @@ shinyServer(function(input, output,session) {
   observe({
 
       Timer()
-       values$num = isolate(values$num)*5
+       # values$num = isolate(values$num)*5
       progress_file = paste(curdir,"www","masque","doing",paste(basename(file_path_sans_ext(json_name)),"_progress",".txt",sep=""),sep= .Platform$file.sep)
       if(file.exists(progress_file))
       {
