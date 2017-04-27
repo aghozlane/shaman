@@ -337,16 +337,19 @@ SamplesMasque <- function(input,values)
 
 CreateJSON <- function(input,values){
 
+  tmp = tempdir()
+  path_fasta = paste(tmp,paste(basename(file_path_sans_ext(values$json_name)),"_contaminant.fasta",sep=""),sep = .Platform$file.sep)
   
   if(input$PairedOrNot=='n')
   {
-    path_fastq = paste(tempdir(),"Masque_files",sep= .Platform$file.sep)
+    path_fastq = paste(tmp,"Masque_files",sep= .Platform$file.sep)
+    
     df = data.frame("paired"=FALSE,
                     "path"=path_fastq,
                     "host"=input$HostName,
                     "type"=input$DataTypeMasque,
                     "mail"=values$login_email,
-                    "contaminant"= "/home/aghozlan/workspace/shaman_bioblend/alienTrimmerPF8contaminants.fasta"
+                    "contaminant"= path_fasta
                     )
 
     df %>% jsonlite::toJSON() %>% write_lines(values$json_name)
@@ -362,7 +365,7 @@ CreateJSON <- function(input,values){
                     "host"=input$HostName,
                     "type"=input$DataTypeMasque,
                     "mail"=values$login_email,
-                    "contaminant"= "/home/aghozlan/workspace/shaman_bioblend/alienTrimmerPF8contaminants.fasta"
+                    "contaminant"= path_fasta
                     )
     df %>% jsonlite::toJSON() %>% write_lines(values$json_name)
   }

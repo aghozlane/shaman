@@ -680,27 +680,24 @@ shinyServer(function(input, output,session) {
   
   
   
-  
-  # observeEvent(input$submit,{
-  #   values$fastq_names_only = NULL
-  #   tmp = tempdir()
-  #   pathTo = paste(tmp,"Masque_files",sep=.Platform$file.sep)
-  # 
-  #   if (dir.exists(pathTo))
-  #     {
-  #       file.remove(list.files(pathTo,full.names =TRUE))
-  #     } else dir.create(pathTo)
-  # 
-  #   file.copy(from=Sys.glob(path()), to=paste(tmp,"Masque_files",sep= .Platform$file.sep))
-  # })
-  # 
+  CreateFasta <- reactive({
+    seq = NULL
+    tmp = tempdir()
+    fastaName = paste(tmp,paste(basename(file_path_sans_ext(json_name)),"_contaminant.fasta",sep=""),sep = .Platform$file.sep)
+    
+    if(!file.exists(fastaName)) file.create(fastaName,showWarnings=FALSE)
+    if(input$PairedOrNot=="y"){seq =paste("#Seq1\n",input$R1primer,"\n \n","#Seq2\n",input$R2primer,sep="")}
+    if(input$PairedOrNot=="n"){seq =input$primerSingle}
+    if(!is.null(seq))  write(seq, file=fastaName)
+    
+  })
   
   observeEvent(input$submit,{
     CMP = CheckMasque(input, values)
     Error = CMP$Error
     values$num = 1
     isJSONalreadyExist = file.exists(paste(curdir,"www","masque","doing",basename(json_name),sep= .Platform$file.sep))
-    
+    CreateFasta()
     if(is.null(Error) && !isJSONalreadyExist)
     {
       tmp = tempdir()
@@ -938,10 +935,13 @@ shinyServer(function(input, output,session) {
       if(file.exists(progress_file))
       {
         pf = read_lines(progress_file)
-        pf = as.numeric(pf)
-        if(!is.na(pf)){
-          pf = min(pf,100); pf = max(pf,0)
-          if(isolate(values$num)<pf) {values$num = pf}
+        print(pf)
+        if(!is.null(pf)){
+          pf = as.numeric(pf)
+          if(!is.na(pf)){
+            pf = min(pf,100); pf = max(pf,0)
+            if(isolate(values$num)<pf) {values$num = pf}
+          }
         }
       }
     
