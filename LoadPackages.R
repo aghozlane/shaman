@@ -1,10 +1,23 @@
 options(download.file.method = 'wget')
 
 
+if (!require("shinytoastr")){
+  source("https://install-github.me/mangothecat/shinytoastr")
+  library(shinytoastr)
+}
+
+if (!require("shinyWidgets")){
+  install.packages("shinyWidgets")
+  library(shinyWidgets)
+}
+
+
+
 if (!require("sendmailR")){
   install.packages("sendmailR")
   library(sendmailR)
 }
+
 
 if (!require("shinyBS")){
   install.packages("shinyBS")

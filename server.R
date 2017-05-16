@@ -20,7 +20,7 @@ shinyServer(function(input, output,session) {
   ## JSON name for masque
   curdir  = getwd()
   json_name = tempfile(pattern = "file", tmpdir = paste(curdir,"www","masque","todo",sep= .Platform$file.sep),  fileext = ".json")
-  
+
   ## Pass for MASQUE
   pass = gsub("file","",basename(file_path_sans_ext(json_name)))
   
@@ -30,7 +30,7 @@ shinyServer(function(input, output,session) {
   ## Reactive target
   values <- reactiveValues(TargetWorking = target,labeled=NULL,fastq_names_only=NULL,R1fastQ=NULL,R2fastQ=NULL,
                            json_name=json_name,num=0,pass=pass,login_email = NULL,is.valid =NULL,
-                           biom_masque = NULL,tree_masque=NULL)
+                           biom_masque = NULL,tree_masque=NULL,masque_key = NULL)
   
   ## Counts file
   dataInputCounts <-reactive({ 
@@ -494,7 +494,7 @@ shinyServer(function(input, output,session) {
     data=dataInput()$data
     if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(tree))
     {
-      tabBox(width = NULL, selected = "Count table",
+      tabBox(id="id_tabboxdata",width = NULL, selected = "Count table",
              tabPanel("Count table",DT::dataTableOutput("DataCounts")),
              tabPanel("Taxonomy",DT::dataTableOutput("DataTaxo")),
              tabPanel("Summary",h5(strong("Percentage of annotation")),htmlOutput("SummaryView"),
@@ -504,7 +504,7 @@ shinyServer(function(input, output,session) {
     }
     else if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0)
     {
-      tabBox(width = NULL, selected = "Count table",
+      tabBox(id="id_tabboxdata",width = NULL, selected = "Count table",
              tabPanel("Count table",DT::dataTableOutput("DataCounts")),
              tabPanel("Taxonomy",DT::dataTableOutput("DataTaxo")),
              tabPanel("Summary",h5(strong("Percentage of annotation")),htmlOutput("SummaryView"),
@@ -662,20 +662,21 @@ shinyServer(function(input, output,session) {
   ##
   #############################################################
   ## Select a folder (for MASQUE)
-  shinyDirChoose(input, 'dir', roots = c(home = '~'),filetypes = c('', 'fastq','gz','fgz'))
+  shinyDirChoose(input, 'dir', roots = c(dir=""),filetypes = c('', 'fastq','gz','fgz'))
   dir <- reactive(input$dir)
   
   output$dirSel <- renderText({ 
     home <- normalizePath("~")
+    home <- ""
     path_glob = file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep))
   })
+  
   
   path <- reactive({
     
     home <- normalizePath("~")
-    # file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep),"*.pdf")
-    
-   file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep),"*.f*q*")
+    home <- ""
+    file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep),"*.f*q*")
   })
   
   
@@ -695,13 +696,16 @@ shinyServer(function(input, output,session) {
   observeEvent(input$submit,{
     CMP = CheckMasque(input, values)
     Error = CMP$Error
-    values$num = 1
+
     isJSONalreadyExist = file.exists(paste(curdir,"www","masque","doing",basename(json_name),sep= .Platform$file.sep))
-    CreateFasta()
+
     if(is.null(Error) && !isJSONalreadyExist)
     {
+      CreateFasta()
+      values$num = 1
       tmp = tempdir()
       home <- normalizePath("~")
+      home <- ""
       path_glob = file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep))
     
     
@@ -739,45 +743,55 @@ shinyServer(function(input, output,session) {
       ## Create JSON file
       withProgress(message = 'Creating JSON file...',{CreateJSON(input,values)})
       if(file.exists(values$json_name)) values$num = 1
-      info("Your data have been submitted. You will receive an e-mail once the computation over.\nThis can take few hours")
+      sendSweetAlert(messageId="SuccessMasque",
+                     title = "Success",
+                     text = paste("Your data have been submitted. You will receive an e-mail once the computation over. <br /> This can take few hours.
+                                  <br /> 
+                                  <br /> 
+                                  <br /> 
+                                  <em> Remind: You can close shaman and use your key to check the progression and get your results: </em>",values$pass),
+                     type = "success",
+                     html=TRUE
+                     )
     }
     
   },priority = 1)
   
-  
-  
+
   ## FastQ list
   output$FastQList_out <- renderUI({
-    input$LoadFiles
+    FastqLoad()
     NullBox = h3(strong("0 FastQ file detected"),style="color:red;  text-align: center")
     res = NullBox
-    
-    home <- normalizePath("~")
-    path_glob = file.path(home, paste(unlist(isolate(dir()$path[-1])), collapse = .Platform$file.sep))
-              
-    fastq_names = Sys.glob(isolate(path()))
-    
-    if(length(fastq_names)>0 && input$LoadFiles>0)
+
+    if(length(values$fastq_names_only)>0)
     {
-      if(is.null(values$fastq_names_only) || length(values$fastq_names_only)==0) values$fastq_names_only = gsub(pattern = path_glob,x = fastq_names,replacement = "")
-      # res = box(title="Select your FastQ files",width = 6, status = "primary",
-      #                 selectInput("FastQList",label = "List of the fastq files in the selected directory",values$fastq_names_only,multiple =TRUE,selectize=FALSE,size = 6),
-      #            actionButton("RemoveFastQbut",'Remove file(s)',icon=icon("remove"))
-      # )
-      res =list(
-                selectInput("FastQList",label = "List of the fastq files in the selected directory",values$fastq_names_only,multiple =TRUE,selectize=FALSE,size = 6),
-                actionButton("RemoveFastQbut",'Remove file(s)',icon=icon("remove"))
-      )
-      
+      res =list(selectInput("FastQList",label = "List of the fastq files in the selected directory",values$fastq_names_only,multiple =TRUE,selectize=FALSE,size = 6),
+                actionButton("RemoveFastQbut",'Remove file(s)',icon=icon("remove")))
     } else res = NullBox
     
     return(res)
-    
   })
   
   
-  observeEvent(input$LoadFiles,{
-    values$fastq_names_only = NULL
+  FastqLoad <- reactive({
+    input$LoadFiles
+    ## Reinitializing
+    if(!is.null(isolate(values$fastq_names_only))) values$fastq_names_only = NULL
+  
+    
+    ## Get the fastq names
+    home <- normalizePath("~")
+    home <- ""
+    path_glob = file.path(home, paste(unlist(isolate(dir()$path[-1])), collapse = .Platform$file.sep))
+    
+    fastq_names = Sys.glob(isolate(path()))
+    
+    if(length(fastq_names)>0 && isolate(input$LoadFiles>0))
+    {
+      if(is.null(isolate(values$fastq_names_only)) || length(isolate(values$fastq_names_only))==0) values$fastq_names_only = gsub(pattern = path_glob,x = fastq_names,replacement = "")
+    }
+    
   })
 
 
@@ -863,12 +877,32 @@ shinyServer(function(input, output,session) {
     
   })
   
+  
+  
+  RemoveFastQ_R1R2_all <-eventReactive(input$LoadFiles,{
+    
+      values$R1fastQ = NULL
+      updateSelectInput(session, "R1filesList","","")
+      values$R2fastQ = NULL
+      updateSelectInput(session, "R2filesList","","")
+    
+  })
+  
   ## Remove FastQ from R1, R2
   observeEvent(input$RemoveFastQbut_R1R2,{  
     
     RemoveFastQ_R1R2()
     
   },priority=1)
+  
+  
+  ## Remove FastQ from R1, R2 (load button)
+  observeEvent(input$LoadFiles,{  
+    
+    RemoveFastQ_R1R2_all()
+    
+  },priority=1)
+  
   
   
   # observe({
@@ -880,70 +914,218 @@ shinyServer(function(input, output,session) {
     toggleState("box-match",condition = (input$PairedOrNot=="y"))
   })
   
-  
 
   output$InfoMasque<- renderUI({
     input$submit
-    
+
     CMP = isolate(CheckMasque(input, values))
-   
+    
     if(!is.null(CMP$Error) && input$submit>0) {
-      box(title = "Error", status = "danger",width = 12,
-          HTML(CMP$Error)
-      )
-    } else return(NULL)
+      toastr_error(title="Error",message=HTML(CMP$Error),closeButton = TRUE,position ="bottom-right",preventDuplicates = TRUE,newestOnTop = TRUE,
+                   progressBar = FALSE,showDuration = 300,showMethod="show",timeOut = 10000)
+    }
 
   })
-  
+
+
   output$InfoMasqueHowTo<- renderUI({
     input$submit
-    
+
     CMP = isolate(CheckMasque(input, values))
-    
+
     if(!is.null(CMP$HowTo) && input$submit>0) {
-      box(title = "How To", status = "success",width = 12,
-          HTML(CMP$HowTo)
-      )
-    } else return(NULL)
-    
+      toastr_success(title="How to",message=HTML(CMP$HowTo),closeButton = TRUE,position ="bottom-right",preventDuplicates = TRUE,newestOnTop = TRUE,
+                     progressBar = FALSE,showDuration = 300,showMethod="show",timeOut = 10000)
+    }
+
   })
 
-  ## plot gauge
-  output$gaugeMasque <-renderGauge({
-    input$submit
-    
-    res = NULL;
+
+  
+  # observeEvent(input$submit,{
+  #   
+  #   CMP = isolate(CheckMasque(input, values))
+  #   if(!is.null(CMP$HowTo)) { 
+  #     toastr_success(title="How to",message=HTML(CMP$HowTo),closeButton = TRUE,position ="bottom-right",preventDuplicates = TRUE,newestOnTop = TRUE,
+  #                  progressBar = FALSE,showDuration = 300,showMethod="show",timeOut = 10000)
+  #   }
+  #   
+  # })
+  # 
+  # 
+  # observeEvent(input$submit,{
+  #   
+  #   CMP = isolate(CheckMasque(input, values))
+  #   if(!is.null(CMP$Error)) { 
+  #     toastr_error(title="Error",message=HTML(CMP$Error),closeButton = TRUE,position ="bottom-right",preventDuplicates = TRUE,newestOnTop = TRUE,
+  #                  progressBar = FALSE,showDuration = 300,showMethod="show",timeOut = 10000)
+  #   }
+  #   
+  # })
+  
+ #########    ICONS   ################ 
+  
+  
+  output$spinner_anim <- renderUI(
+    htmltools::HTML('<i class="fa fa-spinner fa-pulse fa-fw" style="color:white" ></i><span class="sr-only">Loading...</span>')
+  )
+  
+  
+  output$spinner_icon <- renderUI(
+    htmltools::HTML('<i class="fa fa-spinner" aria-hidden="true" style="color:white" ></i><span class="sr-only">Loading...</span>')
+  )
+  
+  output$pause_icon <- renderUI(
+    htmltools::HTML('<i class="fa fa-pause" aria-hidden="true" style="color:white" ></i><span class="sr-only">Loading...</span>')
+  )
+  
+  output$check_icon <- renderUI(
+    htmltools::HTML('<i class="fa fa-check" style="color:white" ></i><span class="sr-only">Loading...</span>')
+  )
+  
+  
+  output$key_icon <- renderUI(
+    htmltools::HTML('<i class="fa fa-key" style="color:white" ></i><span class="sr-only">Loading...</span>')
+  )
+  
+  output$test_icon <- renderUI(
+    htmltools::HTML('<img src="icon.png" alt="dna" style="width:80px;height:80px;">')
+  )
+  
+  output$amplicon_icon <- renderUI(
+    htmltools::HTML('<img src="icons/amplicon.png" alt="dna" style="width:80px;height:80px;">')
+  )
+  output$dereplication_icon <- renderUI(
+    htmltools::HTML('<img src="icons/dereplication.png" alt="dna" style="width:80px;height:80px;">')
+  )
+  
+  output$singleton_icon <- renderUI(
+    htmltools::HTML('<img src="icons/singleton.png" alt="dna" style="width:80px;height:80px;">')
+  )
+  output$chimera_icon <- renderUI(
+    htmltools::HTML('<img src="icons/chimera.png" alt="dna" style="width:80px;height:80px;">')
+  )
+  
+  
+  #####################################
+  
+  
+  
+  output$progressBoxMasque <- renderValueBox({
+    res = NULL
     num = round(as.numeric(values$num),1)
+    res = valueBox("0 %",h6(strong("Waiting for the data...")), color = "light-blue",width=NULL,icon = uiOutput("spinner_icon"))  
     
     CMP = isolate(CheckMasque(input, values))
     Error = CMP$Error
-    if(is.null(Error) || num>1) res = gauge(min(num,100), 0,100,symbol = '%',label= "Progress...")
-
+    
+    if(is.null(Error) || num>=1) res = valueBox(paste(values$num,"%"),h6(strong("Analysis in progress...")), color = "green",width=NULL,icon = uiOutput("spinner_anim"))  
+    if(num>=100) res = valueBox(paste("100 %"),h6(strong("Analysis completed ! Check your mail.")), color = "green",width=NULL,icon =  uiOutput("check_icon"))
     return(res)
   })
   
   
+  # output$infoBoxPass <- renderInfoBox({
+  #   
+  #   res = NULL
+  #   # pass = toupper(gsub(" ","",input$password))
+  #   # passOK = identical(pass,toupper(values$pass))
+  #   # 
+  #   if(input$password =="") res = infoBox("Get a key","Require a valid email address", color = "light-blue",width=NULL,icon = uiOutput("key_icon"),fill = TRUE)
+  #   
+  #   if(passOK)  res = infoBox("Key created !",paste("Your key is ",values$pass), color = "green",width=NULL,icon = uiOutput("key_icon"),fill = TRUE)
+  #   if(!passOK && input$password !="")  res = infoBox("Invalid key","Use the key that you have received by mail", color = "red",width=NULL,icon = uiOutput("key_icon"),fill = TRUE)
+  #   return(res)
+  # })
+  
+  
+  
+  output$infoBoxPass <- renderInfoBox({
+    
+    res = NULL
+    # pass = toupper(gsub(" ","",input$password))
+    # passOK = identical(pass,toupper(values$pass))
+    # 
+    res = infoBox("Get a key","Require a valid email address", color = "light-blue",width=NULL,icon = uiOutput("key_icon"),fill = TRUE)
+    
+    if(input$checkMail>=1 && isValidEmail(input$to))  res = infoBox("Key created !",paste("Your key is ",values$pass), color = "green",width=NULL,icon = uiOutput("key_icon"),fill = TRUE)
+    if(input$checkMail>=1 && !isValidEmail(input$to))  res = infoBox("Invalid emial","Enter a valid email address to get your key", color = "red",width=NULL,icon = uiOutput("key_icon"),fill = TRUE)
+    return(res)
+  })
+  
+  
+  
+  output$infoBoxFastQ <- renderInfoBox({
+    FastqLoad()
+    res = NULL
+    res = infoBox("Fastq files","Load the fastq files ", color = "light-blue",width=NULL,icon = icon("play"),fill = TRUE)
+
+    if(input$LoadFiles>=1){
+      if(length(unique(values$fastq_names_only))==0) res = infoBox("Fastq files","Select a working directory with at least one fastq file", color = "red",width=NULL,icon = icon("play"),fill = TRUE)
+      if(length(unique(values$fastq_names_only))>0) res = infoBox("Fastq files",paste(length(unique(values$fastq_names_only)), "files are loaded"), color = "green",width=NULL,icon = icon("play"),fill = TRUE)
+    }
+     return(res)
+  })
+  
+  
+  output$infoBoxFastQ_match <- renderInfoBox({
+    
+    res = NULL
+    SM = SamplesMasque(input,values)
+    if(input$PairedOrNot=="n"){  res = infoBox("Match the pairs","Only for paired-end sequencing", color = "black",width=NULL,icon = icon("exchange"),fill = TRUE)}
+    
+    if(input$PairedOrNot=='y'){
+      if(input$MatchFiles_button==0) res = infoBox("Match the pairs","Identify forward and reverse files and then click the match button", color = "light-blue",width=NULL,icon = icon("exchange"),fill = TRUE)
+      if(input$MatchFiles_button>0 && length(SM$samples)>=1){res = infoBox("Pairs are matched",paste(length(SM$samples), "samples are detected"), color = "green",width=NULL,icon = icon("exchange"),fill = TRUE)}
+      if(input$MatchFiles_button>0 && length(SM$samples)<1){res = infoBox("Match the pairs","Failed. 0 samples detected", color = "red",width=NULL,icon = icon("exchange"),fill = TRUE)}
+    }
+    
+    return(res)
+  })
+  
+  
+  
+  
+  ## plot gauge
+  # output$gaugeMasque <-renderGauge({
+  #   input$submit
+  #   
+  #   res = NULL;
+  #   num = round(as.numeric(values$num),1)
+  #   
+  #   CMP = isolate(CheckMasque(input, values))
+  #   Error = CMP$Error
+  #   if(is.null(Error) || num>1) res = gauge(min(num,100), 0,100,symbol = '%',label= "Progress...")
+  # 
+  #   return(res)
+  # })
+  # 
+  
   ## Timer for the gauge
-  Timer <- reactiveTimer(20000)
+  Timer <- reactiveTimer(10000)
   
   ## Check masque progress
   observe({
 
-      Timer()
-       # values$num = isolate(values$num)*5
+    Timer()
+    CMP = isolate(CheckMasque(input, values))
+    Error = CMP$Error
+    if(is.null(Error) && isolate(values$num)<100){
+      
+      values$num = isolate(values$num)*100
       progress_file = paste(curdir,"www","masque","doing",paste(basename(file_path_sans_ext(json_name)),"_progress",".txt",sep=""),sep= .Platform$file.sep)
       if(file.exists(progress_file))
       {
         pf = read_lines(progress_file)
-        print(pf)
         if(!is.null(pf)){
           pf = as.numeric(pf)
           if(!is.na(pf)){
             pf = min(pf,100); pf = max(pf,0)
-            if(isolate(values$num)<pf) {values$num = pf}
+            if(isolate(values$num)<pf) {values$num = round(pf,1)}
           }
         }
       }
+    }
     
   })
   
@@ -951,12 +1133,65 @@ shinyServer(function(input, output,session) {
   observe({
     toggleState("checkMail",condition = isValidEmail(input$to))
   })
-
   
-  output$pass_Arg <- renderUI({
-    
-    pass = toupper(gsub(" ","",input$password))
-    passOK = identical(pass,toupper(values$pass))
+  
+  
+  
+  # 
+  # Project_status <-reactive({
+  #   input$Check_project_over
+  #   input$Check_project
+  #   
+  #   passOK = FALSE;status = NULL;file = NULL
+  #  print("OK")
+  #   json_files = list.files(paste(curdir,"www","masque",sep= .Platform$file.sep),pattern = "json",recursive = TRUE)
+  #   allpass = gsub(gsub(json_files,pattern = ".*file",replacement = ""),pattern = ".json",replacement = "")
+  #   
+  #   print(allpass)
+  #   
+  #   if(length(allpass)>0){
+  #     passOK = any(isolate(input$password)==allpass)
+  #     if(passOK){
+  #       ind = which(isolate(input$password)==allpass)
+  #       file = paste(curdir,"www","masque",json_files[ind],sep= .Platform$file.sep)
+  #       status = gsub(json_files[ind],pattern = "/.*",replacement = "")
+  #     }
+  #   }
+  #   
+  #   return(list(status=status,file=file,passOK=passOK))
+  # })
+  
+  
+  # 
+  # Project_current <-reactive({ 
+  #   input$Check_project_over
+  #   
+  #   passOK = FALSE;status = NULL;file = NULL
+  #   
+  #   json_files = list.files(paste(curdir,"www","masque",sep= .Platform$file.sep),pattern = "json",recursive = TRUE)
+  #   allpass = gsub(gsub(json_files,pattern = ".*file",replacement = ""),pattern = ".json",replacement = "")
+  #   
+  #   print(allpass)
+  #   
+  #   if(length(allpass)>0){
+  #     passOK = any(isolate(values$pass)==allpass)
+  #     if(passOK){
+  #       ind = which(values$pass==allpass)
+  #       file = paste(curdir,"www","masque",json_files[ind],sep= .Platform$file.sep)
+  #       status = gsub(json_files[ind],pattern = "/.*",replacement = "")
+  #     }
+  #   }
+  #   
+  #   return(list(status=status,file=file,passOK=passOK))
+  # })
+  # 
+  
+  
+  observeEvent(input$Check_project,{
+    values$masque_key = input$password
+    resbox = Project_box_result(values$masque_key,curdir)
+    PS = resbox$PS
+    passOK = PS$passOK
     
     if(!is.null(input$password) && input$password!="" && !passOK){ 
       removeCssClass(class = 'pwdGREEN', selector = '#password')
@@ -966,6 +1201,13 @@ shinyServer(function(input, output,session) {
     if(!is.null(input$password) && input$password!="" && passOK){  
       removeCssClass(class = 'pwdRED', selector = '#password')
       addCssClass(class = 'pwdGREEN', selector = '#password')
+      hideElement("masque-form",anim=TRUE)
+      hideElement("masque-infobox",anim=TRUE)
+      hideElement("boxsum",anim=TRUE)
+      showElement("reload-project",anim=TRUE)
+      hideElement("project_over",anim=TRUE)
+      hideElement("MasqueToShaman",anim=TRUE)
+      
     }
     if(is.null(input$password) || input$password==""){    
       removeCssClass(class = 'pwdRED', selector = '#password')
@@ -975,13 +1217,258 @@ shinyServer(function(input, output,session) {
   })
   
   
+  observeEvent(input$Check_project_over,{
+    values$masque_key = values$pass
+    resbox = Project_box_result(values$masque_key,curdir)
+    PS = resbox$PS
+    passOK = PS$passOK
+    
+    
+    if(passOK){  
+      hideElement("masque-form",anim=TRUE)
+      hideElement("masque-infobox",anim=TRUE)
+      hideElement("boxsum",anim=TRUE)
+      showElement("reload-project",anim=TRUE)
+      hideElement("project_over",anim=TRUE)
+      hideElement("MasqueToShaman",anim=TRUE)
+    }
+    
+    
+  })
+  
+
+  
+  
+  
+  ### Check button once computation are over
+  observe({
+    if(values$num>=100){
+      hideElement("masque-form",anim=TRUE)
+      hideElement("boxsum",anim=TRUE)
+      hideElement("reload-project",anim=TRUE)
+      showElement("project_over",anim=TRUE)
+      showElement("current-project",anim=TRUE)
+    }
+    
+  })
+  
+  
+  # output$masque_results<- renderUI({
+  #   
+  #   res=NULL
+  #   PS = Project_current()
+  #   
+  #   if(PS$status=="done")
+  #   {
+  #     hideElement("project_over",anim=TRUE)
+  #     showElement("MasqueToShaman",anim=TRUE)
+  #     json_file = PS$file
+  #     folder_name = basename(file_path_sans_ext(json_file))
+  #     print(folder_name)
+  #     ### Paste file name as folder
+  #     annot_process = paste(curdir,"www","masque","done",folder_name,"shaman_annotation_process.tsv",sep= .Platform$file.sep)
+  #     
+  #     if(file.exists(annot_process))
+  #     {
+  #       ap = read.csv(annot_process,sep="\t")
+  #       res = fluidRow(
+  #         HTML('<center><h1><strong>Your project is done !</strong></h1> <br/> <em><h4> Hereafter is a summary of the building and annotation processes</h4> </em> </center>'),
+  #         br(),
+  #         column(width=4,
+  #                valueBox(ap$Count[1],tags$strong(tags$h5("Number of amplicons", style = "width: 70%;")), color = "light-blue",width=NULL,icon = uiOutput("amplicon_icon")),
+  #                valueBox(ap$Count[2],tags$strong(tags$h5("Remaining amplicons after dereplication", style = "width: 70%;")), color = "light-blue",width=NULL,icon = uiOutput("dereplication_icon")),
+  #                valueBox(ap$Count[3],tags$strong(tags$h5("Remaining amplicons after removing singletons", style = "width: 70%;")), color = "light-blue",width=NULL,icon = uiOutput("singleton_icon")),
+  #                valueBox(ap$Count[4],tags$strong(tags$h5("Remaining amplicons after removing chimera", style = "width: 70%;")), color = "light-blue",width=NULL,icon = uiOutput("chimera_icon"))
+  #         )
+  #       )
+  #     } else{res =HTML('<center><h1><strong>Your project is done !</strong></h1> <br/> <em><h4> Hereafter is a summary of the building and annotation processes</h4> </em> </center>')}
+  #   }
+  #   
+  #   if(PS$status=="doing"){
+  #     hideElement("project_over",anim=TRUE)
+  #     res = fluidRow(
+  #       HTML('<center><h1><strong>Your project is currently running !</strong></h1> <br/> <br/> </center>'),
+  #       inlineCSS(gaugeCSS),
+  #       gaugeOutput("gaugeMasque_progress", width = "100%", height = "100%")
+  #     )
+  #   }
+  #   
+  #   if(PS$status=="error"){
+  #     hideElement("project_over",anim=TRUE)
+  #     
+  #     json_file = PS$file
+  #     error_file = paste(curdir,"www","masque","error",paste(basename(file_path_sans_ext(json_file)),"_error",".txt",sep=""),sep= .Platform$file.sep)
+  #     print(error_file)
+  #     if(file.exists(error_file)){error_message = read_lines(error_file)}
+  #     
+  #     res = fluidRow(
+  #       HTML('<center><h1><strong>Sorry, the workflow failed during progression</strong></h1> <br/> <em><h4> Hereafter is the message error.</h4> </em> <br/> </center>'),
+  #       
+  #       column(width = 12,
+  #              div(style = "background-color: white; margin: 0 auto;width: 50%; text-align:center;border:1px solid red",
+  #                  h4(strong("Error message")),
+  #                  hr(style = "width: 70%;"),
+  #                  HTML(paste(error_message,collapse = " <br/> ")),
+  #                  br()
+  #              )
+  #       )
+  #     )
+  #   }
+  #   
+  #   return(res)
+  # })
+  # 
+  # 
+  
+  ## Action of the comeback button
+  observeEvent(input$comeback,{
+    showElement("masque-infobox",anim=TRUE)
+    showElement("masque-form",anim=TRUE)
+    showElement("boxsum",anim=TRUE)
+    hideElement("reload-project",anim=TRUE)
+    hideElement("project-over-wait",anim=TRUE)
+    hideElement("project_over",anim=TRUE)
+  })
+  
+  
+  # observeEvent(input$Check_project_over,{
+  #   values$masque_key = values$pass
+  #   print(values$masque_key)
+  #   # hideElement("project_over",anim=TRUE)
+  # })
+  # 
+  # observeEvent(input$Check_project,{
+  #   values$masque_key = isolate(input$password)
+  #   print(values$masque_key)
+  #   # hideElement("project_over",anim=TRUE)
+  # })
+  # 
+  output$masque_status_key <-renderUI({
+    
+    res = NULL
+    resbox = Project_box_result(values$masque_key,curdir)
+
+    # if(resbox$PS$status=='done') showElement("MasqueToShaman",anim=TRUE)
+    # if(resbox$PS$status!='done') hideElement("MasqueToShaman",anim=TRUE)
+    return(resbox$box)
+    
+    # res=NULL
+    # PS = Project_status()
+    # print("OK2")
+    # if(PS$status=="done")
+    # {
+    #   showElement("MasqueToShaman",anim=TRUE)
+    #   json_file = PS$file
+    #   folder_name = basename(file_path_sans_ext(json_file))
+    #   print(folder_name)
+    #   ### Paste file name as folder
+    #   annot_process = paste(curdir,"www","masque","done",folder_name,"shaman_annotation_process.tsv",sep= .Platform$file.sep)
+    #   
+    #   if(file.exists(annot_process))
+    #   {
+    #     ap = read.csv(annot_process,sep="\t")
+    #     res = fluidRow(
+    #         HTML('<center><h1><strong>Your project is done !</strong></h1> <br/> <em><h4> Hereafter is a summary of the building and annotation processes</h4> </em> </center>'),
+    #         br(),
+    #         column(width=4,
+    #                 valueBox(ap$Count[1],tags$strong(tags$h5("Number of amplicons", style = "width: 70%;")), color = "light-blue",width=NULL,icon = uiOutput("amplicon_icon")),
+    #                 valueBox(ap$Count[2],tags$strong(tags$h5("Remaining amplicons after dereplication", style = "width: 70%;")), color = "light-blue",width=NULL,icon = uiOutput("dereplication_icon")),
+    #                 valueBox(ap$Count[3],tags$strong(tags$h5("Remaining amplicons after removing singletons", style = "width: 70%;")), color = "light-blue",width=NULL,icon = uiOutput("singleton_icon")),
+    #                 valueBox(ap$Count[4],tags$strong(tags$h5("Remaining amplicons after removing chimera", style = "width: 70%;")), color = "light-blue",width=NULL,icon = uiOutput("chimera_icon"))
+    #         )
+    #       )
+    #   } else{res =HTML('<center><h1><strong>Your project is done !</strong></h1> <br/> <em><h4> Hereafter is a summary of the building and annotation processes</h4> </em> </center>')}
+    # }
+    # 
+    # if(PS$status=="doing"){
+    #       res = fluidRow(
+    #             HTML('<center><h1><strong>Your project is currently running !</strong></h1> <br/> <br/> </center>'),
+    #             inlineCSS(gaugeCSS),
+    #             gaugeOutput("gaugeMasque_progress", width = "100%", height = "100%")
+    #       )
+    # }
+    # 
+    # if(PS$status=="error"){
+    #   
+    #   json_file = PS$file
+    #   error_file = paste(curdir,"www","masque","error",paste(basename(file_path_sans_ext(json_file)),"_error",".txt",sep=""),sep= .Platform$file.sep)
+    #   print(error_file)
+    #   if(file.exists(error_file)){error_message = read_lines(error_file)}
+    #     
+    #   res = fluidRow(
+    #     HTML('<center><h1><strong>Sorry, the workflow failed during progression</strong></h1> <br/> <em><h4> Hereafter is the message error.</h4> </em> <br/> </center>'),
+    #     
+    #     column(width = 12,
+    #            div(style = "background-color: white; margin: 0 auto;width: 50%; text-align:center;border:1px solid red",
+    #                h4(strong("Error message")),
+    #                hr(style = "width: 70%;"),
+    #               HTML(paste(error_message,collapse = " <br/> ")),
+    #               br()
+    #            )
+    #     )
+    #   )
+    # }
+    # 
+    # return(res)
+    
+  })
+  
+  
+  output$gaugeMasque_progress <- renderGauge({
+    PS = Project_status()
+    res = NULL
+    if(PS$status=="doing"){
+      json_file = PS$file
+      progress_file = paste(curdir,"www","masque","doing",paste(basename(file_path_sans_ext(json_file)),"_progress",".txt",sep=""),sep= .Platform$file.sep)
+      if(file.exists(progress_file))
+      {
+        pf = read_lines(progress_file)
+        pf = round(as.numeric(pf),1)
+        if(!is.na(pf)){
+          pf = min(pf,100); pf = max(pf,0)
+        }
+        res = gauge(min(pf,100), 0,100,symbol = '%',label= "Progress...")
+      }
+    }
+    return(res)
+  })
+  
+  
+  
+  
+  output$build_process_table <- DT::renderDataTable({
+    folder_name = paste('file',values$masque_key,sep="")
+    build_process = paste(curdir,"www","masque","done",folder_name,"shaman_build_process.tsv",sep= .Platform$file.sep)
+    if(file.exists(build_process))
+    {
+      bp = read.csv(build_process,sep="\t",header=TRUE)
+    }
+    return(bp)},
+    options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
+                      pageLength = 10,scrollX=TRUE, processing=FALSE,server=TRUE))
+  # ## plot gauge
+  # output$gaugeMasque_progress <-renderGauge({
+  # 
+  #   res = NULL;
+  #   num = round(as.numeric(values$num),1)
+  # 
+  #   CMP = isolate(CheckMasque(input, values))
+  #   Error = CMP$Error
+  #   if(is.null(Error) || num>1) res = gauge(min(num,100), 0,100,symbol = '%',label= "Progress...")
+  # 
+  #   return(res)
+  # })
+  # 
+  # 
   textMASQUE <- reactive({
     
     samp = SamplesMasque(input,values)
     home <- normalizePath("~")
+    home <- ""
     path_glob = file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep))
     
-    
+    # text ='<h4><b>Summary of your analysis:</b></h4> <hr color="white">'
+                 
     text = paste("<b>Type of data:</b>",input$DataTypeMasque,"<br /> <br /> ",
                  "<b>Paired-end sequencing:</b>",input$PairedOrNot)
     text = paste(text,"<br /> <br /> ","<b>Number of samples:</b>",length(samp$samples))
@@ -998,12 +1485,15 @@ shinyServer(function(input, output,session) {
     return(text)
   })
   
+  
   output$summary_box_masque <- renderUI({
     
     text = textMASQUE()
     
-    res = div(style = "word-wrap: break-word;",box(
-            title = strong("Summary of your analysis"), width = 12, background = "light-blue",
+    res = div(id="boxsum",style = "word-wrap: break-word;",box(id="boxsum",
+            title = strong("Summary of your analysis"), width = NULL, background = "light-blue",
+            # HTML("<h4><b>Enter the key:</b></h4>",'<hr color="white"> <br /> <br /> '),
+
             HTML(text),
             div(style = "text-align:right;",
                 downloadButton("printMasque_summary", "Save"),
@@ -1029,8 +1519,8 @@ shinyServer(function(input, output,session) {
   
   ## Send mail with the password
   observeEvent(input$checkMail,{
-
-    observe( info(paste("You will received a password by email at :",isolate(input$to), '\nThis can take few seconds.')))
+    
+    # observe( info(paste("You will received a password by email at :",isolate(input$to), '\nThis can take few seconds.')))
     to <- isolate(input$to)
     subject <- "SHAMAN Analysis"
     body <- paste("Hello, \n You are using SHAMAN to run a quantitative metagenomic analysis. Hereafter is the key you need in SHAMAN :
@@ -1040,41 +1530,39 @@ shinyServer(function(input, output,session) {
     ## Send mail
     sendmail(from=from,to=to,subject=subject,msg=body,control=mailControl)
     
+    ## Update the key value.
+    updateTextInput(session,"password","",value = values$pass)
+    
     ## Store the email 
     values$login_email = to
   })
 
   
   ## Create button once MASQUE computation is over
-  output$MasqueToShaman_button <- renderUI({
-    input$submit
-    res = NULL
-
-    CMP = isolate(CheckMasque(input, values))
-    Error = CMP$Error
-    if(is.null(Error)){
-      res = box(id="load-masque-res",title="Upload the results",width = 12, status = "success",
-                        selectInput("masque_database","Select the database",choices=c("Silva" = "silva","Greengenes" = "greengenes")),
-                        tags$style(type='text/css', "#masque-database { width:100%; margin-top: 5px;}"),
-                        actionButton("RunResMasque",label = "Upload the results",icon=icon('upload')),
-                        tags$style(type='text/css', "#RunResMasque { width:100%; margin-top: 15px;}")
-            )
-     }
-
-    return(res)    
-  })
-    
+  # output$MasqueToShaman_button <- renderUI({
+  #   res = NULL
+  # 
+  #   CMP = CheckMasque(input, values)
+  #   Error = CMP$Error
+  #   if(is.null(Error) && values$num>=100){
+  # 
+  # 
+  #    }
+  # 
+  #   return(res)    
+  # })
+  #   
   
-  observe({
-    if(values$num<100) disable("RunResMasque")
-    if(values$num<100) disable("masque_database")
-    
-    if(values$num<100){ addPopover(session,"load-masque-res", 
-                                  title= "Waiting for the results",
-                                  content = paste("Once the computation is over, you will received a password by email at:",values$login_email)
-                                  )
-      } else removePopover(session, "load-masque-res")
-  })
+  # observe({
+  #   if(values$num<100) disable("RunResMasque")
+  #   if(values$num<100) disable("masque_database")
+  #   
+  #   if(values$num<100){ addPopover(session,"load-masque-res", 
+  #                                 title= "Waiting for the results",
+  #                                 content = paste("Once the computation is over, you will received a password by email at:",values$login_email)
+  #                                 )
+  #     } else removePopover(session, "load-masque-res")
+  # })
 
   
   observeEvent(input$RunResMasque,{
@@ -1086,13 +1574,20 @@ shinyServer(function(input, output,session) {
   })
   
   
+  ## Export results in .zip 
+  output$Download_masque_zip <- downloadHandler(
+    filename = function() { paste("SHAMAN_",values$masque_key,'.zip',sep="")},
+    content = function(file){
+      zip_file = paste(curdir,"www","masque","done",paste("file",values$masque_key,".zip",sep=""),sep= .Platform$file.sep)
+      if(file.exists(zip_file)){file.copy(zip_file, file)}
+    }
+  )
+
+  
   
   ######################## END MASQUE #################################
   
-  
-  
-  
-  
+
   
   
   observeEvent(input$deleteRows,{
@@ -1842,6 +2337,8 @@ shinyServer(function(input, output,session) {
     
   })
   
+  
+  
   output$InfoModelHowTo<- renderUI({
     
     CT = dataInput()$data$counts
@@ -1870,10 +2367,9 @@ shinyServer(function(input, output,session) {
       tmpBIOM = dataInputBiom()
       
       if(!is.null(inFile) && is.null(tmpBIOM)) {   
-        box(title = "Error", status = "danger",width = 12,
-            h5(strong("This file can not be loaded.")),br(),
-            em("The loaded file is not in the biom format or its format is not currently supported by SHAMAN software")
-        )
+        toastr_error(title="Error",message=paste("<h5>","This file can not be loaded.","</h5>","<br/> <br/>","<em>The loaded file is not in the biom format or its format is not currently supported by SHAMAN software.</em>"),
+                     closeButton = TRUE,position ="bottom-right",preventDuplicates = TRUE,newestOnTop = TRUE,
+                     progressBar = TRUE,showDuration = 300,showMethod="show",timeOut = 20000,extendedTimeOut = 2000)
       }
     }
   })
@@ -1887,10 +2383,9 @@ shinyServer(function(input, output,session) {
       Counts = dataInputCounts()
       
       if(!is.null(inFile) && is.null(Counts)) {   
-        box(title = "Error", status = "danger",width = 12,
-            h5(strong("This file can not be loaded.")),br(),
-            em("The count table file is not in the correct format for SHAMAN software")
-        )
+        toastr_error(title="Error",message=paste("<h5>","This file can not be loaded.","</h5>","<br/> <br/>","<em>The count table file is not in the correct format for SHAMAN software.</em>"),
+                     closeButton = TRUE,position ="bottom-right",preventDuplicates = TRUE,newestOnTop = TRUE,
+                     progressBar = TRUE,showDuration = 300,showMethod="show",timeOut = 20000,extendedTimeOut = 2000)
       }
     }
   })
@@ -1904,10 +2399,9 @@ shinyServer(function(input, output,session) {
       Taxo = dataInputTaxo()
       
       if(!is.null(inFile) && !input$NoTaxoFile && is.null(Taxo)) {   
-        box(title = "Error", status = "danger",width = 12,
-            h5(strong("This file can not be loaded.")),br(),
-            em("The taxonomy table file is not in the correct format for SHAMAN software")
-        )
+        toastr_error(title="Error",message=paste("<h5>","This file can not be loaded.","</h5>","<br/> <br/>","<em>The taxonomy table file is not in the correct format for SHAMAN software.</em>"),
+                     closeButton = TRUE,position ="bottom-right",preventDuplicates = TRUE,newestOnTop = TRUE,
+                     progressBar = TRUE,showDuration = 300,showMethod="show",timeOut = 20000,extendedTimeOut = 2000)
       }
     }
   })

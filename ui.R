@@ -25,7 +25,7 @@ sidebar <- dashboardSidebar(
 
 body <- dashboardBody(
   tags$style(type="text/css", Errorcss),
-  
+  useToastr(),
   useShinyjs(),
   inlineCSS(appCSS),
   div(
@@ -221,10 +221,35 @@ body <- dashboardBody(
               )
             ),
     tabItem(tabName = "RawData",
-                        tags$style(type='text/css', ".well { max-width: 20em; }"),
+            tags$style(type='text/css', ".well { max-width: 20em; }"),
+            # tags$head(tags$style(HTML(InfoBoxCSS))),
+            tags$head(tags$script("$(function() { $(\"[data-toggle='popover']\").popover(); })")),
+            
+            fluidRow(
+              # column(width=3,valueBoxOutput("valueErrorPercent",width=NULL)),
+              # column(width=3,infoBoxOutput("InfoErrorCounts",width=NULL)),
+              # column(width=3,infoBoxOutput("InfoErrorTaxo",width=NULL)),
+              div(id="masque-infobox",
+              column(width=3,
+                     withPopup(infoBoxOutput("infoBoxPass",width=NULL),
+                                      title="Once you have entered a valid email address, click on this button:",
+                                      img_src="helpPopPup/GetKey_button.png")
+                     ),
+              column(width=3,
+                    withPopup(infoBoxOutput("infoBoxFastQ",width=NULL),
+                        title="Once you have selected your working directory you must click on this button:",
+                        img_src="helpPopPup/LoadFiles_button.png",width_img = "60%",height_img = "60%")
+                    ),
+              column(width=3,      
+                     infoBoxOutput("infoBoxFastQ_match",width=NULL)
+              ),
+              column(width=3,      
+                     valueBoxOutput("progressBoxMasque",width=NULL)
+              )
+            )),
+            
                         # fluidRow(
-                          HTML('<center><h1>MASQUE : Metagenomic Analysis with a Quantitative pipeline</h1></center>'),
-            hr(),
+                          # HTML('<center><h1>MASQUE : Metagenomic Analysis with a Quantitative pipeline</h1></center>'),
             #               column(width=8,
             #                 div(style="background-color: white; padding-left:20px;",
             #                 HTML('
@@ -270,24 +295,17 @@ body <- dashboardBody(
             # HTML('<center><h2 style="color:#053383;"><b>Start your analysis</b></h2></center>'),
             # hr(),
             fluidRow(
-              column(width=3,
-                    box(title = "Enter the key",width=12,status="danger",
-                      inlineCSS(list(.pwdGREEN = "background-color: #DDF0B3",.pwdRED = "background-color: #F0B2AD")),
-                      uiOutput("pass_Arg"),
-                      textInput("password","",value = NULL),
-                      bsTooltip("password", 'Fill in the email field and click the "Get key" button',"bottom",trigger = "hover", options = list(container = "body")),
-                      tags$style(type='text/css', "#password { width:100%; margin-top: 10px;}")
-                    ),
-                    uiOutput("summary_box_masque")
-              ),
+
               
               # column(width=3,
               #        inlineCSS(gaugeCSS),
               #        gaugeOutput("gaugeMasque", width = "100%", height = "100%")
               # 
               #        ),
-              column(width=6,
-                box(title="About",width = 12, status = "primary",
+              column(width=9,
+                     
+              div(id="masque-form",
+                box(title="About",width = NULL, status = "primary",
   
                   column(width=6,  radioButtons("DataTypeMasque",label = "Type of data",choices = c("16S/18S" = "16S_18S","23S/28S" = "23S_28S","ITS" = "ITS"),inline = TRUE)),
                   column(width=6,  radioButtons("PairedOrNot",label = "Paired-end sequencing ?",choices = c('Yes'="y","No"="n"),selected = "n",inline = TRUE)),
@@ -320,7 +338,7 @@ body <- dashboardBody(
                   )
                 ),
 
-                box(title="Directory containing the FastQ files ",width = 12, status = "primary",
+                box(title="Directory containing the FastQ files ",width = NULL, status = "primary",
                     column(width=12,verbatimTextOutput("dirSel")),
                     br(),
                     column(width=12,
@@ -336,8 +354,7 @@ body <- dashboardBody(
                                      )
                     
                   ),
-    
-                  box(id="box-match",title=" Match the paired files (only for paired-end sequencing)",width = 12, status = "primary",
+                  box(id="box-match",title=" Match the paired files (only for paired-end sequencing)",width = NULL, status = "primary",
                           column(width=6,  textInput("R1files",label = "Suffix R1 (Forward)",value = "_R1"),
                                 selectInput("R1filesList",label = "","",multiple =TRUE,selectize=FALSE)),
                                 column(width=6,  
@@ -352,16 +369,61 @@ body <- dashboardBody(
                   ),
                 div(style = "text-align:center;",
                     actionButton("submit", strong("Check and submit"), icon("chevron-circle-right"),class="btn-primary",style = "color: #fff"),
-                    tags$style(type='text/css', "#submit { width:50%; margin-top: 5px;}")
+                    tags$style(type='text/css', "#submit { width:50%; margin-top: 5px;}"),
+                    receiveSweetAlert(messageId = "SuccessMasque")
                 )
+                
+              ),
+              div(id="project_over",style="text-align:center; display: none;",
+                  HTML("<center><h1><strong>Computations are over</strong></h1></center>"),
+                  actionButton("Check_project_over", h2("Check results"),icon=icon("check-circle fa-2x"),class="btn-primary",style = "color: #fff"),
+                  tags$style(type='text/css', "#Check_project_over {margin-top: 15px;width:50%;}")
+              ),
+              div(id="reload-project",style="display: none;",
+                  actionButton("comeback",strong("Close and come back"),icon=icon("backward")),
+                  uiOutput("masque_status_key")
                 ),
-                column(width=3,
-                       inlineCSS(gaugeCSS),
-                       gaugeOutput("gaugeMasque", width = "100%", height = "100%"),
-                       uiOutput("InfoMasque"),
-                       uiOutput("InfoMasqueHowTo"),
-                       uiOutput("MasqueToShaman_button")
-                       ))
+              div(id="current-project",style="display: none;",
+                  uiOutput("masque_results")
+              ),
+              div(id="project-over-wait",style="display: none;",
+                  HTML('<center><h1><strong> Please wait during the creation of the files...</strong></h1> <br/> <em><h4> This can take about 30 seconds</h4> </em> </center>'),
+                  tags$img(src = "gears.gif",id ="loading-spinner")
+              ),
+              div(id="MasqueToShaman",style="display: none;",
+              box(title="Upload the results",width = 4, status = "success",
+                        selectInput("masque_database","Select the database",choices=c("Silva" = "silva","Greengenes" = "greengenes")),
+                        tags$style(type='text/css', "#masque-database { width:100%; margin-top: 5px;}"),
+                        actionButton("RunResMasque",label = "Upload the results",icon=icon('upload')),
+                        tags$style(type='text/css', "#RunResMasque { width:100%; margin-top: 15px;}")
+              )
+              )
+              ),
+              column(width=3,
+                     box(id="boxpass",title = strong("Enter the key"), width = NULL, background = "light-blue",
+                         inlineCSS(list(.pwdGREEN = "background-color: #DDF0B3",.pwdRED = "background-color: #F0B2AD")),
+                         uiOutput("pass_Arg"),
+                         textInput("password","",value = NULL),
+                         div(style = "text-align:right;",
+                             actionButton("Check_project", "Check project",icon=icon("check-circle")),
+                             tags$style(type='text/css', "#Check_project {margin-top: 15px;}")
+                         ),
+                         bsTooltip("password", 'Fill in the email field and click the "Get key" button',"bottom",trigger = "hover", options = list(container = "body")),
+                         tags$style(type='text/css', "#password { width:100%; margin-top: 10px;}")
+                     ),
+                     tags$style(type='text/css', "#boxpass {margin-bottom: 0px;}"),
+                     # valueBoxOutput("progressBoxMasque",width = 12),
+                     # infoBox(title = "tete",icon= uiOutput("spinner_icon"),width=12),
+                     uiOutput("summary_box_masque")
+              ),
+                 column(width=3,
+                #        inlineCSS(gaugeCSS),
+                #        gaugeOutput("gaugeMasque", width = "100%", height = "100%"),
+                      uiOutput("InfoMasque"),
+                      uiOutput("InfoMasqueHowTo")
+                      # uiOutput("MasqueToShaman_button")
+                        )
+            )
             
     ),
 
@@ -432,9 +494,6 @@ body <- dashboardBody(
                 
              ),
               column(12,uiOutput("TabBoxData"))
-
-              
-          
     ),
     
   #### Statistical analysis

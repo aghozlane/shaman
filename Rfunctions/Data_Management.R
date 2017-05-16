@@ -114,7 +114,6 @@ CheckTargetModel <- function(input,target,labeled,CT)
   
   labels = rownames(target)
   ind = which(colnames(CT)%in%labels)
-
 #   InterVar%in%
 #   uniq_column = (length(which(sapply(target[InterVar], function(x) length(unique(x))) == 1)) > 0)
 #   uniq_column_names = names(which(sapply(target[InterVar], function(x) length(unique(x))) == 1))
@@ -238,20 +237,17 @@ CheckMasque <- function(input,values)
  
   ## Check password
   
-  if(is.null(Error) && input$password == ""){
-    Error = "<h6><strong>Empty key field </strong></h6>"
-    HowTo = "<h6><strong>Make sure that you have click the &laquo Get key &raquo button and that you have pasted the key sent by mail </strong></h6>"
+  # if(is.null(Error) && input$password == ""){
+  #   Error = "<h6><strong>Empty key field </strong></h6>"
+  #   HowTo = "<h6><strong>Make sure that you have click the &laquo Get key &raquo button and that you have pasted the key sent by mail </strong></h6>"
+  # }
+  # 
+  if(is.null(Error) && is.null(values$login_email)){
+
+       Error = "<h6><strong>Invalid key </strong></h6>";
+       HowTo = "<h6><strong>Make sure that you have click the &laquo Get key &raquo button </strong></h6>"
   }
-  
-  if(is.null(Error) && input$password != ""){
-     
-     pass = toupper(gsub(" ","",input$password))
-     if(!identical(pass,toupper(values$pass))){ 
-       Error = "<h6><strong>Invalid key </strong></h6>"; 
-       HowTo = "<h6><strong>Make sure that you have click the &laquo Get key &raquo button and that you have pasted the key sent by mail</strong></h6>"
-     }
-  }
-  
+
   ## At least one fastq is detected
   if(is.null(Error) && input$LoadFiles>0 && length(values$fastq_names_only)==0){
     Error = "<h6><strong>The selected directory must contain at least one file in the following format : fastq, fastq.gz, or fq.</strong></h6>" 
@@ -359,7 +355,7 @@ CreateJSON <- function(input,values){
     path_fastq_R1 = paste(tempdir(),"Masque_files_R1",sep= .Platform$file.sep)
     path_fastq_R2 = paste(tempdir(),"Masque_files_R2",sep= .Platform$file.sep)
 
-    df = data.frame("paired"=FALSE,
+    df = data.frame("paired"=TRUE,
                     "path_R1"=path_fastq_R1,
                     "path_R2"=path_fastq_R2,
                     "host"=input$HostName,

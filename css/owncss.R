@@ -59,3 +59,37 @@ margin-bottom: -40px;
 }
 "
 
+
+
+InfoBoxCSS <- "
+.info-box:hover,
+.info-box:hover .info-box-icon {
+background-color: #aaa !important;
+}
+.info-box:active,
+.info-box:active .info-box-icon {
+background-color: #ccc !important;
+}
+"
+
+
+withPopup <- function(tag,title="",img_src=NULL,width_img = "100%",height_img = "100%") {
+  if(!is.null(img_src)){
+    content <- div(title,style = "width: 120px; text-align: justify;",
+                                  img(src = img_src,width = width_img,height = height_img)
+    )
+    }
+  if(is.null(img_src)){
+  content <- div(title,style = "width: 120px; text-align: justify;")
+  }
+  tagAppendAttributes(
+    tag,
+    `data-toggle` = "popover",
+    `data-html` = "true",
+    `data-trigger` = "hover",
+    `data-content` = content
+  )
+}
+
+
+
