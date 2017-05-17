@@ -249,10 +249,10 @@ CheckMasque <- function(input,values)
   }
 
   ## At least one fastq is detected
-  if(is.null(Error) && input$LoadFiles>0 && length(values$fastq_names_only)==0){
-    Error = "<h6><strong>The selected directory must contain at least one file in the following format : fastq, fastq.gz, or fq.</strong></h6>" 
-    HowTo = "<h6><strong>Change the working directory and check the format of the files</strong></h6>"
-  }
+  # if(is.null(Error) && input$LoadFiles>0 && length(values$fastq_names_only)==0){
+  #   Error = "<h6><strong>The selected directory must contain at least one file in the following format : fastq, fastq.gz, or fq.</strong></h6>" 
+  #   HowTo = "<h6><strong>Change the working directory and check the format of the files</strong></h6>"
+  # }
   
   if(is.null(Error) && input$PairedOrNot=='y' && input$MatchFiles_button>0){
     if(length(values$R2fastQ) !=length(values$R2fastQ)){

@@ -30,7 +30,7 @@ shinyServer(function(input, output,session) {
   ## Reactive target
   values <- reactiveValues(TargetWorking = target,labeled=NULL,fastq_names_only=NULL,R1fastQ=NULL,R2fastQ=NULL,
                            json_name=json_name,num=0,pass=pass,login_email = NULL,is.valid =NULL,
-                           biom_masque = NULL,tree_masque=NULL,masque_key = NULL)
+                           biom_masque = NULL,tree_masque=NULL,masque_key = NULL,paths_fastq_tmp=NULL)
   
   ## Counts file
   dataInputCounts <-reactive({ 
@@ -663,21 +663,36 @@ shinyServer(function(input, output,session) {
   #############################################################
   ## Select a folder (for MASQUE)
   shinyDirChoose(input, 'dir', roots = c(dir=""),filetypes = c('', 'fastq','gz','fgz'))
-  dir <- reactive(input$dir)
   
-  output$dirSel <- renderText({ 
-    home <- normalizePath("~")
-    home <- ""
-    path_glob = file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep))
-  })
+
+  # output$dirSel <- renderText({ 
+  #   print(input$dir2)
+  #   home <- normalizePath("~")
+  #   home <- ""
+  #   path_glob = file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep))
+  # })
+  # 
   
   
-  path <- reactive({
+  observeEvent(input$dir,{
     
-    home <- normalizePath("~")
-    home <- ""
-    file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep),"*.f*q*")
+    inFiles <- input$dir
+    
+    if (!is.null(inFiles)){
+    # values$fastq_names_only = unique(paste(values$fastq_names_only,inFiles$name))
+    values$paths_fastq_tmp = rbind(isolate(values$paths_fastq_tmp),inFiles)
+    values$fastq_names_only = isolate(unique(values$paths_fastq_tmp[,"name"]))
+    }
   })
+  
+  
+  # 
+  # path <- reactive({
+  #   
+  #   home <- normalizePath("~")
+  #   home <- ""
+  #   file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep),"*.f*q*")
+  # })
   
   
   
@@ -706,7 +721,7 @@ shinyServer(function(input, output,session) {
       tmp = tempdir()
       home <- normalizePath("~")
       home <- ""
-      path_glob = file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep))
+      # path_glob = file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep))
     
     
       ## Paired-end
@@ -720,9 +735,18 @@ shinyServer(function(input, output,session) {
           
           if(dir.exists(pathToR1)){file.remove(list.files(pathToR1,full.names =TRUE))} else dir.create(pathToR1)
           if(dir.exists(pathToR2)){file.remove(list.files(pathToR2,full.names =TRUE))} else dir.create(pathToR2)
-        
-        for(i in values$R1fastQ){file.copy(from=paste(path_glob,i,sep=.Platform$file.sep), to=paste(tmp,"Masque_files_R1",sep= .Platform$file.sep));cmp = cmp +1;incProgress(cmp/nfiles, detail = "Forward fastq files...")}
-        for(i in values$R2fastQ){file.copy(from=paste(path_glob,i,sep=.Platform$file.sep), to=paste(tmp,"Masque_files_R2",sep= .Platform$file.sep));cmp = cmp +1;incProgress(cmp/nfiles, detail = "Reverse fastq files...")}
+        for(i in values$R1fastQ){
+          ind=which(i==values$paths_fastq_tmp[,"name"])[1]
+          file.copy(from=values$paths_fastq_tmp[,"datapath"][ind], to=paste(tmp,"Masque_files_R1",i,sep= .Platform$file.sep))
+          cmp = cmp +1
+          incProgress(cmp/nfiles, detail = "Forward fastq files...")
+        }
+          for(i in values$R2fastQ){
+            ind=which(i==values$paths_fastq_tmp[,"name"])[1]
+            file.copy(from=values$paths_fastq_tmp[,"datapath"][ind], to=paste(tmp,"Masque_files_R2",i,sep= .Platform$file.sep))
+            cmp = cmp +1
+            incProgress(cmp/nfiles, detail = "Reverse fastq files...")
+          }
         })
         
       } else{
@@ -736,7 +760,9 @@ shinyServer(function(input, output,session) {
           
           if(dir.exists(pathTo)){file.remove(list.files(pathTo,full.names =TRUE))} else dir.create(pathTo)
           
-          for(i in values$fastq_names_only){file.copy(from=paste(path_glob,i,sep=.Platform$file.sep), to=paste(tmp,"Masque_files",sep= .Platform$file.sep));cmp = cmp +1;incProgress(cmp/nfiles)}
+          for(i in values$fastq_names_only){
+            ind=which(i==values$paths_fastq_tmp[,"name"])[1]
+            file.copy(from=values$paths_fastq_tmp[,"datapath"][ind], to=paste(tmp,"Masque_files",i,sep= .Platform$file.sep));cmp = cmp +1;incProgress(cmp/nfiles)}
         })
       }
       
@@ -760,39 +786,40 @@ shinyServer(function(input, output,session) {
 
   ## FastQ list
   output$FastQList_out <- renderUI({
-    FastqLoad()
-    NullBox = h3(strong("0 FastQ file detected"),style="color:red;  text-align: center")
-    res = NullBox
-
-    if(length(values$fastq_names_only)>0)
-    {
-      res =list(selectInput("FastQList",label = "List of the fastq files in the selected directory",values$fastq_names_only,multiple =TRUE,selectize=FALSE,size = 6),
-                actionButton("RemoveFastQbut",'Remove file(s)',icon=icon("remove")))
-    } else res = NullBox
-    
+    res = NULL
+    if(!is.null(input$dir)){
+      NullBox = h3(strong("0 FastQ file detected"),style="color:red;  text-align: center")
+      res = NullBox
+      
+      if(length(values$fastq_names_only)>0)
+      {
+        res =list(selectInput("FastQList",label = "List of the fastq files in the selected directory",isolate(values$fastq_names_only),multiple =TRUE,selectize=FALSE,size = 6),
+                  actionButton("RemoveFastQbut",'Remove file(s)',icon=icon("remove")))
+      } else res = NullBox
+    }
     return(res)
   })
   
-  
-  FastqLoad <- reactive({
-    input$LoadFiles
-    ## Reinitializing
-    if(!is.null(isolate(values$fastq_names_only))) values$fastq_names_only = NULL
-  
-    
-    ## Get the fastq names
-    home <- normalizePath("~")
-    home <- ""
-    path_glob = file.path(home, paste(unlist(isolate(dir()$path[-1])), collapse = .Platform$file.sep))
-    
-    fastq_names = Sys.glob(isolate(path()))
-    
-    if(length(fastq_names)>0 && isolate(input$LoadFiles>0))
-    {
-      if(is.null(isolate(values$fastq_names_only)) || length(isolate(values$fastq_names_only))==0) values$fastq_names_only = gsub(pattern = path_glob,x = fastq_names,replacement = "")
-    }
-    
-  })
+  # 
+  # FastqLoad <- reactive({
+  #   input$LoadFiles
+  #   ## Reinitializing
+  #   if(!is.null(isolate(values$fastq_names_only))) values$fastq_names_only = NULL
+  # 
+  #   
+  #   ## Get the fastq names
+  #   home <- normalizePath("~")
+  #   home <- ""
+  #   # path_glob = file.path(home, paste(unlist(isolate(dir()$path[-1])), collapse = .Platform$file.sep))
+  #   
+  #   fastq_names = Sys.glob(isolate(path()))
+  #   
+  #   if(length(fastq_names)>0 && isolate(input$LoadFiles>0))
+  #   {
+  #     if(is.null(isolate(values$fastq_names_only)) || length(isolate(values$fastq_names_only))==0) values$fastq_names_only = gsub(pattern = path_glob,x = fastq_names,replacement = "")
+  #   }
+  #   
+  # })
 
 
   ## Remove FastQ function
@@ -802,6 +829,7 @@ shinyServer(function(input, output,session) {
     {
       ind = which(values$fastq_names_only%in% input$FastQList)
       values$fastq_names_only = values$fastq_names_only[-ind]
+      values$paths_fastq_tmp = values$paths_fastq_tmp[-ind,]
       updateSelectInput(session, "FastQList","List of the fastq files in the selected directory",values$fastq_names_only)
     }
   })
@@ -1056,12 +1084,12 @@ shinyServer(function(input, output,session) {
   
   
   output$infoBoxFastQ <- renderInfoBox({
-    FastqLoad()
+    # FastqLoad()
     res = NULL
     res = infoBox("Fastq files","Load the fastq files ", color = "light-blue",width=NULL,icon = icon("play"),fill = TRUE)
 
-    if(input$LoadFiles>=1){
-      if(length(unique(values$fastq_names_only))==0) res = infoBox("Fastq files","Select a working directory with at least one fastq file", color = "red",width=NULL,icon = icon("play"),fill = TRUE)
+    if(!is.null(input$dir)){
+      if(length(unique(values$fastq_names_only))==0) res = infoBox("Fastq files","Select at least one fastq file", color = "red",width=NULL,icon = icon("play"),fill = TRUE)
       if(length(unique(values$fastq_names_only))>0) res = infoBox("Fastq files",paste(length(unique(values$fastq_names_only)), "files are loaded"), color = "green",width=NULL,icon = icon("play"),fill = TRUE)
     }
      return(res)
@@ -1112,7 +1140,6 @@ shinyServer(function(input, output,session) {
     Error = CMP$Error
     if(is.null(Error) && isolate(values$num)<100){
       
-      values$num = isolate(values$num)*100
       progress_file = paste(curdir,"www","masque","doing",paste(basename(file_path_sans_ext(json_name)),"_progress",".txt",sep=""),sep= .Platform$file.sep)
       if(file.exists(progress_file))
       {
@@ -1463,17 +1490,11 @@ shinyServer(function(input, output,session) {
   textMASQUE <- reactive({
     
     samp = SamplesMasque(input,values)
-    home <- normalizePath("~")
-    home <- ""
-    path_glob = file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep))
-    
-    # text ='<h4><b>Summary of your analysis:</b></h4> <hr color="white">'
-                 
+
     text = paste("<b>Type of data:</b>",input$DataTypeMasque,"<br /> <br /> ",
                  "<b>Paired-end sequencing:</b>",input$PairedOrNot)
     text = paste(text,"<br /> <br /> ","<b>Number of samples:</b>",length(samp$samples))
     text = paste(text,"<br /> <br /> ","<b>Removed samples:</b>",length(samp$samples_removed))
-    text = paste(text,"<br /> <br /> ","<b>Working directory:</b>",path_glob)
     
     if(isValidEmail(input$to)) text = paste(text,"<br /> <br /> ","<b>Email:</b>",input$to)
     

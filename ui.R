@@ -236,9 +236,7 @@ body <- dashboardBody(
                                       img_src="helpPopPup/GetKey_button.png")
                      ),
               column(width=3,
-                    withPopup(infoBoxOutput("infoBoxFastQ",width=NULL),
-                        title="Once you have selected your working directory you must click on this button:",
-                        img_src="helpPopPup/LoadFiles_button.png",width_img = "60%",height_img = "60%")
+                    infoBoxOutput("infoBoxFastQ",width=NULL)
                     ),
               column(width=3,      
                      infoBoxOutput("infoBoxFastQ_match",width=NULL)
@@ -339,19 +337,19 @@ body <- dashboardBody(
                 ),
 
                 box(title="Directory containing the FastQ files ",width = NULL, status = "primary",
-                    column(width=12,verbatimTextOutput("dirSel")),
-                    br(),
+                    # column(width=12,verbatimTextOutput("dirSel")),
+                    # br(),
                     column(width=12,
-                            shinyDirButton("dir", "Select a directory", "Upload",buttonType = "primary"),
-                            HTML("&nbsp;"),
-                            actionButton("LoadFiles",'Load',icon=icon("play"))
-                    ),
-                    conditionalPanel(condition="input.LoadFiles>=1",
-                                     br(),
-                                     hr(),
-                                     br(),
-                                      column(width=12,uiOutput("FastQList_out"))
-                                     )
+                           
+                           fileInput("dir",label = 'Select your fastq files',accept = c(".fastq,.fastq.gz,.fgz,.gz"),multiple = TRUE),
+                            # shinyDirButton("dir", "Select a directory", "Upload",buttonType = "primary")
+                          
+                           # tags$input(id = "dir2", webkitdirectory = TRUE, type = "file", onchange="pressed()"),
+                            # HTML("&nbsp;"),
+                            # actionButton("LoadFiles",'Load',icon=icon("play"))
+                           uiOutput("FastQList_out")
+                    )
+
                     
                   ),
                   box(id="box-match",title=" Match the paired files (only for paired-end sequencing)",width = NULL, status = "primary",
