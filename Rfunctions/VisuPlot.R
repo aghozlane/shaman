@@ -812,5 +812,3 @@ Plot_Visu_Tree <- function(input,resDiff,CT_Norm_OTU,taxo_table)
   return(res)
 }
 
-
-

@@ -541,6 +541,7 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
   else Kval = val
   ind_kept = which(as.character(group)%in%Kval)
   
+  # save(val,Kval,dds,group_init,type.trans,VarInt,ind_kept,file="testLDA")
   ## Get the group corresponding to the modalities
   group = group[ind_kept]
   nb = length(unique((group)))

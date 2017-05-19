@@ -30,7 +30,7 @@ shinyServer(function(input, output,session) {
   ## Reactive target
   values <- reactiveValues(TargetWorking = target,labeled=NULL,fastq_names_only=NULL,R1fastQ=NULL,R2fastQ=NULL,
                            json_name=json_name,num=0,pass=pass,login_email = NULL,is.valid =NULL,
-                           biom_masque = NULL,tree_masque=NULL,masque_key = NULL,paths_fastq_tmp=NULL)
+                           biom_masque = NULL,tree_masque=NULL,masque_key = NULL,paths_fastq_tmp=NULL,curdir=curdir)
   
   ## Counts file
   dataInputCounts <-reactive({ 
@@ -719,7 +719,7 @@ shinyServer(function(input, output,session) {
     CMP = CheckMasque(input, values)
     Error = CMP$Error
 
-    isJSONalreadyExist = file.exists(paste(curdir,"www","masque","doing",basename(json_name),sep= .Platform$file.sep))
+    isJSONalreadyExist = file.exists(paste(values$curdir,"www","masque","doing",basename(json_name),sep= .Platform$file.sep))
 
     if(is.null(Error) && !isJSONalreadyExist)
     {
@@ -1139,7 +1139,7 @@ shinyServer(function(input, output,session) {
     Error = CMP$Error
     if(is.null(Error) && isolate(values$num)<100){
       
-      progress_file = paste(curdir,"www","masque","doing",paste(basename(file_path_sans_ext(json_name)),"_progress",".txt",sep=""),sep= .Platform$file.sep)
+      progress_file = paste(values$curdir,"www","masque","doing",paste(basename(file_path_sans_ext(json_name)),"_progress",".txt",sep=""),sep= .Platform$file.sep)
       if(file.exists(progress_file))
       {
         pf = read_lines(progress_file)
@@ -1170,7 +1170,7 @@ shinyServer(function(input, output,session) {
   #   
   #   passOK = FALSE;status = NULL;file = NULL
   #  print("OK")
-  #   json_files = list.files(paste(curdir,"www","masque",sep= .Platform$file.sep),pattern = "json",recursive = TRUE)
+  #   json_files = list.files(paste(values$curdir,"www","masque",sep= .Platform$file.sep),pattern = "json",recursive = TRUE)
   #   allpass = gsub(gsub(json_files,pattern = ".*file",replacement = ""),pattern = ".json",replacement = "")
   #   
   #   print(allpass)
@@ -1179,7 +1179,7 @@ shinyServer(function(input, output,session) {
   #     passOK = any(isolate(input$password)==allpass)
   #     if(passOK){
   #       ind = which(isolate(input$password)==allpass)
-  #       file = paste(curdir,"www","masque",json_files[ind],sep= .Platform$file.sep)
+  #       file = paste(values$curdir,"www","masque",json_files[ind],sep= .Platform$file.sep)
   #       status = gsub(json_files[ind],pattern = "/.*",replacement = "")
   #     }
   #   }
@@ -1194,7 +1194,7 @@ shinyServer(function(input, output,session) {
   #   
   #   passOK = FALSE;status = NULL;file = NULL
   #   
-  #   json_files = list.files(paste(curdir,"www","masque",sep= .Platform$file.sep),pattern = "json",recursive = TRUE)
+  #   json_files = list.files(paste(values$curdir,"www","masque",sep= .Platform$file.sep),pattern = "json",recursive = TRUE)
   #   allpass = gsub(gsub(json_files,pattern = ".*file",replacement = ""),pattern = ".json",replacement = "")
   #   
   #   print(allpass)
@@ -1203,7 +1203,7 @@ shinyServer(function(input, output,session) {
   #     passOK = any(isolate(values$pass)==allpass)
   #     if(passOK){
   #       ind = which(values$pass==allpass)
-  #       file = paste(curdir,"www","masque",json_files[ind],sep= .Platform$file.sep)
+  #       file = paste(values$curdir,"www","masque",json_files[ind],sep= .Platform$file.sep)
   #       status = gsub(json_files[ind],pattern = "/.*",replacement = "")
   #     }
   #   }
@@ -1215,7 +1215,7 @@ shinyServer(function(input, output,session) {
   
   observeEvent(input$Check_project,{
     values$masque_key = input$password
-    resbox = Project_box_result(values$masque_key,curdir)
+    resbox = Project_box_result(values$masque_key,values$curdir)
     PS = resbox$PS
     passOK = PS$passOK
     
@@ -1245,7 +1245,7 @@ shinyServer(function(input, output,session) {
   
   observeEvent(input$Check_project_over,{
     values$masque_key = values$pass
-    resbox = Project_box_result(values$masque_key,curdir)
+    resbox = Project_box_result(values$masque_key,values$curdir)
     PS = resbox$PS
     passOK = PS$passOK
     
@@ -1292,7 +1292,7 @@ shinyServer(function(input, output,session) {
   #     folder_name = basename(file_path_sans_ext(json_file))
   #     print(folder_name)
   #     ### Paste file name as folder
-  #     annot_process = paste(curdir,"www","masque","done",folder_name,"shaman_annotation_process.tsv",sep= .Platform$file.sep)
+  #     annot_process = paste(values$curdir,"www","masque","done",folder_name,"shaman_annotation_process.tsv",sep= .Platform$file.sep)
   #     
   #     if(file.exists(annot_process))
   #     {
@@ -1323,7 +1323,7 @@ shinyServer(function(input, output,session) {
   #     hideElement("project_over",anim=TRUE)
   #     
   #     json_file = PS$file
-  #     error_file = paste(curdir,"www","masque","error",paste(basename(file_path_sans_ext(json_file)),"_error",".txt",sep=""),sep= .Platform$file.sep)
+  #     error_file = paste(values$curdir,"www","masque","error",paste(basename(file_path_sans_ext(json_file)),"_error",".txt",sep=""),sep= .Platform$file.sep)
   #     print(error_file)
   #     if(file.exists(error_file)){error_message = read_lines(error_file)}
   #     
@@ -1372,7 +1372,7 @@ shinyServer(function(input, output,session) {
   output$masque_status_key <-renderUI({
     
     res = NULL
-    resbox = Project_box_result(values$masque_key,curdir)
+    resbox = Project_box_result(values$masque_key,values$curdir)
 
     # if(resbox$PS$status=='done') showElement("MasqueToShaman",anim=TRUE)
     # if(resbox$PS$status!='done') hideElement("MasqueToShaman",anim=TRUE)
@@ -1388,7 +1388,7 @@ shinyServer(function(input, output,session) {
     #   folder_name = basename(file_path_sans_ext(json_file))
     #   print(folder_name)
     #   ### Paste file name as folder
-    #   annot_process = paste(curdir,"www","masque","done",folder_name,"shaman_annotation_process.tsv",sep= .Platform$file.sep)
+    #   annot_process = paste(values$curdir,"www","masque","done",folder_name,"shaman_annotation_process.tsv",sep= .Platform$file.sep)
     #   
     #   if(file.exists(annot_process))
     #   {
@@ -1417,7 +1417,7 @@ shinyServer(function(input, output,session) {
     # if(PS$status=="error"){
     #   
     #   json_file = PS$file
-    #   error_file = paste(curdir,"www","masque","error",paste(basename(file_path_sans_ext(json_file)),"_error",".txt",sep=""),sep= .Platform$file.sep)
+    #   error_file = paste(values$curdir,"www","masque","error",paste(basename(file_path_sans_ext(json_file)),"_error",".txt",sep=""),sep= .Platform$file.sep)
     #   print(error_file)
     #   if(file.exists(error_file)){error_message = read_lines(error_file)}
     #     
@@ -1445,7 +1445,7 @@ shinyServer(function(input, output,session) {
     res = NULL
     if(PS$status=="doing"){
       json_file = PS$file
-      progress_file = paste(curdir,"www","masque","doing",paste(basename(file_path_sans_ext(json_file)),"_progress",".txt",sep=""),sep= .Platform$file.sep)
+      progress_file = paste(values$curdir,"www","masque","doing",paste(basename(file_path_sans_ext(json_file)),"_progress",".txt",sep=""),sep= .Platform$file.sep)
       if(file.exists(progress_file))
       {
         pf = read_lines(progress_file)
@@ -1464,7 +1464,7 @@ shinyServer(function(input, output,session) {
   
   output$build_process_table <- DT::renderDataTable({
     folder_name = paste('file',values$masque_key,sep="")
-    build_process = paste(curdir,"www","masque","done",folder_name,"shaman_build_process.tsv",sep= .Platform$file.sep)
+    build_process = paste(values$curdir,"www","masque","done",folder_name,"shaman_build_process.tsv",sep= .Platform$file.sep)
     if(file.exists(build_process))
     {
       bp = read.csv(build_process,sep="\t",header=TRUE)
@@ -1588,8 +1588,8 @@ shinyServer(function(input, output,session) {
   observeEvent(input$RunResMasque,{
     updateSelectInput(session, "FileFormat","",selected = "fileBiom")
     reset("fileBiom"); reset("fileTree")
-    values$biom_masque = paste(curdir,"www","masque","done",basename(file_path_sans_ext(json_name)),paste("shaman_",input$masque_database,".biom",sep=""),sep= .Platform$file.sep)
-    values$tree_masque = paste(curdir,"www","masque","done",basename(file_path_sans_ext(json_name)),paste("shaman_tree_",input$masque_database,".nhx",sep=""),sep= .Platform$file.sep)
+    values$biom_masque = paste(values$curdir,"www","masque","done",basename(file_path_sans_ext(json_name)),paste("shaman_",input$masque_database,".biom",sep=""),sep= .Platform$file.sep)
+    values$tree_masque = paste(values$curdir,"www","masque","done",basename(file_path_sans_ext(json_name)),paste("shaman_tree_",input$masque_database,".nhx",sep=""),sep= .Platform$file.sep)
 
   })
   
@@ -1598,7 +1598,7 @@ shinyServer(function(input, output,session) {
   output$Download_masque_zip <- downloadHandler(
     filename = function() { paste("SHAMAN_",values$masque_key,'.zip',sep="")},
     content = function(file){
-      zip_file = paste(curdir,"www","masque","done",paste("file",values$masque_key,".zip",sep=""),sep= .Platform$file.sep)
+      zip_file = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,".zip",sep=""),sep= .Platform$file.sep)
       if(file.exists(zip_file)){file.copy(zip_file, file)}
     }
   )
