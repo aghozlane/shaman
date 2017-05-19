@@ -1441,19 +1441,21 @@ shinyServer(function(input, output,session) {
   
   
   output$gaugeMasque_progress <- renderGauge({
-    PS = Project_status()
     res = NULL
-    if(PS$status=="doing"){
-      json_file = PS$file
-      progress_file = paste(values$curdir,"www","masque","doing",paste(basename(file_path_sans_ext(json_file)),"_progress",".txt",sep=""),sep= .Platform$file.sep)
-      if(file.exists(progress_file))
-      {
-        pf = read_lines(progress_file)
-        pf = round(as.numeric(pf),1)
-        if(!is.na(pf)){
-          pf = min(pf,100); pf = max(pf,0)
+    PS = Project_status(values$masque_key,values$curdir)
+    if(PS$passOK){
+      if(PS$status=="doing"){
+        json_file = PS$file
+        progress_file = paste(values$curdir,"www","masque","doing",paste(basename(file_path_sans_ext(json_file)),"_progress",".txt",sep=""),sep= .Platform$file.sep)
+        if(file.exists(progress_file))
+        {
+          pf = read_lines(progress_file)
+          pf = round(as.numeric(pf),1)
+          if(!is.na(pf)){
+            pf = min(pf,100); pf = max(pf,0)
+          }
+          res = gauge(min(pf,100), 0,100,symbol = '%',label= "Progress...")
         }
-        res = gauge(min(pf,100), 0,100,symbol = '%',label= "Progress...")
       }
     }
     return(res)
