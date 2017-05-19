@@ -41,7 +41,10 @@ shinyServer(function(input, output,session) {
     if (is.null(inFile)) return(NULL)
     
     
-    try(read.csv(inFile$datapath,sep=input$sepcount,header=TRUE,check.names=FALSE)->data,silent=T)
+    tryCatch(read.csv(inFile$datapath,sep=input$sepcount,header=TRUE,check.names=FALSE)->data,
+             error=function(e) sendSweetAlert(messageId="ErrorCounts",
+                                              title = "Oops",
+                                              text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
 
     if(!is.null(data)){
       colnames(data) = gsub("-",".",colnames(data))
@@ -63,7 +66,10 @@ shinyServer(function(input, output,session) {
     
     if(input$TypeTaxo=="Table") 
     {
-      try(read.csv(inFile$datapath,sep=input$septaxo,header=TRUE)->data,silent=T)
+      tryCatch(read.csv(inFile$datapath,sep=input$septaxo,header=TRUE)->data,
+               error=function(e) sendSweetAlert(messageId="ErrorTaxo",
+                                                title = "Oops",
+                                                text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
     
       ## Rownames
       if(!is.null(data))
@@ -80,7 +86,11 @@ shinyServer(function(input, output,session) {
     
     if(input$TypeTaxo=="RDP") 
     {
-      data = read_rdp(inFile$datapath,input$RDP_th)
+      tryCatch(read_rdp(inFile$datapath,input$RDP_th)->data,
+               error=function(e) sendSweetAlert(messageId="ErrorRDP",
+                                                title = "Oops",
+                                                text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
+      
     }
     
     ## Add NA
@@ -99,10 +109,18 @@ shinyServer(function(input, output,session) {
     inFile <- input$fileBiom
 
     if (!is.null(inFile) && is.null(values$biom_masque)) {
-      try(read_biom(inFile$datapath)->data,silent=T)
-      }
-    if (!is.null(values$biom_masque) && file.exists(values$biom_masque)) try(read_biom(values$biom_masque)->data,silent=T)
+      tryCatch(read_biom(inFile$datapath)->data,
+               error=function(e) sendSweetAlert(messageId="ErrorBiom1",
+                                                title = "Oops",
+                                                text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
     
+      }
+    if (!is.null(values$biom_masque) && file.exists(values$biom_masque)){ 
+      tryCatch(read_biom(values$biom_masque)->data,
+               error=function(e) sendSweetAlert(messageId="ErrorBiom2",
+                                                title = "Oops",
+                                                text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
+    }
     return(data)
   })
   
@@ -223,7 +241,10 @@ shinyServer(function(input, output,session) {
     
     if (is.null(inFile)) return(NULL)
     
-    data = read.csv(inFile$datapath,sep=input$sepsize,header=TRUE)
+    tryCatch(read.csv(inFile$datapath,sep=input$sepsize,header=TRUE)->data,
+             error=function(e) sendSweetAlert(messageId="ErrorSizeFactor",
+                                              title = "Oops",
+                                              text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
     return(as.data.frame(data))
   })
   
@@ -492,25 +513,37 @@ shinyServer(function(input, output,session) {
   output$TabBoxData <- renderUI({
     tree = dataInputTree()$data
     data=dataInput()$data
-    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(tree))
+    res=NULL
+    if(!is.null(tree))
     {
-      tabBox(id="id_tabboxdata",width = NULL, selected = "Count table",
+     res = tabBox(id="id_tabboxdata",style=" visibility: hidden;",width = NULL, selected = "Count table",
              tabPanel("Count table",DT::dataTableOutput("DataCounts")),
              tabPanel("Taxonomy",DT::dataTableOutput("DataTaxo")),
              tabPanel("Summary",h5(strong("Percentage of annotation")),htmlOutput("SummaryView"),
                       br(),h5(strong("Number of features by level:")),plotOutput("SummaryViewBarplot",width = 1200,height=500)),
              tabPanel("Phylogeny", PhyloTreeMetaROutput('PhyloTreeMetaR'))
-      )
+     )
+            
     }
-    else if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0)
+    else if(is.null(tree))
     {
-      tabBox(id="id_tabboxdata",width = NULL, selected = "Count table",
+     res = tabBox(id="id_tabboxdata",width = NULL, selected = "Count table",
              tabPanel("Count table",DT::dataTableOutput("DataCounts")),
              tabPanel("Taxonomy",DT::dataTableOutput("DataTaxo")),
              tabPanel("Summary",h5(strong("Percentage of annotation")),htmlOutput("SummaryView"),
                       br(),h5(strong("Number of features by level:")),plotOutput("SummaryViewBarplot",width = 1200,height=500))
-      )
+             )
+      
     }
+    return(res)
+  })
+  
+  observe({
+    data=dataInput()$data
+    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0)
+    {
+        showElement("tabboxdata_col",anim=TRUE)
+    } else hideElement("tabboxdata_col",anim=TRUE)
     
   })
   
@@ -519,11 +552,15 @@ shinyServer(function(input, output,session) {
   })
   
   output$SummaryView <- renderGvis({
-    data = dataInput()$data
+    tmp = dataInput()
+    data = tmp$data
     taxo = data$taxo
     counts = data$counts
+    check = tmp$check
+    cond = (!is.null(data$counts) && nrow(data$counts)>0 && !is.null(data$taxo) && nrow(data$taxo)>0 && is.null(check$CheckTaxo$Error) && is.null(check$CheckCounts$Error))
+  
     res = NULL
-    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0)
+    if(cond)
     {
       taxo = rbind(taxo,rep(NA,ncol(taxo)))
       #tmpPercent = round(apply(is.na(taxo),2,table)["FALSE",]/(nrow(taxo)-1)*100,2)
@@ -552,11 +589,15 @@ shinyServer(function(input, output,session) {
   
   
   output$SummaryViewBarplot <- renderPlot({
-    data = dataInput()$data
+    tmp = dataInput()
+    data = tmp$data
     taxo = data$taxo
     counts = data$counts
+    check = tmp$check
+    cond = (!is.null(data$counts) && nrow(data$counts)>0 && !is.null(data$taxo) && nrow(data$taxo)>0 && is.null(check$CheckTaxo$Error) && is.null(check$CheckCounts$Error))
+
     res = NULL
-    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0)
+    if(cond)
     {
       colors=rep(c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c","#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5","#8c564b",
                    "#c49c94","#e377c2","#f7b6d2","#7f7f7f", "#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"),ceiling(ncol(taxo)/20))
@@ -635,25 +676,7 @@ shinyServer(function(input, output,session) {
     # return(list(target = target, labeled=labeled))
   })
   
-  
-  # ## Select a folder (for MASQUE)
-  # observeEvent(
-  #   ignoreNULL = TRUE,
-  #   eventExpr = {
-  #     input$directory
-  #   },
-  #   handlerExpr = {
-  #     # if (input$directory > 0) {
-  #       # condition prevents handler execution on initial app launch
-  #       
-  #       # launch the directory selection dialog with initial path read from the widget
-  #       path = choose.dir(default = readDirectoryInput(session, 'directory'))
-  #       
-  #       # update the widget value
-  #       updateDirectoryInput(session, 'directory', value = path)
-  #     # }
-  #   }
-  # )
+
   
   
   #############################################################
@@ -661,17 +684,7 @@ shinyServer(function(input, output,session) {
   ##                        MASQUE
   ##
   #############################################################
-  ## Select a folder (for MASQUE)
-  shinyDirChoose(input, 'dir', roots = c(dir=""),filetypes = c('', 'fastq','gz','fgz'))
   
-
-  # output$dirSel <- renderText({ 
-  #   print(input$dir2)
-  #   home <- normalizePath("~")
-  #   home <- ""
-  #   path_glob = file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep))
-  # })
-  # 
   
   
   observeEvent(input$dir,{
@@ -685,17 +698,9 @@ shinyServer(function(input, output,session) {
     }
   })
   
+
   
-  # 
-  # path <- reactive({
-  #   
-  #   home <- normalizePath("~")
-  #   home <- ""
-  #   file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep),"*.f*q*")
-  # })
-  
-  
-  
+  ## Create a fasta file containing the contaminant
   CreateFasta <- reactive({
     seq = NULL
     tmp = tempdir()
@@ -708,7 +713,9 @@ shinyServer(function(input, output,session) {
     
   })
   
-  observeEvent(input$submit,{
+  
+  ## Action with submit button
+  MasqueSubmit <- eventReactive(input$submit,{
     CMP = CheckMasque(input, values)
     Error = CMP$Error
 
@@ -781,9 +788,20 @@ shinyServer(function(input, output,session) {
                      )
     }
     
+  })
+  
+  
+  observeEvent(input$submit,{  
+    
+    tryCatch(MasqueSubmit(),
+             error=function(e) sendSweetAlert(messageId="ErrorMasque",
+                                              title = "Oops",
+                                              text=paste("Something wrong when submitting.\n \n",e),type ="error"))
+    
+    
   },priority = 1)
   
-
+  
   ## FastQ list
   output$FastQList_out <- renderUI({
     res = NULL
@@ -800,26 +818,7 @@ shinyServer(function(input, output,session) {
     return(res)
   })
   
-  # 
-  # FastqLoad <- reactive({
-  #   input$LoadFiles
-  #   ## Reinitializing
-  #   if(!is.null(isolate(values$fastq_names_only))) values$fastq_names_only = NULL
-  # 
-  #   
-  #   ## Get the fastq names
-  #   home <- normalizePath("~")
-  #   home <- ""
-  #   # path_glob = file.path(home, paste(unlist(isolate(dir()$path[-1])), collapse = .Platform$file.sep))
-  #   
-  #   fastq_names = Sys.glob(isolate(path()))
-  #   
-  #   if(length(fastq_names)>0 && isolate(input$LoadFiles>0))
-  #   {
-  #     if(is.null(isolate(values$fastq_names_only)) || length(isolate(values$fastq_names_only))==0) values$fastq_names_only = gsub(pattern = path_glob,x = fastq_names,replacement = "")
-  #   }
-  #   
-  # })
+
 
 
   ## Remove FastQ function

@@ -367,6 +367,7 @@ body <- dashboardBody(
                   ),
                 div(style = "text-align:center;",
                     actionButton("submit", strong("Check and submit"), icon("chevron-circle-right"),class="btn-primary",style = "color: #fff"),
+                    receiveSweetAlert(messageId = "ErrorMasque"),
                     tags$style(type='text/css', "#submit { width:50%; margin-top: 5px;}"),
                     receiveSweetAlert(messageId = "SuccessMasque")
                 )
@@ -449,7 +450,7 @@ body <- dashboardBody(
                         column(width=6,radioButtons("TypeTable",h6(strong("Type:")),c("OTU/Gene table"="OTU","MGS table"="MGS"))),
                         column(width=6,selectInput("sepcount", h6(strong("Separator:")),c("Tab" = "\t", "Comma" = ",","Semi-colon" = ";")))
                       ),
-                      fileInput('fileCounts', h6(strong('Select your file')),width="100%"),
+                      fileInput('fileCounts', h6(strong('Select your file')),width="100%",accept = c(".csv",".tsv",'.xls','.xlsx','.txt')),
                       tags$script('$( "#fileCounts" ).on( "click", function() { this.value = null; });')
                   ),
                   conditionalPanel(condition="!input.NoTaxoFile",
@@ -464,7 +465,7 @@ body <- dashboardBody(
                                                       c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
                                  )
                         ),
-                        fileInput('fileTaxo', h6(strong('Select your file')),width="100%"),
+                        fileInput('fileTaxo', h6(strong('Select your file')),width="100%",accept = c(".csv",".tsv",'.xls','.xlsx','.txt')),
                         tags$script('$( "#fileTaxo" ).on( "click", function() { this.value = null; });')
                     )
                   )
@@ -472,7 +473,7 @@ body <- dashboardBody(
                 
                 conditionalPanel(condition="input.FileFormat=='fileBiom'",
                                  box(title="Load the BIOM file",width = 3, status = "primary", solidHeader = TRUE,collapsible = FALSE,
-                                     fileInput('fileBiom', h5(strong('Select your file')),width="100%"),
+                                     fileInput('fileBiom', h5(strong('Select your file')),width="100%",accept = c(".biom")),
                                      tags$script('$( "#fileBiom" ).on( "click", function() { this.value = null; });')
                                  )
                 ),
@@ -491,7 +492,13 @@ body <- dashboardBody(
                 
                 
              ),
-              column(12,uiOutput("TabBoxData"))
+              column(id="tabboxdata_col",width=12,uiOutput("TabBoxData")),
+              receiveSweetAlert(messageId = "ErrorTaxo"),
+              receiveSweetAlert(messageId = "ErrorBiom1"),
+              receiveSweetAlert(messageId = "ErrorBiom2"),
+              receiveSweetAlert(messageId = "ErrorSizeFactor"),
+              receiveSweetAlert(messageId = "ErrorCounts"),
+              receiveSweetAlert(messageId = "ErrorRDP")
     ),
     
   #### Statistical analysis

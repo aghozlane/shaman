@@ -100,7 +100,7 @@ Project_box_result <- function(masque_key,curdir){
   }
   
   if(PS$status=="error"){
-    
+    error_message = "Failed"
     json_file = PS$file
     error_file = paste(curdir,"www","masque","error",paste('file',masque_key,"_error",".txt",sep=""),sep= .Platform$file.sep)
 
