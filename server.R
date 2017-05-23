@@ -516,7 +516,7 @@ shinyServer(function(input, output,session) {
     res=NULL
     if(!is.null(tree))
     {
-     res = tabBox(id="id_tabboxdata",style=" visibility: hidden;",width = NULL, selected = "Count table",
+     res = tabBox(width = NULL, selected = "Count table",
              tabPanel("Count table",DT::dataTableOutput("DataCounts")),
              tabPanel("Taxonomy",DT::dataTableOutput("DataTaxo")),
              tabPanel("Summary",h5(strong("Percentage of annotation")),htmlOutput("SummaryView"),
@@ -527,7 +527,7 @@ shinyServer(function(input, output,session) {
     }
     else if(is.null(tree))
     {
-     res = tabBox(id="id_tabboxdata",width = NULL, selected = "Count table",
+     res = tabBox(width = NULL,selected = "Count table",
              tabPanel("Count table",DT::dataTableOutput("DataCounts")),
              tabPanel("Taxonomy",DT::dataTableOutput("DataTaxo")),
              tabPanel("Summary",h5(strong("Percentage of annotation")),htmlOutput("SummaryView"),
@@ -1762,13 +1762,13 @@ shinyServer(function(input, output,session) {
   output$ExportCounts <- downloadHandler(
     filename = function() { 'NormCounts.csv' },
     #content = function(file){write.csv(dataMergeCounts()$counts, file)}
-    content = function(file){write.csv(dataMergeCounts()$CT_Norm, file)}
+    content = function(file){write.csv(round(counts(ResDiffAnal()$dds,normalized=TRUE)), file)}
   )
   
   ## Export in .csv
   output$ExportRelative <- downloadHandler(
     filename = function() { 'RelativeAb.csv' },
-    content = function(file){write.csv(sweep(dataMergeCounts()$CT_Norm,2,colSums(dataMergeCounts()$CT_Norm),`/`), file)}
+    content = function(file){write.csv(sweep(round(counts(ResDiffAnal()$dds,normalized=TRUE)),2,colSums(round(counts(ResDiffAnal()$dds,normalized=TRUE))),`/`), file)}
   )
   
   ## Export size factors

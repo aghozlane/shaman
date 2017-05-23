@@ -11,14 +11,13 @@ TableDiff_print <- function(input,BaseContrast,resDiff, info = NULL)
   if(length(VarInt)>1) for(i in VarInt){ group = paste(group,target[,i], sep="-") }
   else group = target[,VarInt]
   conds = unique(group)
-  
   result = list()
   alpha = as.numeric(input$AlphaVal)
   cooksCutoff = ifelse(input$CooksCutOff!='Auto',ifelse(input$CooksCutOff!=Inf,input$CutOffVal,Inf),TRUE)
   result[[input$ContrastList_table]] <- results(dds,contrast=BaseContrast[,input$ContrastList_table],pAdjustMethod=input$AdjMeth,
                                                 cooksCutoff=cooksCutoff,
-                                                independentFiltering=input$IndFiltering,alpha=alpha,parallel = TRUE)
-  
+                                                independentFiltering=input$IndFiltering,alpha=alpha)
+  print(result[[input$ContrastList_table]])
   #names(result) <- gsub("_", " ", names(result))
   if (is.null(info))  info <- data.frame(Id = rownames(result[[1]]))
   else names(info)[1] <- "Id"

@@ -13,7 +13,7 @@ sidebar <- dashboardSidebar(
     menuItem("Home", tabName = "Home", icon = icon("home")),
     menuItem("Tutorial", tabName = "Tutorial", icon = icon("book")),
     menuItem("Download/Install", tabName = "Download", icon = icon("download")),
-    menuItem("Raw data", tabName = "RawData", icon = icon("upload")),
+    # menuItem("Raw data", tabName = "RawData", icon = icon("upload")),
     menuItem("Upload your data", tabName = "Upload", icon = icon("upload")),
     # bookmarkButton(),
     menuItemOutput("dymMenu"),
@@ -207,20 +207,20 @@ body <- dashboardBody(
                                 ),
                                 tabPanel("R install (RC)",
                                          p("SHAMAN is available for R>3.1.2. The installation, download and execution can all be performed with a small R script :",style = "font-family: 'times'; font-si16pt"),
-                                         wellPanel(div(style = 'max-width: 900px',"# Load shiny packages",br(),
+                                         wellPanel(style = 'width: 50%; word-wrap: break-word;',"# Load shiny packages",br(),
                                            "if(!require('shiny')){",br(),"  install.packages('shiny')",br(),"  library(shiny)",br(),"}",br(),
                                            "system(\"Rscript -e 'library(\\\"shiny\\\");runGitHub(\\\"pierreLec/KronaRShy\\\",port=5438)'\",wait=FALSE)",
-                                              br(),"# Install dependencies,",br(),"# download last version from github,",br(),"# and run SHAMAN in one command:",br(),"runGitHub('aghozlane/shaman')")),
+                                              br(),"# Install dependencies,",br(),"# download last version from github,",br(),"# and run SHAMAN in one command:",br(),"runGitHub('aghozlane/shaman')"),
                                          p("This script can also be dowloaded", a("here", target="_blank", href="shamanapp.R"), "and executed as following :"),
-                                         wellPanel(div(style = 'max-width: 900px',"chmod +x ./shamanapp.R && Rscript ./shamanapp.R")),
+                                         wellPanel(style = 'width: 50%; word-wrap: break-word;',"chmod +x ./shamanapp.R && Rscript ./shamanapp.R")),
                                          p("Of note, the R version has an impact on the contrast definition. DESeq2 contrast are harder to define on R>3.2."),
-                                         p("Contribution to SHAMAN code are always welcome and can be performed with the", a("github deposit.",href="https://github.com/aghozlane/shaman"))
+                                         p("Contribution to SHAMAN code are always welcome and can be performed with the", a("github deposit.",href="https://github.com/aghozlane/shaman")
                                 ))
                          )
                      )
               )
             ),
-    tabItem(tabName = "RawData",
+    tabItem(id="rawdatatab",tabName = "RawData",
             tags$style(type='text/css', ".well { max-width: 20em; }"),
             # tags$head(tags$style(HTML(InfoBoxCSS))),
             tags$head(tags$script("$(function() { $(\"[data-toggle='popover']\").popover(); })")),
@@ -584,7 +584,7 @@ body <- dashboardBody(
                                     fluidRow(
                                           column(width=3,
                                                   checkboxInput("AddFilter","Add a filtering step",value = FALSE),
-                                                  bsTooltip("AddFilter", "If your count matrix is very sparse, you can add a filter on your data","bottom",trigger = "click", options = list(container = "body"))
+                                                  bsTooltip("AddFilter", "If your count matrix is very sparse, you can add a filter on your data","bottom",trigger = "hover", options = list(container = "body"))
                                           )
                                     ),
                                     fluidRow(
