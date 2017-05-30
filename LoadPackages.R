@@ -2,12 +2,12 @@ options(download.file.method = 'wget')
 
 
 if (!require("shinytoastr")){
-  source("https://install-github.me/mangothecat/shinytoastr")
+  devtools::install_github("mangothecat/shinytoastr")
   library(shinytoastr)
 }
 
 if (!require("shinyWidgets")){
-  install.packages("shinyWidgets")
+  devtools::install_github("aghozlane/shinyWidgets")
   library(shinyWidgets)
 }
 
