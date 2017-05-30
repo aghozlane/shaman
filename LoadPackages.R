@@ -1,59 +1,5 @@
 options(download.file.method = 'wget')
 
-
-if (!require("shinytoastr")){
-  devtools::install_github("mangothecat/shinytoastr")
-  library(shinytoastr)
-}
-
-if (!require("shinyWidgets")){
-  devtools::install_github("aghozlane/shinyWidgets")
-  library(shinyWidgets)
-}
-
-
-
-if (!require("sendmailR")){
-  install.packages("sendmailR")
-  library(sendmailR)
-}
-
-
-if (!require("shinyBS")){
-  install.packages("shinyBS")
-  library(shinyBS)
-}
-
-library(tools)
-
-if (!require("flexdashboard")){
-  install.packages("flexdashboard")
-  library(flexdashboard)
-}
-
-if (!require("backports")){
-  install.packages("backports")
-  library(backports)
-}
-
-
-if (!require("readr")){
-  install.packages("readr")
-  library(readr)
-}
-
-if (!require("jsonlite")){
-  install.packages("jsonlite")
-  library(jsonlite)
-}
-
-
-if (!require("shinyFiles")){
-  install.packages("shinyFiles")
-  library(shinyFiles)
-}
-
-
 if (!require("Rcpp")){
   install.packages("Rcpp")
 }
@@ -211,6 +157,55 @@ if(!require(philentropy)){
 if(!require(PhyloTreeMetaR)){
   devtools::install_github("pierreLec/PhyloTreeMetaR")
   library(PhyloTreeMetaR)
+}
+
+if (!require("shinytoastr")){
+  devtools::install_github("mangothecat/shinytoastr")
+  library(shinytoastr)
+}
+
+if (!require("shinyWidgets")){
+  devtools::install_github("aghozlane/shinyWidgets")
+  library(shinyWidgets)
+}
+
+if (!require("sendmailR")){
+  install.packages("sendmailR")
+  library(sendmailR)
+}
+
+if (!require("shinyBS")){
+  install.packages("shinyBS")
+  library(shinyBS)
+}
+
+library(tools)
+
+if (!require("flexdashboard")){
+  install.packages("flexdashboard")
+  library(flexdashboard)
+}
+
+if (!require("backports")){
+  install.packages("backports")
+  library(backports)
+}
+
+
+if (!require("readr")){
+  install.packages("readr")
+  library(readr)
+}
+
+if (!require("jsonlite")){
+  install.packages("jsonlite")
+  library(jsonlite)
+}
+
+
+if (!require("shinyFiles")){
+  install.packages("shinyFiles")
+  library(shinyFiles)
 }
 
 
