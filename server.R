@@ -369,13 +369,13 @@ shinyServer(function(input, output,session) {
     data = tmp$data
     check = tmp$check
     cond = (!is.null(data$counts) && nrow(data$counts)>0 && !is.null(data$taxo) && nrow(data$taxo)>0)
-    res = valueBox(paste0(0, "%"),h6(strong("Annotated features")), color = "light-blue",width=NULL,icon = icon("list"))
+    res = shinydashboard::valueBox(paste0(0, "%"),h6(strong("Annotated features")), color = "light-blue",width=NULL,icon = icon("list"))
 
     if(cond)
     {
       percent = round(100*tmp$percent,2)
-      if(percent==0) res = valueBox(paste0(percent, "%"),h6(strong("Annotated features")), color = "red",width=NULL,icon = icon("list"))  
-      if(percent!=0) res = valueBox(paste0(percent, "%"),h6(strong("Annotated features")), color = "green",width=NULL,icon = icon("list"))  
+      if(percent==0) res = shinydashboard::valueBox(paste0(percent, "%"),h6(strong("Annotated features")), color = "red",width=NULL,icon = icon("list"))  
+      if(percent!=0) res = shinydashboard::valueBox(paste0(percent, "%"),h6(strong("Annotated features")), color = "green",width=NULL,icon = icon("list"))  
       
     }
     
@@ -1041,13 +1041,13 @@ shinyServer(function(input, output,session) {
   output$progressBoxMasque <- renderValueBox({
     res = NULL
     num = round(as.numeric(values$num),1)
-    res = valueBox("0 %",h6(strong("Waiting for the data...")), color = "light-blue",width=NULL,icon = uiOutput("spinner_icon"))  
+    res = shinydashboard::valueBox("0 %",h6(strong("Waiting for the data...")), color = "light-blue",width=NULL,icon = uiOutput("spinner_icon"))  
     
     CMP = isolate(CheckMasque(input, values))
     Error = CMP$Error
     
-    if(is.null(Error) || num>=1) res = valueBox(paste(values$num,"%"),h6(strong("Analysis in progress...")), color = "green",width=NULL,icon = uiOutput("spinner_anim"))  
-    if(num>=100) res = valueBox(paste("100 %"),h6(strong("Analysis completed ! Check your mail.")), color = "green",width=NULL,icon =  uiOutput("check_icon"))
+    if(is.null(Error) || num>=1) res = shinydashboard::valueBox(paste(values$num,"%"),h6(strong("Analysis in progress...")), color = "green",width=NULL,icon = uiOutput("spinner_anim"))  
+    if(num>=100) res = shinydashboard::valueBox(paste("100 %"),h6(strong("Analysis completed ! Check your mail.")), color = "green",width=NULL,icon =  uiOutput("check_icon"))
     return(res)
   })
   
@@ -1707,11 +1707,11 @@ shinyServer(function(input, output,session) {
       #### Ajout fontion check target
       #infoBox(h6(strong("Target file")), subtitle = h6("Your target file is OK"), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
       labeled = round(labeled,2)
-      if(labeled>0) res = valueBox(paste0(labeled, "%"),h6(strong("Labeled features")), color = "green",width=NULL,icon = icon("list"))
-      else res = valueBox(paste0(labeled, "%"),h6(strong("Labeled features")), color = "red",width=NULL,icon = icon("list"))  
+      if(labeled>0) res = shinydashboard::valueBox(paste0(labeled, "%"),h6(strong("Labeled features")), color = "green",width=NULL,icon = icon("list"))
+      else res = shinydashboard::valueBox(paste0(labeled, "%"),h6(strong("Labeled features")), color = "red",width=NULL,icon = icon("list"))  
     }
     #else infoBox(h6(strong("Target file")), subtitle = h6("Label of the target file must correspond to count table column names") ,color = "light-blue",width=NULL,fill=TRUE, icon = icon("warning"))
-    else res = valueBox(paste0(0, "%"),h6(strong("Labeled features")), color = "light-blue",width=NULL,icon = icon("list"))
+    else res = shinydashboard::valueBox(paste0(0, "%"),h6(strong("Labeled features")), color = "light-blue",width=NULL,icon = icon("list"))
     return(res)
   }
   )
