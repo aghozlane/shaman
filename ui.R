@@ -13,7 +13,7 @@ sidebar <- dashboardSidebar(
       menuItem("Home", tabName = "Home", icon = icon("home")),
       menuItem("Tutorial", tabName = "Tutorial", icon = icon("book")),
       menuItem("Download/Install", tabName = "Download", icon = icon("download")),
-      menuItem("Raw data", tabName = "RawData", icon = icon("upload")),
+      #menuItem("Raw data", tabName = "RawData", icon = icon("upload")),
       menuItem("Upload your data", tabName = "Upload", icon = icon("upload")),
       # bookmarkButton(),
       menuItemOutput("dymMenu"),
