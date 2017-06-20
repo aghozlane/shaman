@@ -93,60 +93,63 @@ Perma_test_Diag <- function(input,resDiff,tree)
 
 
 ## Hierarchical clustering
-HCPlot <- function (input,dds,group,type.trans,counts,CT,tree,col = c("lightblue", "orange", "MediumVioletRed", "SpringGreen")) 
+HCPlot <- function (input,dds,group,type.trans=NULL,counts=NULL,CT,tree,col = c("lightblue", "orange", "MediumVioletRed", "SpringGreen")) 
 {
   
   res = NULL
-  
-  ## Get the counts
-  if (input$DistClust == "euclidean" && type.trans == "VST") counts <- assay(varianceStabilizingTransformation(dds))
-  if (input$DistClust == "euclidean" && type.trans == "rlog") counts <- assay(rlogTransformation(dds))
-  
-  ## Get the group of leaf
-  group = apply(group,1,paste, collapse = "-")    
-  nb = length(unique((group)))
-  
-  ## Get the dendrogram
-  if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts.norm))
-  else if(input$DistClust=="Unifrac"){
-    tmp = UniFracDist(CT,tree)
-    if(is.null(tree) || is.null(tmp)) dist.counts.norm = NULL
-    else
-    {
-      dist.counts.norm = switch(input$DistClustUnifrac,
-                                "WU" = as.dist(tmp[, , "d_1"]), 
-                                "UWU" = as.dist(tmp[, , "d_UW"]),
-                                "VAWU" = as.dist(tmp[, , "d_VAW"]))
-    }
-    
-  }
-  else if(input$DistClust  %in% getDistMethods()){
-    dist = as.dist(distance(t(sweep(counts.norm,2,colSums(counts.norm),`/`)), method=input$DistClust))
-    dist[is.na(dist)]=0.0
-    dist.counts.norm = dist
-  }
-  else  dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
+  if(!is.null(dds) && !is.null(counts) && !is.null(type.trans) && !is.null(input$DistClust)){
+    ## Get the counts
 
-  if(!is.null(dist))
-  {
-    hc <- hclust(dist, method = "ward.D")
+    if (input$DistClust == "euclidean" && type.trans == "VST") counts <- assay(varianceStabilizingTransformation(dds))
+    if (input$DistClust == "euclidean" && type.trans == "rlog") counts <- assay(rlogTransformation(dds))
     
-    dend = as.dendrogram(hc)
+    ## Get the group of leaf
+    group = apply(group,1,paste, collapse = "-")    
+    nb = length(unique((group)))
     
-    ## Get the type of dendrogram
-    type <- input$typeHculst
-    
-    dend <- set(dend, "labels_cex", input$cexLabelDiag)
-    if(input$colorHC) labels_colors(dend)<-col[as.integer(as.factor(group))][order.dendrogram(dend)]
-    if(type=="hori") 
-    { 
-      par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
-      res = plot(dend, main = "Cluster dendrogram",xlab = paste(input$DistClust,"distance, Ward criterion",sep=" "),cex=input$cexLabelDiag)
-    }  
-    else
+    ## Get the dendrogram
+    if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts))
+    else if(input$DistClust=="Unifrac"){
+      tmp = UniFracDist(CT,tree)
+      if(is.null(tree) || is.null(tmp)) dist.counts.norm = NULL
+      else
+      {
+        dist.counts.norm = switch(input$DistClustUnifrac,
+                                  "WU" = as.dist(tmp[, , "d_1"]), 
+                                  "UWU" = as.dist(tmp[, , "d_UW"]),
+                                  "VAWU" = as.dist(tmp[, , "d_VAW"]))
+      }
+      
+    }
+    else if(input$DistClust  %in% getDistMethods()){
+      dist = as.dist(distance(t(sweep(counts,2,colSums(counts),`/`)), method=input$DistClust))
+      dist[is.na(dist)]=0.0
+      dist.counts.norm = dist
+    }
+    else  dist.counts.norm = vegdist(t(counts), method = input$DistClust)
+  
+    if(!is.null(dist.counts.norm))
     {
-      par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
-      res = circlize_dendrogram(dend, labels_track_height = 0.2, dend_track_height = .3, main = "Cluster dendrogram",xlab = paste(input$DistClust,"distance, Ward criterion",sep=" "))
+  
+      hc <- hclust(dist.counts.norm, method = "ward.D")
+      
+      dend = as.dendrogram(hc)
+      
+      ## Get the type of dendrogram
+      type <- input$typeHculst
+      
+      dend <- set(dend, "labels_cex", input$cexLabelDiag)
+      if(input$colorHC) labels_colors(dend)<-col[as.integer(as.factor(group))][order.dendrogram(dend)]
+      if(type=="hori") 
+      { 
+        par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
+        res = plot(dend, main = "Cluster dendrogram",xlab = paste(input$DistClust,"distance, Ward criterion",sep=" "),cex=input$cexLabelDiag)
+      }  
+      else
+      {
+        par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
+        res = circlize_dendrogram(dend, labels_track_height = 0.2, dend_track_height = .3, main = "Cluster dendrogram",xlab = paste(input$DistClust,"distance, Ward criterion",sep=" "))
+      }
     }
   }
   return(res)

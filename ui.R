@@ -9,17 +9,16 @@ sidebar <- dashboardSidebar(
       p()),
   div(
     id = "app-content-bar",
-  sidebarMenu(id = "side",
-    menuItem("Home", tabName = "Home", icon = icon("home")),
-    menuItem("Tutorial", tabName = "Tutorial", icon = icon("book")),
-    menuItem("Download/Install", tabName = "Download", icon = icon("download")),
-    # menuItem("Raw data", tabName = "RawData", icon = icon("upload")),
-    menuItem("Upload your data", tabName = "Upload", icon = icon("upload")),
-    # bookmarkButton(),
-    menuItemOutput("dymMenu"),
-    
-    img(src = "logo.jpg", height = 49, width = 220,style="position:absolute;bottom:0;margin:0 0 15px 10px;")
-  )
+    sidebarMenu(id = "side",
+      menuItem("Home", tabName = "Home", icon = icon("home")),
+      menuItem("Tutorial", tabName = "Tutorial", icon = icon("book")),
+      menuItem("Download/Install", tabName = "Download", icon = icon("download")),
+      #menuItem("Raw data", tabName = "RawData", icon = icon("upload")),
+      menuItem("Upload your data", tabName = "Upload", icon = icon("upload")),
+      # bookmarkButton(),
+      menuItemOutput("dymMenu"),
+      img(src = "logo.jpg", height = 49, width = 220,style="position:absolute;bottom:0;margin:0 0 15px 10px;")
+    )
   )
 )
 
@@ -957,8 +956,8 @@ body <- dashboardBody(
                                    column(width=6,sliderInput("LabelColOffsetHeatmap", h6("Column offset"),min=0,max=4,value = 0,step = 0.5)),
                                    column(width=6,sliderInput("LabelRowOffsetHeatmap", h6("Row offset"),min=0,max=4,value = 0,step = 0.5)),
                                    column(width=12,h6(strong("Margins options"))),
-                                   column(width=6,sliderInput("rightMargin", h6("Right"),min=0,max=20,value = 6,step = 1)),
-                                   column(width=6,sliderInput("lowerMargin", h6("Lower"),min=0,max=20,value = 6,step = 1))
+                                   column(width=6,sliderInput("rightMargin", h6("Right"),min=0,max=30,value = 6,step = 1)),
+                                   column(width=6,sliderInput("lowerMargin", h6("Lower"),min=0,max=30,value = 6,step = 1))
                                  )
                 ),
                 

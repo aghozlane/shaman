@@ -123,9 +123,16 @@ Plot_Visu_Heatmap <- function(input,resDiff,export=FALSE){
     ## Transpose matrix if Horizontal
     if(input$SensPlotVisu=="Horizontal") counts_tmp_combined = t(as.matrix(counts_tmp_combined))
     
-    if(!export) plot = d3heatmap(counts_tmp_combined, dendrogram = "none", Rowv = (input$SortHeatRow == "Yes"), Colv = (input$SortHeatColumn == "Yes"), na.rm = TRUE, width=ifelse(input$modifwidthVisu,input$widthVisu, "100%"), height = input$heightVisu, show_grid = FALSE, colors = col, scale = input$scaleHeatmap, cexRow = input$LabelSizeHeatmap, cexCol=input$LabelSizeHeatmap, offsetCol=input$LabelColOffsetHeatmap, offsetRow=input$LabelRowOffsetHeatmap)
-    if(export) plot = heatmap.2(counts_tmp_combined, dendrogram = "none", Rowv = (input$SortHeatRow == "Yes"), Colv = (input$SortHeatColumn == "Yes"), na.rm = TRUE, density.info="none", margins=c(12,8),trace="none", srtCol=45, col = col, scale = input$scaleHeatmap, cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap,symm=FALSE,symkey=TRUE,symbreaks=TRUE)
-    
+    if(!export) {plot = d3heatmap(counts_tmp_combined, dendrogram = "none", Rowv = (input$SortHeatRow == "Yes"), 
+                                  Colv = (input$SortHeatColumn == "Yes"), na.rm = TRUE, width=ifelse(input$modifwidthVisu,input$widthVisu, "100%"), 
+                                  height = input$heightVisu, show_grid = FALSE, colors = col, scale = input$scaleHeatmap, cexRow = as.numeric(input$LabelSizeHeatmap), margins=c(12,30), 
+                                  cexCol=as.numeric(input$LabelSizeHeatmap), offsetCol=input$LabelColOffsetHeatmap, offsetRow=input$LabelRowOffsetHeatmap)
+    }
+    if(export){ plot = heatmap.2(counts_tmp_combined, dendrogram = "none", Rowv = (input$SortHeatRow == "Yes"), 
+                                 Colv = (input$SortHeatColumn == "Yes"), na.rm = TRUE, density.info="none", margins=c(as.numeric(input$lowerMargin),as.numeric(input$rightMargin)),trace="none",
+                                 srtCol=45, col = col, scale = input$scaleHeatmap, cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, 
+                                 offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap,symm=FALSE,symkey=FALSE,symbreaks=FALSE)
+    }
     return(plot)
   }
 }

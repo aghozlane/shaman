@@ -202,6 +202,9 @@ shinyServer(function(input, output,session) {
       { 
         tmp = GetDataFromCT(Counts,Taxo, ifelse(input$TypeTable=="MGS" && input$FileFormat!="fileBiom", TRUE, FALSE))
         data = list(counts=tmp$counts,taxo=tmp$taxo)
+        ## Remove row with only O
+        # data[["counts"]] = data[["counts"]][rowSums(data[["counts"]])>1,]
+        
         check = list(CheckCounts=tmp$CheckCounts,CheckTaxo=tmp$CheckTaxo,CheckPercent=tmp$CheckPercent)
         percent = tmp$Percent
       }    
@@ -214,11 +217,16 @@ shinyServer(function(input, output,session) {
       {
         tmp = GetDataFromBIOM(tmpBIOM)
         data = list(counts=tmp$counts,taxo=tmp$taxo)
+        ## Remove row with only O
+        # data[["counts"]] = data[["counts"]][rowSums(data[["counts"]])>1,]
+        
         check = list(CheckCounts=tmp$CheckCounts,CheckTaxo=tmp$CheckTaxo,CheckPercent=tmp$CheckPercent)
         percent = tmp$Percent
       }
     }
     
+    
+
 #     if(input$FileFormat=="fileRData")
 #     {
 #       inFile <- input$fileRData
@@ -726,7 +734,7 @@ shinyServer(function(input, output,session) {
       CreateFasta()
       values$num = 1
       tmp = tempdir()
-      home <- normalizePath("~")
+      # home <- normalizePath("~")
       home <- ""
       # path_glob = file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep))
     
