@@ -560,7 +560,7 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
     CT = OrderCounts(counts=CT,labels=labels)$CountsOrder
     CT_noNorm = CT
     RowProd = sum(apply(CT_noNorm,1,prod))
-  
+    
     merged_table = merge(CT, taxo, by="row.names")
     CT = as.data.frame(merged_table[,2: (dim(CT)[2]+1)])
     taxo = as.data.frame(merged_table[,(dim(CT)[2]+2):dim(merged_table)[2]])
@@ -573,7 +573,7 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
     
     ## Create the dds object
     dds <- DESeqDataSetFromMatrix(countData=CT, colData=target, design=design,ignoreRank=TRUE)
-
+    
     #save(dds,file="testdds.RData")
     if(is.null(VarNorm)){
       ## Counts normalisation
@@ -581,6 +581,7 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
       if(input$AccountForNA=="NonNull" || RowProd==0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT))
       if(input$AccountForNA=="All" && RowProd!=0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)))
       if(input$AccountForNA=="Weighted" && input$AccountForNA!="NonNull" ) {dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT)); sizeFactors(dds) = w.sizefactor(CT)}
+      if(input$AccountForNA=="Total counts") { sizeFactors(dds) = colSums(CT)/mean(colSums(CT))}
       normFactors = sizeFactors(dds)
       
     } else{
@@ -600,13 +601,13 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
           if(input$AccountForNA=="NonNull") {dds_tmp = estimateSizeFactors(dds_tmp,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT_tmp)); normFactors[indgrp] = sizeFactors(dds_tmp)}
           if(input$AccountForNA=="All") {dds_tmp = estimateSizeFactors(dds_tmp,locfunc=eval(as.name(input$locfunc))); normFactors[indgrp] = sizeFactors(dds_tmp)}
           if(input$AccountForNA=="Weighted" && input$AccountForNA!="NonNull" ) {dds_tmp = estimateSizeFactors(dds_tmp,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT_tmp)); normFactors[indgrp] = w.sizefactor(CT_tmp)}
-          
+          if(input$AccountForNA=="Total counts") { normFactors[indgrp] = colSums(CT_tmp)/mean(colSums(CT_tmp))}
         }
       } else{
         if(input$AccountForNA=="NonNull" || RowProd==0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT))
         if(input$AccountForNA=="All" && RowProd!=0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)))
         if(input$AccountForNA=="Weighted" && input$AccountForNA!="NonNull" ) {dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT)); sizeFactors(dds) = w.sizefactor(CT)}
-        
+        if(input$AccountForNA=="Total counts") { sizeFactors(dds) = colSums(CT)/mean(colSums(CT))}
         normFactors = sizeFactors(dds)
       }
       
@@ -618,15 +619,15 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
     
     # Only interesting OTU
     # merged_table = merge(CT, taxo[order(rownames(CT)),], by="row.names")
-
-#     merged_table = merge(CT, taxo, by="row.names")
-#     CT = as.data.frame(merged_table[,2: (dim(CT)[2]+1)])
-#     taxo = as.data.frame(merged_table[,(dim(CT)[2]+2):dim(merged_table)[2]])
-#     
-#     rownames(CT) = merged_table[,1]
-#     rownames(taxo) = merged_table[,1]
-#     #ordOTU = order(rownames(taxo))
-#     counts_annot = CT
+    
+    #     merged_table = merge(CT, taxo, by="row.names")
+    #     CT = as.data.frame(merged_table[,2: (dim(CT)[2]+1)])
+    #     taxo = as.data.frame(merged_table[,(dim(CT)[2]+2):dim(merged_table)[2]])
+    #     
+    #     rownames(CT) = merged_table[,1]
+    #     rownames(taxo) = merged_table[,1]
+    #     #ordOTU = order(rownames(taxo))
+    #     counts_annot = CT
     #       ordOTU = order(rownames(taxo))
     #       indOTU_annot = which(rownames(CT)%in%rownames(taxo))
     #       counts_annot = CT[indOTU_annot[ordOTU],]

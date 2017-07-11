@@ -569,7 +569,7 @@ body <- dashboardBody(
                            tabPanel("Normalization", 
                                     fluidRow(
                                       column(width=3,
-                                             selectizeInput("AccountForNA", h6(strong("Normalization method")),choices = c("Usual"="All", "Remove null counts"="NonNull", "Weighted"="Weighted"),selected = "NonNull")),
+                                             selectizeInput("AccountForNA", h6(strong("Normalization method")),choices = c("Usual"="All", "Remove null counts"="NonNull", "Weighted"="Weighted","Total counts"="Total counts"),selected = "NonNull")),
                                       column(width=3,
                                              uiOutput("SelectVarNorm")),
                                       column(width=3,
