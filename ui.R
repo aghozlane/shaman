@@ -77,6 +77,7 @@ body <- dashboardBody(
             box(
               title = "What's new in SHAMAN", width = NULL, status = "primary",
               div(style = 'overflow-y: scroll; height: 550px',
+                  addNews("July 18th 2017","Normalization and visualisation","A new method for normalization called total counts was added. More options have been added to the abundance tree."),
                   addNews("May 30th 2017","Bug fixes","Some visualization bug with the abundance tree and phylogenetic tree are now fixed. The export of the relative abundance and normalised abundance are now given in the right level. This update prepares the field for the next major release of shaman for June."),
                   addNews("March 30th 2017","Krona, Phylogeny and bug fixes","Krona and phylogenetic tree plots are now available in visualisation. Several new distance are available in PCOA. The import float count matrices is now ok. We have finaly debugged the export of the relative abundance/normalized matrices."),
                   addNews("Dec 9th 2016","Phylogenetic tree and stress plot","You can now upload a phylogenetic tree to calculate the unifrac distance (only available at the OTU level). 
@@ -847,13 +848,13 @@ body <- dashboardBody(
                   conditionalPanel(condition="input.PlotVisuSelect",
                                    radioButtons("NormOrRaw",label = h5(strong("Type of counts")), c("Normalized" = "norm", "Raw" = "raw"),inline=TRUE)
                   ),
-                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Scatterplot' && input.PlotVisuSelect!='Tree'",
+                  conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Scatterplot'",
                                    uiOutput("VarIntVisu"),
                                    h5(strong("Select the modalities")),
                                    uiOutput("ModVisu")
                   ),
                   # conditionalPanel(condition="input.PlotVisuSelect=='Tree'",
-                  #                   uiOutput("VarIntVisuTree")),
+                  #                  uiOutput("VarIntVisuTree")),
                   conditionalPanel(condition="input.PlotVisuSelect=='Scatterplot'",
                                    uiOutput("VarIntVisuScatter"),
                                    radioButtons("TransDataScatter","Data transformation",c("Log2 +1" = "log2","None" = "none"),inline=TRUE),
