@@ -154,7 +154,6 @@ Plot_Visu_Boxplot <- function(input,resDiff,alpha=0.7){
   VarInt = input$VisuVarInt
   ind_taxo = input$selectTaxoPlot
   
-  
   tmp_merge = GetDataToPlot(input,resDiff,VarInt,ind_taxo,aggregate=FALSE)
   counts_tmp_combined = tmp_merge$counts
   levelsMod = tmp_merge$levelsMod
@@ -201,9 +200,8 @@ Plot_Visu_Boxplot <- function(input,resDiff,alpha=0.7){
       ind = which(VarInt%in%input$BoxColorBy)
       dataBarPlot_mat$Colors = rapply(tmp, function(x) paste(x[ind],collapse ="-"), how = "unlist")
     }
-    
     dataBarPlot_mat$Samples = factor(dataBarPlot_mat$Samples,levels=levelsMod)
-    
+    dataBarPlot_mat$Colors = factor(dataBarPlot_mat$Colors,levels=levelsMod)
     gg = ggplot(dataBarPlot_mat,aes(x=Samples,y=Value,fill=Colors))  + geom_boxplot(alpha=alpha) +theme_bw()
     gg = gg  +theme(axis.text=element_text(size=16,face="bold"),axis.title=element_text(size=18,face="bold"),panel.background = element_blank(),
                     panel.grid.major = element_blank(),panel.grid.minor = element_blank(), axis.title.x=element_blank(), axis.text.x = element_text(angle = 90, hjust = 1,vjust=0.5)) 
