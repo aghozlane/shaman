@@ -150,7 +150,7 @@ if (!require(phytools)) {
 }
 
 if(!require(philentropy)){
-  devtools::install_github("HajkD/philentropy", build_vignettes = TRUE, dependencies = TRUE)
+  install.packages("philentropy")
   library(philentropy)
 }
 
