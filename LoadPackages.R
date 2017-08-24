@@ -1,10 +1,10 @@
 options(download.file.method = 'wget')
 
 if (!require("Rcpp")){
-  install.packages("Rcpp")
+  install.packages("Rcpp",  repos="http://cran.univ-paris1.fr/")
 }
 if(!require(shiny)){
-  install.packages("shiny")
+  install.packages("shiny",  repos="http://cran.univ-paris1.fr/")
   library(shiny)
 }
 if(!require(shinydashboard)){
@@ -13,52 +13,52 @@ if(!require(shinydashboard)){
 }
 
 if(!require(rjson)){
-  install.packages('rjson')
+  install.packages('rjson',  repos="http://cran.univ-paris1.fr/")
   library(rjson)
 }
 if(!require(ape)){
-  install.packages('ape')
+  install.packages('ape',  repos="http://cran.univ-paris1.fr/")
   library(ape)
 }
 
 if(!require(GUniFrac)){
-  install.packages('GUniFrac')
+  install.packages('GUniFrac',  repos="http://cran.univ-paris1.fr/")
   library(GUniFrac)
 }
 
 if(!require(devtools)){
-  install.packages('devtools')
+  install.packages('devtools',  repos="http://cran.univ-paris1.fr/")
   library(devtools)
 }
 
 if (!require(psych)) {
-  install.packages('psych')
+  install.packages('psych',  repos="http://cran.univ-paris1.fr/")
   library(psych)
 }
 
 if (!require(ggplot2)) {
-  install.packages('ggplot2')
+  install.packages('ggplot2',  repos="http://cran.univ-paris1.fr/")
   library(ggplot2)
 }
 
 if (!require(vegan)) {
-  install.packages('vegan')
+  install.packages('vegan',  repos="http://cran.univ-paris1.fr/")
   library(vegan)
 }
 
 if (!require(dendextend)) {
-  install.packages('dendextend')
+  install.packages('dendextend',  repos="http://cran.univ-paris1.fr/")
   library(dendextend)
 }
 
 if (!require(circlize)) {
-  install.packages('circlize')
+  install.packages('circlize',  repos="http://cran.univ-paris1.fr/")
   library(circlize)
 }
 
 
 if (!require(devtools)) {
-  install.packages('devtools')
+  install.packages('devtools',  repos="http://cran.univ-paris1.fr/")
   library(devtools)
 }
 if(!require(treeWeightD3)){
@@ -99,12 +99,12 @@ if (!require(genefilter)) {
 }
 
 if (!require(googleVis)) {
-  install.packages('googleVis')
+  install.packages('googleVis',  repos="http://cran.univ-paris1.fr/")
   suppressPackageStartupMessages(library(googleVis))
 }
 
 if (!require(shinyjs)) {
-  install.packages('shinyjs')
+  install.packages('shinyjs',  repos="http://cran.univ-paris1.fr/")
   library(shinyjs)
 }
 
@@ -114,17 +114,17 @@ if(!require(d3vennR)){
 }
 
 if (!require(DT)) {
-  install.packages('DT')
+  install.packages('DT',  repos="http://cran.univ-paris1.fr/")
   library(DT)
 }
 
 if (!require(RColorBrewer)) {
-  install.packages('RColorBrewer')
+  install.packages('RColorBrewer',  repos="http://cran.univ-paris1.fr/")
   library(RColorBrewer)
 }
 
 if (!require(gplots)) {
-  install.packages('gplots')
+  install.packages('gplots',  repos="http://cran.univ-paris1.fr/")
   library(gplots)
 }
 
@@ -135,22 +135,22 @@ if (!require(DESeq2)) {
 }
 
 if (!require(ade4)) {
-  install.packages('ade4')
+  install.packages('ade4',  repos="http://cran.univ-paris1.fr/")
   library(ade4)
 }
 
 if (!require(scales)) {
-  install.packages('scales')
+  install.packages('scales',  repos="http://cran.univ-paris1.fr/")
   library(scales)
 }
 
 if (!require(phytools)) {
-  install.packages('phytools')
+  install.packages('phytools',  repos="http://cran.univ-paris1.fr/")
   library(phytools)
 }
 
 if(!require(philentropy)){
-  install.packages("philentropy")
+  install.packages("philentropy",  repos="http://cran.univ-paris1.fr/")
   library(philentropy)
 }
 
@@ -170,44 +170,53 @@ if (!require("shinyWidgets")){
 }
 
 if (!require("sendmailR")){
-  install.packages("sendmailR")
+  install.packages("sendmailR",  repos="http://cran.univ-paris1.fr/")
   library(sendmailR)
 }
 
 if (!require("shinyBS")){
-  install.packages("shinyBS")
+  install.packages("shinyBS",  repos="http://cran.univ-paris1.fr/")
   library(shinyBS)
 }
 
 library(tools)
 
 if (!require("flexdashboard")){
-  install.packages("flexdashboard")
+  install.packages("flexdashboard",  repos="http://cran.univ-paris1.fr/")
   library(flexdashboard)
 }
 
 if (!require("backports")){
-  install.packages("backports")
+  install.packages("backports",  repos="http://cran.univ-paris1.fr/")
   library(backports)
 }
 
 
 if (!require("readr")){
-  install.packages("readr")
+  install.packages("readr",  repos="http://cran.univ-paris1.fr/")
   library(readr)
 }
 
 if (!require("jsonlite")){
-  install.packages("jsonlite")
+  install.packages("jsonlite",  repos="http://cran.univ-paris1.fr/")
   library(jsonlite)
 }
 
 
 if (!require("shinyFiles")){
-  install.packages("shinyFiles")
+  install.packages("shinyFiles",  repos="http://cran.univ-paris1.fr/")
   library(shinyFiles)
 }
 
+if (!require("htmltools")){
+  install.packages("htmltools",  repos="http://cran.univ-paris1.fr/")
+  library(htmltools)
+}
+
+# if (!require("V8")){
+#   install.packages("V8",  repos="http://cran.univ-paris1.fr/")
+#   library(htmltools)
+# }
 
 # if(!require(plotly)){
 #   install.packages("plotly")

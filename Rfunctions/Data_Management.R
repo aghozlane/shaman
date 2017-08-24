@@ -294,7 +294,7 @@ CheckTreeFile <- function(tree)
 
 
 ## Check Masque Input
-CheckMasque <- function(input,values)
+CheckMasque <- function(input, values, check_mail=FALSE)
 {
   Error = NULL
   HowTo = NULL
@@ -306,8 +306,9 @@ CheckMasque <- function(input,values)
   #   HowTo = "<h6><strong>Make sure that you have click the &laquo Get key &raquo button and that you have pasted the key sent by mail </strong></h6>"
   # }
   # 
-  if(is.null(Error) && is.null(values$login_email)){
-
+  print(check_mail)
+  if(is.null(Error) && is.null(values$login_email) && check_mail){
+       print("fuck")
        Error = "<h6><strong>Invalid key </strong></h6>";
        HowTo = "<h6><strong>Make sure that you have click the &laquo Get key &raquo button </strong></h6>"
   }
@@ -352,10 +353,17 @@ CheckMasque <- function(input,values)
     res = SamplesMasque(input,values)
     if(length(res$samples)==0) {
       Error = "<h6><strong>0 sample detected</strong></h6>"
-      if(input$PairedOrNot=='y') HowTo = '<h6><strong>Make sur that you click the &laquo Load &raquo button. <br /> Change the working directory and/or verify the pairs matching.</strong></h6>'
-      if(input$PairedOrNot=='n') HowTo = '<h6><strong>Make sur that you click the &laquo Load &raquo button. <br /> Change the working directory.</strong></h6>'
+      if(input$PairedOrNot=='y') HowTo = '<h6><strong>Make sure that you click the &laquo Match &raquo button. <br /> Change the working directory and/or verify the pairs matching.</strong></h6>'
+      if(input$PairedOrNot=='n') HowTo = '<h6><strong>Make sure that your samples have the correct extension (.fastq, .fq, .fastq.gz or .fq.gz). <br /> Change the working directory.</strong></h6>'
     }
     
+  }
+  
+  if(is.null(Error)) {
+    error_file = paste(values$curdir,"www","masque","error",paste('file',values$masque_key,"_error.txt",sep=""),sep= .Platform$file.sep)
+    if(file.exists(error_file)){
+      Error = "<h6><strong>An error happened during the workflow progress. Please check your email.</strong></h6>" 
+    }
   }
   
   return(list(Error=Error,HowTo=HowTo))
@@ -425,7 +433,8 @@ CreateJSON <- function(input,values){
                     "host"=input$HostName,
                     "type"=input$DataTypeMasque,
                     "mail"=values$login_email,
-                    "contaminant"= path_fasta
+                    "contaminant"= path_fasta,
+                    "pattern_R1"= input$R1files
                     )
     df %>% jsonlite::toJSON() %>% write_lines(values$json_name)
   }

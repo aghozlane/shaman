@@ -30,28 +30,38 @@ shinyServer(function(input, output,session) {
   ## Reactive target
   values <- reactiveValues(TargetWorking = target,labeled=NULL,fastq_names_only=NULL,R1fastQ=NULL,R2fastQ=NULL,
                            json_name=json_name,num=0,pass=pass,login_email = NULL,is.valid =NULL,
-                           biom_masque = NULL,tree_masque=NULL,masque_key = NULL,paths_fastq_tmp=NULL,curdir=curdir)
+                           biom_masque = NULL,tree_masque=NULL, masque_key = NULL, count_table_masque = NULL, 
+                           rdp_annot_masque = NULL, rdp_thres_masque = NULL,
+                           paths_fastq_tmp=NULL,curdir=curdir, error_progress=FALSE)
   
   ## Counts file
   dataInputCounts <-reactive({ 
     
     data = NULL
     inFile <- input$fileCounts
-    
-    if (is.null(inFile)) return(NULL)
-    
-    
-    tryCatch(read.csv(inFile$datapath,sep=input$sepcount,header=TRUE,check.names=FALSE)->data,
-             error=function(e) sendSweetAlert(messageId="ErrorCounts",
-                                              title = "Oops",
-                                              text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
+    if (is.null(inFile) && is.null(values$count_table_masque)) return(NULL)
+    #if (is.null(inFile)) return(NULL)
 
+    if (!is.null(values$count_table_masque) && file.exists(values$count_table_masque)){
+      tryCatch(read.csv(values$count_table_masque,sep="\t",header=TRUE,check.names=FALSE)->data,
+               error=function(e) sendSweetAlert(messageId="ErrorCounts",
+                                                title = "Oops",
+                                                text=paste("The count file can not be read in SHAMAN.\n \n",e),type ="error"))
+    }
+    else{
+      tryCatch(read.csv(inFile$datapath,sep=input$sepcount,header=TRUE,check.names=FALSE)->data,
+               error=function(e) sendSweetAlert(messageId="ErrorCounts",
+                                                title = "Oops",
+                                                text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
+    }
+    #print(data)
     if(!is.null(data)){
       colnames(data) = gsub("-",".",colnames(data))
       ## Rownames
       if(!TRUE%in%duplicated(data[,1])) rownames(data)=data[,1];data=data[,-1]
       try(round(data, 0)->data, silent=T)
     }
+
     return(as.data.frame(data))
   })
   
@@ -61,10 +71,11 @@ shinyServer(function(input, output,session) {
   dataInputTaxo <-reactive({ 
     
     inFile <- input$fileTaxo
-    
-    if (is.null(inFile)) return(NULL)
-    
-    if(input$TypeTaxo=="Table") 
+
+    if (is.null(inFile) && is.null(values$rdp_annot_masque)) return(NULL)
+    #if (is.null(inFile)) return(NULL)
+
+    if(input$TypeTaxo=="Table" && !is.null(inFile)) 
     {
       tryCatch(read.csv(inFile$datapath,sep=input$septaxo,header=TRUE)->data,
                error=function(e) sendSweetAlert(messageId="ErrorTaxo",
@@ -84,12 +95,20 @@ shinyServer(function(input, output,session) {
       }
     }
     
-    if(input$TypeTaxo=="RDP") 
+    if(input$TypeTaxo=="RDP" && !is.null(inFile) || !is.null(values$rdp_annot_masque)) 
     {
-      tryCatch(read_rdp(inFile$datapath,input$RDP_th)->data,
-               error=function(e) sendSweetAlert(messageId="ErrorRDP",
-                                                title = "Oops",
-                                                text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
+      if (!is.null(values$rdp_annot_masque) && file.exists(values$rdp_annot_masque)){
+        tryCatch(read_rdp(values$rdp_annot_masque,values$rdp_thres_masque)->data,
+                 error=function(e) sendSweetAlert(messageId="ErrorRDP",
+                                                  title = "Oops",
+                                                  text=paste("The annotation file can not be read in SHAMAN.\n \n",e),type ="error"))
+      }
+      else{
+        tryCatch(read_rdp(inFile$datapath,input$RDP_th)->data,
+                 error=function(e) sendSweetAlert(messageId="ErrorRDP",
+                                                  title = "Oops",
+                                                  text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
+      }
       
     }
     
@@ -108,7 +127,7 @@ shinyServer(function(input, output,session) {
     data = NULL
     inFile <- input$fileBiom
 
-    if (!is.null(inFile) && is.null(values$biom_masque)) {
+    if (!is.null(inFile) && is.null(values$biom_masque)){
       tryCatch(read_biom(inFile$datapath)->data,
                error=function(e) sendSweetAlert(messageId="ErrorBiom1",
                                                 title = "Oops",
@@ -124,7 +143,13 @@ shinyServer(function(input, output,session) {
     return(data)
   })
   
-  
+  observeEvent(input$fileCounts,{
+    values$count_table_masque=NULL;
+  })
+  observeEvent(input$fileTaxo,{
+    values$rdp_annot_masque=NULL;
+    values$rdp_thres_masque=NULL;
+  })
   observeEvent(input$fileBiom,{
     values$biom_masque=NULL;
   })
@@ -135,7 +160,7 @@ shinyServer(function(input, output,session) {
     
     data = NULL
     inFile <- input$fileTree
-    
+
     if (!is.null(inFile) && is.null(values$tree_masque)) {
       try(read.tree(inFile$datapath)->data, silent=T)
       CheckTree = CheckTreeFile(data)
@@ -588,9 +613,12 @@ shinyServer(function(input, output,session) {
       
       df <- data.frame(Label = colnames(taxo),Value = tmpPercent)
       
+      # res = gvisGauge(df,options=list(min=0, max=100, greenFrom=80,
+      #                                 greenTo=100, yellowFrom=60, yellowTo=80,
+      #                                 redFrom=0, redTo=60, width=1200, height=300))
       res = gvisGauge(df,options=list(min=0, max=100, greenFrom=80,
                                       greenTo=100, yellowFrom=60, yellowTo=80,
-                                      redFrom=0, redTo=60, width=1200, height=300))
+                                      redFrom=0, redTo=60, width=800, height=200))
     }
     return(res)
   })
@@ -724,7 +752,8 @@ shinyServer(function(input, output,session) {
   
   ## Action with submit button
   MasqueSubmit <- eventReactive(input$submit,{
-    CMP = CheckMasque(input, values)
+    #activate check_mail
+    CMP = CheckMasque(input, values,check_mail = TRUE)
     Error = CMP$Error
 
     isJSONalreadyExist = file.exists(paste(values$curdir,"www","masque","doing",basename(json_name),sep= .Platform$file.sep))
@@ -953,7 +982,7 @@ shinyServer(function(input, output,session) {
   output$InfoMasque<- renderUI({
     input$submit
 
-    CMP = isolate(CheckMasque(input, values))
+    CMP = isolate(CheckMasque(input, values, check_mail = FALSE))
     
     if(!is.null(CMP$Error) && input$submit>0) {
       toastr_error(title="Error",message=HTML(CMP$Error),closeButton = TRUE,position ="bottom-right",preventDuplicates = TRUE,newestOnTop = TRUE,
@@ -966,7 +995,7 @@ shinyServer(function(input, output,session) {
   output$InfoMasqueHowTo<- renderUI({
     input$submit
 
-    CMP = isolate(CheckMasque(input, values))
+    CMP = isolate(CheckMasque(input, values, check_mail = FALSE))
 
     if(!is.null(CMP$HowTo) && input$submit>0) {
       toastr_success(title="How to",message=HTML(CMP$HowTo),closeButton = TRUE,position ="bottom-right",preventDuplicates = TRUE,newestOnTop = TRUE,
@@ -1040,22 +1069,42 @@ shinyServer(function(input, output,session) {
   output$chimera_icon <- renderUI(
     htmltools::HTML('<img src="icons/chimera.png" alt="dna" style="width:80px;height:80px;">')
   )
-  
-  
+  output$otu_icon <- renderUI(
+    htmltools::HTML('<img src="icons/otu.png" alt="dna" style="width:80px;height:80px;">')
+  )
+  output$silva_icon <- renderUI(
+    htmltools::HTML('<img src="icons/silva.png" alt="dna" style="width:199px;height:80px;">')
+  )
+  output$greengenes_icon <- renderUI(
+    htmltools::HTML('<img src="icons/greengenes.png" alt="dna" style="width:143px;height:80px;">')
+  )
+  output$rdp_icon <- renderUI(
+    htmltools::HTML('<img src="icons/rdp.png" alt="dna" style="width:107px;height:80px;">')
+  )
+  output$findley_icon <- renderUI(
+    htmltools::HTML('<img src="icons/findley.png" alt="dna" style="width:131px;height:80px;">')
+  )
+  output$unite_icon <- renderUI(
+    htmltools::HTML('<img src="icons/unite.png" alt="dna" style="width:163px;height:80px;">')
+  )
+  output$underhill_icon <- renderUI(
+    htmltools::HTML('<img src="icons/underhill.png" alt="dna" style="width:80px;height:80px;">')
+  )
+
   #####################################
   
   
   
   output$progressBoxMasque <- renderValueBox({
     res = NULL
+    error_progress = values$error_progress
     num = round(as.numeric(values$num),1)
     res = shinydashboard::valueBox("0 %",h6(strong("Waiting for the data...")), color = "light-blue",width=NULL,icon = uiOutput("spinner_icon"))  
-    
-    CMP = isolate(CheckMasque(input, values))
+    CMP = isolate(CheckMasque(input, values, check_mail=FALSE))
     Error = CMP$Error
-    
-    if(is.null(Error) || num>=1) res = shinydashboard::valueBox(paste(values$num,"%"),h6(strong("Analysis in progress...")), color = "green",width=NULL,icon = uiOutput("spinner_anim"))  
     if(num>=100) res = shinydashboard::valueBox(paste("100 %"),h6(strong("Analysis completed ! Check your mail.")), color = "green",width=NULL,icon =  uiOutput("check_icon"))
+    else if(is.null(Error) || num>=1) res = shinydashboard::valueBox(paste(values$num,"%"),h6(strong("Analysis in progress...")), color = "green",width=NULL,icon = uiOutput("spinner_anim"))  
+    else if(!is.null(Error) && num>=1 || error_progress) res = shinydashboard::valueBox(paste(values$num,"%"),h6(strong("Workflow failed during progression...")), color = "red",width=NULL,icon = uiOutput("spinner_anim"))  
     return(res)
   })
   
@@ -1084,7 +1133,7 @@ shinyServer(function(input, output,session) {
     res = infoBox("Get a key","Require a valid email address", color = "light-blue",width=NULL,icon = uiOutput("key_icon"),fill = TRUE)
     
     if(input$checkMail>=1 && isValidEmail(input$to))  res = infoBox("Key created !",paste("Your key is ",values$pass), color = "green",width=NULL,icon = uiOutput("key_icon"),fill = TRUE)
-    if(input$checkMail>=1 && !isValidEmail(input$to))  res = infoBox("Invalid emial","Enter a valid email address to get your key", color = "red",width=NULL,icon = uiOutput("key_icon"),fill = TRUE)
+    if(input$checkMail>=1 && !isValidEmail(input$to))  res = infoBox("Invalid email","Enter a valid email address to get your key", color = "red",width=NULL,icon = uiOutput("key_icon"),fill = TRUE)
     return(res)
   })
   
@@ -1143,8 +1192,9 @@ shinyServer(function(input, output,session) {
   observe({
 
     Timer()
-    CMP = isolate(CheckMasque(input, values))
+    CMP = isolate(CheckMasque(input, values, check_mail=FALSE))
     Error = CMP$Error
+
     if(is.null(Error) && isolate(values$num)<100){
       
       progress_file = paste(values$curdir,"www","masque","doing",paste(basename(file_path_sans_ext(json_name)),"_progress",".txt",sep=""),sep= .Platform$file.sep)
@@ -1160,8 +1210,9 @@ shinyServer(function(input, output,session) {
         }
       }
     }
-    
-  })
+    #CHANGEMENT DE COULEUR BORDEL
+    else if(!is.null(Error) && isolate(values$num)>=1) values$error_progress = TRUE
+})
   
   
   observe({
@@ -1223,16 +1274,18 @@ shinyServer(function(input, output,session) {
   
   observeEvent(input$Check_project,{
     values$masque_key = input$password
-    resbox = Project_box_result(values$masque_key,values$curdir)
-    PS = resbox$PS
-    passOK = PS$passOK
-    
-    if(!is.null(input$password) && input$password!="" && !passOK){ 
+    PS = Project_status(values$masque_key,values$curdir)
+    #resbox = Project_box_result(values$masque_key,values$curdir)
+    #PS = resbox$PS
+    #passOK = PS$passOK
+    #if(!is.null(input$password) && input$password!="" && !passOK){
+    if(!is.null(input$password) && input$password!="" && !PS$passOK){ 
       removeCssClass(class = 'pwdGREEN', selector = '#password')
       addCssClass(class = 'pwdRED', selector = '#password')
     }
     
-    if(!is.null(input$password) && input$password!="" && passOK){  
+    #if(!is.null(input$password) && input$password!="" && passOK){  
+    if(!is.null(input$password) && input$password!="" && PS$passOK){
       removeCssClass(class = 'pwdRED', selector = '#password')
       addCssClass(class = 'pwdGREEN', selector = '#password')
       hideElement("masque-form",anim=TRUE)
@@ -1240,34 +1293,42 @@ shinyServer(function(input, output,session) {
       hideElement("boxsum",anim=TRUE)
       showElement("reload-project",anim=TRUE)
       hideElement("project_over",anim=TRUE)
-      hideElement("MasqueToShaman",anim=TRUE)
-      
+      hideElement("pass",anim=TRUE)
+      #showElement("MasqueToShaman",anim=TRUE)
     }
     if(is.null(input$password) || input$password==""){    
       removeCssClass(class = 'pwdRED', selector = '#password')
       removeCssClass(class = 'pwdGREEN', selector = '#password')
     }
-    
   })
   
+  #eventReactive(input$refresh, {
+  #  shinyjs::js$refresh()
+    #hideElement("gaugeMasque_progress")
+    #reset("gaugeMasque_progress")
+    #showElement("gaugeMasque_progress")
+    #shinyjs::reset("gaugeMasque_progress")
+    #shinyjs::reset("reload-project")
+    #showElement("reload-project")
+  #})
   
   observeEvent(input$Check_project_over,{
     values$masque_key = values$pass
-    resbox = Project_box_result(values$masque_key,values$curdir)
-    PS = resbox$PS
-    passOK = PS$passOK
+    PS = Project_status(values$masque_key,values$curdir)
+    #resbox = Project_box_result(values$masque_key,values$curdir)
+    #PS = resbox$PS
+    #passOK = PS$passOK
     
-    
-    if(passOK){  
+    if(PS$passOK){  
       hideElement("masque-form",anim=TRUE)
       hideElement("masque-infobox",anim=TRUE)
       hideElement("boxsum",anim=TRUE)
       showElement("reload-project",anim=TRUE)
       hideElement("project_over",anim=TRUE)
-      hideElement("MasqueToShaman",anim=TRUE)
+      #showElement("MasqueToShaman",anim=TRUE)
+      ##TODO test
+      hideElement("pass",anim=TRUE)
     }
-    
-    
   })
   
 
@@ -1359,6 +1420,7 @@ shinyServer(function(input, output,session) {
     showElement("masque-infobox",anim=TRUE)
     showElement("masque-form",anim=TRUE)
     showElement("boxsum",anim=TRUE)
+    showElement("pass",anim=TRUE)
     hideElement("reload-project",anim=TRUE)
     hideElement("project-over-wait",anim=TRUE)
     hideElement("project_over",anim=TRUE)
@@ -1378,7 +1440,7 @@ shinyServer(function(input, output,session) {
   # })
   # 
   output$masque_status_key <-renderUI({
-    
+    input$refresh
     res = NULL
     resbox = Project_box_result(values$masque_key,values$curdir)
 
@@ -1452,6 +1514,7 @@ shinyServer(function(input, output,session) {
     res = NULL
     PS = Project_status(values$masque_key,values$curdir)
     if(PS$passOK){
+
       if(PS$status=="doing"){
         json_file = PS$file
         progress_file = paste(values$curdir,"www","masque","doing",paste(basename(file_path_sans_ext(json_file)),"_progress",".txt",sep=""),sep= .Platform$file.sep)
@@ -1474,7 +1537,7 @@ shinyServer(function(input, output,session) {
   
   output$build_process_table <- DT::renderDataTable({
     folder_name = paste('file',values$masque_key,sep="")
-    build_process = paste(values$curdir,"www","masque","done",folder_name,"shaman_build_process.tsv",sep= .Platform$file.sep)
+    build_process = paste(values$curdir,"www","masque","done",folder_name,"shaman_process_build.tsv",sep= .Platform$file.sep)
     if(file.exists(build_process))
     {
       bp = read.csv(build_process,sep="\t",header=TRUE)
@@ -1595,12 +1658,35 @@ shinyServer(function(input, output,session) {
   # })
 
   
-  observeEvent(input$RunResMasque,{
-    updateSelectInput(session, "FileFormat","",selected = "fileBiom")
-    reset("fileBiom"); reset("fileTree")
-    values$biom_masque = paste(values$curdir,"www","masque","done",basename(file_path_sans_ext(json_name)),paste("shaman_",input$masque_database,".biom",sep=""),sep= .Platform$file.sep)
-    values$tree_masque = paste(values$curdir,"www","masque","done",basename(file_path_sans_ext(json_name)),paste("shaman_tree_",input$masque_database,".nhx",sep=""),sep= .Platform$file.sep)
-
+  #observeEvent(input$RunResMasque,{
+  #  sendSweetAlert(messageId="WTF2", title = "Success", text = "EUHHH", type = "success", html=TRUE)
+    #updateSelectInput(session, "FileFormat","",selected = "fileBiom")
+    #reset("fileBiom"); reset("fileTree"); print("WTG");
+    #reset("fileBiom")
+    #reset("fileTree")
+    #values$biom_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_",input$masque_database,".biom",sep=""),sep= .Platform$file.sep)
+    #values$tree_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_",input$masque_database,"_tree.nhx",sep=""),sep= .Platform$file.sep)
+  #})
+  
+  observeEvent(input$LoadResMasque, {
+    
+    if (input$masque_db == "rdp"){
+      updateSelectInput(session, "FileFormat","",selected = "fileCounts")
+      updateSelectInput(session, "TypeTaxo","",selected = "RDP")
+      reset("fileTaxo")
+      reset("fileCounts")
+      values$rdp_thres_masque = as.numeric(input$rdp_thres)
+      values$rdp_annot_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),"shaman_rdp_annotation.tsv",sep= .Platform$file.sep)
+      values$count_table_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),"shaman_otu_table.tsv",sep= .Platform$file.sep)
+    }
+    else{
+      updateSelectInput(session, "FileFormat","",selected = "fileBiom")
+      reset("fileBiom")
+      reset("fileTree")
+      values$biom_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_",input$masque_db,".biom",sep=""),sep= .Platform$file.sep)
+      values$tree_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_",input$masque_db,"_tree.nhx",sep=""),sep= .Platform$file.sep)
+    }
+    sendSweetAlert(messageId="LoadResMasque", title = "Success", text = "Processed data were successfully loaded. You can go to statistical analysis part to analyze your data with SHAMAN.", type = "success", html=TRUE)
   })
   
   
@@ -1608,7 +1694,7 @@ shinyServer(function(input, output,session) {
   output$Download_masque_zip <- downloadHandler(
     filename = function() { paste("SHAMAN_",values$masque_key,'.zip',sep="")},
     content = function(file){
-      zip_file = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,".zip",sep=""),sep= .Platform$file.sep)
+      zip_file = paste(values$curdir,"www","masque","done",paste("shaman_",values$masque_key,".zip",sep=""),sep= .Platform$file.sep)
       if(file.exists(zip_file)){file.copy(zip_file, file)}
     }
   )

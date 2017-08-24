@@ -4,3 +4,8 @@
 .Rproj.user
 *.Rproj
 *.json
+www/masque/doing/*
+www/masque/todo/*
+www/masque/done/*
+www/masque/error/*
+www/masque.png

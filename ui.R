@@ -13,9 +13,9 @@ sidebar <- dashboardSidebar(
       menuItem("Home", tabName = "Home", icon = icon("home")),
       menuItem("Tutorial", tabName = "Tutorial", icon = icon("book")),
       menuItem("Download/Install", tabName = "Download", icon = icon("download")),
-      #menuItem("Raw data", tabName = "RawData", icon = icon("upload")),
+      menuItem("Raw data (Beta)", tabName = "RawData", icon = icon("upload")),
       menuItem("Upload your data", tabName = "Upload", icon = icon("upload")),
-      # bookmarkButton(),
+      #bookmarkButton(),
       menuItemOutput("dymMenu"),
       img(src = "logo.jpg", height = 49, width = 220,style="position:absolute;bottom:0;margin:0 0 15px 10px;")
     )
@@ -59,13 +59,9 @@ body <- dashboardBody(
                             p(a("Stevenn Volant", href="mailto:stevenn.volant@pasteur.fr"), "(Initiator, coding, testing, documentation, evaluation)"),
                             p(a("Amine Ghozlane",href="mailto:amine.ghozlane@pasteur.fr"), "(Coding, testing, documentation, evaluation, packaging)"),
                             p("Pierre Lechat", "(Coding, testing, feature suggestions)"),
-                            p("Hugo Varet", "(Coding, testing, feature suggestions)"),
-                            p("Christophe Malabat", "(Packaging)"), 
-                            p("Marie-Agnès Dillies", "(Evaluation)"),
-                            p("Sean Kennedy", "(Evaluation)"),
                             h3("Acknowledgements"),
                             p("Thanks to the following people for patches and other suggestions for improvements:"),
-                            p("Carine Rey, ","Alexis Criscuolo, ","Julien Tap, ","Anna Zhukova, ", "Rachel Torchet.")
+                            p("Carine Rey, ", "Hugo Varet,", "Julien Tap, ","Anna Zhukova.")
                           ),
                    tabPanel("Citing SHAMAN",
                    p("No papers about SHAMAN have been published yet, but a manuscript is in preparation.",style = "font-family: 'times'; font-si16pt"),
@@ -221,7 +217,8 @@ body <- dashboardBody(
                      )
               )
             ),
-    tabItem(id="rawdatatab",tabName = "RawData",
+    #id="rawdatatab",
+    tabItem(tabName = "RawData",
             tags$style(type='text/css', ".well { max-width: 20em; }"),
             # tags$head(tags$style(HTML(InfoBoxCSS))),
             tags$head(tags$script("$(function() { $(\"[data-toggle='popover']\").popover(); })")),
@@ -234,7 +231,7 @@ body <- dashboardBody(
               column(width=3,
                      withPopup(infoBoxOutput("infoBoxPass",width=NULL),
                                       title="Once you have entered a valid email address, click on this button:",
-                                      img_src="helpPopPup/GetKey_button.png")
+                                      img_src="icons/GetKey_button.png")
                      ),
               column(width=3,
                     infoBoxOutput("infoBoxFastQ",width=NULL)
@@ -379,26 +376,34 @@ body <- dashboardBody(
                   actionButton("Check_project_over", h2("Check results"),icon=icon("check-circle fa-2x"),class="btn-primary",style = "color: #fff"),
                   tags$style(type='text/css', "#Check_project_over {margin-top: 15px;width:50%;}")
               ),
-              div(id="reload-project",style="display: none;",
-                  actionButton("comeback",strong("Close and come back"),icon=icon("backward")),
-                  uiOutput("masque_status_key")
-                ),
+              
               div(id="current-project",style="display: none;",
                   uiOutput("masque_results")
               ),
               div(id="project-over-wait",style="display: none;",
                   HTML('<center><h1><strong> Please wait during the creation of the files...</strong></h1> <br/> <em><h4> This can take about 30 seconds</h4> </em> </center>'),
                   tags$img(src = "gears.gif",id ="loading-spinner")
+              )),
+              div(id="reload-project",style="display: none;",
+                  column(width=12,
+                  actionButton("comeback",strong("Close and come back"),icon=icon("backward")),
+                  #shinyjs::useShinyjs(),
+                  #shinyjs::extendShinyjs(text = "shinyjs.refresh = function() { history.go(0); }"),
+                  actionButton("refresh", "Refresh progress"),
+                  uiOutput("masque_status_key")
+                  
+                  )
               ),
-              div(id="MasqueToShaman",style="display: none;",
-              box(title="Upload the results",width = 4, status = "success",
-                        selectInput("masque_database","Select the database",choices=c("Silva" = "silva","Greengenes" = "greengenes")),
-                        tags$style(type='text/css', "#masque-database { width:100%; margin-top: 5px;}"),
-                        actionButton("RunResMasque",label = "Upload the results",icon=icon('upload')),
-                        tags$style(type='text/css', "#RunResMasque { width:100%; margin-top: 15px;}")
-              )
-              )
-              ),
+              # div(id="MasqueToShaman",style="display: none;",
+              #     column(width=3,
+              #     #uiOutput("loaddb"),
+              #     box(id="box-zip",title="Download .zip file",width = NULL, status = "success",
+              #         downloadButton('Download_masque_zip', 'Download the results'),
+              #         tags$style(type='text/css', "#Download_masque_zip { width:100%;}")
+              #     )
+              #     )
+              # ),
+              div(id="pass",style = "word-wrap: break-word;",
               column(width=3,
                      box(id="boxpass",title = strong("Enter the key"), width = NULL, background = "light-blue",
                          inlineCSS(list(.pwdGREEN = "background-color: #DDF0B3",.pwdRED = "background-color: #F0B2AD")),
@@ -415,7 +420,7 @@ body <- dashboardBody(
                      # valueBoxOutput("progressBoxMasque",width = 12),
                      # infoBox(title = "tete",icon= uiOutput("spinner_icon"),width=12),
                      uiOutput("summary_box_masque")
-              ),
+              )),
                  column(width=3,
                 #        inlineCSS(gaugeCSS),
                 #        gaugeOutput("gaugeMasque", width = "100%", height = "100%"),
