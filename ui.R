@@ -73,6 +73,7 @@ body <- dashboardBody(
             box(
               title = "What's new in SHAMAN", width = NULL, status = "primary",
               div(style = 'overflow-y: scroll; height: 550px',
+                  addNews("September 4th 2017","Bioinformatics","The bioinformatic treatment of fastq reads is now available in SHAMAN. For now, SHAMAN allows to compute OTU, build an OTU table and annotate them with the last version of the available database. This application is for 16S/18S/23S/28S/ITS sequencing."),
                   addNews("July 18th 2017","Normalization and visualisation","A new method for normalization called total counts was added. More options have been added to the abundance tree."),
                   addNews("May 30th 2017","Bug fixes","Some visualization bug with the abundance tree and phylogenetic tree are now fixed. The export of the relative abundance and normalised abundance are now given in the right level. This update prepares the field for the next major release of shaman for June."),
                   addNews("March 30th 2017","Krona, Phylogeny and bug fixes","Krona and phylogenetic tree plots are now available in visualisation. Several new distance are available in PCOA. The import float count matrices is now ok. We have finaly debugged the export of the relative abundance/normalized matrices."),
