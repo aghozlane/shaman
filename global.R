@@ -1,10 +1,10 @@
 # Allow to upload 50M files only shaman server
-if(Sys.info()["nodename"] == "ShinyPro"){
-  options(shiny.maxRequestSize=100*1024^2)
-}else{
-  # No limit
-  options(shiny.maxRequestSize=500000000000000*1024^2)
-}
+#if(Sys.info()["nodename"] == "ShinyPro"){
+#  options(shiny.maxRequestSize=1000000000*1024^2)
+#}else{
+# No limit with the raw data submission
+options(shiny.maxRequestSize=500000000000000*1024^2)
+#}
 
 
 source('LoadPackages.R')
