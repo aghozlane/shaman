@@ -304,7 +304,7 @@ body <- dashboardBody(
               div(id="masque-form",
                 box(title="About",width = NULL, status = "primary",
   
-                  column(width=6,  radioButtons("DataTypeMasque",label = "Type of data",choices = c("16S/18S" = "16S_18S","23S/28S" = "23S_28S","ITS" = "ITS"),inline = TRUE)),
+                  column(width=6,  radioButtons("DataTypeMasque",label = "Type of data",choices = c("16S" = "16S", "18S" = "18S","23S/28S" = "23S_28S","ITS" = "ITS"),inline = TRUE)),
                   column(width=6,  radioButtons("PairedOrNot",label = "Paired-end sequencing ?",choices = c('Yes'="y","No"="n"),selected = "n",inline = TRUE)),
                   column(width=3,  textInput("to", "Email address *", value="yyy@xxx"),
                                     bsTooltip("to", "Enter a valid email address to get your results","bottom",trigger = "hover", options = list(container = "body"))
