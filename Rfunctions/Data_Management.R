@@ -306,9 +306,7 @@ CheckMasque <- function(input, values, check_mail=FALSE)
   #   HowTo = "<h6><strong>Make sure that you have click the &laquo Get key &raquo button and that you have pasted the key sent by mail </strong></h6>"
   # }
   # 
-  print(check_mail)
   if(is.null(Error) && is.null(values$login_email) && check_mail){
-       print("fuck")
        Error = "<h6><strong>Invalid key </strong></h6>";
        HowTo = "<h6><strong>Make sure that you have click the &laquo Get key &raquo button </strong></h6>"
   }

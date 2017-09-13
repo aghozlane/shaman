@@ -568,7 +568,7 @@ body <- dashboardBody(
                                              radioButtons("locfunc",h6(strong("Local function")),choices = c("Median"="median","Shorth"="shorth"))
                                       ),  
                                       column(width=3,
-                                             radioButtons("fitType",h6(strong("Relationship")),choices = c("Parametric"="parametric","Local"="local"))
+                                             radioButtons("fitType",h6(strong("Relationship")),choices = c("Parametric"="parametric","Local"="local", "Mean"="mean"))
                                       )
                                       # column(width=3,uiOutput("RefSelect"))
                                     )
