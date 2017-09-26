@@ -781,13 +781,13 @@ shinyServer(function(input, output,session) {
           if(dir.exists(pathToR2)){file.remove(list.files(pathToR2,full.names =TRUE))} else dir.create(pathToR2)
         for(i in values$R1fastQ){
           ind=which(i==values$paths_fastq_tmp[,"name"])[1]
-          file.copy(from=values$paths_fastq_tmp[,"datapath"][ind], to=paste(tmp,"Masque_files_R1",i,sep= .Platform$file.sep))
+          file.rename(from=values$paths_fastq_tmp[,"datapath"][ind], to=paste(tmp,"Masque_files_R1",i,sep= .Platform$file.sep))
           cmp = cmp +1
           incProgress(cmp/nfiles, detail = "Forward fastq files...")
         }
           for(i in values$R2fastQ){
             ind=which(i==values$paths_fastq_tmp[,"name"])[1]
-            file.copy(from=values$paths_fastq_tmp[,"datapath"][ind], to=paste(tmp,"Masque_files_R2",i,sep= .Platform$file.sep))
+            file.rename(from=values$paths_fastq_tmp[,"datapath"][ind], to=paste(tmp,"Masque_files_R2",i,sep= .Platform$file.sep))
             cmp = cmp +1
             incProgress(cmp/nfiles, detail = "Reverse fastq files...")
           }
@@ -806,7 +806,7 @@ shinyServer(function(input, output,session) {
           
           for(i in values$fastq_names_only){
             ind=which(i==values$paths_fastq_tmp[,"name"])[1]
-            file.copy(from=values$paths_fastq_tmp[,"datapath"][ind], to=paste(tmp,"Masque_files",i,sep= .Platform$file.sep));cmp = cmp +1;incProgress(cmp/nfiles)}
+            file.rename(from=values$paths_fastq_tmp[,"datapath"][ind], to=paste(tmp,"Masque_files",i,sep= .Platform$file.sep));cmp = cmp +1;incProgress(cmp/nfiles)}
         })
       }
       
