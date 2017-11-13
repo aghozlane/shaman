@@ -1621,7 +1621,9 @@ shinyServer(function(input, output,session) {
     mailControl=list(smtpServer="smtp.pasteur.fr")
     from="<shaman@pasteur.fr>"
     ## Send mail
-    sendmail(from=from,to=to,subject=subject,msg=body,control=mailControl)
+    if(Sys.info()["nodename"] == "ShinyPro"){
+      sendmail(from=from,to=to,subject=subject,msg=body,control=mailControl)
+    }
     
     ## Update the key value.
     updateTextInput(session,"password","",value = values$pass)
