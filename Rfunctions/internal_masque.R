@@ -48,8 +48,8 @@ Project_box_result <- function(masque_key,curdir){
       if(file.exists(annot_process))
       {
         ap = read.csv(annot_process,sep="\t")
-        if(json_data[[1]]$type == "16S") db_choices = c("Silva" = "silva","Greengenes" = "greengenes", "RDP"= "rdp")
-        else if(json_data[[1]]$type == "23S_28S" || json_data[[1]]$type == "18S") db_choices = c("Silva" = "silva","RDP"= "rdp")
+        if(json_data$type == "16S") db_choices = c("Silva" = "silva","Greengenes" = "greengenes", "RDP"= "rdp")
+        else if(json_data$type == "23S_28S" || json_data$type == "18S") db_choices = c("Silva" = "silva","RDP"= "rdp")
         else db_choices = c("Findley" = "findley", "Underhill"= "underhill", "Unite"= "unite", "RDP"= "rdp")
         #build_process = paste(curdir,"www","masque","done",folder_name,"shaman_process_annotation.tsv",sep= .Platform$file.sep)
         res[[1]] = fluidRow(
@@ -65,7 +65,7 @@ Project_box_result <- function(masque_key,curdir){
                  shinydashboard::valueBox(ap$Count[5],tags$strong(tags$h5("Number of OTU", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("otu_icon"))
           ),
           #column(width=5, div(img(src = "masque.png",width = "50%",height = "20%"))),
-          if(json_data[[1]]$type == "16S"){
+          if(json_data$type == "16S"){
             column(width=5,
                    strong(h3("16S annotation process")),
                    shinydashboard::valueBox(ap$Count[6],tags$strong(tags$h5("Number of OTU annotated by SILVA", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("silva_icon")),
@@ -73,14 +73,14 @@ Project_box_result <- function(masque_key,curdir){
                    shinydashboard::valueBox(ap$Count[8],tags$strong(tags$h5("Number of OTU annotated by RDP", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("rdp_icon"))
             )
           }
-          else if(json_data[[1]]$type == "18S"){
+          else if(json_data$type == "18S"){
             column(width=5,
                    strong(h3("18S annotation process")),
                    shinydashboard::valueBox(ap$Count[6],tags$strong(tags$h5("Number of OTU annotated by SILVA", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("silva_icon")),
                    shinydashboard::valueBox(ap$Count[8],tags$strong(tags$h5("Number of OTU annotated by RDP", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("rdp_icon"))
             )
           }
-          else if(json_data[[1]]$type == "23S_28S"){
+          else if(json_data$type == "23S_28S"){
             column(width=5,
                    strong(h3("23S/28S annotation process")),
                    shinydashboard::valueBox(ap$Count[6],tags$strong(tags$h5("Number of OTU annotated by SILVA", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("silva_icon")),
@@ -120,7 +120,6 @@ Project_box_result <- function(masque_key,curdir){
          )
         )
       } else{res =HTML('<center><h1><strong>Your project is done !</strong></h1> <br/> <em><h4>Result can not be shown...</h4> </em> </center>')}
-      
       
       build_process = paste(curdir,"www","masque","done",folder_name,"shaman_process_build.tsv",sep= .Platform$file.sep)
       if(file.exists(build_process))

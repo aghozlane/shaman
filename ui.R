@@ -352,10 +352,10 @@ body <- dashboardBody(
                     
                   ),
                   box(id="box-match",title=" Match the paired files (only for paired-end sequencing)",width = NULL, status = "primary",
-                          column(width=6,  textInput("R1files",label = "Suffix R1 (Forward)",value = "_R1"),
+                          column(width=6,  textInput("R1files",label = "Suffix R1 (Forward, do not include file extension)",value = "_R1"),
                                 selectInput("R1filesList",label = "","",multiple =TRUE,selectize=FALSE)),
                                 column(width=6,  
-                                        textInput("R2files",label = "Suffix R2 (Reverse)",value = "_R2"),
+                                        textInput("R2files",label = "Suffix R2 (Reverse, do not include file extension)",value = "_R2"),
                                         selectInput("R2filesList",label = "","",multiple =TRUE,selectize=FALSE)
                                        ),
                                 column(width=12,
