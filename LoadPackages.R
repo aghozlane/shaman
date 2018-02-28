@@ -1,4 +1,4 @@
-options(download.file.method = 'wget')
+options(download.file.method = 'wget', bitmapType='cairo')
 
 if (!require("Rcpp")){
   install.packages("Rcpp",  repos="http://cran.univ-paris1.fr/")
