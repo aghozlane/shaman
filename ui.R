@@ -13,7 +13,7 @@ sidebar <- dashboardSidebar(
       menuItem("Home", tabName = "Home", icon = icon("home")),
       menuItem("Tutorial", tabName = "Tutorial", icon = icon("book")),
       menuItem("Download/Install", tabName = "Download", icon = icon("download")),
-      menuItem("Raw data (Beta)", tabName = "RawData", icon = icon("upload")),
+      menuItem("Raw data", tabName = "RawData", icon = icon("upload")),
       menuItem("Upload your data", tabName = "Upload", icon = icon("upload")),
       #bookmarkButton(),
       menuItemOutput("dymMenu"),
@@ -64,10 +64,17 @@ body <- dashboardBody(
                             p("Carine Rey, ", "Hugo Varet,", "Julien Tap, ","Anna Zhukova.")
                           ),
                    tabPanel("Citing SHAMAN",
-                   p("No papers about SHAMAN have been published yet, but a manuscript is in preparation.",style = "font-family: 'times'; font-si16pt"),
+                   p("If you use SHAMAN for your project, please cite our first application of SHAMAN in Quereda et al. 2016.",style = "font-family: 'times'; font-si16pt"),
                    p("Publication using SHAMAN :",style = "font-family: 'times'; font-si18pt; font-style: strong"),
+                   p(a("Characteristics of Fecal Microbiota in Pediatric Crohn’s Disease and Their Dynamic Changes During Infliximab Therapy.", href="https://www.ncbi.nlm.nih.gov/pubmed/29194468"), "Wang Y, Gao X, Ghozlane A, Hu H, Li X, Xiao Y, Li D, Yu G, Zhang T; Journal of Crohn's & colitis  2017",style = "font-family: 'times'; font-si16pt"),
+                   p(a("Carryover effects of larval exposure to different environmental bacteria drive adult trait variation in a mosquito vector.", href="https://www.ncbi.nlm.nih.gov/pubmed/28835919"), "Dickson LB, Jiolle D, Minard G, Moltini-Conclois I, Volant S, Ghozlane A, Bouchier C, Ayala D, Paupy C, Moro CV, Lambrechts L; Science Advances 2017",style = "font-family: 'times'; font-si16pt"),
                    p(a("A bacteriocin from epidemic Listeria strains alters the host intestinal microbiota to favor infection.", href="http://www.ncbi.nlm.nih.gov/pubmed/27140611"), "Quereda JJ, Dussurget O, Nahori MA, Ghozlane A, Volant S, Dillies MA, Regnault B, Kennedy S, Mondot S, Villoing B, Cossart P, Pizarro-Cerda J.; PNAS 2016",style = "font-family: 'times'; font-si16pt"),
-                   p("If you have any comments, questions or suggestions, or need help to use SHAMAN, please contact authors", a("here", href="mailto:shaman@pasteur.fr"),".", style = "font-family: 'times'; font-si16pt; color:red")
+                   p("Reporting bugs, ask for help",style = "font-family: 'times'; font-si18pt; font-style: strong"),
+                   p("If you have any comments, questions or suggestions, or need help to use SHAMAN, please contact us at", a("shaman@pasteur.fr", href="mailto:shaman@pasteur.fr"),"and please provide us with enough information that we can recreate the problem. Useful things to include are:", style = "font-family: 'times'; font-si16pt;"),
+                   tags$ul(
+                     tags$li("Input data (or examples, a small test case sufficient to recreate the problem)"), 
+                     tags$li("Information about which system your are using: web version, docker or R installation")
+                   )
             )))),
               column(width=3,
             box(
@@ -96,11 +103,15 @@ body <- dashboardBody(
               )
               )
     ),
-
     tabItem(tabName = "Tutorial",
             div(style="width:100% ; max-width: 1200px",
             tabBox(title="How to use SHAMAN", id="tabset1", width =NULL,
             tabPanel("Introduction",
+            p("First check out our user guide:"),
+            tags$ul(
+             tags$li(a("User's guide", href="Userguide.pdf")), 
+             tags$li(a("Writing a target file for the experimental design", href="experimental_design_guide.pdf")) 
+            ),
             p(" You can test SHAMAN with the dataset from", a("[Tap et al. 2015]",href="http://www.ncbi.nlm.nih.gov/pubmed/26235304"),
               ", which is available", a("here",target="_blank",href="Alimintest.zip"),"."),
             p("The zip archive contains 4 different files :", br(),
@@ -322,6 +333,9 @@ body <- dashboardBody(
                   column(width=6,checkboxInput("primer", "Specify the primer"),
                                   bsTooltip("primer", "If no, default values are chosen","bottom", options = list(container = "body"))
                          ),
+                  column(width=6,checkboxInput("options", "More workflow options"),
+                         bsTooltip("options", "If no, default values are chosen","bottom", options = list(container = "body"))
+                  ),
                   conditionalPanel(condition="input.primer && input.PairedOrNot=='y'",
                                    column(width=12,
                                      textInput("R1primer",label = "Forward primer",value = "TCGTCGGCAGCGTCAGATGTGTATAAGAGACAGCCTACGGGNGGCWGCAG"),
@@ -332,6 +346,34 @@ body <- dashboardBody(
                                    column(width=12,
                                      textInput("primerSingle",label = "Primer",value = "TCGTCGGCAGCGTCAGATGTGTATAAGAGACAGCCTACGGGNGGCWGCAG")
                                    )
+                  ),
+                  conditionalPanel(condition="input.options",
+                                   column(width=4, h3("Read processing"),
+                                          sliderInput("phredthres", "Phred quality score cutoff to trim off low-quality read ends",
+                                                      min = 0, max = 40, value = 20),
+                                          sliderInput("mincorrect", "Minimum allowed percentage of correctly called nucleotides per reads",
+                                                      min = 50, max = 100, value = 80),
+                                          numericInput("minreadlength", "Minimum read length", 50,step=1,min=50),
+                                          conditionalPanel(condition="input.options && input.PairedOrNot=='y'", numericInput("minoverlap", "Minimum overlap size", 10,step=1,min=1))
+                                          
+                                   ),
+                                   column(width=4, h3("OTU processing"),
+                                          selectInput("dreptype", "Dereplication ", choices = list("Prefix" = "--derep_prefix", "Full length" = "--derep_fulllength"), selected = "--derep_prefix"),
+                                          numericInput("maxampliconlength", "Maximum OTU length (0 is no limit)", 0,step=1,min=0),
+                                          numericInput("minampliconlength", "Minimum OTU length", 50, step=1, min=35),
+                                          numericInput("minabundance", "Minimum abundance at dereplication", 4, step=1, min=2),
+                                          selectInput("clusteringstrand", "Clustering strand ", choices = list("Both" = "both", "Plus" = "plus"), selected = "both"),
+                                          sliderInput("clusteringthreshold", "Clustering threshold", min = 0, max = 1, value = 0.97)),
+                                   column(width=4, h3("OTU annotation"),
+                                          selectInput("annotationstrand", "Annotation strand ", choices = list("Both" = "both", "Plus" = "plus"), selected = "both"),
+                                          sliderInput("annotationKingdomthreshold", "Minimum identity for Kingdom annotation", min = 0, max = 1, value = 0.75, step = 0.005),
+                                          sliderInput("annotationPhylumthreshold", "Identity thresholds for Phylum annotation", min = 0, max = 1, value = c(0.75, 0.785), step = 0.005),
+                                          sliderInput("annotationClassthreshold", "Identity thresholds for Class annotation", min = 0, max = 1, value = c(0.785, 0.82), step = 0.005),
+                                          sliderInput("annotationOrderthreshold", "Identity thresholds for Order annotation", min = 0, max = 1, value = c(0.82, 0.865), step = 0.005),
+                                          sliderInput("annotationFamilythreshold", "Identity thresholds for Family annotation", min = 0, max = 1, value = c(0.865, 0.945), step = 0.005),
+                                          sliderInput("annotationGenusthreshold", "Identity thresholds for Genus annotation", min = 0, max = 1, value = c(0.945, 0.98), step = 0.005),
+                                          sliderInput("annotationSpeciethreshold", "Minimum identity for Specie annotation", min = 0, max = 1, value = 0.98, step = 0.005)
+                                  )
                   )
                 ),
 

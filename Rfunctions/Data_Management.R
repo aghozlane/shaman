@@ -415,7 +415,29 @@ CreateJSON <- function(input,values){
                     "host"=input$HostName,
                     "type"=input$DataTypeMasque,
                     "mail"=values$login_email,
-                    "contaminant"= path_fasta
+                    "contaminant"= path_fasta,
+                    "phredthres" = input$phredthres,
+                    "mincorrect" = input$mincorrect,
+                    "minreadlength" = input$minreadlength,
+                    "dreptype" = input$dreptype,
+                    "maxampliconlength" = input$maxampliconlength,
+                    "minampliconlength" = input$minampliconlength,
+                    "minabundance" = input$minabundance,
+                    "clusteringthreshold" = input$clusteringthreshold,
+                    "clusteringstrand" = input$clusteringstrand,
+                    "annotationstrand" = input$annotationstrand,
+                    "aKmin" = input$annotationKingdomthreshold,
+                    "aPmin" = input$annotationPhylumthreshold[1],
+                    "aPmax" = input$annotationPhylumthreshold[2],
+                    "aCmin" = input$annotationClassthreshold[1],
+                    "aCmax" = input$annotationClassthreshold[2],
+                    "aOmin" = input$annotationOrderthreshold[1],
+                    "aOmax" = input$annotationOrderthreshold[2],
+                    "aFmin" = input$annotationFamilythreshold[1],
+                    "aFmax" = input$annotationFamilythreshold[2],
+                    "aGmin" = input$annotationGenusthreshold[1],
+                    "aGmax" = input$annotationGenusthreshold[2],
+                    "aSmin" = input$annotationSpeciethreshold
                     )
 
     df %>% jsonlite::toJSON() %>% write_lines(values$json_name)
@@ -432,7 +454,30 @@ CreateJSON <- function(input,values){
                     "type"=input$DataTypeMasque,
                     "mail"=values$login_email,
                     "contaminant"= path_fasta,
-                    "pattern_R1"= input$R1files
+                    "pattern_R1"= input$R1files,
+                    "phredthres" = input$phredthres,
+                    "mincorrect" = input$mincorrect,
+                    "minoverlap" = input$minoverlap,
+                    "minreadlength" = input$minreadlength,
+                    "dreptype" = input$dreptype,
+                    "maxampliconlength" = input$maxampliconlength,
+                    "minampliconlength" = input$minampliconlength,
+                    "minabundance" = input$minabundance,
+                    "clusteringthreshold" = input$clusteringthreshold,
+                    "clusteringstrand" = input$clusteringstrand,
+                    "annotationstrand" = input$annotationstrand,
+                    "aKmin" = input$annotationKingdomthreshold,
+                    "aPmin" = input$annotationPhylumthreshold[1],
+                    "aPmax" = input$annotationPhylumthreshold[2],
+                    "aCmin" = input$annotationClassthreshold[1],
+                    "aCmax" = input$annotationClassthreshold[2],
+                    "aOmin" = input$annotationOrderthreshold[1],
+                    "aOmax" = input$annotationOrderthreshold[2],
+                    "aFmin" = input$annotationFamilythreshold[1],
+                    "aFmax" = input$annotationFamilythreshold[2],
+                    "aGmin" = input$annotationGenusthreshold[1],
+                    "aGmax" = input$annotationGenusthreshold[2],
+                    "aSmin" = input$annotationSpeciethreshold
                     )
     df %>% jsonlite::toJSON() %>% write_lines(values$json_name)
   }

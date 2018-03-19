@@ -28,7 +28,7 @@ shinyServer(function(input, output,session) {
   observe(if(input$AddRegScatter) info("By adding the regression line, you will lose interactivity."))
   
   ## Reactive target
-  values <- reactiveValues(TargetWorking = target,labeled=NULL,fastq_names_only=NULL,R1fastQ=NULL,R2fastQ=NULL,
+  values <- reactiveValues(TargetWorking = target,labeled=NULL,fastq_names_only=NULL,fastq_size_only=NULL,R1fastQ=NULL,R2fastQ=NULL,
                            json_name=json_name,num=0,pass=pass,login_email = NULL,is.valid =NULL,
                            biom_masque = NULL,tree_masque=NULL, masque_key = NULL, count_table_masque = NULL, 
                            rdp_annot_masque = NULL, rdp_thres_masque = NULL,
@@ -206,7 +206,48 @@ shinyServer(function(input, output,session) {
     return(res)
   })
 
-  
+  observe({
+    val <- input$annotationKingdomthreshold
+    # Control the value, min, max, and step.
+    # Step size is 2 when input value is even; 1 when value is odd.
+    updateSliderInput(session, "annotationPhylumthreshold", value = input$annotationPhylumthreshold,
+                      min = val, max = 1, step = 0.005)
+  })
+  observe({
+    val <- input$annotationPhylumthreshold[2]
+    # Control the value, min, max, and step.
+    # Step size is 2 when input value is even; 1 when value is odd.
+    updateSliderInput(session, "annotationClassthreshold", value = input$annotationClassthreshold,
+                      min = val, max = 1, step = 0.005)
+  })
+  observe({
+    val <- input$annotationClassthreshold[2]
+    # Control the value, min, max, and step.
+    # Step size is 2 when input value is even; 1 when value is odd.
+    updateSliderInput(session, "annotationOrderthreshold", value = input$annotationOrderthreshold,
+                      min = val, max = 1, step = 0.005)
+  })
+  observe({
+    val <- input$annotationOrderthreshold[2]
+    # Control the value, min, max, and step.
+    # Step size is 2 when input value is even; 1 when value is odd.
+    updateSliderInput(session, "annotationFamilythreshold", value = input$annotationFamilythreshold,
+                      min = val, max = 1, step = 0.005)
+  })
+  observe({
+    val <- input$annotationFamilythreshold[2]
+    # Control the value, min, max, and step.
+    # Step size is 2 when input value is even; 1 when value is odd.
+    updateSliderInput(session, "annotationGenusthreshold", value = input$annotationGenusthreshold,
+                      min = val, max = 1, step = 0.005)
+  })
+  observe({
+    val <- input$annotationGenusthreshold[2]
+    # Control the value, min, max, and step.
+    # Step size is 2 when input value is even; 1 when value is odd.
+    updateSliderInput(session, "annotationSpeciethreshold", value = input$annotationSpeciethreshold,
+                      min = val, max = 1, step = 0.005)
+  })
   ## Input data
   dataInput <-reactive({ 
     
@@ -726,11 +767,13 @@ shinyServer(function(input, output,session) {
   observeEvent(input$dir,{
     
     inFiles <- input$dir
-    
+    print(inFiles)
     if (!is.null(inFiles)){
     # values$fastq_names_only = unique(paste(values$fastq_names_only,inFiles$name))
     values$paths_fastq_tmp = rbind(isolate(values$paths_fastq_tmp),inFiles)
     values$fastq_names_only = isolate(unique(values$paths_fastq_tmp[,"name"]))
+    values$fastq_size_only = isolate(unique(values$paths_fastq_tmp[,"size"]))
+    print(values$fastq_size_only)
     }
   })
   
