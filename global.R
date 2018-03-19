@@ -2,8 +2,8 @@
 #if(Sys.info()["nodename"] == "ShinyPro"){
 #  options(shiny.maxRequestSize=1000000000*1024^2)
 #}else{
-# No limit with the raw data submission
-options(shiny.maxRequestSize=500000000000000*1024^2)
+# Limit with the raw data submission to 2Gb
+options(shiny.maxRequestSize=2000000000)
 #}
 
 
