@@ -109,8 +109,8 @@ body <- dashboardBody(
             tabPanel("Introduction",
             p("First check out our user guide:"),
             tags$ul(
-             tags$li(a("User's guide", href="Userguide.pdf")), 
-             tags$li(a("Writing a target file for the experimental design", href="experimental_design_guide.pdf")) 
+             tags$li(a("User's guide",target="_blank", href="Userguide.pdf")), 
+             tags$li(a("Writing a target file for the experimental design",target="_blank", href="experimental_design_guide.pdf")) 
             ),
             p(" You can test SHAMAN with the dataset from", a("[Tap et al. 2015]",href="http://www.ncbi.nlm.nih.gov/pubmed/26235304"),
               ", which is available", a("here",target="_blank",href="Alimintest.zip"),"."),
@@ -487,10 +487,20 @@ body <- dashboardBody(
              fluidRow(
                 box(title="Select your file format",width = 3,status = "success", solidHeader = TRUE,collapsible = FALSE,
                   # selectInput("FileFormat","",c("Count table & taxonomy (*.csv or *.tsv)"="fileCounts","BIOM file"="fileBiom","Saved project"="fileRData"),selected="fileCounts"),
-                  selectInput("FileFormat","",c("Count table & taxonomy (*.csv or *.tsv)"="fileCounts","BIOM file"="fileBiom"),selected="fileCounts"),
+                  selectInput("FileFormat","",c("Count table & taxonomy (*.csv or *.tsv)"="fileCounts","BIOM file"="fileBiom","Project number"="projnum"),selected="fileCounts"),
                   conditionalPanel(condition="input.FileFormat=='fileCounts'",
                                    checkboxInput("NoTaxoFile","No taxonomy table",value=FALSE)
+                  ),
+                  conditionalPanel(condition="input.FileFormat=='projnum'",
+                                 inlineCSS(list(.pwdGREEN = "background-color: #DDF0B3",.pwdRED = "background-color: #F0B2AD")),
+                                 textInput("password_home","Enter the key",value = NULL),
+                                 div(style = "text-align:right;",
+                                     actionButton("Check_project_home", "Check project number",icon=icon("check-circle")),
+                                     tags$style(type='text/css', "#Check_project_home {margin-top: 15px;}")
+                                 )
+                    
                   )
+                         
                 ),
                 
                 conditionalPanel(condition="input.FileFormat=='fileCounts'",
@@ -527,18 +537,24 @@ body <- dashboardBody(
                                  )
                 ),
                 
-                box(title="Load phylogenetic tree (optional)",width = 3, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
-                    fileInput('fileTree', h6(strong('Select your file (tree)')),width="100%"),
-                    tags$script('$( "#fileTree" ).on( "click", function() { this.value = null; });')
+                conditionalPanel(condition="input.FileFormat=='projnum'",
+                                uiOutput("Project_box_home")
+                ),
+                
+                conditionalPanel(condition="input.FileFormat!='projnum'",
+                  box(title="Load phylogenetic tree (optional)",width = 3, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
+                      fileInput('fileTree', h6(strong('Select your file (tree)')),width="100%"),
+                      tags$script('$( "#fileTree" ).on( "click", function() { this.value = null; });')
+                  )
                 ),
                 
                 fluidRow(column(width=3,
                                 uiOutput("InfoCountsFile"),
                                 uiOutput("InfoTaxoFile"),
                                 uiOutput("InfoBIOM")
+                          )
                 )
-                )
-                
+  
                 
              ),
               column(id="tabboxdata_col",width=12,uiOutput("TabBoxData")),
