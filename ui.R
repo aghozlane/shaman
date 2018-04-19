@@ -66,6 +66,7 @@ body <- dashboardBody(
                    tabPanel("Citing SHAMAN",
                    p("If you use SHAMAN for your project, please cite our first application of SHAMAN in Quereda et al. 2016.",style = "font-family: 'times'; font-si16pt"),
                    p("Publication using SHAMAN :",style = "font-family: 'times'; font-si18pt; font-style: strong"),
+                   p(a("Diverse laboratory colonies of Aedes aegypti harbor the same adult midgut bacterial microbiome.", href="https://www.ncbi.nlm.nih.gov/pubmed/29587819"), "Dickson LB, Ghozlane A, Volant S, Bouchier C, Ma L, Vega-Rúa A, Dusfour I, Jiolle D, Paupy C, Mayanja MN, Kohl A, Lutwama JJ, Duong V, Lambrechts L; Parasit Vectors 2018",style = "font-family: 'times'; font-si16pt"),
                    p(a("Characteristics of Fecal Microbiota in Pediatric Crohn’s Disease and Their Dynamic Changes During Infliximab Therapy.", href="https://www.ncbi.nlm.nih.gov/pubmed/29194468"), "Wang Y, Gao X, Ghozlane A, Hu H, Li X, Xiao Y, Li D, Yu G, Zhang T; Journal of Crohn's & colitis  2017",style = "font-family: 'times'; font-si16pt"),
                    p(a("Carryover effects of larval exposure to different environmental bacteria drive adult trait variation in a mosquito vector.", href="https://www.ncbi.nlm.nih.gov/pubmed/28835919"), "Dickson LB, Jiolle D, Minard G, Moltini-Conclois I, Volant S, Ghozlane A, Bouchier C, Ayala D, Paupy C, Moro CV, Lambrechts L; Science Advances 2017",style = "font-family: 'times'; font-si16pt"),
                    p(a("A bacteriocin from epidemic Listeria strains alters the host intestinal microbiota to favor infection.", href="http://www.ncbi.nlm.nih.gov/pubmed/27140611"), "Quereda JJ, Dussurget O, Nahori MA, Ghozlane A, Volant S, Dillies MA, Regnault B, Kennedy S, Mondot S, Villoing B, Cossart P, Pizarro-Cerda J.; PNAS 2016",style = "font-family: 'times'; font-si16pt"),
@@ -80,6 +81,7 @@ body <- dashboardBody(
             box(
               title = "What's new in SHAMAN", width = NULL, status = "primary",
               div(style = 'overflow-y: scroll; height: 550px',
+                  addNews("April 17th 2018","Bioinformatics","The bioinformatic treatment offers a larger access to parameters. We also worked a lot on the documentation."),
                   addNews("September 4th 2017","Bioinformatics","The bioinformatic treatment of fastq reads is now available in SHAMAN. For now, SHAMAN allows to compute OTU, build an OTU table and annotate them with the last version of the available database. This application is for 16S/18S/23S/28S/ITS sequencing."),
                   addNews("July 18th 2017","Normalization and visualisation","A new method for normalization called total counts was added. More options have been added to the abundance tree."),
                   addNews("May 30th 2017","Bug fixes","Some visualization bug with the abundance tree and phylogenetic tree are now fixed. The export of the relative abundance and normalised abundance are now given in the right level. This update prepares the field for the next major release of shaman for June."),

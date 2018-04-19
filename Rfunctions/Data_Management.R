@@ -175,18 +175,19 @@ CheckTargetModel <- function(input,target,labeled,CT)
   Error = NULL
   HowTo = NULL
   InterVar = input$InterestVar
-  
+  print(colnames(CT))
   labels = rownames(target)
   ind = which(colnames(CT)%in%labels)
+  print(ind)
 #   InterVar%in%
 #   uniq_column = (length(which(sapply(target[InterVar], function(x) length(unique(x))) == 1)) > 0)
 #   uniq_column_names = names(which(sapply(target[InterVar], function(x) length(unique(x))) == 1))
   
   ## At least one variable selected
-  if(is.null(Error) && length(ind)<=1){
-    Error = "Less than two samples names fit with the counts table" 
-    HowTo = "Check the samples names in the target file. They must be in the first column and must correspond EXACTLY to the names in the count table."
-  }
+  #if(is.null(Error) && length(ind)<=1){
+  #  Error = "Less than two samples names fit with the counts table" 
+  #  HowTo = "Check the samples names in the target file. They must be in the first column and must correspond EXACTLY to the names in the count table."
+  #}
   ## At least one variable selected
   if(is.null(Error) && length(InterVar)==0){
     Error = "At least one variable must be selected for the model" 

@@ -77,7 +77,7 @@ Project_box_result <- function(masque_key,curdir){
             column(width=5,
                    strong(h3("18S annotation process")),
                    shinydashboard::valueBox(ap$Count[6],tags$strong(tags$h5("Number of OTU annotated by SILVA", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("silva_icon")),
-                   shinydashboard::valueBox(ap$Count[8],tags$strong(tags$h5("Number of OTU annotated by RDP", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("rdp_icon"))
+                   shinydashboard::valueBox(ap$Count[7],tags$strong(tags$h5("Number of OTU annotated by RDP", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("rdp_icon"))
             )
           }
           else if(json_data$type == "23S_28S"){

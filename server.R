@@ -56,7 +56,7 @@ shinyServer(function(input, output,session) {
     }
     #print(data)
     if(!is.null(data)){
-      colnames(data) = gsub("-",".",colnames(data))
+      #colnames(data) = gsub("-",".",colnames(data))
       ## Rownames
       if(!TRUE%in%duplicated(data[,1])) rownames(data)=data[,1];data=data[,-1]
       try(round(data, 0)->data, silent=T)
@@ -367,30 +367,25 @@ shinyServer(function(input, output,session) {
     target = isolate(values$TargetWorking)
     labeled= isolate(values$labeled)
     taxo = isolate(input$TaxoSelect)
-    print("here-1")
     withProgress(
       if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target)) 
       {
-        print("here0")
         design = GetDesign(isolate(input),target)
+        print(design)
         ChTM = CheckTargetModel(input,target,labeled,data$counts)$Error
         if(!is.null(design) && is.null(ChTM))
         {
-          print("here")
           tmp = isolate(GetCountsMerge(input,data,taxo,target,design))
-          ChMC = tmp$Error
-          if (!is.null(ChMC))
-          {
-            print("here_getcount")
+          #ChMC = tmp$Error
+          #if (!is.null(ChMC))
+          #{
             counts = tmp$counts
             ## Filtering the counts
             if(isolate(input$AddFilter) && !is.null(isolate(input$SliderThSamp)) && !is.null(isolate(input$SliderThAb)))
             {
-              print("here1")
               ind.filter =Filtered_feature(counts,isolate(input$SliderThSamp),isolate(input$SliderThAb))$ind
               counts = counts[-ind.filter,]
             }
-            print("here2")
             CheckTarget = tmp$CheckTarget
             #target = tmp$target
             #labeled = tmp$labeled
@@ -398,7 +393,7 @@ shinyServer(function(input, output,session) {
             ## OTU table, norm and no norm
             CT_noNorm = tmp$CT_noNorm
             CT_Norm = tmp$CT_Norm
-          }
+          #}
         }
       }
       ,message="Merging the counts ...")
@@ -718,7 +713,7 @@ shinyServer(function(input, output,session) {
     
     ## Read the data
     try(read.csv(inFile$datapath,sep=input$septarget,header=TRUE)->data,silent=TRUE)
-    
+
     if(!is.null(data))
     {
       data = as.data.frame(data)
@@ -2610,7 +2605,7 @@ shinyServer(function(input, output,session) {
     labeled = values$labeled
     taxo = input$TaxoSelect
     ChTM = NULL
-    
+
     ## Return NULL if there is no error
     if(!is.null(target)) ChTM = CheckTargetModel(input,target,labeled,CT)
     if(!is.null(ChTM$Error)) {   
