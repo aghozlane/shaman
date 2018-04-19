@@ -1,6 +1,7 @@
 # SHAMAN: a SHiny Application for Metagenomics ANalysis
-[Stevenn Volant](https://research.pasteur.fr/fr/member/stevenn-volant/) (stevenn.volant@pasteur.fr)  
 [Amine Ghozlane](https://research.pasteur.fr/fr/member/amine-ghozlane/) (amine.ghozlane@pasteur.fr) (@xealf8)
+[Stevenn Volant](https://research.pasteur.fr/fr/member/stevenn-volant/) (stevenn.volant@pasteur.fr)  
+
 
 ## Contents
 
@@ -24,7 +25,7 @@ Hereafter is the global workflow of the SHAMAN application:
 
 ## Installation
 
-SHAMAN is available for R>3.X. The installation, download and execution can all be performed with a small R script :
+SHAMAN is available for R>3.1.2. The installation, download and execution can all be performed with a small R script :
 ```
 # Load shiny packages
 if(!require('shiny')){
@@ -42,6 +43,18 @@ chmod +x ./shaman/www/shamanapp.R && Rscript ./shaman/www/shamanapp.R
 
 ## Citation
 
+If you use SHAMAN for your project, please cite our first application of SHAMAN in Quereda et al. 2016.
+Publication using SHAMAN :  
+- Diverse laboratory colonies of Aedes aegypti harbor the same adult midgut bacterial microbiome. Dickson LB, Ghozlane A, Volant S, Bouchier C, Ma L, Vega-Rúa A, Dusfour I, Jiolle D, Paupy C, Mayanja MN, Kohl A, Lutwama JJ, Duong V, Lambrechts L; Parasit Vectors 2018 [PUBMED](https://www.ncbi.nlm.nih.gov/pubmed/29587819").
+- Characteristics of Fecal Microbiota in Pediatric Crohn’s Disease and Their Dynamic Changes During Infliximab Therapy.", href="https://www.ncbi.nlm.nih.gov/pubmed/29194468"), "Wang Y, Gao X, Ghozlane A, Hu H, Li X, Xiao Y, Li D, Yu G, Zhang T; Journal of Crohn's & colitis  2017",style = "font-family: 'times'; font-si16pt"),
+- Carryover effects of larval exposure to different environmental bacteria drive adult trait variation in a mosquito vector.", href="https://www.ncbi.nlm.nih.gov/pubmed/28835919"), "Dickson LB, Jiolle D, Minard G, Moltini-Conclois I, Volant S, Ghozlane A, Bouchier C, Ayala D, Paupy C, Moro CV, Lambrechts L; Science Advances 2017",style = "font-family: 'times'; font-si16pt"),
+- A bacteriocin from epidemic Listeria strains alters the host intestinal microbiota to favor infection.", href="http://www.ncbi.nlm.nih.gov/pubmed/27140611"), "Quereda JJ, Dussurget O, Nahori MA, Ghozlane A, Volant S, Dillies MA, Regnault B, Kennedy S, Mondot S, Villoing B, Cossart P, Pizarro-Cerda J.; PNAS 2016",style = "font-family: 'times'; font-si16pt"),
+- Reporting bugs, ask for help",style = "font-family: 'times'; font-si18pt; font-style: strong"),
+- If you have any comments, questions or suggestions, or need help to use SHAMAN, please contact us at", a("shaman@pasteur.fr", href="mailto:shaman@pasteur.fr"),"and please provide us with enough information that we can recreate the problem. Useful things to include are:", style = "font-family: 'times'; font-si16pt;"),
+                   
+Input data (or examples, a small test case sufficient to recreate the problem)"), 
+Information about which system your are using: web version, docker or R installation")
+
 No papers about SHAMAN have been published yet, but a manuscript is in preparation.  
 Publication using SHAMAN :  
   
@@ -54,13 +67,11 @@ If you have any comments, questions or suggestions, or need help to use SHAMAN, 
 
 ## Acknowledgements
 
-The main contributors to SHAMAN:  
+The main contributors to SHAMAN:
+Stevenn Volant, (Initiator, coding, testing, documentation, evaluation),
+Amine Ghozlane, (Coding, testing, documentation, evaluation, packaging),
 Pierre Lechat (Coding, testing, feature suggestions)  
-Hugo Varet (Coding, testing, feature suggestions)  
-Christophe Malabat (Packaging)  
-Marie-Agnès Dillies (Evaluation)    
-Sean Kennedy (Evaluation)  
 
 Thanks to the following people for patches and other suggestions for improvements:  
-Carine Rey, Alexis Criscuolo, Julien Tap, Anna Zhukova, Rachel Torchet
+Carine Rey, Hugo Varet, Julien Tap, Anna Zhukova
 
