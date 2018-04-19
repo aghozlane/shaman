@@ -422,10 +422,6 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree,col = c("SpringGreen",
     ## Get the distance
     if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts.norm))
     else if(input$DistClust=="Unifrac"){
-      saveRDS(counts.norm,file="/home/aghozlan/workspace/shaman/count_matrix.rds")
-      saveRDS(tree,file="/home/aghozlan/workspace/shaman/tree.rds")
-      print(counts.norm)
-      print(tree)
       #tmp = UniFracDist(CT,tree)
       tmp = UniFracDist(counts.norm,tree)
       if(is.null(tree) || is.null(tmp)) dist.counts.norm = NULL

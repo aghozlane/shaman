@@ -175,19 +175,17 @@ CheckTargetModel <- function(input,target,labeled,CT)
   Error = NULL
   HowTo = NULL
   InterVar = input$InterestVar
-  print(colnames(CT))
   labels = rownames(target)
   ind = which(colnames(CT)%in%labels)
-  print(ind)
 #   InterVar%in%
 #   uniq_column = (length(which(sapply(target[InterVar], function(x) length(unique(x))) == 1)) > 0)
 #   uniq_column_names = names(which(sapply(target[InterVar], function(x) length(unique(x))) == 1))
   
   ## At least one variable selected
-  #if(is.null(Error) && length(ind)<=1){
-  #  Error = "Less than two samples names fit with the counts table" 
-  #  HowTo = "Check the samples names in the target file. They must be in the first column and must correspond EXACTLY to the names in the count table."
-  #}
+  if(is.null(Error) && length(ind)<=1){
+    Error = "Less than two samples names fit with the counts table" 
+    HowTo = "Check the samples names in the target file. They must be in the first column and must correspond EXACTLY to the names in the count table."
+  }
   ## At least one variable selected
   if(is.null(Error) && length(InterVar)==0){
     Error = "At least one variable must be selected for the model" 
@@ -609,15 +607,11 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
       CT=CT_int
     } else CT = CT[,ind]
     
-    print("start order")
     ## Order CT according to the target
     CT = OrderCounts(counts=CT,labels=labels)$CountsOrder
     CT_noNorm = CT
     RowProd = sum(apply(CT_noNorm,1,prod))
-    print("end order")
     merged_table = merge(CT, taxo, by="row.names")
-    save(merged_table, file = "/tmp/wtf.rdata")
-    print("end merged")
     CT = as.data.frame(merged_table[,2: (dim(CT)[2]+1)])
     taxo = as.data.frame(merged_table[,(dim(CT)[2]+2):dim(merged_table)[2]])
     
@@ -628,10 +622,8 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
     counts_annot = CT
     if(0%in%colSums(counts_annot)){Error = "At least one of the column of the counts table is 0" }
     else{
-      print("DDS start")
       ## Create the dds object
       dds <- DESeqDataSetFromMatrix(countData=CT, colData=target, design=design,ignoreRank=TRUE)
-      print("DDS end")
       #save(dds,file="testdds.RData")
       if(is.null(VarNorm)){
         ## Counts normalisation
