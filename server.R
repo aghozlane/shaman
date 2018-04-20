@@ -56,7 +56,7 @@ shinyServer(function(input, output,session) {
     }
     #print(data)
     if(!is.null(data)){
-      #colnames(data) = gsub("-",".",colnames(data))
+      colnames(data) = gsub("-",".",colnames(data))
       ## Rownames
       if(!TRUE%in%duplicated(data[,1])) rownames(data)=data[,1];data=data[,-1]
       try(round(data, 0)->data, silent=T)
@@ -733,6 +733,7 @@ shinyServer(function(input, output,session) {
         ind_num = which(sapply(as.data.frame(data[,-1]),is.numeric)) + 1
         if(length(ind_num)>0){
           data_tmp =cbind( as.data.frame(apply(as.data.frame(data[,-ind_num]),2,gsub,pattern = "-",replacement = ".")),data[,ind_num])
+          #data_tmp =cbind( as.data.frame(as.data.frame(data[,-ind_num])),data[,ind_num])
           colnames(data_tmp) = c(colnames(data)[-ind_num],colnames(data)[ind_num])
           data = data_tmp
         }
