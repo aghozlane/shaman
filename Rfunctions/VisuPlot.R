@@ -87,7 +87,7 @@ Plot_Visu_Barplot <- function(input,resDiff)
     dataBarPlot_mat$AllVar = factor(dataBarPlot_mat$AllVar,levels = unique(dataBarPlot_mat$AllVar))
     
     gg= ggplot(dataBarPlot_mat, aes(x=AllVar, y=Proportions, fill=Taxonomy)) 
-    gg= gg + geom_bar(stat="identity")
+    gg= gg +geom_bar(position=input$positionBarPlot, stat="identity")
     gg= gg + theme_bw()+ scale_fill_manual(values=tax.colors)
     gg = gg +theme(panel.grid.minor.x=element_blank(),panel.grid.major.x=element_blank()) 
     if(input$CountsOrProp=="prop") gg = gg+labs(y="Relative abundance (%)",x="")
@@ -128,7 +128,12 @@ Plot_Visu_Heatmap <- function(input,resDiff,export=FALSE){
                                   height = input$heightVisu, show_grid = FALSE, colors = col, scale = input$scaleHeatmap, cexRow = as.numeric(input$LabelSizeHeatmap), margins=c(12,30), 
                                   cexCol=as.numeric(input$LabelSizeHeatmap), offsetCol=input$LabelColOffsetHeatmap, offsetRow=input$LabelRowOffsetHeatmap)
     }
-    if(export){ plot = heatmap.2(counts_tmp_combined, dendrogram = "none", Rowv = (input$SortHeatRow == "Yes"), 
+    if(export){ 
+      dendrogram="none"
+      if(input$SortHeatColumn == "Yes" && input$SortHeatRow == "Yes" ) dendrogram ="both"
+      else if(input$SortHeatColumn == "Yes") dendrogram ="column"
+      else if(input$SortHeatRow == "Yes") dendrogram ="row"
+      plot = heatmap.2(counts_tmp_combined, dendrogram = dendrogram, Rowv = (input$SortHeatRow == "Yes"), 
                                  Colv = (input$SortHeatColumn == "Yes"), na.rm = TRUE, density.info="none", margins=c(as.numeric(input$lowerMargin),as.numeric(input$rightMargin)),trace="none",
                                  srtCol=45, col = col, scale = input$scaleHeatmap, cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, 
                                  offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap,symm=FALSE,symkey=FALSE,symbreaks=FALSE)
@@ -310,8 +315,12 @@ Plot_Visu_Scatterplot<- function(input,resDiff,export=FALSE,lmEst = FALSE,CorEst
   {counts = as.data.frame(round(counts(dds, normalized = FALSE)))}
 
   target = as.data.frame(resDiff$target)
+  #print("target")
+  #print(target)
   ## Get the diversity values
   tmp_div = Plot_Visu_Diversity(input,resDiff,ForScatter=TRUE)$dataDiv
+  #print("tmp_div")
+  #print(tmp_div)
   
   if(!is.null(tmp_div)){
     div = cbind(round(tmp_div$value[tmp_div$diversity =="Alpha"],3),
@@ -322,8 +331,7 @@ Plot_Visu_Scatterplot<- function(input,resDiff,export=FALSE,lmEst = FALSE,CorEst
   }
   if(input$TransDataScatter =="log2") data = cbind(target,log2(t(counts)+1),div)
   else if(input$TransDataScatter =="none") data = cbind(target,t(counts),div)
-  
-  
+
   ## Get Input for ScatterPlot
   Xvar = input$Xscatter
   Yvar = input$Yscatter
@@ -383,11 +391,16 @@ Plot_Visu_Scatterplot<- function(input,resDiff,export=FALSE,lmEst = FALSE,CorEst
     Rsq = sumRes$r.squared
     return(list(regCoef=regCoef,Rsq = Rsq))
   }
+  print("HERE")
   if(CorEst)
   {
-    typesTarget = sapply(target,class)
-    numInd = (typesTarget=="numeric")[1:ncol(target)]
-    
+    print("HERE2")
+    #typesTarget = sapply(target,class)
+    #print(typesTarget)
+    #numInd = (typesTarget=="numeric")[1:ncol(target)]
+    #print(numInd)
+    typesTarget = sapply(target,is.numeric)
+    numInd=which(typesTarget[2:ncol(target)])
     if(any(numInd)) data = cbind(target[,numInd],log2(t(counts)+1),div)
     if(!any(numInd)) data = cbind(log2(t(counts)+1),div)
     

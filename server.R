@@ -3621,26 +3621,25 @@ shinyServer(function(input, output,session) {
     resDiff = ResDiffAnal()
     res = list()
     namesTarget = colnames(target)[2:ncol(target)]
-    
-    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target)) 
+    #!is.null(data$taxo) &&
+    if(!is.null(data$counts) &&  nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target)) 
     {
       counts = dataMergeCounts()$counts
       
       ## Get numeric variables from target
       typesTarget = sapply(target,class)
-      numInd = (typesTarget=="numeric")[2:ncol(target)]
+      numInd = (typesTarget%in%c("integer","numeric"))[2:ncol(target)]
       ## Using list slows down the application if the number of rows too high
-      if(nrow(counts)<300) 
-      {
+      #if(nrow(counts)<300) 
+      #{
         Available_x = list(x1 = c(sort(rownames(counts))),"Diversity" = c("Alpha div","Shannon div","Inv.Simpson div","Simpson div"))
         names(Available_x)[1] = taxo
-        if(any(numInd)) Available_x$Variables = namesTarget[numInd]
-      } else{
-        Available_x = c(sort(rownames(counts)),"Alpha div","Shannon div","Inv.Simpson div","Simpson div")
-        if(any(numInd)) Available_x = c(Available_x,namesTarget[numInd])
-      }
+        if(any(numInd)) Available_x$Variables = c(namesTarget[numInd],"")
+      #} #else{
+        #Available_x = c(sort(rownames(counts)),"Alpha div","Shannon div","Inv.Simpson div","Simpson div")
+        #if(any(numInd)) Available_x = c(Available_x,namesTarget[numInd])
+      #}
       Available_y = Available_x
-      
       res[[1]] = selectizeInput("Xscatter",h6(strong("X variable")),Available_x, selected = Available_x[1],multiple = FALSE)
       res[[2]] = selectizeInput("Yscatter",h6(strong("Y variable")),Available_y, selected = Available_x[2],multiple = FALSE)
       res[[3]] = selectizeInput("ColorBy",h6(strong("Color variable")),c("None"="None",namesTarget[!numInd]),multiple = FALSE)

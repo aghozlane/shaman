@@ -66,7 +66,12 @@ body <- dashboardBody(
                    tabPanel("Citing SHAMAN",
                    p("If you use SHAMAN for your project, please cite our first application of SHAMAN in Quereda et al. 2016.",style = "font-family: 'times'; font-si16pt"),
                    p("Publication using SHAMAN :",style = "font-family: 'times'; font-si18pt; font-style: strong"),
+                   p(a("Prediction of the intestinal resistome by a three-dimensional structure-based method.", href="https://www.ncbi.nlm.nih.gov/pubmed/30478291"),"Ruppé E, Ghozlane A, Tap J, et al.;Nature microbiology 2018",style = "font-family: 'times'; font-si16pt"),
+                   
                    p(a("Diverse laboratory colonies of Aedes aegypti harbor the same adult midgut bacterial microbiome.", href="https://www.ncbi.nlm.nih.gov/pubmed/29587819"), "Dickson LB, Ghozlane A, Volant S, Bouchier C, Ma L, Vega-Rúa A, Dusfour I, Jiolle D, Paupy C, Mayanja MN, Kohl A, Lutwama JJ, Duong V, Lambrechts L; Parasit Vectors 2018",style = "font-family: 'times'; font-si16pt"),
+                   p(a("Combined bacterial and fungal intestinal microbiota analyses: Impact of storage conditions and DNA extraction protocols", href="https://www.ncbi.nlm.nih.gov/pubmed/30074988"), "Angebault C, Ghozlane A, Volant S, Botterel F, d’Enfert C, Bougnoux ME, PloS one 2018",style = "font-family: 'times'; font-si16pt"),
+                   p(a("Clinical Efficacy and Microbiome Changes Following Fecal Microbiota Transplantation in Children With Recurrent Clostridium Difficile Infection", href="https://www.ncbi.nlm.nih.gov/pubmed/26566371"), "Li X, Gao X, Hu H, Xiao Y, Li D, Yu G, Yu D, Zhang T, Wang Y, Frontiers in Microbiology",style = "font-family: 'times'; font-si16pt"),
+                   p(a("Diverse laboratory colonies of Aedes aegypti harbor the same adult midgut bacterial microbiome", href="https://www.ncbi.nlm.nih.gov/pubmed/29587819"),"Dickson LB, Ghozlane A, Volant S, Bouchier C, Ma L, Vega-Rúa A, Dusfour I, Jiolle D, Paupy C, Mayanja MN, Kohl A, Lutwama JJ, Duong V, Lambrechts L",style = "font-family: 'times'; font-si16pt"),
                    p(a("Characteristics of Fecal Microbiota in Pediatric Crohn’s Disease and Their Dynamic Changes During Infliximab Therapy.", href="https://www.ncbi.nlm.nih.gov/pubmed/29194468"), "Wang Y, Gao X, Ghozlane A, Hu H, Li X, Xiao Y, Li D, Yu G, Zhang T; Journal of Crohn's & colitis  2017",style = "font-family: 'times'; font-si16pt"),
                    p(a("Carryover effects of larval exposure to different environmental bacteria drive adult trait variation in a mosquito vector.", href="https://www.ncbi.nlm.nih.gov/pubmed/28835919"), "Dickson LB, Jiolle D, Minard G, Moltini-Conclois I, Volant S, Ghozlane A, Bouchier C, Ayala D, Paupy C, Moro CV, Lambrechts L; Science Advances 2017",style = "font-family: 'times'; font-si16pt"),
                    p(a("A bacteriocin from epidemic Listeria strains alters the host intestinal microbiota to favor infection.", href="http://www.ncbi.nlm.nih.gov/pubmed/27140611"), "Quereda JJ, Dussurget O, Nahori MA, Ghozlane A, Volant S, Dillies MA, Regnault B, Kennedy S, Mondot S, Villoing B, Cossart P, Pizarro-Cerda J.; PNAS 2016",style = "font-family: 'times'; font-si16pt"),
@@ -81,6 +86,8 @@ body <- dashboardBody(
             box(
               title = "What's new in SHAMAN", width = NULL, status = "primary",
               div(style = 'overflow-y: scroll; height: 550px',
+                  addNews("April 11th 2019","Debugging","We fixed few bugs in export system and scatterplot visualisation system."),
+                  addNews("March 28th 2019","Packaging","SHAMAN is now available as packrat package. Take a look at download section."),
                   addNews("April 17th 2018","Bioinformatics","The bioinformatic treatment offers a larger access to parameters. We also worked a lot on the documentation."),
                   addNews("September 4th 2017","Bioinformatics","The bioinformatic treatment of fastq reads is now available in SHAMAN. For now, SHAMAN allows to compute OTU, build an OTU table and annotate them with the last version of the available database. This application is for 16S/18S/23S/28S/ITS sequencing."),
                   addNews("July 18th 2017","Normalization and visualisation","A new method for normalization called total counts was added. More options have been added to the abundance tree."),
@@ -98,7 +105,7 @@ body <- dashboardBody(
                   addNews("Aug 1st 2016","Biom format","SHAMAN can now support all the Biom format versions."),
                   addNews("Jun 24th 2016","Comparisons plots","The venn diagram and the heatmap of foldchange 
                                                                 have been added to compare the results of 2 or more contrasts."), 
-                  addNews("Jun 17th 2016","Diversity plots","Enhancement of the visualtisation of the diverties. 
+                  addNews("Jun 17th 2016","Diversity plots","Enhancement of the visualisation of the diverties. 
                                                               The shanon and inv. shanon have been added.")
                   )
             )
@@ -216,17 +223,32 @@ body <- dashboardBody(
                                 p("- Docker update after an update of SHAMAN:"),
                                 wellPanel(div(style = 'max-width: 900px',"docker pull aghozlane/shaman"))
                                 ),
-                                tabPanel("R install (RC)",
-                                         p("SHAMAN is available for R>3.1.2. The installation, download and execution can all be performed with a small R script :",style = "font-family: 'times'; font-si16pt"),
+                                tabPanel("R install with Packrat",
+                                         p("SHAMAN is available for R=3.1.2. Packrat framework installation allow an easy installation of all the dependencies. Of note, raw data submission is not possible with this version. First, install R 3.1.2 as local install as follow:",style = "font-family: 'times'; font-si16pt"),
+                                         wellPanel(style = 'width: 150%; word-wrap: break-word;',"# Install R 3.1.2", br(),
+                                                   "wget https://pbil.univ-lyon1.fr/CRAN/src/base/R-3/R-3.1.2.tar.gz  && tar -zxf R-3.1.2.tar.gz",br(),"mkdir /some/location/r_bin",br(),
+                                                   "cd R-3.1.2/ && ./configure --prefix=/some/location/r_bin/ && make && make install && /some/location/r_bin/bin/R", br(),
+                                                    "# Download SHAMAN package",br(),"wget ftp://shiny01.hosting.pasteur.fr/pub/shaman_package.tar.gz"), br(),
+                                         p("This installation will not interact with other R installation. Then, you can install shaman with packrat:", a("here", target="_blank", href="shamanapp.R"), "and executed as following :"),
+                                         wellPanel(style = 'width: 150%; word-wrap: break-word;',"# Install SHAMAN dependencies",br(),
+                                                   "mkdir /some/location/shaman", br(), "/some/location/r_bin/bin/R",br(),
+                                                   "install.packages(\"packrat\")",br(),"packrat::unbundle(\"shaman_package.tar.gz\", \"/packrat/location/shaman\")"),
+                                               p("Now you can run SHAMAN:"),
+                                         wellPanel(style = 'width: 50%; word-wrap: break-word;',"library(packrat)",br(),"packrat::init(\"/packrat/location/shaman\")",br(),"library(shiny)",br(),
+                                                   "system(\"Rscript -e 'library(\\\"shiny\\\");runGitHub(\\\"pierreLec/KronaRShy\\\",port=5438)'\",wait=FALSE)",
+                                                   br(),"runGitHub('aghozlane/shaman')")),
+                                         
+                                tabPanel("R install (DEPRECATED)",
+                                         p("SHAMAN is available for R=3.1.2. A more recent installation of R will break the differential abundance interface. The installation, download and execution can all be performed with a small R script:",style = "font-family: 'times'; font-si16pt"),
                                          wellPanel(style = 'width: 50%; word-wrap: break-word;',"# Load shiny packages",br(),
                                            "if(!require('shiny')){",br(),"  install.packages('shiny')",br(),"  library(shiny)",br(),"}",br(),
                                            "system(\"Rscript -e 'library(\\\"shiny\\\");runGitHub(\\\"pierreLec/KronaRShy\\\",port=5438)'\",wait=FALSE)",
                                               br(),"# Install dependencies,",br(),"# download last version from github,",br(),"# and run SHAMAN in one command:",br(),"runGitHub('aghozlane/shaman')"),
                                          p("This script can also be dowloaded", a("here", target="_blank", href="shamanapp.R"), "and executed as following :"),
-                                         wellPanel(style = 'width: 50%; word-wrap: break-word;',"chmod +x ./shamanapp.R && Rscript ./shamanapp.R")),
-                                         p("Of note, the R version has an impact on the contrast definition. DESeq2 contrast are harder to define on R>3.2."),
-                                         p("Contribution to SHAMAN code are always welcome and can be performed with the", a("github deposit.",href="https://github.com/aghozlane/shaman")
-                                ))
+                                         wellPanel(style = 'width: 50%; word-wrap: break-word;',"chmod +x ./shamanapp.R && Rscript ./shamanapp.R"),br(),
+                                         p("Of note, contribution to SHAMAN code are always welcome and can be performed with the", a("github deposit.",href="https://github.com/aghozlane/shaman")))
+                                         
+                         )
                          )
                      )
               )
@@ -1050,7 +1072,7 @@ body <- dashboardBody(
                     ## BARPLOT
                     ##################
                     conditionalPanel(condition="input.PlotVisuSelect=='Barplot'",
-                                     radioButtons("positionBarPlot","Position",c("Grouped"="fill","Stacked"="dodge"),inline=TRUE)
+                                     radioButtons("positionBarPlot","Position",c("Grouped"="dodge","Stacked"="fill"), selected = "fill",inline=TRUE)
                     ),
                     selectInput("Exp_format_Visu",h5(strong("Export format")),c("png"="png","pdf"="pdf","eps"="eps","svg"="svg"), multiple = FALSE),
                     fluidRow(
