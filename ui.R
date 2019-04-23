@@ -1,6 +1,7 @@
 function(request) {
 sidebar <- dashboardSidebar(
   useShinyjs(),
+  includeCSS("www/custom_shaman.css"),
   inlineCSS(appCSS),
 #   tags$head(
 #     tags$script(src = "custom.js")
@@ -215,37 +216,39 @@ body <- dashboardBody(
                                   "Then, you will need to install the", a("Docker toolbox.", href="https://www.docker.com/products/docker-toolbox"),
                                   "Once installed, run ‘Docker Quickstart Terminal’ application."),
                                 p("- Running SHAMAN:"),
-                                wellPanel(div(style = 'max-width: 900px',"docker pull aghozlane/shaman && docker run --rm -p 80:80 -p 5438:5438 aghozlane/shaman")),
+                                mainPanel(div(style = 'max-width: 900px',"docker pull aghozlane/shaman && docker run --rm -p 80:80 -p 5438:5438 aghozlane/shaman"),width=8,class="mainwell"),
                                 p("Then connect to http://0.0.0.0/ with your favorite web navigator."),
                                 p("Failed: port is already allocated ?"),
-                                wellPanel(div(style = 'max-width: 900px',"docker run --rm -p 3838:80 -p 5438:5438 aghozlane/shaman")),
+                                mainPanel(div(style = 'max-width: 900px',"docker run --rm -p 3838:80 -p 5438:5438 aghozlane/shaman"),width=6,class="mainwell"),
                                 p("Then connect to http://0.0.0.0:3838/."),
                                 p("- Docker update after an update of SHAMAN:"),
-                                wellPanel(div(style = 'max-width: 900px',"docker pull aghozlane/shaman"))
+                                mainPanel(div(style = 'max-width: 900px',"docker pull aghozlane/shaman"),width=4,class="mainwell")
                                 ),
                                 tabPanel("R install with Packrat",
                                          p("SHAMAN is available for R=3.1.2. Packrat framework installation allow an easy installation of all the dependencies. Of note, raw data submission is not possible with this version. First, install R 3.1.2 as local install as follow:",style = "font-family: 'times'; font-si16pt"),
-                                         wellPanel(style = 'width: 150%; word-wrap: break-word;',"# Install R 3.1.2", br(),
+                                         mainPanel(div(style = 'max-width: 900px; word-wrap: break-word;',"# Install R 3.1.2", br(),
                                                    "wget https://pbil.univ-lyon1.fr/CRAN/src/base/R-3/R-3.1.2.tar.gz  && tar -zxf R-3.1.2.tar.gz",br(),"mkdir /some/location/r_bin",br(),
-                                                   "cd R-3.1.2/ && ./configure --prefix=/some/location/r_bin/ && make && make install && /some/location/r_bin/bin/R", br(),
-                                                    "# Download SHAMAN package",br(),"wget ftp://shiny01.hosting.pasteur.fr/pub/shaman_package.tar.gz"), br(),
-                                         p("This installation will not interact with other R installation. Then, you can install shaman with packrat:", a("here", target="_blank", href="shamanapp.R"), "and executed as following :"),
-                                         wellPanel(style = 'width: 150%; word-wrap: break-word;',"# Install SHAMAN dependencies",br(),
+                                                   "cd R-3.1.2/",br(), "./configure --prefix=/some/location/r_bin/", br(), "make && make install", br(), "/some/location/r_bin/bin/R", br(),
+                                                   "install.packages(c('devtools', 'codetools', 'lattice', 'MASS', 'survival', 'packrat'))", br(),
+                                                   "library(devtools)",br(),"devtools::install_github(c('aghozlane/nlme'))", br(),
+                                                    "# Download SHAMAN package",br(),"wget ftp://shiny01.hosting.pasteur.fr/pub/shaman_package.tar.gz"),width=9,class="mainwell"),
+                                         p("This installation will not interact with other R installation. Then, you can install SHAMAN with packrat:"),
+                                        mainPanel(div(style = 'max-width: 900px; word-wrap: break-word;',"# Install SHAMAN dependencies",br(),
                                                    "mkdir /some/location/shaman", br(), "/some/location/r_bin/bin/R",br(),
-                                                   "install.packages(\"packrat\")",br(),"packrat::unbundle(\"shaman_package.tar.gz\", \"/packrat/location/shaman\")"),
-                                               p("Now you can run SHAMAN:"),
-                                         wellPanel(style = 'width: 50%; word-wrap: break-word;',"library(packrat)",br(),"packrat::init(\"/packrat/location/shaman\")",br(),"library(shiny)",br(),
+                                                   "install.packages(\"packrat\")",br(),"packrat::unbundle(\"shaman_package.tar.gz\", \"/packrat/location/shaman\")"), width=9,class="mainwell"),
+                                        p("Now you can run SHAMAN:"),
+                                        mainPanel(div(style = 'max-width: 900px; word-wrap: break-word;',"library(packrat)",br(),"packrat::init(\"/packrat/location/shaman\")",br(),"library(shiny)",br(),
                                                    "system(\"Rscript -e 'library(\\\"shiny\\\");runGitHub(\\\"pierreLec/KronaRShy\\\",port=5438)'\",wait=FALSE)",
-                                                   br(),"runGitHub('aghozlane/shaman')")),
+                                                   br(),"runGitHub('aghozlane/shaman')"),width=9,class="mainwell")),
                                          
                                 tabPanel("R install (DEPRECATED)",
                                          p("SHAMAN is available for R=3.1.2. A more recent installation of R will break the differential abundance interface. The installation, download and execution can all be performed with a small R script:",style = "font-family: 'times'; font-si16pt"),
-                                         wellPanel(style = 'width: 50%; word-wrap: break-word;',"# Load shiny packages",br(),
+                                         mainPanel(div(style = 'max-width: 900px; word-wrap: break-word;',"# Load shiny packages",br(),
                                            "if(!require('shiny')){",br(),"  install.packages('shiny')",br(),"  library(shiny)",br(),"}",br(),
                                            "system(\"Rscript -e 'library(\\\"shiny\\\");runGitHub(\\\"pierreLec/KronaRShy\\\",port=5438)'\",wait=FALSE)",
-                                              br(),"# Install dependencies,",br(),"# download last version from github,",br(),"# and run SHAMAN in one command:",br(),"runGitHub('aghozlane/shaman')"),
+                                              br(),"# Install dependencies,",br(),"# download last version from github,",br(),"# and run SHAMAN in one command:",br(),"runGitHub('aghozlane/shaman')"),width=9,class="mainwell"),
                                          p("This script can also be dowloaded", a("here", target="_blank", href="shamanapp.R"), "and executed as following :"),
-                                         wellPanel(style = 'width: 50%; word-wrap: break-word;',"chmod +x ./shamanapp.R && Rscript ./shamanapp.R"),br(),
+                                         mainPanel(div(style = 'max-width: 900px; word-wrap: break-word;',"chmod +x ./shamanapp.R && Rscript ./shamanapp.R"),width=6,class="mainwell"),br(),
                                          p("Of note, contribution to SHAMAN code are always welcome and can be performed with the", a("github deposit.",href="https://github.com/aghozlane/shaman")))
                                          
                          )
