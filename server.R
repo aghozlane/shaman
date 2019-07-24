@@ -379,20 +379,20 @@ shinyServer(function(input, output,session) {
           #ChMC = tmp$Error
           #if (!is.null(ChMC))
           #{
-            counts = tmp$counts
-            ## Filtering the counts
-            if(isolate(input$AddFilter) && !is.null(isolate(input$SliderThSamp)) && !is.null(isolate(input$SliderThAb)))
-            {
-              ind.filter =Filtered_feature(counts,isolate(input$SliderThSamp),isolate(input$SliderThAb))$ind
-              counts = counts[-ind.filter,]
-            }
-            CheckTarget = tmp$CheckTarget
-            #target = tmp$target
-            #labeled = tmp$labeled
-            normFactors = tmp$normFactors
-            ## OTU table, norm and no norm
-            CT_noNorm = tmp$CT_noNorm
-            CT_Norm = tmp$CT_Norm
+          counts = tmp$counts
+          ## Filtering the counts
+          if(isolate(input$AddFilter) && !is.null(isolate(input$SliderThSamp)) && !is.null(isolate(input$SliderThAb)))
+          {
+            ind.filter =Filtered_feature(counts,isolate(input$SliderThSamp),isolate(input$SliderThAb))$ind
+            counts = counts[-ind.filter,]
+          }
+          CheckTarget = tmp$CheckTarget
+          #target = tmp$target
+          #labeled = tmp$labeled
+          normFactors = tmp$normFactors
+          ## OTU table, norm and no norm
+          CT_noNorm = tmp$CT_noNorm
+          CT_Norm = tmp$CT_Norm
           #}
         }
       }
@@ -570,15 +570,26 @@ shinyServer(function(input, output,session) {
     ))
   
   ## Counts Table
-  output$DataVenn<- DT::renderDataTable(#{
+  output$DataVenn<- DT::renderDataTable({
+    SelContrast = ContrastListDebounce()
     #SelContrast = input$ContrastList_table_FC
-    #resDiff = ResDiffAnal()
+    resDiff = ResDiffAnal()
     #BaseContrast = read.table(namesfile,header=TRUE)
-    GetData_venn(input,input$ContrastList_table_FC,read.table(namesfile,header=TRUE),ResDiffAnal())$df.tot,
-    #}
-    options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE, processing=FALSE
-    ))
+    datatable(GetData_venn(input,SelContrast,read.table(namesfile,header=TRUE),resDiff)$df.tot,
+              options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
+                   pageLength = 10,scrollX=TRUE, processing=FALSE)
+              )
+    })
+  
+  # output$DataVenn<- DT::renderDataTable(#{
+  #   #SelContrast = input$ContrastList_table_FC
+  #   #resDiff = ResDiffAnal()
+  #   #BaseContrast = read.table(namesfile,header=TRUE)
+  #   GetData_venn(input,input$ContrastList_table_FC,read.table(namesfile,header=TRUE),ResDiffAnal())$df.tot,
+  #   #}
+  #   options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
+  #                  pageLength = 10,scrollX=TRUE, processing=FALSE
+  #   ))
   
   
   ## Taxonomy table
@@ -713,7 +724,7 @@ shinyServer(function(input, output,session) {
     
     ## Read the data
     try(read.csv(inFile$datapath,sep=input$septarget,header=TRUE)->data,silent=TRUE)
-
+    
     if(!is.null(data))
     {
       data = as.data.frame(data)
@@ -870,7 +881,7 @@ shinyServer(function(input, output,session) {
                                   <em> Remind: You can close shaman and use your key to check the progression and get your results: </em>",values$pass),
                      type = "success",
                      html=TRUE
-                     )
+      )
     }
     
   })
@@ -2115,7 +2126,9 @@ shinyServer(function(input, output,session) {
     updateSelectInput(session, "ContrastList_table","Contrasts",Contrast)
     updateSelectInput(session, "ContrastList_table_Visu","For which contrasts",Contrast)
     updateSelectInput(session, "ContrastList_table_VisuComp","For which contrasts",Contrast)
-    updateSelectInput(session, "ContrastList_table_FC","Contrasts (Min = 2)",Contrast)
+    updateSelectInput(session, "ContrastList_table_FC","Contrasts",Contrast)
+    updateSelectInput(session, "Contrast1", "Contrast 1 (X axis)", c("...",Contrast))
+    updateSelectInput(session, "Contrast2", "Contrast 2 (Y axis)", c("...",Contrast))
   })
   
   ## Add contrast 
@@ -2144,7 +2157,9 @@ shinyServer(function(input, output,session) {
     updateSelectInput(session, "ContrastList_table","Contrasts",Contrast)
     updateSelectInput(session, "ContrastList_table_Visu","For which contrasts",Contrast)
     updateSelectInput(session, "ContrastList_table_VisuComp","For which contrasts",Contrast)
-    updateSelectInput(session, "ContrastList_table_FC","Contrasts (Min = 2)",Contrast)
+    updateSelectInput(session, "ContrastList_table_FC","Contrasts",Contrast)
+    updateSelectInput(session, "Contrast1", "Contrast 1 (X axis)", c("...",Contrast))
+    updateSelectInput(session, "Contrast2", "Contrast 2 (Y axis)", c("...",Contrast))
   })
   
   ## Add contrast 
@@ -2173,11 +2188,13 @@ shinyServer(function(input, output,session) {
         if(filesize!=0){ createdCont = read.table(namesfile,header=TRUE) }
         
         if(!is.null(createdCont)) res = cbind(res,createdCont)
-        updateSelectInput(session, "ContrastList","Contrasts",colnames(res))
+        updateSelectInput(session, "ContrastList","Contrasts", colnames(res))
         updateSelectInput(session, "ContrastList_table","Contrasts",colnames(res))
         updateSelectInput(session, "ContrastList_table_Visu","For which contrasts",colnames(res))
         updateSelectInput(session, "ContrastList_table_VisuComp","For which contrasts",colnames(res))
-        updateSelectInput(session, "ContrastList_table_FC","Contrasts (Min = 2)",colnames(res))
+        updateSelectInput(session, "ContrastList_table_FC","Contrasts",colnames(res))
+        updateSelectInput(session, "Contrast1", "Contrast 1 (X axis)", c("...", colnames(res)))
+        updateSelectInput(session, "Contrast2", "Contrast 2 (Y axis)", c("...", colnames(res)))
         write.table(res,namesfile,row.names=FALSE)
       }
     }
@@ -2208,7 +2225,9 @@ shinyServer(function(input, output,session) {
       updateSelectInput(session, "ContrastList_table","Contrasts",ContrastKept)
       updateSelectInput(session, "ContrastList_table_Visu","For which contrasts",ContrastKept)
       updateSelectInput(session, "ContrastList_table_VisuComp","For which contrasts",ContrastKept)
-      updateSelectInput(session, "ContrastList_table_FC","Contrasts (Min = 2)",ContrastKept)
+      updateSelectInput(session, "ContrastList_table_FC","Contrasts",ContrastKept)
+      updateSelectInput(session, "Contrast1", "Contrast 1 (X axis)", c("...",ContrastKept))
+      updateSelectInput(session, "Contrast2", "Contrast 2 (Y axis)", c("...",ContrastKept))
     }
   })
   
@@ -2229,7 +2248,9 @@ shinyServer(function(input, output,session) {
     updateSelectInput(session, "ContrastList_table","Contrasts",NULL)
     updateSelectInput(session, "ContrastList_table_Visu","For which contrasts",NULL)
     updateSelectInput(session, "ContrastList_table_VisuComp","For which contrasts",NULL)
-    updateSelectInput(session, "ContrastList_table_FC","Contrasts (Min = 2)",NULL)
+    updateSelectInput(session, "ContrastList_table_FC","Contrasts",NULL)
+    updateSelectInput(session, "Contrast1", "Contrast 1 (X axis)", NULL)
+    updateSelectInput(session, "Contrast2", "Contrast 2 (Y axis)", NULL)
   })
   
   ## Remove all contrast
@@ -2606,7 +2627,7 @@ shinyServer(function(input, output,session) {
     labeled = values$labeled
     taxo = input$TaxoSelect
     ChTM = NULL
-
+    
     ## Return NULL if there is no error
     if(!is.null(target)) ChTM = CheckTargetModel(input,target,labeled,CT)
     if(!is.null(ChTM$Error)) {   
@@ -2910,7 +2931,6 @@ shinyServer(function(input, output,session) {
       resDiff = ResDiffAnal()
       tree = isolate(dataInputTree()$data)
       
-      
       print(Plot_diag(input,resDiff,tree))
       dev.off()
     }
@@ -2947,7 +2967,6 @@ shinyServer(function(input, output,session) {
   )
   
   
-  
   #### Export Visu
   output$exportVisuComp <- downloadHandler(
     filename <- function() { paste(input$PlotVisuSelectComp,paste('SHAMAN',input$Exp_format_Visu,sep="."),sep="_") },
@@ -2965,19 +2984,28 @@ shinyServer(function(input, output,session) {
       if(is.na(filesize)){filesize=0}
       
       if(input$PlotVisuSelectComp=="Venn"){ 
-        if(filesize!=0) print(Plot_Visu_Venn(input,BaseContrast,ResDiffAnal(),export=TRUE))
+        if(filesize!=0) print(Plot_Visu_Venn(input,BaseContrast,ResDiffAnal(),ContrastListDebounce, export=TRUE))
       }
       if(input$PlotVisuSelectComp=="Heatmap_comp"){
-        if(filesize!=0) Plot_Visu_Heatmap_FC(input,BaseContrast,ResDiffAnal(),export=TRUE)
-      } 
-      
+        if(filesize!=0) Plot_Visu_Heatmap_FC(input,BaseContrast,ResDiffAnal(),ContrastListDebounce, SelectTaxoPlotCompDebounce, export=TRUE)
+      }
+      if(input$PlotVisuSelectComp=="pValueDensity"){
+        if(filesize!=0) print(Plot_pValue_Density(input, BaseContrast, ResDiffAnal(), ContrastListDebounce))
+      }
+      if(input$PlotVisuSelectComp=="multipleVenn"){
+        if(filesize!=0) print(Plot_MultipleVenn(input, BaseContrast, ResDiffAnal(), ContrastListDebounce))
+      }
+      if(input$PlotVisuSelectComp=="ContrastCompair"){
+        if(filesize!=0) print(Plot_UpSet(input, BaseContrast, ResDiffAnal(), ContrastListDebounce))
+      }
+      if(input$PlotVisuSelectComp=="LogitPlot"){
+        if(filesize!=0) print(Plot_Comp_Logit(input, BaseContrast, ResDiffAnal(), SelectTaxoPlotCompDebounce, export = TRUE))
+      }
       
       dev.off()
       
     }
   )
-  
-  
   
   
   #####################################################
@@ -3017,9 +3045,6 @@ shinyServer(function(input, output,session) {
     }
   })
   
-  
-  
-  
   ## Get the diff table
   dataDiff <-reactive({ 
     input$AddContrast
@@ -3037,57 +3062,146 @@ shinyServer(function(input, output,session) {
       BaseContrast = read.table(namesfile,header=TRUE)
       res = TableDiff_print(input,BaseContrast,resDiff, info = NULL) 
     } 
-    
     return(res)
   })
   
   ## Significant diff table
-  output$DataDiffsignificant <- DT::renderDataTable(
-    datatable(dataDiff()$significant,rownames = FALSE),
-    options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE, processing=FALSE
-    ))
+  output$DataDiffsignificant <- DT::renderDataTable({
+    data_table <- data.table::data.table(dataDiff()$significant)
+    data_table <-
+      data_table[order(eval(parse(text = input$ColumnOrder)), decreasing = input$Decreasing)]
+    datatable(
+      data_table,
+      rownames = FALSE,
+      options = list(
+        lengthMenu = list(c(10, 50,-1), c('10', '50', 'All')),
+        pageLength = 10,
+        scrollX = TRUE,
+        processing = FALSE,
+        ordering = FALSE
+      )
+    )
+  })
+  
   ## Complete diff table
-  output$DataDiffcomplete <- DT::renderDataTable(
-    datatable(dataDiff()$complete,rownames = FALSE),
-    options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE, processing=FALSE
-    ))
+  output$DataDiffcomplete <- DT::renderDataTable({
+    data_table <- data.table::data.table(dataDiff()$complete)
+    data_table <-
+      data_table[order(eval(parse(text = input$ColumnOrder)), decreasing = input$Decreasing)]
+    datatable(
+      data_table,
+      rownames = FALSE,
+      options = list(
+        lengthMenu = list(c(10, 50,-1), c('10', '50', 'All')),
+        pageLength = 10,
+        scrollX = TRUE,
+        processing = FALSE,
+        ordering = FALSE
+      )
+    )
+  })
   
   ## Up diff table
-  output$DataDiffup <- DT::renderDataTable(
-    datatable(dataDiff()$up,rownames = FALSE),
-    options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE, processing=FALSE
-    ))
+  output$DataDiffup <- DT::renderDataTable({
+    data_table <- data.table::data.table(dataDiff()$up)
+    data_table <-
+      data_table[order(eval(parse(text = input$ColumnOrder)), decreasing = input$Decreasing)]
+    datatable(
+      data_table,
+      rownames = FALSE,
+      options = list(
+        lengthMenu = list(c(10, 50,-1), c('10', '50', 'All')),
+        pageLength = 10,
+        scrollX = TRUE,
+        processing = FALSE,
+        ordering = FALSE
+      )
+    )
+  })
   
   ## Down diff table
-  output$DataDiffdown <- DT::renderDataTable(
-    datatable(dataDiff()$down,rownames = FALSE),
-    options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE, processing=FALSE
-    ))
+  output$DataDiffdown <- DT::renderDataTable({
+    data_table <- data.table::data.table(dataDiff()$down)
+    data_table <-
+      data_table[order(eval(parse(text = input$ColumnOrder)), decreasing = input$Decreasing)]
+    datatable(
+      data_table,
+      rownames = FALSE,
+      options = list(
+        lengthMenu = list(c(10, 50,-1), c('10', '50', 'All')),
+        pageLength = 10,
+        scrollX = TRUE,
+        processing = FALSE,
+        ordering = FALSE
+      )
+    )
+  })
   
   
   ## TabBox for diff table
   output$TabBoxDataDiff <- renderUI({
-    
     data = dataDiff()
     
-    if(!is.null(data))
+    if (!is.null(data))
     {
-      
-      tabBox(width = NULL, selected = "Significant",
-             tabPanel("Significant",DT::dataTableOutput("DataDiffsignificant")),
-             tabPanel("Complete",DT::dataTableOutput("DataDiffcomplete")),
-             tabPanel("Up",DT::dataTableOutput("DataDiffup")),
-             tabPanel("Down",DT::dataTableOutput("DataDiffdown"))
-             
+      tabBox(
+        id = "tabBoxDiffTable",
+        width = NULL,
+        selected = "Significant",
+        tabPanel("Significant",DT::dataTableOutput("DataDiffsignificant")),
+        tabPanel("Complete", DT::dataTableOutput("DataDiffcomplete")),
+        tabPanel("Up", DT::dataTableOutput("DataDiffup")),
+        tabPanel("Down", DT::dataTableOutput("DataDiffdown"))
       )
     }
-    
   })
   
+  # output$TabBoxTablesPlot <- renderUI({
+  #   tabBox(
+  #     id = "tabBoxPlotTables",
+  #     width = NULL,
+  #     selected = "Bar chart",
+  #     tabPanel(
+  #       "Bar chart",
+  #       amChartsOutput("BarChartTables", height = input$heightBarChartTables)
+  #     ),
+  #     tabPanel(
+  #       "Volcano plot",
+  #       scatterD3Output("VolcanoPlot", height = input$heightVolcanoPlot, width = input$widthVolcanoPlot)
+  #     )
+  #   )
+  # })
+  
+  output$BarChartContainer <- renderUI({
+    fluidPage(amChartsOutput("BarChartTables", height = input$heightBarChartTables))
+  })
+  
+  output$VolcanoPlotContainer <- renderUI({
+
+    fluidPage(scatterD3Output("VolcanoPlot", height = input$heightVolcanoPlot + 10, width=ifelse(input$modifwidthVolcano,input$widthVolcanoPlot,"100%")))#width = input$widthVolcanoPlot + 10))
+  })
+  
+  output$BarChartTables <- renderAmCharts({
+    data = dataDiff()
+    if (!is.null(data$complete))
+      withProgress(message = "Loading...", Bar_Chart_Tables(input, data))
+  })
+  
+  output$SetHeightBarChart <- renderUI({
+    sliderInput(
+      "heightBarChartTables",
+      h6(strong(paste("Height"))),
+      min = 50,
+      max = max(500*((20*NROW(input$selectTaxoPlotBarChart))%/%500)+500,5000),
+      value = 100 + 18 * NROW(input$selectTaxoPlotBarChart)
+    )
+  })
+  
+  output$VolcanoPlot <- renderScatterD3({
+    data = dataDiff()
+    if (!is.null(data$complete))
+      withProgress(message = "Loading...", Volcano_Plot(input, data))
+  })
   
   #####################
   ###
@@ -3114,7 +3228,6 @@ shinyServer(function(input, output,session) {
   )
   
   
-  
   output$ExportTableButton <- renderUI({
     
     res = NULL
@@ -3125,10 +3238,22 @@ shinyServer(function(input, output,session) {
   })
   
   
-  
-  
-  
-  
+  #### Export Plot Tables
+  output$exportPlotTables <- downloadHandler(
+    filename <- function() { paste(input$WhichPlotTables,paste('SHAMAN',input$Exp_format_PlotTables,sep="."),sep="_") },
+    content <- function(file) {
+
+      if(input$Exp_format_PlotTables=="png") png(file, width = input$widthTablePlotExport, height = input$heightTablePlotExport)
+      else if(input$Exp_format_PlotTables=="pdf") pdf(file, width = input$widthTablePlotExport/96, height = input$heightTablePlotExport/96)
+      else if(input$Exp_format_PlotTables=="eps") postscript(file, width = input$widthTablePlotExport/96, height = input$heightTablePlotExport/96, paper="special")
+      else if(input$Exp_format_PlotTables=="svg") svg(file, width = input$widthTablePlotExport/96, height = input$heightTablePlotExport/96)
+      
+      if(input$WhichPlotTables=="BarChart") {print(Bar_Chart_Tables(input, dataDiff(), export = TRUE))}
+      else if(input$WhichPlotTables=="VolcanoPlot") 
+        {print(Volcano_Plot(input, dataDiff(), export = TRUE))}
+      dev.off()
+    }
+  )
   
   
   ## Run button
@@ -3226,20 +3351,18 @@ shinyServer(function(input, output,session) {
   output$heatmap_comp <- renderD3heatmap({
     resDiff = ResDiffAnal()
     ## Just for reactivity
-    SelContrast = input$ContrastList_table_FC
-    
+    #SelContrast = input$ContrastList_table_FC
+
     resplot = NULL
     filesize = file.info(namesfile)[,"size"]
     if(is.na(filesize)){filesize=0}
     if(filesize!=0)
     {
       BaseContrast = read.table(namesfile,header=TRUE)
-      if(!is.null(resDiff$dds)) resplot = withProgress(message="Loading...",Plot_Visu_Heatmap_FC(input,BaseContrast,resDiff))
+      if(!is.null(resDiff$dds)) resplot = withProgress(message="Loading...",Plot_Visu_Heatmap_FC(input,BaseContrast,resDiff, ContrastListDebounce, SelectTaxoPlotCompDebounce))
     }
     return(resplot)
   })
-  
-  
   
   
   output$ScatterplotD3 <- renderScatterD3({
@@ -3256,14 +3379,69 @@ shinyServer(function(input, output,session) {
   output$VennD3 <- renderD3vennR({
     resDiff = ResDiffAnal()
     ## Just for reactivity
-    SelContrast = input$ContrastList_table_FC
+    # SelContrast = input$ContrastList_table_FC
     filesize = file.info(namesfile)[,"size"]
     if(is.na(filesize)){filesize=0}
     if(filesize!=0){
       BaseContrast = read.table(namesfile,header=TRUE)
-      if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Venn(input,BaseContrast,resDiff))
+      if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Venn(input,BaseContrast,resDiff, ContrastListDebounce))
     }
   })
+  
+  output$LogitPlotD3 <- renderScatterD3({
+    resDiff = ResDiffAnal()
+    ## Just for reactivity ???
+    #SelContrast = c(input$Contrast1, input$Contrast2) ???
+    filesize = file.info(namesfile)[,"size"]
+    if(is.na(filesize)){filesize=0}
+    if(filesize!=0){
+      BaseContrast = read.table(namesfile,header=TRUE)
+      if(!is.null(resDiff$dds) && input$Contrast1 != input$Contrast2 && input$Contrast1 != "..." && input$Contrast2 != "...") withProgress(message="Loading...",Plot_Comp_Logit(input, BaseContrast, resDiff, SelectTaxoPlotCompDebounce))
+    }
+  })
+  
+  
+  output$pValueDensity <- renderPlot({
+    resDiff = ResDiffAnal()
+    filesize = file.info(namesfile)[,"size"]
+    if(is.na(filesize)){filesize=0}
+    if(filesize!=0){
+      BaseContrast = read.table(namesfile,header=TRUE)
+      if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_pValue_Density(input, BaseContrast, resDiff, ContrastListDebounce))
+    }
+  })
+  
+  output$UpSet <- renderPlot({
+    resDiff = ResDiffAnal()
+    filesize = file.info(namesfile)[,"size"]
+    if(is.na(filesize)){filesize=0}
+    if(filesize!=0){
+      BaseContrast = read.table(namesfile,header=TRUE)
+      if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_UpSet(input, BaseContrast, resDiff, ContrastListDebounce))
+    }
+  })
+  
+  output$multipleVennPlot <- renderPlot({
+    resDiff = ResDiffAnal()
+    filesize = file.info(namesfile)[,"size"]
+    if(is.na(filesize)){filesize=0}
+    if(filesize!=0){
+      BaseContrast = read.table(namesfile,header=TRUE)
+      if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_MultipleVenn(input, BaseContrast, resDiff, ContrastListDebounce))
+    }
+  })
+
+  ####
+  ContrastList <- reactive({
+    input$ContrastList_table_FC})
+
+  ContrastListDebounce <- debounce(ContrastList, 1000)
+  
+  SelectTaxoPlotComp <- reactive({
+    input$selectTaxoPlotComp})
+  
+  SelectTaxoPlotCompDebounce <- debounce(SelectTaxoPlotComp, 1000)
+  ####
   
   
   ## Regression coefficients Table
@@ -3417,9 +3595,49 @@ shinyServer(function(input, output,session) {
     res=NULL
     if(input$PlotVisuSelectComp=="Heatmap_comp") res =  d3heatmapOutput("heatmap_comp", height = input$heightVisuComp+10, width=ifelse(input$modifwidthComp,input$widthComp,"100%"))
     if(input$PlotVisuSelectComp=="Venn") res =  d3vennROutput("VennD3", height = input$heightVisuComp+10, width=ifelse(input$modifwidthComp,input$widthComp,"100%"))
+    if(input$PlotVisuSelectComp=="LogitPlot") res = scatterD3Output("LogitPlotD3", height = input$heightVisuComp+10, width=ifelse(input$modifwidthComp,input$widthComp,"100%"))
+    if(input$PlotVisuSelectComp=="pValueDensity") res = div(style = "position:relative",
+                                      plotOutput("pValueDensity", height = input$heightVisuComp+10, width=ifelse(input$modifwidthComp,input$widthComp,"100%")
+                                                 , hover = hoverOpts(id = "plot_hover_pValueDensity", delay = 10, delayType = "throttle")),
+                                       uiOutput("tooltippValueDensity")
+                                                )
+    if(input$PlotVisuSelectComp=="ContrastCompair") res = plotOutput("UpSet", height = input$heightVisuComp+10, width=ifelse(input$modifwidthComp,input$widthComp,"100%"))
+    if(input$PlotVisuSelectComp=="multipleVenn") res = plotOutput("multipleVennPlot", height = input$heightVisuComp+10, width=ifelse(input$modifwidthComp,input$widthComp,"100%"))
     return(res)
   })
   
+  #####
+  output$tooltippValueDensity <- renderUI({
+    hover <- input$plot_hover_pValueDensity
+    point <- nearPoints(pValueDensityData(), hover, xvar = "x", yvar = "y", threshold = 20, maxpoints = 1)
+    if (nrow(point) == 0) return(NULL)
+    # calculate point position INSIDE the image as percent of total dimensions from left (horizontal) and from top (vertical)
+    left_pct <- (hover$x - hover$domain$left) / (hover$domain$right - hover$domain$left)
+    top_pct <- (hover$domain$top - hover$y) / (hover$domain$top - hover$domain$bottom)
+    # calculate distance from left and bottom side of the picture in pixels
+    left_px <- hover$range$left + left_pct * (hover$range$right - hover$range$left)
+    top_px <- hover$range$top + top_pct * (hover$range$bottom - hover$range$top)
+    # create style property fot tooltip, background color is set so tooltip is a bit transparent, z-index is set so we are sure are tooltip will be on top
+    style <- paste0("position:absolute; z-index:100; padding-top : 5px ; padding-bottom : 5px ; padding-right : 15px ; padding-left : 15px ; background-color: rgba(245, 245, 245, 0.85); border-color :", point$colour ,"; border-width : 2px ;",
+                    "left:", left_px + 2, "px; top:", top_px + 2, "px;")
+    # actual tooltip created as wellPanel
+    wellPanel(
+      style = style,
+      (h5(strong(ContrastListDebounce()[point$group])))
+    )
+  })
+
+  pValueDensityData <- reactive({
+    resDiff = ResDiffAnal()
+    filesize = file.info(namesfile)[,"size"]
+    if(is.na(filesize)){filesize=0}
+    if(filesize!=0){
+      BaseContrast = read.table(namesfile,header=TRUE)
+      if(!is.null(resDiff$dds))
+      {p <- Plot_pValue_Density(input, BaseContrast, resDiff, ContrastListDebounce)
+        data <- ggplot_build(p)$data[[1]]}
+    }})
+  #####
   
   output$ColBoxplot <- renderUI({
     
@@ -3429,15 +3647,11 @@ shinyServer(function(input, output,session) {
     return(res)
   })
   
-  
   #   output$DiversityBoxPlot <- renderPlot({
   #     resDiff = ResDiffAnal()
   #     if(!is.null(resDiff$dds)) Plot_Visu_Diversity(input,resDiff,type="box")
   #   })
-  
-  
-  
-  
+
   output$TaxoToPlotVisu <- renderUI({
     
     data = dataInput()$data 
@@ -3453,7 +3667,7 @@ shinyServer(function(input, output,session) {
       Available_taxo = rownames(counts)[ord]
       selTaxo = Available_taxo[1:min(12,length(Available_taxo))]
       
-      if(input$SelectSpecifTaxo=='Most')  res = selectizeInput("selectTaxoPlot",h6(strong(paste("Select the",input$TaxoSelect, "to plot"))),Available_taxo, selected = selTaxo,multiple = TRUE)
+      if(input$SelectSpecifTaxo=="Most")  res = selectizeInput("selectTaxoPlot",h6(strong(paste("Select the",input$TaxoSelect, "to plot"))),Available_taxo, selected = selTaxo,multiple = TRUE)
       if(input$SelectSpecifTaxo=="Diff" && length(input$ContrastList_table_Visu)>=1)
       {
         filesize = file.info(namesfile)[,"size"]
@@ -3531,7 +3745,7 @@ shinyServer(function(input, output,session) {
       Available_taxo = rownames(counts)[ord]
       selTaxo = Available_taxo[1:min(12,length(Available_taxo))]
       
-      if(input$SelectSpecifTaxoComp=='Most')  res = selectizeInput("selectTaxoPlotComp",h6(strong(paste("Select the",input$TaxoSelect, "to plot"))),Available_taxo, selected = selTaxo,multiple = TRUE)
+      if(input$SelectSpecifTaxoComp=="Most")  res = selectizeInput("selectTaxoPlotComp",h6(strong(paste("Select the",input$TaxoSelect, "to ",if(input$PlotVisuSelectComp=="LogitPlot"){"label"}else{"plot"}))),Available_taxo, selected = selTaxo,multiple = TRUE)
       if(input$SelectSpecifTaxoComp=="Diff" && length(input$ContrastList_table_VisuComp)>=1)
       {
         
@@ -3557,7 +3771,7 @@ shinyServer(function(input, output,session) {
           
           if(length(ind)>0 && !is.null(ind)) selTaxo = Feature_names[ind]
           else selTaxo = NULL
-          res = selectizeInput("selectTaxoPlotComp",h6(strong(paste("Select the",input$TaxoSelect, "to plot"))),Available_taxo, selected = selTaxo,multiple = TRUE,options = list(minItems = 2))
+          res = selectizeInput("selectTaxoPlotComp",h6(strong(paste("Select the",input$TaxoSelect, "to ",if(input$PlotVisuSelectComp=="LogitPlot"){"label"}else{"plot"}))),Available_taxo, selected = selTaxo,multiple = TRUE,options = list(minItems = 2))
         }    
       }
       if(input$SelectSpecifTaxoComp=="NoDiff"  && length(input$ContrastList_table_VisuComp)>=1)
@@ -3585,16 +3799,190 @@ shinyServer(function(input, output,session) {
           
           if(length(ind)>0 && !is.null(ind)) selTaxo = Feature_names[ind]
           else selTaxo = NULL
-          res = selectizeInput("selectTaxoPlotComp",h6(strong(paste("Select the",input$TaxoSelect, "to plot"))),Available_taxo, selected = selTaxo,multiple = TRUE,options = list(minItems = 2))
+          res = selectizeInput("selectTaxoPlotComp",h6(strong(paste("Select the",input$TaxoSelect, "to ",if(input$PlotVisuSelectComp=="LogitPlot"){"label"}else{"plot"}))),Available_taxo, selected = selTaxo,multiple = TRUE,options = list(minItems = 2))
         }    
       }
-      if(input$SelectSpecifTaxoComp=="All") res = selectizeInput("selectTaxoPlotComp",h6(strong(paste("Select the",input$TaxoSelect, "to plot"))),Available_taxo, selected = Available_taxo,multiple = TRUE)
+      if(input$SelectSpecifTaxoComp=="All") res = selectizeInput("selectTaxoPlotComp",h6(strong(paste("Select the",input$TaxoSelect, "to ",if(input$PlotVisuSelectComp=="LogitPlot"){"label"}else{"plot"}))),Available_taxo, selected = Available_taxo,multiple = TRUE)
     }
     return(res)
   })
   
   
+  # For Tables plot Volcano
+  output$TaxoToLabelVolcanoPlot <- renderUI({
+    data = dataInput()$data
+    taxo = input$TaxoSelect
+    resDiff = ResDiffAnal()
+    res = NULL
+
+    if (!is.null(input$SelectSpecifTaxoTablesVolcano) &&
+        !is.null(data$counts) &&
+        !is.null(data$taxo) &&
+        nrow(data$counts) > 0 &&
+        nrow(data$taxo) > 0 && !is.null(taxo) && taxo != "...")
+    { 
+      counts = dataMergeCounts()$counts
+      sumTot = rowSums(counts)
+      ord = order(sumTot, decreasing = TRUE)
+      Available_taxo = rownames(counts)[ord]
+      selTaxo = Available_taxo[1:min(12, length(Available_taxo))]
+
+      if (input$SelectSpecifTaxoTablesVolcano == "Most"){
+        res = selectizeInput(
+          "selectTaxoLabelVolcano",
+          h6(strong("Custom selection")),
+          Available_taxo,
+          selected = selTaxo,
+          multiple = TRUE
+        )
+      }
+      if (input$SelectSpecifTaxoTablesVolcano == "Diff") {
+        selTaxo <- dataDiff()$significant[["Id"]]
+        res = selectizeInput(
+          "selectTaxoLabelVolcano",
+          h6(strong("Custom selection")),
+          Available_taxo,
+          selected = selTaxo,
+          multiple = TRUE
+        )
+      }
+      if (input$SelectSpecifTaxoTablesVolcano == "All") {
+        res = selectizeInput(
+          "selectTaxoLabelVolcano",
+          h6(strong("Custom selection")),
+          Available_taxo,
+          selected = Available_taxo,
+          multiple = TRUE
+        )
+      }
+      if (input$SelectSpecifTaxoTablesVolcano == "None"){
+        res = selectizeInput(
+          "selectTaxoLabelVolcano",
+          h6(strong("Custom selection")),
+          Available_taxo,
+          selected = NULL,
+          multiple = TRUE
+        )
+        }
+    }
+    return(res)
+  })
   
+  output$SelectTheToLabel <- renderText({
+    paste("Select the ", input$TaxoSelect, " to label")
+  })
+  
+  # observeEvent(input$SelectSpecifTaxoTablesVolcano,{
+  #   
+  #   data = dataInput()$data
+  #   taxo = input$TaxoSelect
+  # 
+  #   if (!is.null(data$counts) &&
+  #       !is.null(data$taxo) &&
+  #       nrow(data$counts) > 0 &&
+  #       nrow(data$taxo) > 0 && !is.null(taxo) && taxo != "...")
+  #   { counts = dataMergeCounts()$counts
+  #     sumTot = rowSums(counts)
+  #     ord = order(sumTot, decreasing = TRUE)
+  #     Available_taxo = rownames(counts)[ord]
+  #     selTaxo = Available_taxo[1:min(12, length(Available_taxo))]
+  #     
+  #     if (input$SelectSpecifTaxoTablesVolcano == "Most"){
+  #       sel = selTaxo
+  #     }
+  #     if (input$SelectSpecifTaxoTablesVolcano == "Diff") {
+  #       selTaxo <- dataDiff()$significant[["Id"]]
+  #       sel = selTaxo
+  #     }
+  #     if (input$SelectSpecifTaxoTablesVolcano == "All") {
+  #       sel = Available_taxo
+  #     }
+  #     if (input$SelectSpecifTaxoTablesVolcano == "None"){
+  #       sel = NULL
+  #     }
+  #   
+  #   updateSelectizeInput(session, "selectTaxoLabelVolcano", choices = Available_taxo, selected = sel)
+  # }}, priority=1)
+  # 
+  
+  
+  # output$RadioButtonSelectedVolcano <- renderUI({
+  #   radioButtons(
+  #     "SelectSpecifTaxoTablesVolcano",
+  #     h5(strong(
+  #       paste("Select the ", input$TaxoSelect, " to label")
+  #     )),
+  #     c(
+  #       "None" = "None",
+  #       "Differential features" = "Diff",
+  #       "Most abundant" = "Most",
+  #       "All" = "All"
+  #     )
+  #   )
+  # })
+  
+  ## For Tables plot Bar Chart
+  output$TaxoToPlotBarChart <- renderUI({
+    data = dataInput()$data
+    taxo = input$TaxoSelect
+    resDiff = ResDiffAnal()
+    res = NULL
+    
+    if (!is.null(input$SelectSpecifTaxoTablesBarChart) &&
+        !is.null(data$counts) &&
+        !is.null(data$taxo) &&
+        nrow(data$counts) > 0 &&
+        nrow(data$taxo) > 0 && !is.null(taxo) && taxo != "...")
+    {
+      counts = dataMergeCounts()$counts
+      sumTot = rowSums(counts)
+      ord = order(sumTot, decreasing = TRUE)
+      Available_taxo = rownames(counts)[ord]
+      selTaxo = Available_taxo[1:min(12, length(Available_taxo))]
+      
+      if (input$SelectSpecifTaxoTablesBarChart == "Diff") {
+        selTaxo <- dataDiff()$significant[["Id"]]
+        res = selectizeInput(
+          "selectTaxoPlotBarChart",
+          h6(strong("Custom selection")),
+          Available_taxo,
+          selected = selTaxo,
+          multiple = TRUE
+        )
+      }
+      if (input$SelectSpecifTaxoTablesBarChart == "Most")
+        res = selectizeInput(
+          "selectTaxoPlotBarChart",
+          h6(strong("Custom selection")),
+          Available_taxo,
+          selected = selTaxo,
+          multiple = TRUE
+        )
+      if (input$SelectSpecifTaxoTablesBarChart == "All")
+        res = selectizeInput(
+          "selectTaxoPlotBarChart",
+          h6(strong("Custom selection")),
+          Available_taxo,
+          selected = Available_taxo,
+          multiple = TRUE
+        )
+    }
+    return(res)
+  })
+  
+  output$RadioButtonSelectedBarChart <- renderUI({
+    radioButtons(
+      "SelectSpecifTaxoTablesBarChart",
+      h5(strong(
+        paste("Select the ", input$TaxoSelect, " to plot")
+      )),
+      c(
+        "Differential features" = "Diff",
+        "Most abundant" = "Most",
+        "All" = "All"
+      )
+    )
+  })
   
   output$VarIntVisu <- renderUI({
     
@@ -3632,12 +4020,12 @@ shinyServer(function(input, output,session) {
       ## Using list slows down the application if the number of rows too high
       #if(nrow(counts)<300) 
       #{
-        Available_x = list(x1 = c(sort(rownames(counts))),"Diversity" = c("Alpha div","Shannon div","Inv.Simpson div","Simpson div"))
-        names(Available_x)[1] = taxo
-        if(any(numInd)) Available_x$Variables = c(namesTarget[numInd],"")
+      Available_x = list(x1 = c(sort(rownames(counts))),"Diversity" = c("Alpha div","Shannon div","Inv.Simpson div","Simpson div"))
+      names(Available_x)[1] = taxo
+      if(any(numInd)) Available_x$Variables = c(namesTarget[numInd],"")
       #} #else{
-        #Available_x = c(sort(rownames(counts)),"Alpha div","Shannon div","Inv.Simpson div","Simpson div")
-        #if(any(numInd)) Available_x = c(Available_x,namesTarget[numInd])
+      #Available_x = c(sort(rownames(counts)),"Alpha div","Shannon div","Inv.Simpson div","Simpson div")
+      #if(any(numInd)) Available_x = c(Available_x,namesTarget[numInd])
       #}
       Available_y = Available_x
       res[[1]] = selectizeInput("Xscatter",h6(strong("X variable")),Available_x, selected = Available_x[1],multiple = FALSE)

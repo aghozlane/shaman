@@ -65,11 +65,11 @@ if(!require(treeWeightD3)){
    devtools::install_github('pierreLec/treeWeightD3')
    library(treeWeightD3)
 }
-if (!require(BiocInstaller)){
-  source("https://bioconductor.org/biocLite.R")
-  biocLite("BiocInstaller")
-  library(BiocInstaller)
-}
+# if (!require(BiocInstaller)){
+#   source("https://bioconductor.org/biocLite.R")
+#   biocLite("BiocInstaller")
+#   library(BiocInstaller)
+# }
 
 if (!require(d3heatmap)) {
   devtools::install_github('aghozlane/d3heatmap')
@@ -223,4 +223,27 @@ if (!require("htmltools")){
 #   library(plotly)  
 # }
 
+if (!require("rAmCharts")){
+  install.packages("rAmCharts")
+  library(rAmCharts)
+}
 
+if(!require("colourpicker")){
+  install.packages("colourpicker")
+  library(coulourpicker)
+}  
+
+if(!require("data.table")){
+  install.packages("data.table")
+  library(data.table)
+}
+
+if(!require("UpSetR")){
+  install.packages("UpSetR")
+  library(UpSetR)
+}
+
+if(!require("ggrepel")){
+  install.packages("ggrepel")
+  library(ggrepel)
+}
