@@ -230,7 +230,7 @@ if (!require("rAmCharts")){
 
 if(!require("colourpicker")){
   install.packages("colourpicker")
-  library(coulourpicker)
+  library(colourpicker)
 }  
 
 if(!require("data.table")){
