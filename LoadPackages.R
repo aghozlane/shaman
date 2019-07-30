@@ -65,11 +65,11 @@ if(!require(treeWeightD3)){
    devtools::install_github('pierreLec/treeWeightD3')
    library(treeWeightD3)
 }
-# if (!require(BiocInstaller)){
-#   source("https://bioconductor.org/biocLite.R")
-#   biocLite("BiocInstaller")
-#   library(BiocInstaller)
-# }
+if (!require(BiocInstaller)){
+  source("https://bioconductor.org/biocLite.R")
+  biocLite("BiocInstaller")
+  library(BiocInstaller)
+}
 
 if (!require(d3heatmap)) {
   devtools::install_github('aghozlane/d3heatmap')
