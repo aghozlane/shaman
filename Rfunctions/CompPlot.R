@@ -46,7 +46,7 @@ Plot_Visu_Heatmap_FC <- function(input, BaseContrast, resDiff, ContrastListDebou
 ##############################
 ##      P VALUE DENSITY PLOT
 ##############################
-Plot_pValue_Density <- function(input, BaseContrast, resDiff, ContrastListDebounce){
+Plot_pValue_Density <- function(input, BaseContrast, resDiff, ContrastListDebounce, alphaVal){
   res = NULL
   #SelContrast = input$ContrastList_table_FC
   SelContrast = ContrastListDebounce()
@@ -64,7 +64,8 @@ Plot_pValue_Density <- function(input, BaseContrast, resDiff, ContrastListDeboun
     data <- rbind(data, data_cont)
   }
   data$contrast <- factor(data$contrast, levels = SelContrast)
-  p <- ggplot(data, aes(x = padj, color = contrast, fill = contrast)) + geom_density(alpha = input$fillOpacity, size = input$lineWidth)
+                                                                                                                          # uncomment to zoom (X axis between 0 and input$alphaVal)                               (use "+ xlim(0,as.numeric(alphaVal))" instead, to redraw geom_density with only data under threshold)
+  p <- ggplot(data, aes(x = padj, color = contrast, fill = contrast)) + geom_density(alpha = input$fillOpacity, size = input$lineWidth) + theme_minimal() #+ coord_cartesian(xlim = c(0,as.numeric(alphaVal)))
   p <- p + theme(axis.title = element_text(size = input$FontSizepValueDensity), 
                  axis.text = element_text(size = input$FontSizepValueDensity),
                  legend.title = element_text(size = input$FontSizepValueDensity),
@@ -187,7 +188,7 @@ Plot_Comp_Logit <- function(input, BaseContrast, resDiff, SelectTaxoPlotCompDebo
     
     if(export){
       data <- data.frame(logit_x, logit_y, color_var)
-      plot <- ggplot(data, aes(x = logit_x, y = logit_y))
+      plot <- ggplot(data, aes(x = logit_x, y = logit_y)) + theme_minimal()
       plot <- plot + geom_point(aes(color = color_var), size = (input$pointSizeLogit %/% 30), alpha = input$pointOpacityLogit)
       plot <- plot + scale_x_continuous(paste("logit p value", input$Contrast1))
       plot <- plot + scale_y_continuous(paste("logit p value", input$Contrast2))
@@ -216,20 +217,23 @@ Plot_Comp_Logit <- function(input, BaseContrast, resDiff, SelectTaxoPlotCompDebo
 ##############################
 ##      VENN DIAGRAM
 ##############################
-Plot_Visu_Venn <- function(input,BaseContrast,resDiff, ContrastListDebounce, export=FALSE){
+Plot_Visu_Venn <- function(input,BaseContrast,resDiff, ContrastListVennDebounce, export=FALSE){
   res = NULL
-  #SelContrast = input$ContrastList_table_FC
-  SelContrast = ContrastListDebounce()
+  #SelContrast = input$ContrastList_table_FCVenn
+  SelContrast = ContrastListVennDebounce()
+  if(length(SelContrast)>=2 & length(SelContrast)<=4){
   data = GetData_venn(input,SelContrast,BaseContrast,resDiff)$res
   res = venn_tooltip(d3vennR(data=data))
+  }
   return(res)
 }
 
 ##############################
-##      CONTRASTS COMPAIR
+##      UPSET
 ##############################
 Plot_UpSet <- function(input,BaseContrast, resDiff, ContrastListDebounce, export=FALSE){
   plot = NULL
+  df = NULL
   #SelContrast = input$ContrastList_table_FC
   SelContrast = ContrastListDebounce()
   if(length(SelContrast)>=2){
@@ -240,16 +244,38 @@ Plot_UpSet <- function(input,BaseContrast, resDiff, ContrastListDebounce, export
       new <- list(na.omit(data[,i]))
       listInput <- c(listInput, new)
     }
-    print(input$pointSizeContrastsCompair)
-    print(class(input$pointSizeContrastsCompair))
     names(listInput) <- colnames(data)
+    
+    # for plot
     plot <- upset(fromList(listInput), nsets = n, nintersects = NA, set_size.show = input$showNumbers, 
                   show.numbers = if(input$showNumbers){"yes"}else{"no"}, sets = SelContrast, keep.order = !(input$orderBySize),
-                  point.size = input$pointSizeContrastsCompair, line.size = 1.5, order.by = if(input$orderBySize){"freq"}else{"degree"}, 
+                  point.size = input$pointSizeUpSet, line.size = 1.5, order.by = input$orderByUpset, 
                   mainbar.y.label = "Number of differential features in common", sets.x.label = "Number of differential features", 
-                  text.scale = c(2, 1.6, 1.6, 1.6, 2, 1.5))
+                  text.scale = c(2, 1.6, 1.6, 1.6, 2, 1.5), decreasing = input$decreasingUpset)
+    
+    # for table
+    combos <- Reduce(c,lapply(rev(1:length(listInput)), function(x) combn(rev(colnames(data)),x,simplify=FALSE) ))
+    
+    listSignif <- Reduce(function(a,b) {unique(c(as.character(a),as.character(b)))}, listInput)
+    n_col = length(combos)
+    n_row = length(listSignif)
+    df <- matrix(rep(listSignif, times = n_col), ncol = n_col)
+    lst <- list()
+    for(j in 1:n_col){for(i in 1:n_row){group_contrasts <- unlist(combos[j])
+                                        if (is.element(df[i,j], lst)){df[i,j] <- NA}
+                                        else{if (!is.element(df[i,j], Reduce(intersect, listInput[group_contrasts]))){df[i,j] <- NA}
+                                             else{lst <- c(lst,df[i,j])}
+                                            }
+                                        }
+                      }
+    colnames(df) <- lapply(combos, function(lstCont) paste(lstCont, collapse = " & "))
+
+    df = as.data.frame(apply(df,2,Go_data_top))
+    maxRow = max(apply(df,2,FUN=function(x) length(which(!is.na(x)))))
+    df = df[1:max(maxRow,1),]
+    df = df[,which(apply(!is.na(df),2,any))]
   }
-  return(plot)
+  return(list(plot=plot,table=df))
 }
 
 
@@ -463,10 +489,24 @@ GetData_venn <-function(input,SelContrast,BaseContrast,resDiff)
       for(i in 1:(ncont))
       {
         for(j in i:ncont)
-        {
-          if(i!=j) res[[cmp]] = list(sets=list(names.df[i],names.df[j]),size= length(which(!is.na(intersect(df[,i],df[,j])))))
-          if(i==j) res[[cmp]] = list(sets=list(names.df[i]),size= length(which(!is.na(intersect(df[,i],df[,i])))))
-          cmp=cmp+1
+          # For Venn diagram (until intersection of 4 contrasts)
+        { if(i==j) {res[[cmp]] = list(sets=list(names.df[i]),size= length(which(!is.na(intersect(df[,i],df[,i])))))
+                    cmp=cmp+1}
+          if(i!=j) {res[[cmp]] = list(sets=list(names.df[i],names.df[j]),size= length(which(!is.na(intersect(df[,i],df[,j])))))
+                    cmp=cmp+1
+                    for(k in j:ncont){
+                      if(k!=j){
+                        res[[cmp]] = list(sets=list(names.df[i],names.df[j],names.df[k]), size = length(which(!is.na(intersect(intersect(df[,i],df[,j]),df[,k])))))
+                        cmp=cmp+1
+                        for(l in k:ncont){
+                          if(l!=k){
+                            res[[cmp]] = list(sets=list(names.df[i],names.df[j],names.df[k],names.df[l]), size = length(which(!is.na(intersect(intersect(intersect(df[,i],df[,j]),df[,k]),df[,l])))))
+                            cmp=cmp+1}
+                        }
+                        }
+                    }
+          }
+          # For 'Multiple Venn Compair'
           if(i!=j) {
             if (is.null(res_multiple_venn))
               {res_multiple_venn <- data.frame(name = c(rownames_multiple_venn, paste(names.df[i],names.df[j], sep = " vs ")), 

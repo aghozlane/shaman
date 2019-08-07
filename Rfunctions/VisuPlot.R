@@ -449,17 +449,17 @@ Plot_Visu_Diversity <- function(input,resDiff,ForScatter=FALSE){
     ci.alpha.down = pmax(alpha - 1.96*tapply(TaxoNumber(counts_tmp_combined), targetInt$AllVar, sd)/sqrt.nb,0)
     ci.alpha.up = alpha + 1.96*tapply(TaxoNumber(counts_tmp_combined), targetInt$AllVar, sd)/sqrt.nb
     
-    shan <- tapply(diversity(counts_tmp_combined, index = "shannon"), targetInt$AllVar, mean)
-    ci.shan.down = pmax(shan - 1.96*tapply(diversity(counts_tmp_combined, index = "shannon"), targetInt$AllVar, sd)/sqrt.nb,0)
-    ci.shan.up = shan + 1.96*tapply(diversity(counts_tmp_combined, index = "shannon"), targetInt$AllVar, sd)/sqrt.nb
+    shan <- tapply(vegan::diversity(counts_tmp_combined, index = "shannon"), targetInt$AllVar, mean)
+    ci.shan.down = pmax(shan - 1.96*tapply(vegan::diversity(counts_tmp_combined, index = "shannon"), targetInt$AllVar, sd)/sqrt.nb,0)
+    ci.shan.up = shan + 1.96*tapply(vegan::diversity(counts_tmp_combined, index = "shannon"), targetInt$AllVar, sd)/sqrt.nb
     
-    simpson <- tapply(diversity(counts_tmp_combined, index = "simpson"), targetInt$AllVar, mean)
-    ci.simpson.down = pmax(simpson - 1.96*tapply(diversity(counts_tmp_combined, index = "simpson"), targetInt$AllVar, sd)/sqrt.nb,0)
-    ci.simpson.up = simpson + 1.96*tapply(diversity(counts_tmp_combined, index = "simpson"), targetInt$AllVar, sd)/sqrt.nb
+    simpson <- tapply(vegan::diversity(counts_tmp_combined, index = "simpson"), targetInt$AllVar, mean)
+    ci.simpson.down = pmax(simpson - 1.96*tapply(vegan::diversity(counts_tmp_combined, index = "simpson"), targetInt$AllVar, sd)/sqrt.nb,0)
+    ci.simpson.up = simpson + 1.96*tapply(vegan::diversity(counts_tmp_combined, index = "simpson"), targetInt$AllVar, sd)/sqrt.nb
     
-    invsimpson <- tapply(diversity(counts_tmp_combined, index = "invsimpson"), targetInt$AllVar, mean)
-    ci.invsimpson.down = pmax(invsimpson - 1.96*tapply(diversity(counts_tmp_combined, index = "invsimpson"), targetInt$AllVar, sd)/sqrt.nb,0)
-    ci.invsimpson.up = invsimpson + 1.96*tapply(diversity(counts_tmp_combined, index = "invsimpson"), targetInt$AllVar, sd)/sqrt.nb
+    invsimpson <- tapply(vegan::diversity(counts_tmp_combined, index = "invsimpson"), targetInt$AllVar, mean)
+    ci.invsimpson.down = pmax(invsimpson - 1.96*tapply(vegan::diversity(counts_tmp_combined, index = "invsimpson"), targetInt$AllVar, sd)/sqrt.nb,0)
+    ci.invsimpson.up = invsimpson + 1.96*tapply(vegan::diversity(counts_tmp_combined, index = "invsimpson"), targetInt$AllVar, sd)/sqrt.nb
     
     gamma <- TaxoNumber(counts_tmp_combined, targetInt$AllVar)
     beta = gamma/alpha - 1
@@ -605,8 +605,12 @@ expand.grid2.list <- function(listInput)
 
 
 ## Put the data in the right format to be plot
-GetDataToPlot <- function(input,resDiff,VarInt,ind_taxo,aggregate=TRUE,rarefy=FALSE)
+GetDataToPlot <- function(input,resDiff,VarInt,ind_taxo,sec_variable = NULL, aggregate=TRUE,rarefy=FALSE)
 {
+  sec_variable_added_to_VarInt <- FALSE
+  if(!is.null(sec_variable)){if(!is.element(sec_variable,VarInt)){VarInt <- c(VarInt,sec_variable)
+                                                                  sec_variable_added_to_VarInt <- TRUE}}
+  
   dds = resDiff$dds
   val = c()
   list.val = list()
@@ -640,7 +644,10 @@ GetDataToPlot <- function(input,resDiff,VarInt,ind_taxo,aggregate=TRUE,rarefy=FA
       expr=parse(text=Tinput)
       ## All the modalities for all the var of interest
       val = c(val,eval(expr))
-      list.val[[i]] = eval(expr)
+      if(sec_variable_added_to_VarInt){mod <- eval(expr)
+                                      if(is.null(mod)){mod <- as.character(unique(as.factor(target[,VarInt[i]])))}
+                                      list.val[[i]] = mod}
+      else{list.val[[i]] = eval(expr)}
     }
     if (!is.null(val) && !is.null(list.val))
     {
@@ -699,9 +706,7 @@ GetDataToPlot <- function(input,resDiff,VarInt,ind_taxo,aggregate=TRUE,rarefy=FA
       }
     }
   }
-  
-  return(list(counts = counts_tmp_combined,targetInt=targetInt,prop=prop_tmp_combined,namesCounts=namesCounts,levelsMod=levelsMod,prop_all=prop_all))
-  
+  return(list(counts=counts_tmp_combined,targetInt=targetInt,prop=prop_tmp_combined,namesCounts=namesCounts,levelsMod=levelsMod,prop_all=prop_all))
   
 }
 
@@ -830,3 +835,78 @@ Plot_Visu_Tree <- function(input,resDiff,CT_Norm_OTU,taxo_table)
   return(res)
 }
 
+#############################
+##      NETWORK
+#############################
+
+Plot_network <- function(input,resDiff,availableTaxo, ind_taxo, qualiVariable, export = FALSE){
+  plot = NULL
+  dataVN = NULL
+  
+  VarInt = input$VisuVarInt
+  
+  if(isolate(input$colorCorr)){sec_variable = isolate(input$sec_variable)}
+  else{sec_variable = NULL}
+  
+  data <- GetDataToPlot(input,resDiff,VarInt,availableTaxo, sec_variable = sec_variable, aggregate = FALSE)
+  if(!is.null(data)){
+  counts_tmp_combined <- data$counts
+  dataVariables <- as.matrix(data$targetInt)
+  if(isolate(input$colorCorr && qualiVariable())){dataVariables[,sec_variable] <- sapply(dataVariables[,sec_variable], function(x) if(is.element(x,isolate(input$values1))){1}else{0})}
+  
+  if(!is.null(counts_tmp_combined)){
+    countsMatrix <- as.matrix(counts_tmp_combined)
+    
+    n <- ncol(countsMatrix)
+    resCorrTest <- corr.test(countsMatrix, ci = FALSE)
+    cor <- resCorrTest$r
+    pval <- resCorrTest$p
+    pval_bool <- t(apply(pval, 1, function(v) {sapply(v, function(x){x < 0.05})}))
+    cor_sgn <- t(apply(cor, 1, function(v) {sapply(v, sign)}))
+    adjacency <- matrix(mapply(function(a,b) {mapply(function(x,y){x*y}, x=a, y=b)}, a=pval_bool, b=cor_sgn), nrow = n)
+    rownames(adjacency) <- colnames(countsMatrix)
+    colnames(adjacency) <- colnames(countsMatrix)
+    # ### Remove rows and columns with only NA
+    # adjacency <- adjacency[apply(adjacency, 1, function(y) !all(is.na(y))),]
+    # adjacency <- t(adjacency)
+    # adjacency <- adjacency[apply(adjacency, 1, function(y) !all(is.na(y))),]
+    # adjacency <- t(adjacency)
+    
+    ### Replace NA by zeros (ie "no correlation")
+    adjacency[is.na(adjacency)] <- 0
+    
+    adjacency <- adjacency[,ind_taxo]
+    adjacency <- adjacency[ind_taxo,]
+    
+    igraphGraph <- graph_from_adjacency_matrix(adjacency, diag = FALSE, mode = "upper" , weighted = TRUE) # "upper" for adjusted p-value, lower for p-value not adjusted
+    
+    list_to_label <- isolate(input$ToLabelNetwork)
+    dataVN <- toVisNetworkData(igraphGraph)
+    dataVN$nodes$title <- paste0("<b>", dataVN$nodes$id,"</b>")
+    dataVN$nodes$label <- sapply(dataVN$nodes$id, function(x)if(is.element(x, list_to_label)){x}else{""})
+    dataVN$edges$color <- sapply(dataVN$edges$weight, function(x)if(x==1){isolate(input$edgeColorPositive)}else{isolate(input$edgeColorNegative)})
+    
+    if(!is.null(sec_variable)){
+        cor <- sapply(dataVN$nodes$id, function(x)cor(as.numeric(dataVariables[,sec_variable]), countsMatrix[,x]))
+        dataVN$nodes$cor <- round(cor, digits = 5)
+        scale <- if(isolate(input$scaleFree)){max(c(max(dataVN$nodes$cor),-min(dataVN$nodes$cor)))}else{1}
+        dataVN$nodes$color.background <- sapply(dataVN$nodes$cor, function(x) colorRampPalette(rev(brewer.pal(9, isolate(input$colorPalette))))(200)[round(x, digits = 2)*100/scale+100])
+        dataVN$nodes$color.highlight.background <- dataVN$nodes$color.background
+    }
+    else{dataVN$nodes$color.background <- isolate(input$colorBackground)
+         dataVN$nodes$color.highlight.background <- isolate(input$colorHighlightBackground)}
+    dataVN$nodes$color.border <- isolate(input$colorBorder)
+    dataVN$nodes$color.highlight.border <- isolate(input$colorHighlightBorder)
+    
+    plot <- visNetwork(nodes = dataVN$nodes, edges = dataVN$edges)
+    plot <- visIgraphLayout(plot, layout = "layout_nicely", physics = FALSE, smooth = FALSE)
+    plot <- visNodes(plot, size = 20) #, scaling = list(label = list(min = 30, max = 30, maxVisible = 30)))
+    plot <- visEdges(plot, width = 1)
+    plot <- visOptions(plot, width = if(isolate(input$modifwidthVisu)){isolate(input$widthVisu)}, height = isolate(input$heightVisu), autoResize = FALSE)
+    #plot <- visLegend(plot, addEdges = data.frame(color = c("red", "blue"), label = c("Positive correlation","Negative correlation")))
+    
+    #plot <- visExport(plot, type = "pdf", name = "network_SHAMAN.pdf", float="bottom")
+  }
+  }
+  return(list(plot = plot, data = dataVN))
+}

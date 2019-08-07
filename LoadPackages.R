@@ -1,4 +1,5 @@
-options(download.file.method = 'wget', bitmapType='cairo')
+#options(download.file.method = 'wget', bitmapType='cairo')
+options(bitmapType='cairo')
 
 if (!require("Rcpp")){
   install.packages("Rcpp",  repos="http://cran.univ-paris1.fr/")
@@ -83,7 +84,8 @@ library(biomformat)
 }
 
 if (!require(scatterD3)) {
-  devtools::install_github('aghozlane/scatterD3')
+  #devtools::install_github('aghozlane/scatterD3')
+  install.packages("scatterD3")
   library(scatterD3)
 }
 
@@ -109,7 +111,7 @@ if (!require(shinyjs)) {
 }
 
 if(!require(d3vennR)){
-  install_github("timelyportfolio/d3vennR")
+  devtools::install_github("timelyportfolio/d3vennR")
   library(d3vennR)
 }
 
@@ -129,8 +131,7 @@ if (!require(gplots)) {
 }
 
 if (!require(DESeq2)) {
-  source("https://bioconductor.org/biocLite.R")
-  biocLite("DESeq2")
+  devtools::install_github("aghozlane/DESeq2shaman")
   library(DESeq2)
 }
 
@@ -230,8 +231,8 @@ if (!require("rAmCharts")){
 
 if(!require("colourpicker")){
   install.packages("colourpicker")
-  library(coulourpicker)
-}  
+  library(colourpicker)
+}
 
 if(!require("data.table")){
   install.packages("data.table")
@@ -246,4 +247,19 @@ if(!require("UpSetR")){
 if(!require("ggrepel")){
   install.packages("ggrepel")
   library(ggrepel)
+}
+
+# if(!require("networkD3")){
+#   install.packages("networkD3")
+#   library(networkD3)
+# }
+
+if(!require("igraph")){
+  install.packages("igraph")
+  library(igraph)
+}
+
+if(!require("visNetwork")){
+  install.packages("visNetwork")
+  library(visNetwork)
 }

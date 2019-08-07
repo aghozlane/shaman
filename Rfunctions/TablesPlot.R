@@ -73,15 +73,13 @@ Bar_Chart_Tables <- function(input, data, export = FALSE) {
       creditsPosition = "bottom-right"
     )
     plot <- setProperties(plot, fontSize = input$fontSize)
-    return(plot)
   }
   
-  if(export){
-    print(input$fontSize)
+  else{
     data <- data_table
     data$Id <- factor(data$Id, levels = rev(data$Id))
-    plot <- ggplot(data, aes(x = Id, y = log2FoldChange))
-    plot <- plot + geom_bar(stat = "identity", aes(color = Group, fill = Group))
+    plot <- ggplot(data, aes(x = Id, y = log2FoldChange)) + theme_minimal()
+    plot <- plot + geom_bar(stat = "identity", aes(color = Group, fill = Group), width = 0.7)
     plot <- plot + coord_flip()
     plot <- plot + scale_color_manual(values = c("Down" = input$colour1,"Not significant" = input$colour2,"Up" = input$colour3))
     plot <- plot + scale_fill_manual(values = c("Down" = input$colour1,"Not significant" = input$colour2,"Up" = input$colour3))
@@ -90,11 +88,10 @@ Bar_Chart_Tables <- function(input, data, export = FALSE) {
                          axis.text = element_text(size = input$fontSize),
                          legend.title = element_text(size = input$fontSize),
                          legend.text = element_text(size = input$fontSize))
-    if(input$removeLabelsBarChart){print("ici")
-                                         plot <- plot + theme(axis.ticks.y = element_blank(),
-                                                              axis.text.y = element_blank())}
-    return(plot)
+    if(input$removeLabelsBarChart){plot <- plot + theme(axis.ticks.y = element_blank(),
+                                                        axis.text.y = element_blank())}
   }
+  return(plot)
 }
 
 ###########################
@@ -186,8 +183,7 @@ Volcano_Plot <- function(input, data, export = FALSE) {
                   } 
               else{NULL},
       col_var = color_var,
-      col_lab = NA #if(input$showLegend){"Legend title"}else{NA}
-      ,
+      col_lab = NA, #if(input$showLegend){"Legend title"}else{NA}
       colors = c(
         "Down" = input$colour1,
         "Not significant" = input$colour2,
@@ -205,14 +201,14 @@ Volcano_Plot <- function(input, data, export = FALSE) {
       menu = FALSE,
       height = input$heightVolcanoPlot,
       width=if(input$modifwidthVolcano){input$widthVolcanoPlot},
-      disable_wheel = TRUE
+      disable_wheel = FALSE
     )
   return(plot)
   }
   
   if(export){
     data <- data.frame(x,y_log, color_var)
-    plot <- ggplot(data, aes(x = x, y = y_log))
+    plot <- ggplot(data, aes(x = x, y = y_log)) + theme_minimal()
     plot <- plot + geom_point(aes(color = color_var), size = (input$pointSize %/% 30), alpha = input$pointOpacity)
     plot <- plot + scale_x_continuous("Log 2 Fold Change", limits = xlimits)
     plot <- plot + scale_y_continuous("- Log 10 p value adjusted", limits = ylimits)
