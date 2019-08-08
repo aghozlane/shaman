@@ -1234,7 +1234,7 @@ function(request) {
                   ),
                   column(width=3,
                          box(title = "Select your plot",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = FALSE,collapsed= FALSE,
-                             selectizeInput("PlotVisuSelectComp","",c("Venn diagram"="Venn","Heatmap"="Heatmap_comp", "Logit plot"="LogitPlot", "p value density"="pValueDensity", "UpSet"="UpSet", "Multiple venn compair" = "multipleVenn"),selected = "Heatmap_comp")
+                             selectizeInput("PlotVisuSelectComp","",c("Venn diagram"="Venn", "UpSet"="UpSet", "Contrasts compair" = "multipleVenn" ,"Heatmap"="Heatmap_comp", "Logit plot"="LogitPlot", "Density plot"="pValueDensity"),selected = "Heatmap_comp")
                          ),
                          box(title = "Options",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
                              conditionalPanel(condition="input.PlotVisuSelectComp=='Heatmap_comp' || input.PlotVisuSelectComp=='UpSet' || input.PlotVisuSelectComp=='pValueDensity' || input.PlotVisuSelectComp=='multipleVenn'",

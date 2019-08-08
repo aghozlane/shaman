@@ -138,7 +138,7 @@ HCPlot <- function (input,dds,group,type.trans=NULL,counts=NULL,CT,tree,col = c(
       ## Get the type of dendrogram
       type <- input$typeHculst
       
-      dend <- set(dend, "labels_cex", input$cexLabelDiag)
+      #dend <- set(dend, "labels_cex", input$cexLabelDiag)
       if(input$colorHC) labels_colors(dend)<-col[as.integer(as.factor(group))][order.dendrogram(dend)]
       if(type=="hori") 
       { 
@@ -148,7 +148,8 @@ HCPlot <- function (input,dds,group,type.trans=NULL,counts=NULL,CT,tree,col = c(
       else
       {
         par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
-        res = circlize_dendrogram(dend, labels_track_height = 0.2, dend_track_height = .3, main = "Cluster dendrogram",xlab = paste(input$DistClust,"distance, Ward criterion",sep=" "))
+        res = circlize_dendrogram(dend, labels_track_height = 0.2, dend_track_height = .3, main = "Cluster dendrogram",xlab = paste(input$DistClust,"distance, Ward criterion",sep=" "), 
+                                  labels_cex = input$cexLabelDiag)
       }
     }
   }
@@ -554,8 +555,8 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
   { 
     type.trans <- type.trans[1]
     
-    if (type.trans == "VST") counts.trans <- assay(varianceStabilizingTransformation(dds))
-    else counts.trans <- assay(rlogTransformation(dds))
+    if (type.trans == "VST") counts.trans <- SummarizedExperiment::assay(varianceStabilizingTransformation(dds))
+    else counts.trans <- SummarizedExperiment::assay(rlogTransformation(dds))
     counts.trans = counts.trans[,ind_kept]
     
     rv = apply(counts.trans, 1, var, na.rm = TRUE)
@@ -754,8 +755,8 @@ Get_pca_table <-function(input,dds, group_init, n = min(500, nrow(counts(dds))),
   { 
     type.trans <- type.trans[1]
     
-    if (type.trans == "VST") counts.trans <- assay(varianceStabilizingTransformation(dds))
-    else counts.trans <- assay(rlogTransformation(dds))
+    if (type.trans == "VST") counts.trans <- SummarizedExperiment::assay(varianceStabilizingTransformation(dds))
+    else counts.trans <- SummarizedExperiment::assay(rlogTransformation(dds))
     counts.trans = counts.trans[,ind_kept]
     
     rv = apply(counts.trans, 1, var, na.rm = TRUE)
