@@ -39,7 +39,7 @@ Plot_diag <- function(input,resDiff,tree,getTable=FALSE)
     if(input$DiagPlot=="MajTax") res = majTaxPlot(input,counts, group = group, col=colors)
     if(input$DiagPlot=="SfactorsVStot") res = diagSFactors(input,normFactors,resDiff$raw_counts) 
     if(input$DiagPlot=="pcaPlot") res = PCAPlot_meta(input,dds, group,  type.trans = input$TransType, col = colors)
-    if(input$DiagPlot=="pcoaPlot") res = PCoAPlot_meta(input,dds, group,CT,tree, col = colors) 
+    if(input$DiagPlot=="pcoaPlot") res = PCoAPlot_meta(input,dds, group,CT,tree, col = colors)$plot 
     if(input$DiagPlot=="nmdsPlot") res = NMDSPlot(input, dds, group,CT,tree, col = colors) 
     if(input$DiagPlot=="clustPlot") res = HCPlot(input,dds,group,type.trans=input$TransType,counts,CT,tree,col=colors)
   }
@@ -170,7 +170,8 @@ Plot_diag_Eigen <- function(input,resDiff)
   maxFact =max(sapply(group,FUN=function(x) length(levels(x))))
   if(maxFact>=4) colors = rainbow(maxFact) 
   
-  PCAPlot_meta(input,dds, group,  type.trans = input$TransType, col = colors, plot = "eigen") 
+  res = PCAPlot_meta(input,dds, group,  type.trans = input$TransType, col = colors, plot = "eigen")
+  return(res)
 }
 
 
@@ -383,6 +384,8 @@ diagSFactors<-function (input,normFactors,counts)
 ### PCoA
 PCoAPlot_meta <-function (input, dds, group_init, CT,tree,col = c("SpringGreen","dodgerblue","black","firebrick1"), plot = "pcoa") 
 {
+  dist.counts.norm = NULL
+  pp = NULL
   cval=c()
   time_set = 0
   # Set of shape
@@ -478,7 +481,7 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree,col = c("SpringGreen",
         ## Plot axis, label and circles
         v_axes = c(as.numeric(gsub("PC","",input$PCaxe1)),as.numeric(gsub("PC","",input$PCaxe2)))
         
-        plot(pco.counts.norm$li[v_axes], 
+        pp = plot(pco.counts.norm$li[v_axes], 
              xlab=paste(input$PCaxe1, ": ",round(eigen[v_axes[1]],1),"%") , 
              ylab=paste(input$PCaxe2, ": ",round(eigen[v_axes[2]],1),"%"),
              xlim=c(min+0.25*min,max+0.25*max), ylim=c(min-0.1,max+0.1), 
@@ -510,11 +513,11 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree,col = c("SpringGreen",
         nbBar = max(7,max(v_axes))
         col = rep("grey",nbBar)
         col[v_axes] = "black"
-        barplot(eigen[1:nbBar], xlab="Dimensions", ylab="Eigenvalues (%)", names.arg = 1:nbBar, col = col, ylim=c(0,max(eigen)+5), cex.axis=1.2, cex.lab=1.4,cex.names=1.2)
+        pp = barplot(eigen[1:nbBar], xlab="Dimensions", ylab="Eigenvalues (%)", names.arg = 1:nbBar, col = col, ylim=c(0,max(eigen)+5), cex.axis=1.2, cex.lab=1.4,cex.names=1.2)
       }
     }
   }
-  
+  return(list(plot=pp,dataDiv = dist.counts.norm))
 }
 
 
@@ -647,6 +650,7 @@ my.boxplot <- function(x, pol.col = 1, pol.density = NULL, pol.angle = 45,
 ### Get PCOA table (useful to get the number of axes)
 Get_pcoa_table <-function (input, dds, group_init,CT,tree) 
 {
+  dist.counts.norm = NULL
   cval=c()
   time_set = 0
   # Set of shape
