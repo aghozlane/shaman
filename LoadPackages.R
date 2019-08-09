@@ -1,4 +1,5 @@
-options(download.file.method = 'wget', bitmapType='cairo')
+#options(download.file.method = 'wget', bitmapType='cairo')
+options(bitmapType='cairo')
 
 if (!require("Rcpp")){
   install.packages("Rcpp",  repos="http://cran.univ-paris1.fr/")
@@ -65,11 +66,11 @@ if(!require(treeWeightD3)){
    devtools::install_github('pierreLec/treeWeightD3')
    library(treeWeightD3)
 }
-if (!require(BiocInstaller)){
-  source("https://bioconductor.org/biocLite.R")
-  biocLite("BiocInstaller")
-  library(BiocInstaller)
-}
+# if (!require(BiocInstaller)){
+#   source("https://bioconductor.org/biocLite.R")
+#   biocLite("BiocInstaller")
+#   library(BiocInstaller)
+# }
 
 if (!require(d3heatmap)) {
   devtools::install_github('aghozlane/d3heatmap')
@@ -83,7 +84,8 @@ library(biomformat)
 }
 
 if (!require(scatterD3)) {
-  devtools::install_github('aghozlane/scatterD3')
+  #devtools::install_github('aghozlane/scatterD3')
+  install.packages("scatterD3")
   library(scatterD3)
 }
 
@@ -109,7 +111,7 @@ if (!require(shinyjs)) {
 }
 
 if(!require(d3vennR)){
-  install_github("timelyportfolio/d3vennR")
+  devtools::install_github("timelyportfolio/d3vennR")
   library(d3vennR)
 }
 
@@ -129,8 +131,7 @@ if (!require(gplots)) {
 }
 
 if (!require(DESeq2)) {
-  source("https://bioconductor.org/biocLite.R")
-  biocLite("DESeq2")
+  devtools::install_github("aghozlane/DESeq2shaman")
   library(DESeq2)
 }
 
@@ -223,4 +224,47 @@ if (!require("htmltools")){
 #   library(plotly)  
 # }
 
+if (!require("rAmCharts")){
+  install.packages("rAmCharts")
+  library(rAmCharts)
+}
 
+if(!require("colourpicker")){
+  install.packages("colourpicker")
+  library(colourpicker)
+}
+
+if(!require("data.table")){
+  install.packages("data.table")
+  library(data.table)
+}
+
+if(!require("UpSetR")){
+  install.packages("UpSetR")
+  library(UpSetR)
+}
+
+if(!require("ggrepel")){
+  install.packages("ggrepel")
+  library(ggrepel)
+}
+
+# if(!require("networkD3")){
+#   install.packages("networkD3")
+#   library(networkD3)
+# }
+
+if(!require("igraph")){
+  install.packages("igraph")
+  library(igraph)
+}
+
+if(!require("visNetwork")){
+  install.packages("visNetwork")
+  library(visNetwork)
+}
+
+if(!require("SummarizedExperiment")){
+  BiocManager::install("SummarizedExperiment")
+  library(SummarizedExperiment)
+}

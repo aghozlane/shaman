@@ -47,22 +47,22 @@ Get_dds_object <- function(input,counts,target,design,normFactorsOTU,CT_noNorm,C
 #   }
 #   countsNorm = counts(dds, normalized = TRUE)
 
-  if(as.numeric(R.Version()$major)>=3 && as.numeric(R.Version()$minor) >=1.3){
-    if(nrow(counts)*nrow(target)>=50000)
-    {
-      try(DESeq(dds,fitType=input$fitType,parallel = TRUE,minReplicatesForReplace = Inf) ->ddstmp,silent = TRUE)
-      if(!is.null(ddstmp)) dds = ddstmp
-    }
-    if(nrow(counts)*nrow(target)<50000 || is.null(ddstmp))
-    {
-      dds <- estimateDispersions(dds, fitType=input$fitType)
-      dds <- nbinomWaldTest(dds)
-    }
-  }else{
+  # if(as.numeric(R.Version()$major)>=3 && as.numeric(R.Version()$minor) >=1.3){
+  #   if(nrow(counts)*nrow(target)>=50000)
+  #   {
+  #     try(DESeq(dds,fitType=input$fitType,parallel = TRUE,minReplicatesForReplace = Inf) ->ddstmp,silent = TRUE)
+  #     if(!is.null(ddstmp)) dds = ddstmp
+  #   }
+  #   if(nrow(counts)*nrow(target)<50000 || is.null(ddstmp))
+  #   {
+  #     dds <- estimateDispersions(dds, fitType=input$fitType)
+  #     dds <- nbinomWaldTest(dds)
+  #   }
+  # }else{
     dds <- estimateDispersions(dds, fitType=input$fitType)
     dds <- nbinomWaldTest(dds,modelMatrixType = "expanded")
     # dds <-  DESeq(dds,fitType=input$fitType,modelMatrixType = "expanded",parallel = TRUE)
-  }
+  # }
   countsNorm = counts(dds, normalized = TRUE)
   
   
