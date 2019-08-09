@@ -391,10 +391,8 @@ Plot_Visu_Scatterplot<- function(input,resDiff,export=FALSE,lmEst = FALSE,CorEst
     Rsq = sumRes$r.squared
     return(list(regCoef=regCoef,Rsq = Rsq))
   }
-  print("HERE")
   if(CorEst)
   {
-    print("HERE2")
     #typesTarget = sapply(target,class)
     #print(typesTarget)
     #numInd = (typesTarget=="numeric")[1:ncol(target)]
@@ -849,10 +847,10 @@ Plot_network <- function(input,resDiff,availableTaxo, ind_taxo, qualiVariable, e
   else{sec_variable = NULL}
   
   data <- GetDataToPlot(input,resDiff,VarInt,availableTaxo, sec_variable = sec_variable, aggregate = FALSE)
-  if(!is.null(data)){
+  if(!is.null(data) && !is.null(data$targetInt)){
   counts_tmp_combined <- data$counts
   dataVariables <- as.matrix(data$targetInt)
-  if(isolate(input$colorCorr && qualiVariable())){dataVariables[,sec_variable] <- sapply(dataVariables[,sec_variable], function(x) if(is.element(x,isolate(input$values1))){1}else{0})}
+  if(isolate(input$colorCorr && qualiVariable()) && !is.null(dataVariables)){dataVariables[,sec_variable] <- sapply(dataVariables[,sec_variable], function(x) if(is.element(x,isolate(input$values1))){1}else{0})}
   
   if(!is.null(counts_tmp_combined)){
     countsMatrix <- as.matrix(counts_tmp_combined)

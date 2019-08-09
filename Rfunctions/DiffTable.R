@@ -17,7 +17,7 @@ TableDiff_print <- function(input,BaseContrast,resDiff, info = NULL)
   result[[input$ContrastList_table]] <- results(dds,contrast=BaseContrast[,input$ContrastList_table],pAdjustMethod=input$AdjMeth,
                                                 cooksCutoff=cooksCutoff,
                                                 independentFiltering=input$IndFiltering,alpha=alpha)
-  print(result[[input$ContrastList_table]])
+  #print(result[[input$ContrastList_table]])
   #names(result) <- gsub("_", " ", names(result))
   if (is.null(info))  info <- data.frame(Id = rownames(result[[1]]))
   else names(info)[1] <- "Id"

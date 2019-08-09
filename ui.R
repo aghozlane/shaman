@@ -59,6 +59,7 @@ function(request) {
                                     tabPanel("Authors", h3("The main contributors to SHAMAN:"),
                                              p(a("Stevenn Volant", href="mailto:stevenn.volant@pasteur.fr"), "(Initiator, coding, testing, documentation, evaluation)"),
                                              p(a("Amine Ghozlane",href="mailto:amine.ghozlane@pasteur.fr"), "(Coding, testing, documentation, evaluation, packaging)"),
+                                             p("Perrine Woringer", "(Coding, testing, Documentation)"),
                                              p("Pierre Lechat", "(Coding, testing, feature suggestions)"),
                                              h3("Acknowledgements"),
                                              p("Thanks to the following people for patches and other suggestions for improvements:"),
@@ -87,6 +88,7 @@ function(request) {
                          box(
                            title = "What's new in SHAMAN", width = NULL, status = "primary",
                            div(style = 'overflow-y: scroll; height: 550px',
+                               addNews("August 14th 2019","Major update","We performed a global improvement of SHAMAN. The application is now migrated to R 3.6.1. We implemented several visualization for differential analysis and network of abundance. We hope you will enjoy this main update."),
                                addNews("April 11th 2019","Debugging","We fixed few bugs in export system and scatterplot visualisation system."),
                                addNews("March 28th 2019","Packaging","SHAMAN is now available as packrat package. Take a look at download section."),
                                addNews("April 17th 2018","Bioinformatics","The bioinformatic treatment offers a larger access to parameters. We also worked a lot on the documentation."),
@@ -752,6 +754,17 @@ function(request) {
                            ),
                            conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='nmdsPlot'",
                                             uiOutput("ResPermaTestBox")
+                           ),
+                           conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='nmdsPlot'",
+                                            br(),
+                                            box(title = "Distance values",  width = 6, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
+                                                DT::dataTableOutput("Distancetable"),
+                                                fluidRow(
+                                                  column(width=3,downloadButton('ExportDistancetable', 'Export table')),
+                                                  column(width=3,selectInput("sepdistance", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
+                                                ),
+                                                tags$style(type='text/css', "#ExportDistancetable { margin-top: 37px;}")
+                                            )
                            )
                          )
                          

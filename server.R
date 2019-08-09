@@ -2813,7 +2813,7 @@ shinyServer(function(input, output,session) {
     ## Phylogenetic tree
     tree = dataInputTree()$data
     
-    Plot_diag_pcoaEigen(input,resDiff,tree)
+    Plot_diag_pcoaEigen(input,resDiff,tree)$plot
   },height = 400)
   
   
@@ -2829,6 +2829,32 @@ shinyServer(function(input, output,session) {
     return(t(data.frame(Factor=res$normFactors)))
     
   })
+  
+  output$Distancetable <- DT::renderDataTable(
+    datatable({
+      resDiff = ResDiffAnal()
+      ## Phylogenetic tree
+      tree = dataInputTree()$data
+      as.matrix(Plot_diag_pcoaEigen(input,resDiff,tree)$dataDiv)
+    }, rownames= FALSE, options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')), scroller = TRUE,
+                                       pageLength = 10,scrollX=TRUE
+    ))
+  )
+  
+  ## Export Distancetable in .csv
+  output$ExportDistancetable <- downloadHandler(
+    filename = function() {
+      if(input$sepdiversity=="\t") 'SHAMAN_Distance.tsv'
+      else 'SHAMAN_Distance.csv'
+    },
+    content = function(file){
+      resDiff = ResDiffAnal()
+      ## Phylogenetic tree
+      tree = dataInputTree()$data
+      tmp = as.matrix(Plot_diag_pcoaEigen(input,resDiff,tree)$dataDiv)
+      datatable(tmp,rownames= FALSE)
+      write.table(tmp, file,row.names = FALSE, sep=input$sepdistance)
+    })
   
   
   output$ResPermaTestBox <- renderUI({
@@ -3672,7 +3698,7 @@ shinyServer(function(input, output,session) {
   output$tooltippValueDensity <- renderUI({
     hover <- input$plot_hover_pValueDensity
     point <- nearPoints(pValueDensityData(), hover, xvar = "x", yvar = "y", threshold = 20, maxpoints = 1)
-    if (nrow(point) == 0) return(NULL)
+    if (is.null(nrow(point)) || nrow(point) == 0) return(NULL)
     # calculate point position INSIDE the image as percent of total dimensions from left (horizontal) and from top (vertical)
     left_pct <- (hover$x - hover$domain$left) / (hover$domain$right - hover$domain$left)
     top_pct <- (hover$domain$top - hover$y) / (hover$domain$top - hover$domain$bottom)
