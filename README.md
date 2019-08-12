@@ -13,19 +13,15 @@
 
 ## Introduction
 
-SHAMAN is dedicated to metagenomic analysis, it includes the normalization, the differential analysis and mutiple visualization.  
-SHAMAN is based on DESeq2 R package [Anders and Huber 2010](http://www.ncbi.nlm.nih.gov/pubmed/20979621) for the analysis of metagenomic data, as suggested in [McMurdie and Holmes 2014](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3974642/) and [Jonsson2016](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC4727335/).
+SHAMAN is a shiny application for differential analysis of metagenomic data (16S, 18S, 23S, 28S, ITS and WGS) including bioinformatics treatment of raw reads for targeted metagenomics, statistical analysis and results visualization with a large variety of plots (barplot, boxplot, heatmap, …).
+The statistical analysis performed by SHAMAN is based on DESeq2 R package [Anders and Huber 2010](http://www.ncbi.nlm.nih.gov/pubmed/20979621) ] which robustly identifies the differential abundant features as suggested in  [McMurdie and Holmes 2014](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3974642/) and [Jonsson2016](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC4727335/).
 SHAMAN robustly identifies the differential abundant genera with the Generalized Linear Model implemented in DESeq2 [Love 2014](http://www.ncbi.nlm.nih.gov/pubmed/25516281).
-Resulting p-values are adjusted according to the Benjamini and Hochberg procedure [Benjamini and Hochberg 1995].
-The PCOA is performed with the ade4 R package and plots are generated with ggplot2 or D3.js packages.
-A presentation about SHAMAN is available [here](www/shaman_presentation.pdf).  
-SHAMAN is compatible with standard formats for metagenomic analysis. We also provide a complete pipeline for OTU picking and annotation named [MASQUE](https://github.com/aghozlane/masque) used in production at Institut Pasteur.  
-Hereafter is the global workflow of the SHAMAN application:  
+SHAMAN is compatible with standard formats for metagenomic analysis (.csv, .tsv, .biom) and generated figures can be downloaded in several formats. Hereafter is the global workflow of the SHAMAN application:  
 <img src="www/Workflow.png" align="center" />
 
 ## Installation
 
-SHAMAN is available for R>3.1.2. The installation, download and execution can all be performed with a small R script :
+SHAMAN is available for R 3.6.1. The installation, download and execution can all be performed with a small R script :
 ```
 # Load shiny packages
 if(!require('shiny')){
