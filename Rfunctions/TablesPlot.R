@@ -154,13 +154,6 @@ Volcano_Plot <- function(input, data, export = FALSE) {
       } else{
         ""
       })
-  # labels <-
-  #   sapply(names, function(name)
-  #     if (is.element(name, points_to_label)) {
-  #       name
-  #     } else{
-  #       ""
-  #     })
   if(!export){
   plot <-
     scatterD3(
