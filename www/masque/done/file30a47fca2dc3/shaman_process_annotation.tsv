@@ -1,0 +1,9 @@
+Type	Count	Mean_length	Median_length
+Amplicon	4248638	428	427
+Dereplication	1629789	428	427
+Singleton_removed	40537	429	427
+Chimera_removed	34496	429	427
+OTU	63	354	427
+silva_annotation	39
+greengenes_annotation	39
+rdp_annotation	62

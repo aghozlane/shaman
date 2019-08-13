@@ -59,7 +59,7 @@ function(request) {
                                     tabPanel("Authors", h3("The main contributors to SHAMAN:"),
                                              p(a("Stevenn Volant", href="mailto:stevenn.volant@pasteur.fr"), "(Initiator, coding, testing, documentation, evaluation)"),
                                              p(a("Amine Ghozlane",href="mailto:amine.ghozlane@pasteur.fr"), "(Coding, testing, documentation, evaluation, packaging)"),
-                                             p("Perrine Woringer", "(Coding, testing, Documentation)"),
+                                             p("Perrine Woringer", "(Coding, testing, documentation, feature suggestions)"),
                                              p("Pierre Lechat", "(Coding, testing, feature suggestions)"),
                                              h3("Acknowledgements"),
                                              p("Thanks to the following people for patches and other suggestions for improvements:"),
@@ -518,7 +518,9 @@ function(request) {
                       # selectInput("FileFormat","",c("Count table & taxonomy (*.csv or *.tsv)"="fileCounts","BIOM file"="fileBiom","Saved project"="fileRData"),selected="fileCounts"),
                       selectInput("FileFormat","",c("Count table & taxonomy (*.csv or *.tsv)"="fileCounts","BIOM file"="fileBiom","Project number"="projnum"),selected="fileCounts"),
                       conditionalPanel(condition="input.FileFormat=='fileCounts'",
-                                       checkboxInput("NoTaxoFile","No taxonomy table",value=FALSE)
+                                       checkboxInput("NoTaxoFile","No taxonomy table",value=FALSE),
+                                       selectInput("DemoDataset",h6(strong('Or select a dataset')),c("..."="...","ZymoBIOMICS mock 16S"="30a47fca2dc3"),selected="..."),
+                                       receiveSweetAlert(messageId = "DemoDataset")
                       ),
                       conditionalPanel(condition="input.FileFormat=='projnum'",
                                        inlineCSS(list(.pwdGREEN = "background-color: #DDF0B3",.pwdRED = "background-color: #F0B2AD")),
@@ -619,6 +621,8 @@ function(request) {
                                column(width=6,uiOutput("SelectInteraction2"))
                              ),
                              fluidRow( 
+                               column(width=6,uiOutput('ButtonBiom')),
+                               #column(width=6,downloadButton('ExportBiom', 'Export BIOM')),
                                column(width=6,uiOutput("RunButton"))
                              )
                          ),
