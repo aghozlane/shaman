@@ -46,7 +46,7 @@ Plot_Visu_Heatmap_FC <- function(input, BaseContrast, resDiff, ContrastListDebou
 ##############################
 ##      P VALUE DENSITY PLOT
 ##############################
-Plot_pValue_Density <- function(input, BaseContrast, resDiff, ContrastListDebounce, alphaVal){
+Plot_pValue_Density <- function(input, BaseContrast, resDiff, ContrastListDebounce, alphaVal, InputpValueDensityfocus){
   res = NULL
   #SelContrast = input$ContrastList_table_FC
   SelContrast = ContrastListDebounce()
@@ -64,8 +64,10 @@ Plot_pValue_Density <- function(input, BaseContrast, resDiff, ContrastListDeboun
     data <- rbind(data, data_cont)
   }
   data$contrast <- factor(data$contrast, levels = SelContrast)
-                                                                                                                          # uncomment to zoom (X axis between 0 and input$alphaVal)                               (use "+ xlim(0,as.numeric(alphaVal))" instead, to redraw geom_density with only data under threshold)
-  p <- ggplot(data, aes(x = padj, color = contrast, fill = contrast)) + geom_density(alpha = input$fillOpacity, size = input$lineWidth) + theme_minimal() #+ coord_cartesian(xlim = c(0,as.numeric(alphaVal)))
+  p <- ggplot(data, aes(x = padj, color = contrast, fill = contrast)) + theme_minimal()
+  InputpValueDensityfocus() # for reactivity
+  if(isolate(input$adaptBWtoFocus)){p <- p + geom_density(alpha = input$fillOpacity, size = input$lineWidth, adjust = as.numeric(alphaVal), n = 2 ^ (input$numberPoints))}else{p <- p + geom_density(alpha = input$fillOpacity, size = input$lineWidth, adjust = 1, n = 2 ^ (input$numberPoints))}
+  if(isolate(input$focusUnderThreshold)){p <- p + coord_cartesian(xlim = c(0,as.numeric(alphaVal)))}
   p <- p + theme(axis.title = element_text(size = input$FontSizepValueDensity), 
                  axis.text = element_text(size = input$FontSizepValueDensity),
                  legend.title = element_text(size = input$FontSizepValueDensity),
@@ -130,8 +132,6 @@ Plot_Comp_Logit <- function(input, BaseContrast, resDiff, SelectTaxoPlotCompDebo
                         ylab = paste("logit p value", input$Contrast2),
                         hover_opacity = 1,
                         tooltip_text = row.names(padj),
-                        # xlim = xlimits,
-                        # ylim = ylimits,
                         lines = if (input$showSignifThresholdsLogitPlot) {
                           if(input$showDiagonal){
                             data.frame(
@@ -180,8 +180,6 @@ Plot_Comp_Logit <- function(input, BaseContrast, resDiff, SelectTaxoPlotCompDebo
                         # dom_id_reset_zoom = "scatterD3-reset-zoomLogit",
                         # dom_id_svg_export = "scatterD3-svg-exportLogit",
                         # menu = FALSE,
-                        # height = input$heightVolcanoPlot,
-                        # width=if(input$modifwidthVolcano){input$widthVolcanoPlot},
                         # disable_wheel = TRUE
                         )
       }
@@ -219,13 +217,20 @@ Plot_Comp_Logit <- function(input, BaseContrast, resDiff, SelectTaxoPlotCompDebo
 ##############################
 Plot_Visu_Venn <- function(input,BaseContrast,resDiff, ContrastListVennDebounce, export=FALSE){
   res = NULL
+  contrasts_without_diff = NULL
   #SelContrast = input$ContrastList_table_FCVenn
   SelContrast = ContrastListVennDebounce()
   if(length(SelContrast)>=2 & length(SelContrast)<=4){
-  data = GetData_venn(input,SelContrast,BaseContrast,resDiff)$res
+    gotData = GetData_venn(input,SelContrast,BaseContrast,resDiff)
+    
+    data2 = gotData$df.tot
+    if(length(SelContrast) - length(colnames(data2[sapply(data2,function(x) all(is.na(x)))])) < 2){contrasts_without_diff = colnames(data2[sapply(data2,function(x) all(is.na(x)))])
+    }
+    else{
+  data = gotData$res
   res = venn_tooltip(d3vennR(data=data))
-  }
-  return(res)
+  }}
+  return(list(res = res, contrasts_without_diff=contrasts_without_diff))
 }
 
 ##############################
@@ -234,10 +239,16 @@ Plot_Visu_Venn <- function(input,BaseContrast,resDiff, ContrastListVennDebounce,
 Plot_UpSet <- function(input,BaseContrast, resDiff, ContrastListDebounce, export=FALSE){
   plot = NULL
   df = NULL
+  contrasts_without_diff = NULL
   #SelContrast = input$ContrastList_table_FC
   SelContrast = ContrastListDebounce()
   if(length(SelContrast)>=2){
-    data = GetData_venn(input,SelContrast,BaseContrast,resDiff)$df.tot
+    gotData = GetData_venn(input,SelContrast,BaseContrast,resDiff)
+    data = gotData$df.tot
+    
+    if(length(SelContrast) - length(colnames(data[sapply(data,function(x) all(is.na(x)))])) < 2){contrasts_without_diff = colnames(data[sapply(data,function(x) all(is.na(x)))])
+    }
+    else{
     listInput <- list()
     n <- ncol(data)
     for(i in 1:n){
@@ -274,19 +285,27 @@ Plot_UpSet <- function(input,BaseContrast, resDiff, ContrastListDebounce, export
     maxRow = max(apply(df,2,FUN=function(x) length(which(!is.na(x)))))
     df = df[1:max(maxRow,1),]
     df = df[,which(apply(!is.na(df),2,any))]
-  }
-  return(list(plot=plot,table=df))
+  }}
+  return(list(plot=plot,table=df, contrasts_without_diff=contrasts_without_diff))
 }
 
 
 ##############################
-##   MULTIPLE VENN COMPAIR
+##   Contrasts comparison
 ##############################
 Plot_MultipleVenn <- function(input,BaseContrast, resDiff, ContrastListDebounce){
   plot = NULL
+  contrasts_without_diff = NULL
   SelContrast = ContrastListDebounce()
   if(length(SelContrast)>=2){
-  data = GetData_venn(input,SelContrast,BaseContrast,resDiff)$res_multiple_venn
+  gotData = GetData_venn(input,SelContrast,BaseContrast,resDiff)
+  
+  data2 = gotData$df.tot
+  if(length(SelContrast) - length(colnames(data2[sapply(data2,function(x) all(is.na(x)))])) < 2){contrasts_without_diff = colnames(data2[sapply(data2,function(x) all(is.na(x)))])
+  }
+  else{
+  
+  data = gotData$res_multiple_venn
 
   plot <- ggplot(data,aes(x=x,y=y)) + geom_point() + theme_bw() + 
           geom_label_repel(aes(label=name), size = input$labelSizemultipleVenn) + xlim(c(0,1)) + ylim(c(0,1)) + 
@@ -294,8 +313,8 @@ Plot_MultipleVenn <- function(input,BaseContrast, resDiff, ContrastListDebounce)
           ylab(bquote(Contrast1 *intersect(Contrast2) ~ "/ Contrast2"))
   plot <- plot + theme(axis.title = element_text(size = input$FontSizeMultipleVenn), 
                  axis.text = element_text(size = input$FontSizeMultipleVenn - 2))
-  }
-  return(plot)
+  }}
+  return(list(plot = plot, contrasts_without_diff=contrasts_without_diff))
 }
 
 
@@ -342,20 +361,17 @@ Get_log2FC_padj <-function(input,BaseContrast,resDiff, info = NULL)
                                 independentFiltering=input$IndFiltering,alpha=alpha)
     }
     log2FC = as.matrix(round(result[[SelContrast[1]]][, "log2FoldChange"], 3))
-    #padj = as.matrix(round(result[[SelContrast[1]]][, "padj"], 3))
     padj = as.matrix((result[[SelContrast[1]]][, "padj"]))
     if(nbCont>1)
     {
       for(i in 2:nbCont)
       {
         log2FC = cbind(log2FC,round(result[[SelContrast[i]]][, "log2FoldChange"], 3))
-        #padj = cbind(padj,round(result[[SelContrast[i]]][, "padj"], 7))
         padj = cbind(padj,(result[[SelContrast[i]]][, "padj"]))
       }
-    }#  
-      colnames(log2FC) = names(result)
-      colnames(padj) = names(result)
-    #}
+    }  
+    colnames(log2FC) = names(result)
+    colnames(padj) = names(result)
     
     rownames(log2FC) = rownames(result[[SelContrast[1]]])
     rownames(padj) = rownames(result[[SelContrast[1]]])
@@ -429,7 +445,7 @@ venn_tooltip <- function(venn){
   }
 
 
-## Transform the data for the venn diagram
+## Transform the data for the venn diagram and the "contrasts comparison"
 GetData_venn <-function(input,SelContrast,BaseContrast,resDiff)
 {
   res = list()
@@ -506,7 +522,7 @@ GetData_venn <-function(input,SelContrast,BaseContrast,resDiff)
                         }
                     }
           }
-          # For 'Multiple Venn Compair'
+          # For 'Contrasts comparison'
           if(i!=j) {
             if (is.null(res_multiple_venn))
               {res_multiple_venn <- data.frame(name = c(rownames_multiple_venn, paste(names.df[i],names.df[j], sep = " vs ")), 
