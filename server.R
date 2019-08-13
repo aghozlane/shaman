@@ -2,11 +2,11 @@ shinyServer(function(input, output,session) {
   
   hide(id = "loading-content", anim = TRUE, animType = "fade",time=1.5)
   hide(id = "loading-content-bar", anim = TRUE, animType = "fade",time=1.5)
-  #####################################################
+  ###                                               ###
   ##
-  ##                    LOAD FILES
+  ####                    LOAD FILES ####
   ##
-  #####################################################
+  ###                                               ###
   
   
   
@@ -518,11 +518,11 @@ shinyServer(function(input, output,session) {
     ## output of plot_filter is ggplot class
     plot_filter(counts,input$SliderThSamp,input$SliderThAb,type="Scatter")
   })
-  #####################################################
+  ###                                               ###
   ##
-  ##                DYNAMIC MENU
+  ##                DYNAMIC MENU ####
   ##
-  #####################################################
+  ###                                               ###
   
   
   
@@ -556,11 +556,11 @@ shinyServer(function(input, output,session) {
   
   
   
-  #####################################################
+  ###                                               ###
   ##
-  ##                DATA TABLE
+  ##                DATA TABLE ####
   ##
-  #####################################################
+  ###                                               ###
   
   ## Counts Table
   output$DataCounts <- DT::renderDataTable(
@@ -715,11 +715,11 @@ shinyServer(function(input, output,session) {
     return(res)
   })
   
-  #####################################################
+  ###                                               ###
   ##
-  ##                TARGET FILE
+  ##                TARGET FILE ####
   ##
-  #####################################################
+  ###                                               ###
   
   
   ## Load target file
@@ -784,11 +784,11 @@ shinyServer(function(input, output,session) {
   
   
   
-  #############################################################
+  ###                                               ###
   ##
-  ##                        MASQUE
+  ##                        MASQUE ####
   ##
-  #############################################################
+  ###                                               ###
   
   
   
@@ -1160,7 +1160,7 @@ shinyServer(function(input, output,session) {
     htmltools::HTML('<img src="icons/underhill.png" alt="dna" style="width:80px;height:80px;">')
   )
   
-  #####################################
+  ###                                               ###
   
   
   
@@ -1935,6 +1935,24 @@ shinyServer(function(input, output,session) {
     return(res)
   })
   
+  ## Run button
+  output$RunButton <- renderUI({
+    
+    res = NULL
+    ChTM = "Error"
+    target = values$TargetWorking
+    labeled = values$labeled
+    CT = dataInput()$data$counts
+    taxo = input$TaxoSelect
+    VarInt = input$InterestVar
+    
+    ## Return NULL if there is no error
+    if(!is.null(target) && length(VarInt)>=1) ChTM = CheckTargetModel(input,target,labeled,CT)$Error
+    
+    if(!is.null(target) && taxo!="..." && is.null(ChTM) && length(VarInt)>=1) res = actionButton("RunDESeq",strong("Run analysis"),icon = icon("caret-right"))
+    
+    return(res)
+  })
   
   ## Var for normalization
   output$SelectVarNorm <- renderUI({
@@ -2081,11 +2099,11 @@ shinyServer(function(input, output,session) {
   
   
   
-  #####################################################
+  ###                                               ###
   ##
-  ##            DEFINE CONTRAST
+  ##            DEFINE CONTRAST ####
   ##
-  #####################################################
+  ###                                               ###
   
   output$contrastMat <- renderUI({
     
@@ -2529,11 +2547,11 @@ shinyServer(function(input, output,session) {
   }, priority=1)
   
   
-  #####################################################
+  ###                                               ###
   ##
-  ##                DESEQ2 run
+  ##                DESEQ2 run ####
   ##
-  #####################################################
+  ###                                               ###
   
   
   
@@ -2575,11 +2593,11 @@ shinyServer(function(input, output,session) {
   })
   
   
-  #####################################################
+  ###                                               ###
   ##
-  ##                Taxonomy
+  ##                Taxonomy ####
   ##
-  #####################################################
+  ###                                               ###
   
   
   # Infobox Contrast
@@ -2729,11 +2747,11 @@ shinyServer(function(input, output,session) {
   
   
   
-  #####################################################
+  ###                                               ###
   ##
-  ##                Diagnostic plots
+  ##                DIAGNOSTIC PLOTS ####
   ##
-  #####################################################
+  ###                                               ###
   
   
   
@@ -2955,11 +2973,11 @@ shinyServer(function(input, output,session) {
   
   
   
-  #####################################################
+  ###                                               ###
   ##
-  ##                EXPORT DIAG GRAPH
+  ##                EXPORT DIAG GRAPH ####
   ##
-  #####################################################
+  ###                                               ###
   
   #### Export Diag
   output$exportdiag <- downloadHandler(
@@ -2977,11 +2995,11 @@ shinyServer(function(input, output,session) {
     }
   )
   
-  #####################################################
+  ###                                               ###
   ##
-  ##                EXPORT VISU GRAPH
+  ##                EXPORT VISU GRAPH ####
   ##
-  #####################################################
+  ###                                               ###
   
   
   #### Export Visu
@@ -3025,16 +3043,16 @@ shinyServer(function(input, output,session) {
       if(is.na(filesize)){filesize=0}
       
       if(input$PlotVisuSelectComp=="Venn"){ 
-        if(filesize!=0) print(Plot_Visu_Venn(input,BaseContrast,ResDiffAnal(),ContrastListVennDebounce, export=TRUE))
+        if(filesize!=0) print(Plot_Visu_Venn(input,BaseContrast,ResDiffAnal(),ContrastListVennDebounce, export=TRUE)$res)
       }
       if(input$PlotVisuSelectComp=="Heatmap_comp"){
         if(filesize!=0) Plot_Visu_Heatmap_FC(input,BaseContrast,ResDiffAnal(),ContrastListDebounce, SelectTaxoPlotCompDebounce, export=TRUE)
       }
       if(input$PlotVisuSelectComp=="pValueDensity"){
-        if(filesize!=0) print(Plot_pValue_Density(input, BaseContrast, ResDiffAnal(), ContrastListDebounce, input$AlphaVal))
+        if(filesize!=0) print(Plot_pValue_Density(input, BaseContrast, ResDiffAnal(), ContrastListDebounce, input$AlphaVal, InputpValueDensityfocus))
       }
       if(input$PlotVisuSelectComp=="multipleVenn"){
-        if(filesize!=0) print(Plot_MultipleVenn(input, BaseContrast, ResDiffAnal(), ContrastListDebounce))
+        if(filesize!=0) print(Plot_MultipleVenn(input, BaseContrast, ResDiffAnal(), ContrastListDebounce)$plot)
       }
       if(input$PlotVisuSelectComp=="UpSet"){
         if(filesize!=0) print(Plot_UpSet(input, BaseContrast, ResDiffAnal(), ContrastListDebounce)$plot)
@@ -3067,11 +3085,11 @@ shinyServer(function(input, output,session) {
   )
   
   
-  #####################################################
+  ###                                               ###
   ##
-  ##                DIFF TABLES
+  ##                DIFF TABLES ####
   ##
-  #####################################################
+  ###                                               ###
   
   
   #   output$ContrastListTable <- renderUI({
@@ -3215,29 +3233,12 @@ shinyServer(function(input, output,session) {
     }
   })
   
-  # output$TabBoxTablesPlot <- renderUI({
-  #   tabBox(
-  #     id = "tabBoxPlotTables",
-  #     width = NULL,
-  #     selected = "Bar chart",
-  #     tabPanel(
-  #       "Bar chart",
-  #       amChartsOutput("BarChartTables", height = input$heightBarChartTables)
-  #     ),
-  #     tabPanel(
-  #       "Volcano plot",
-  #       scatterD3Output("VolcanoPlot", height = input$heightVolcanoPlot, width = input$widthVolcanoPlot)
-  #     )
-  #   )
-  # })
-  
   output$BarChartContainer <- renderUI({
     fluidPage(amChartsOutput("BarChartTables", height = input$heightBarChartTables))
   })
   
   output$VolcanoPlotContainer <- renderUI({
-
-    fluidPage(scatterD3Output("VolcanoPlot", height = input$heightVolcanoPlot + 10, width=ifelse(input$modifwidthVolcano,input$widthVolcanoPlot,"100%")))#width = input$widthVolcanoPlot + 10))
+    fluidPage(scatterD3Output("VolcanoPlot", height = input$heightVolcanoPlot + 10, width=ifelse(input$modifwidthVolcano,input$widthVolcanoPlot,"100%")))
   })
   
   output$BarChartTables <- renderAmCharts({
@@ -3262,10 +3263,9 @@ shinyServer(function(input, output,session) {
       withProgress(message = "Loading...", Volcano_Plot(input, data))
   })
   
-  #####################
-  ###
-  ###
-  ###################
+  ###                                               ###
+  ### EXPORT DIFF TABLES ####
+  ###                                               ###
   
   
   #### Export diff table
@@ -3314,34 +3314,11 @@ shinyServer(function(input, output,session) {
     }
   )
   
-  
-  ## Run button
-  
-  output$RunButton <- renderUI({
-    
-    res = NULL
-    ChTM = "Error"
-    target = values$TargetWorking
-    labeled = values$labeled
-    CT = dataInput()$data$counts
-    taxo = input$TaxoSelect
-    VarInt = input$InterestVar
-    
-    ## Return NULL if there is no error
-    if(!is.null(target) && length(VarInt)>=1) ChTM = CheckTargetModel(input,target,labeled,CT)$Error
-    
-    if(!is.null(target) && taxo!="..." && is.null(ChTM) && length(VarInt)>=1) res = actionButton("RunDESeq",strong("Run analysis"),icon = icon("caret-right"))
-    
-    return(res)
-  })
-  
-  
-  
-  #####################################################
+  ###                                               ###
   ##
-  ##                VISUALISATION
+  ##                VISUALIZATION ####
   ##
-  #####################################################
+  ###                                               ###
   
   
   output$PhyloTreeMetaR2 <- renderPhyloTreeMetaR({
@@ -3434,7 +3411,7 @@ shinyServer(function(input, output,session) {
     if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Scatterplot(input,resDiff,lmEst=FALSE))
   })
   
-  
+  ### ___Venn diagram ####
   output$VennD3 <- renderD3vennR({
     resDiff = ResDiffAnal()
     ## Just for reactivity
@@ -3443,10 +3420,11 @@ shinyServer(function(input, output,session) {
     if(is.na(filesize)){filesize=0}
     if(filesize!=0){
       BaseContrast = read.table(namesfile,header=TRUE)
-      if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Venn(input,BaseContrast,resDiff, ContrastListVennDebounce))
+      if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Venn(input,BaseContrast,resDiff, ContrastListVennDebounce)$res)
     }
   })
   
+  ### ___Logit plot ####
   output$LogitPlotD3 <- renderScatterD3({
     resDiff = ResDiffAnal()
     ## Just for reactivity ???
@@ -3459,17 +3437,18 @@ shinyServer(function(input, output,session) {
     }
   })
   
-  
+  ### ___Density plot ####
   output$pValueDensity <- renderPlot({
     resDiff = ResDiffAnal()
     filesize = file.info(namesfile)[,"size"]
     if(is.na(filesize)){filesize=0}
     if(filesize!=0){
       BaseContrast = read.table(namesfile,header=TRUE)
-      if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_pValue_Density(input, BaseContrast, resDiff, ContrastListDebounce, input$AlphaVal))
+      if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_pValue_Density(input, BaseContrast, resDiff, ContrastListDebounce, input$AlphaVal, InputpValueDensityfocus))
     }
   })
   
+  ### ___UpSet ####
   output$UpSet <- renderPlot({
     resDiff = ResDiffAnal()
     filesize = file.info(namesfile)[,"size"]
@@ -3480,31 +3459,54 @@ shinyServer(function(input, output,session) {
     }
   })
   
+  ### ___Contrasts comparison ####
   output$multipleVennPlot <- renderPlot({
     resDiff = ResDiffAnal()
     filesize = file.info(namesfile)[,"size"]
     if(is.na(filesize)){filesize=0}
     if(filesize!=0){
       BaseContrast = read.table(namesfile,header=TRUE)
-      if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_MultipleVenn(input, BaseContrast, resDiff, ContrastListDebounce))
+      if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_MultipleVenn(input, BaseContrast, resDiff, ContrastListDebounce)$plot)
     }
   })
 
-  ####
+  # Warning about contrasts without significant differential element (common to UpSet, Venn and Contrasts comparison)
+  output$contrastsNoDiff <- renderUI({
+    res = NULL
+    resDiff = ResDiffAnal()
+    filesize = file.info(namesfile)[,"size"]
+    if(is.na(filesize)){filesize=0}
+    if(filesize!=0){
+      BaseContrast = read.table(namesfile,header=TRUE)
+      if(!is.null(resDiff$dds)) {
+        lst <- NULL
+        if(input$PlotVisuSelectComp == "UpSet"){lst <- Plot_UpSet(input, BaseContrast, resDiff, ContrastListDebounce)$contrasts_without_diff}
+        else{if(input$PlotVisuSelectComp == "Venn"){lst <- Plot_Visu_Venn(input,BaseContrast,resDiff, ContrastListVennDebounce)$contrasts_without_diff}
+          else{if(input$PlotVisuSelectComp == "multipleVenn"){lst <- Plot_MultipleVenn(input, BaseContrast, resDiff, ContrastListDebounce)$contrasts_without_diff}
+          }}
+    
+        if(!is.null(lst)){print(lst)
+          res <- div(h5("The following contrasts have no significant differential element:"), div(paste(lst, sep = "  ", collapse = "  "), align = "center"), h5(strong("Select minimum two contrasts with differential elements.")))}
+        return(res)}}
+  })
+  
+  #### to delay reactivity
   ContrastList <- reactive({
     input$ContrastList_table_FC})
-
   ContrastListDebounce <- debounce(ContrastList, 1000)
   
   ContrastListVenn <- reactive({
     input$ContrastList_table_FCVenn})
-  
   ContrastListVennDebounce <- debounce(ContrastListVenn, 1000)
   
   SelectTaxoPlotComp <- reactive({
     input$selectTaxoPlotComp})
-  
   SelectTaxoPlotCompDebounce <- debounce(SelectTaxoPlotComp, 1000)
+  
+  InputDensityP <- reactive({
+    input$adaptBWtoFocus
+    input$focusUnderThreshold})
+  InputpValueDensityfocus <- debounce(InputDensityP, 1000)
   ####
   
   
@@ -3694,7 +3696,7 @@ shinyServer(function(input, output,session) {
     return(res)
   })
   
-  #####
+  ####
   output$tooltippValueDensity <- renderUI({
     hover <- input$plot_hover_pValueDensity
     point <- nearPoints(pValueDensityData(), hover, xvar = "x", yvar = "y", threshold = 20, maxpoints = 1)
@@ -3727,11 +3729,11 @@ shinyServer(function(input, output,session) {
     if(filesize!=0){
       BaseContrast = read.table(namesfile,header=TRUE)
       if(!is.null(resDiff$dds))
-      {p <- Plot_pValue_Density(input, BaseContrast, resDiff, ContrastListDebounce, input$AlphaVal)
+      {p <- Plot_pValue_Density(input, BaseContrast, resDiff, ContrastListDebounce, input$AlphaVal, InputpValueDensityfocus)
       if(!is.null(p)){
       data <- ggplot_build(p)$data[[1]]}}
     }})
-  #####
+  ####
   
   output$ColBoxplot <- renderUI({
     
@@ -3871,7 +3873,6 @@ shinyServer(function(input, output,session) {
       return(!is.numeric(target[,input$sec_variable]))
       }
   })
-  
   
   output$SelectValueQualiVar <- renderUI({
     target=isolate(values$TargetWorking)
@@ -4231,11 +4232,11 @@ shinyServer(function(input, output,session) {
   # 
   # })
   
-  #####################################################
+  ###                                               ###
   ##
   ##                KRONA
   ##
-  #####################################################
+  ###                                               ###
   #output$kronar <- renderTable({
   #  data = dataInput()$data 
   #  taxo = input$TaxoSelect
@@ -4256,11 +4257,11 @@ shinyServer(function(input, output,session) {
   #}, sanitize.text.function = function(x) x)
   
   
-  #####################################################
+  ###                                               ###
   ##
   ##      Disable/Enable actions
   ##
-  #####################################################
+  ###                                               ###
   
   
   ## Disable the actionbutton if the number of feature is lower than 2
@@ -4308,9 +4309,9 @@ shinyServer(function(input, output,session) {
     }
   })
   
-  ###########
+  ###                                               ###
   # NETWORK
-  ###########
+  ###                                               ###
   observeEvent(input$searchNode, {
     if(input$searchNode == "..."){visNetworkProxy("NetworkPlot") %>% visFit()}
     else{
@@ -4399,5 +4400,4 @@ shinyServer(function(input, output,session) {
       Plot_network(input,ResDiffAnal(), Available_taxo, SelectTaxoPlotNetworkDebounce(), qualiVariable)$plot %>% visSave(con)
     }
   )
-  
 })
