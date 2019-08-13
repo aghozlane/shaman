@@ -1403,6 +1403,7 @@ shinyServer(function(input, output,session) {
       updateSelectInput(session, "FileFormat","",selected = "fileBiom")
       reset("fileBiom")
       reset("fileTree")
+      updateSelectInput(session, "DemoDataset","",selected = "...") 
       values$biom_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_silva.biom",sep=""),sep= .Platform$file.sep)
       values$tree_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_silva_tree.nhx",sep=""),sep= .Platform$file.sep)
       sendSweetAlert(messageId="DemoDataset", title = "Success", text = "Data of XXX were successfully loaded. You can go to statistical analysis section.", type = "success", html=TRUE)
