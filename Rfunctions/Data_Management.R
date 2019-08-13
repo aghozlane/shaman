@@ -496,7 +496,7 @@ PercentAnnot <- function(counts,taxo)
 }
 
 
-## Get the counts and the taxo tables from the BIOM format file.
+## Get the counts, the taxo and the target tables from the BIOM format file.
 GetDataFromBIOM <-function(dataBIOM)
 {
   taxo = NULL
@@ -515,14 +515,15 @@ GetDataFromBIOM <-function(dataBIOM)
   counts = CheckCounts$counts
   
   ## Taxonomy table
-  tmp = observation_metadata(dataBIOM)
-  if(!is.null(tmp))
+  obs = observation_metadata(dataBIOM)
+  if(!is.null(obs))
   {
-    if(is.data.frame(tmp)) taxo = as.data.frame(tmp)
-    if(!is.data.frame(tmp)) taxo = as.data.frame(t(sapply(observation_metadata(dataBIOM),FUN=function(x){x[1:7]})))
+    if(is.data.frame(obs)) taxo = as.data.frame(obs)
+    if(!is.data.frame(obs)) taxo = as.data.frame(t(sapply(observation_metadata(dataBIOM),FUN=function(x){x[1:7]})))
     
     OTUnames = rownames(taxo)
     ## Modif taxo table (remove p__,... and change the colnames)
+    taxo_biom = taxo
     taxo = as.data.frame(sapply(taxo,gsub,pattern="^.*__",replacement=""))
     colnames(taxo) = c("Kingdom", "Phylum","Class","Order","Family","Genus","Species")
     rownames(taxo) = OTUnames
@@ -531,19 +532,34 @@ GetDataFromBIOM <-function(dataBIOM)
     taxo[taxo=="Unassigned"] = NA
     taxo=taxo[rowSums(is.na(taxo))!=dim(taxo)[2], ]
   }
-  if(is.null(tmp) && !is.null(counts)) {taxo = data.frame(rownames(counts),row.names = rownames(counts));names(taxo)=NA; taxoCreated = TRUE}
+  
+  ## Sample metadata
+  target = sample_metadata(dataBIOM)
+  if(!is.null(target))
+  {
+    # Convert from list to dataframe
+    target = as.data.frame(target)
+    target$SampleID = rownames(target)
+    print(c(dim(target)[2], seq(1, dim(target)[2]-1)))
+    target = subset(target, select=c(dim(target)[2], seq(1, dim(target)[2]-1)))
+  }
+  print(target)
+  if(is.null(obs) && !is.null(counts)) {taxo = data.frame(rownames(counts),row.names = rownames(counts));names(taxo)=NA; taxoCreated = TRUE}
   
   CheckTaxo = CheckTaxoTable(taxo,counts,taxoCreated)
   
+  #input the target file
+  #CheckTargetModel(,meta,)
   ## Pourcentage of annotation
-  tmp = PercentAnnot(counts,taxo)
+  perca = PercentAnnot(counts,taxo)
   
-  return(list(counts=counts,taxo=taxo,CheckCounts=CheckCounts,CheckTaxo=CheckTaxo,Percent=tmp$Percent,CheckPercent=tmp$Error))
+  return(list(counts=counts,taxo=taxo,taxo_biom=taxo_biom,target=target,CheckCounts=CheckCounts,CheckTaxo=CheckTaxo,Percent=perca$Percent,CheckPercent=perca$Error))
 }
 
 ## Check the data
 GetDataFromCT <-function(dataC,dataT, MGSTable)
 {
+  l = c("k__", "p__", "c__", "o__", "f__", "g__", "s__")
   
   ## Counts table
   counts = dataC
@@ -554,11 +570,26 @@ GetDataFromCT <-function(dataC,dataT, MGSTable)
   ## Taxonomy table
   taxo = as.data.frame(dataT)
   CheckTaxo = CheckTaxoTable(taxo,counts, MGSTable)
+
+  # Biom taxonomy must have seven levels
+  taxo_temp = as.matrix(taxo)
+  if(dim(taxo_temp)[2] < 7){
+    taxo_temp = cbind(taxo_temp, matrix(NA, dim(taxo_temp)[1], 7 - dim(taxo_temp)[2]))
+  }
+  # All OTU must be referenced
+  if(dim(taxo_temp)[1] != dim(counts)[1]){ 
+    missing_elements = rownames(counts)[!rownames(counts) %in% rownames(taxo_temp)]
+    mat_missing = matrix(NA, length(missing_elements), dim(taxo_temp)[2])
+    rownames(mat_missing) = missing_elements
+    taxo_temp = rbind(taxo_temp, mat_missing)
+  }
+  taxo_biom = t(sapply(as.data.frame(t(taxo_temp)), FUN=function(x){paste(l,na.omit(x),sep="")}))
+
   
   ## Pourcentage of annotation
   tmp = PercentAnnot(counts,taxo)
   
-  return(list(counts=counts,taxo=taxo,CheckCounts=CheckCounts,CheckTaxo=CheckTaxo,Percent=tmp$Percent,CheckPercent=tmp$Error))
+  return(list(counts=counts,taxo=taxo,taxo_biom = taxo_biom, CheckCounts=CheckCounts,CheckTaxo=CheckTaxo,Percent=tmp$Percent,CheckPercent=tmp$Error))
 }
 
 

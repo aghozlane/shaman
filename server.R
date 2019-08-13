@@ -16,7 +16,6 @@ shinyServer(function(input, output,session) {
   file.create(namesfile,showWarnings=FALSE)
   target = NULL
   
-  
   ## JSON name for masque
   curdir  = getwd()
   json_name = tempfile(pattern = "file", tmpdir = paste(curdir,"www","masque","todo",sep= .Platform$file.sep),  fileext = ".json")
@@ -257,6 +256,7 @@ shinyServer(function(input, output,session) {
     Taxo = NULL
     Counts = NULL
     inputData = NULL
+    target = NULL
     
     if(input$FileFormat=="fileCounts")
     {
@@ -267,7 +267,7 @@ shinyServer(function(input, output,session) {
       if(!is.null(Counts) && !is.null(Taxo))
       { 
         tmp = GetDataFromCT(Counts,Taxo, ifelse(input$TypeTable=="MGS" && input$FileFormat!="fileBiom", TRUE, FALSE))
-        data = list(counts=tmp$counts,taxo=tmp$taxo)
+        data = list(counts=tmp$counts,taxo=tmp$taxo, taxo_biom=tmp$taxo_biom)
         ## Remove row with only O
         # data[["counts"]] = data[["counts"]][rowSums(data[["counts"]])>1,]
         
@@ -282,12 +282,13 @@ shinyServer(function(input, output,session) {
       if(!is.null(tmpBIOM))
       {
         tmp = GetDataFromBIOM(tmpBIOM)
-        data = list(counts=tmp$counts,taxo=tmp$taxo)
+        data = list(counts=tmp$counts,taxo=tmp$taxo, target=tmp$target, taxo_biom=tmp$taxo_biom)
         ## Remove row with only O
         # data[["counts"]] = data[["counts"]][rowSums(data[["counts"]])>1,]
         
         check = list(CheckCounts=tmp$CheckCounts,CheckTaxo=tmp$CheckTaxo,CheckPercent=tmp$CheckPercent)
         percent = tmp$Percent
+        #if(!is.null(data$target)) values$TargetWorking = data$target
       }
     }
     
@@ -720,12 +721,39 @@ shinyServer(function(input, output,session) {
   ##                TARGET FILE
   ##
   #####################################################
-  
+  observe({
+    counts = dataInput()$data$counts
+    data = dataInput()$data$target
+
+    if(!is.null(data) && !is.null(counts))
+    {
+      names = colnames(data)
+      ## Keep only the row which are in the count table
+      ind = which(rownames(data)%in%colnames(counts))
+      data = as.data.frame(data[ind,])
+      colnames(data) = names
+      
+      ## Replace "-" by "."
+      if(ncol(data)>1 && nrow(data)>1){
+        ind_num = which(sapply(as.data.frame(data[,-1]),is.numeric)) + 1
+        if(length(ind_num)>0){
+          data_tmp =cbind( as.data.frame(apply(as.data.frame(data[,-ind_num]),2,gsub,pattern = "-",replacement = ".")),data[,ind_num])
+          #data_tmp =cbind( as.data.frame(as.data.frame(data[,-ind_num])),data[,ind_num])
+          colnames(data_tmp) = c(colnames(data)[-ind_num],colnames(data)[ind_num])
+          data = data_tmp
+        }
+        if(length(ind_num)==0){data = as.data.frame(apply(data,2,gsub,pattern = "-",replacement = "."))}
+      }
+      values$TargetWorking = data
+      values$labeled = length(ind)/length(colnames(counts))*100.0
+    }
+  })
   
   ## Load target file
   observe({ 
     
     inFile <- input$fileTarget
+    #values$TargetWorking = NULL
     counts = dataInput()$data$counts
     labeled = 0
     data = NULL
@@ -760,7 +788,6 @@ shinyServer(function(input, output,session) {
         }
         if(length(ind_num)==0){data = as.data.frame(apply(data,2,gsub,pattern = "-",replacement = "."))}
       }
-      
       values$TargetWorking = as.data.frame(data)
       #       ind_sel = Target_selection()
       #       if(length(ind))
@@ -768,8 +795,8 @@ shinyServer(function(input, output,session) {
       
       #ord = order(rownames(data))
       #data = data[ord,]
-      ### A SUPPRIMER 
-      #rownames(data) <- colnames(counts)
+      ### A SUqPPRIMER 
+      #rownamQes(data) <- colnames(counts)
       
       # Percent annotated
       #     print(ind)
@@ -1370,9 +1397,21 @@ shinyServer(function(input, output,session) {
       removeCssClass(class = 'pwdGREEN', selector = '#password')
     }
   })
+  # Run demo
+  observeEvent(input$DemoDataset, {
+    if(input$DemoDataset != "..."){ 
+      values$masque_key = input$DemoDataset
+      updateSelectInput(session, "FileFormat","",selected = "fileBiom")
+      reset("fileBiom")
+      reset("fileTree")
+      values$biom_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_silva.biom",sep=""),sep= .Platform$file.sep)
+      values$tree_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_silva_tree.nhx",sep=""),sep= .Platform$file.sep)
+      sendSweetAlert(messageId="DemoDataset", title = "Success", text = "Data of XXX were successfully loaded. You can go to statistical analysis section.", type = "success", html=TRUE)
+    }
+  })
   
   ## the same from home
-  observeEvent(input$Check_project_home,{
+  observeEvent(input$Check_project_home, {
     values$masque_key = input$password_home
     
     PS = Project_status(values$masque_key,values$curdir)
@@ -1398,6 +1437,14 @@ shinyServer(function(input, output,session) {
       removeCssClass(class = 'pwdGREEN', selector = '#password_home')
     }
   })
+  
+  
+  # observeEvent(input$DemoDataset,{
+  #   if(input$DemoDataset != "...")
+  #   values$masque_key = input$DemoDataset
+  #   
+  #   PS = Project_status(values$masque_key,values$curdir)
+  # })
   
   
   #eventReactive(input$refresh, {
@@ -2022,21 +2069,39 @@ shinyServer(function(input, output,session) {
     
   ## Box for merged counts
   output$BoxCountsMerge <- renderUI({
-    input$RunDESeq
-    #counts = isolate(dataMergeCounts()$counts)
+    # input$RunDESeq
+    # #counts = isolate(dataMergeCounts()$counts)
     counts = isolate(dataMergeCounts()$CT_Norm)
     taxo = input$TaxoSelect
+    # 
+    # if(!is.null(counts) && taxo != "...")
+    # {
+    resDiff = ResDiffAnal()
+    int = input$Interaction2
     
-    if(!is.null(counts) && taxo != "...")
-    {
+    if(!is.null(resDiff)){
       box(title=paste("Count table (",taxo,")",sep=""),width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
           DT::dataTableOutput("CountsMerge"),
-          downloadButton('ExportCounts', 'Export normalised counts'),
+          downloadButton('ExportCounts', 'Export normalized counts'),
           downloadButton('ExportRelative', 'Export relative abundance')
       )  
     }
-    
   })
+  
+  output$ButtonBiom  <- renderUI({
+    resDiff = ResDiffAnal()
+    int = input$Interaction2
+    
+    if(!is.null(resDiff)) downloadButton('ExportBiom', 'Export BIOM')
+  })
+  
+  output$ExportBiom  <- downloadHandler(
+    filename = function() { 'SHAMAN_data.biom' },
+    #write_biom doesn't handle properly the sample metadata
+    content = function(file){
+      write_biom(make_biom(dataMergeCounts()$CT_noNorm, sample_metadata=values$TargetWorking[,-1],
+                           observation_metadata=dataInput()$data$taxo_biom), file)}
+  )
   
   ## Export in .csv
   output$ExportCounts <- downloadHandler(
@@ -2048,7 +2113,8 @@ shinyServer(function(input, output,session) {
   ## Export in .csv
   output$ExportRelative <- downloadHandler(
     filename = function() { 'RelativeAb.csv' },
-    content = function(file){write.csv(sweep(round(counts(ResDiffAnal()$dds,normalized=TRUE)),2,colSums(round(counts(ResDiffAnal()$dds,normalized=TRUE))),`/`), file)}
+    content = function(file){write.csv(sweep(round(counts(ResDiffAnal()$dds,normalized=TRUE)),2,
+                                             colSums(round(counts(ResDiffAnal()$dds,normalized=TRUE))),`/`), file)}
   )
   
   ## Export size factors
@@ -4299,13 +4365,10 @@ shinyServer(function(input, output,session) {
   observe({
     taxo = input$TaxoSelect
     target=values$TargetWorking
+    if(is.null(target) || is.null(taxo)) shinyjs::disable("AddFilter")
+    else if (is.null(target) || taxo =="...")  shinyjs::disable("AddFilter")
+    else shinyjs::enable("AddFilter")
     
-    if(is.null(target) || taxo =="...") 
-    {
-      shinyjs::disable("AddFilter")
-    } else {
-      shinyjs::enable("AddFilter")
-    }
   })
   
   ###########
