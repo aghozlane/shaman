@@ -2,9 +2,9 @@
 #@ visualisation plots of SHAMAN
 
 
-###########################
-##        Barplot
-###########################
+##                       ##
+##        Barplot ####
+##                       ##
 
 Plot_Visu_Barplot <- function(input,resDiff)
 {
@@ -76,9 +76,9 @@ Plot_Visu_Barplot <- function(input,resDiff)
    
     
     
-    ##################################
+    ##                                 ##
     ## Same plot in ggplot2 for export
-    ##################################
+    ##                                 ##
     
     tax.colors=rep(c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c","#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5","#8c564b",
                      "#c49c94","#e377c2","#f7b6d2","#7f7f7f", "#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"),ceiling(nbKept/20))
@@ -99,9 +99,9 @@ Plot_Visu_Barplot <- function(input,resDiff)
 
 
 
-##############################
-##          HEATMAP
-##############################
+##                       ##
+##          HEATMAP ####
+##                       ##
 Plot_Visu_Heatmap <- function(input,resDiff,export=FALSE){
   
   VarInt = input$VisuVarInt
@@ -144,9 +144,9 @@ Plot_Visu_Heatmap <- function(input,resDiff,export=FALSE){
 
 
 
-##############################
-##          BOXPLOTS
-##############################
+##                       ##
+##          BOXPLOTS ####
+##                       ##
 Plot_Visu_Boxplot <- function(input,resDiff,alpha=0.7){
   
   gg = NULL
@@ -219,9 +219,9 @@ Plot_Visu_Boxplot <- function(input,resDiff,alpha=0.7){
   return(gg)
 }
 
-##############################
-##          KRONA
-##############################
+##                       ##
+##          KRONA ####
+##                       ##
 Plot_Visu_Krona <- function(input,resDiff,CT_OTU,taxo_table){
   
   res = NULL
@@ -256,9 +256,9 @@ Plot_Visu_Krona <- function(input,resDiff,CT_OTU,taxo_table){
   return(res)
 }
 
-##############################
-##      Phylo PLOT
-##############################
+##                       ##
+##      Phylo PLOT ####
+##                       ##
 Plot_Visu_Phylotree = function(input, resDiff, CT_OTU, taxo_table, treeseq){
   res = NULL
   VarInt = input$VisuVarInt
@@ -296,9 +296,9 @@ Plot_Visu_Phylotree = function(input, resDiff, CT_OTU, taxo_table, treeseq){
 }
   
 
-##############################
-##      SCATTER PLOT
-##############################
+##                       ##
+##      SCATTER PLOT ####
+##                       ##
 Plot_Visu_Scatterplot<- function(input,resDiff,export=FALSE,lmEst = FALSE,CorEst=FALSE){
   
   plot = NULL
@@ -410,9 +410,9 @@ Plot_Visu_Scatterplot<- function(input,resDiff,export=FALSE,lmEst = FALSE,CorEst
 
 
 
-##############################
-##      Diversity
-##############################
+##                       ##
+##      Diversity ####
+##                       ##
 Plot_Visu_Diversity <- function(input,resDiff,ForScatter=FALSE){
   gg = NULL
   dataTmp = NULL
@@ -528,9 +528,9 @@ Plot_Visu_Diversity <- function(input,resDiff,ForScatter=FALSE){
 }
 
 
-##############################
-##       RAREFACTION
-##############################
+##                       ##
+##       RAREFACTION ####
+##                       ##
 Plot_Visu_Rarefaction <- function(input,resDiff,xlim,ylim,ylab="Species"){
   
   PlotRare = NULL
@@ -558,11 +558,11 @@ Plot_Visu_Rarefaction <- function(input,resDiff,xlim,ylim,ylab="Species"){
 
 
 
-##############################################################
+##                                      ##
 ##
-##          Useful functions
+##          Useful functions ####
 ##
-##############################################################
+##                                      ##
 
 ## Get the non-zero taxo by sample  
 TaxoNumber <-  function (x, groups, mar = 1) 
@@ -795,9 +795,9 @@ CreateTableTree <- function(input,resDiff,CT_Norm_OTU,taxo_table,VarInt,ind_taxo
 
 
 
-###########################
+##                       ##
 ##        Tree
-###########################
+##                       ##
 
 ## The count matrix must be given at the leaf level.
 
@@ -833,9 +833,9 @@ Plot_Visu_Tree <- function(input,resDiff,CT_Norm_OTU,taxo_table)
   return(res)
 }
 
-#############################
+##                       ##
 ##      NETWORK
-#############################
+##                       ##
 
 Plot_network <- function(input,resDiff,availableTaxo, ind_taxo, qualiVariable, export = FALSE){
   plot = NULL
@@ -864,19 +864,19 @@ Plot_network <- function(input,resDiff,availableTaxo, ind_taxo, qualiVariable, e
     adjacency <- matrix(mapply(function(a,b) {mapply(function(x,y){x*y}, x=a, y=b)}, a=pval_bool, b=cor_sgn), nrow = n)
     rownames(adjacency) <- colnames(countsMatrix)
     colnames(adjacency) <- colnames(countsMatrix)
-    # ### Remove rows and columns with only NA
+    # ### Remove rows and columns with only NA        # this way, elements with the same count in all sample (often 0 in this case) will not appear
     # adjacency <- adjacency[apply(adjacency, 1, function(y) !all(is.na(y))),]
     # adjacency <- t(adjacency)
     # adjacency <- adjacency[apply(adjacency, 1, function(y) !all(is.na(y))),]
     # adjacency <- t(adjacency)
     
-    ### Replace NA by zeros (ie "no correlation")
+    ### Replace NA by zeros (ie "no correlation")     # this way, those elements will appear as single nodes
     adjacency[is.na(adjacency)] <- 0
     
     adjacency <- adjacency[,ind_taxo]
     adjacency <- adjacency[ind_taxo,]
     
-    igraphGraph <- graph_from_adjacency_matrix(adjacency, diag = FALSE, mode = "upper" , weighted = TRUE) # "upper" for adjusted p-value, lower for p-value not adjusted
+    igraphGraph <- graph_from_adjacency_matrix(adjacency, diag = FALSE, mode = "upper" , weighted = TRUE) # mode = "upper" for adjusted p-value, mode = "lower" for p-value not adjusted
     
     list_to_label <- isolate(input$ToLabelNetwork)
     dataVN <- toVisNetworkData(igraphGraph)
@@ -898,7 +898,7 @@ Plot_network <- function(input,resDiff,availableTaxo, ind_taxo, qualiVariable, e
     
     plot <- visNetwork(nodes = dataVN$nodes, edges = dataVN$edges)
     plot <- visIgraphLayout(plot, layout = "layout_nicely", physics = FALSE, smooth = FALSE)
-    plot <- visNodes(plot, size = 20) #, scaling = list(label = list(min = 30, max = 30, maxVisible = 30)))
+    plot <- visNodes(plot, size = 20)
     plot <- visEdges(plot, width = 1)
     plot <- visOptions(plot, width = if(isolate(input$modifwidthVisu)){isolate(input$widthVisu)}, height = isolate(input$heightVisu), autoResize = FALSE)
     #plot <- visLegend(plot, addEdges = data.frame(color = c("red", "blue"), label = c("Positive correlation","Negative correlation")))
