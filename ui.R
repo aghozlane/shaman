@@ -88,7 +88,7 @@ function(request) {
                          box(
                            title = "What's new in SHAMAN", width = NULL, status = "primary",
                            div(style = 'overflow-y: scroll; height: 550px',
-                               addNews("August 14th 2019","Major update","We performed a global improvement of SHAMAN. The application is now migrated to R 3.6.1. We implemented several visualization for differential analysis and network of abundance. We hope you will enjoy this main update."),
+                               addNews("August 14th 2019","Major update","We performed a global improvement of SHAMAN. The application is now migrated to R 3.6.1. We implemented several visualization for differential analysis and network of abundance. We hope you will enjoy this new version."),
                                addNews("April 11th 2019","Debugging","We fixed few bugs in export system and scatterplot visualisation system."),
                                addNews("March 28th 2019","Packaging","SHAMAN is now available as packrat package. Take a look at download section."),
                                addNews("April 17th 2018","Bioinformatics","The bioinformatic treatment offers a larger access to parameters. We also worked a lot on the documentation."),
@@ -228,15 +228,17 @@ function(request) {
                                              mainPanel(div(style = 'max-width: 900px',"docker pull aghozlane/shaman"),width=4,class="mainwell")
                                     ),
                                     tabPanel("R install with Packrat",
-                                             p("SHAMAN is available for R=3.6.1. Packrat framework installation allow an easy installation of all the dependencies. Of note, raw data submission is not possible with this version. First, install R 3.1.2 as local install as follow:",style = "font-family: 'times'; font-si16pt"),
+                                             p("SHAMAN is available for R=3.6.1. Packrat framework allow an easy installation of all the dependencies. First, install R 3.1.2 as local install as follow:",style = "font-family: 'times'; font-si16pt"),
                                              mainPanel(div(style = 'max-width: 900px; word-wrap: break-word;',"# Install R 3.6.1", br(),
                                                            #"wget https://pbil.univ-lyon1.fr/CRAN/src/base/R-3/R-3.1.2.tar.gz  && tar -zxf R-3.1.2.tar.gz",br(),"mkdir /some/location/r_bin",br(),
                                                            #"cd R-3.1.2/",br(), "./configure --prefix=/some/location/r_bin/", br(), "make && make install", br(), "/some/location/r_bin/bin/R", br(),
                                                            #"install.packages(c('devtools', 'codetools', 'lattice', 'MASS', 'survival', 'packrat'))", br(),
                                                            #"library(devtools)",br(),"devtools::install_github(c('aghozlane/nlme'))", br(),
                                                            "# Download SHAMAN package",br(),"wget ftp://shiny01.hosting.pasteur.fr/pub/shaman_20190809.tar.gz"),width=9,class="mainwell"),
-                                             p("This installation will not interact with other R installation. Then, you can install SHAMAN with packrat:"),
-                                             mainPanel(div(style = 'max-width: 900px; word-wrap: break-word;',"# Install SHAMAN dependencies",br(),
+                                             p("Of note, raw data submission is not possible with this version. Then, you can install SHAMAN with packrat:"),
+                                             mainPanel(div(style = 'max-width: 900px; word-wrap: break-word;',
+                                                           "# Download SHAMAN package",br(),"wget ftp://shiny01.hosting.pasteur.fr/pub/shaman_20190809.tar.gz", br(),
+                                                           "# Install SHAMAN dependencies",br(),
                                                            "mkdir /some/location/shaman", br(), "/some/location/r_bin/bin/R",br(),
                                                            "install.packages(\"packrat\")",br(),"packrat::unbundle(\"shaman_20190809.tar.gz\", \"/packrat/location/shaman\")"), width=9,class="mainwell"),
                                              p("Now you can run SHAMAN:"),
@@ -521,7 +523,7 @@ function(request) {
                       selectInput("FileFormat","",c("Count table & taxonomy (*.csv or *.tsv)"="fileCounts","BIOM file"="fileBiom","Project number"="projnum"),selected="fileCounts"),
                       conditionalPanel(condition="input.FileFormat=='fileCounts'",
                                        checkboxInput("NoTaxoFile","No taxonomy table",value=FALSE),
-                                       selectInput("DemoDataset",h6(strong('Or select a dataset')),c("..."="...","ZymoBIOMICS mock 16S"="30a47fca2dc3"),selected="..."),
+                                       selectInput("DemoDataset",h6(strong('Or select a dataset')),c("..."="...","ZymoBIOMICS mock 16S"=c("30a47fca2dc3|Volant et al. 2019 in review")),selected="..."),
                                        receiveSweetAlert(messageId = "DemoDataset")
                       ),
                       conditionalPanel(condition="input.FileFormat=='projnum'",
@@ -562,19 +564,19 @@ function(request) {
                                                     )
                                    )
                   ),
-                  
-                  conditionalPanel(condition="input.FileFormat=='fileBiom'",
+                  #&&is.null(input.password_home)
+                  conditionalPanel(condition="input.FileFormat=='fileBiom'&&input.DemoDataset=='...'",
                                    box(title="Load the BIOM file",width = 3, status = "primary", solidHeader = TRUE,collapsible = FALSE,
                                        fileInput('fileBiom', h5(strong('Select your file')),width="100%",accept = c(".biom")),
                                        tags$script('$( "#fileBiom" ).on( "click", function() { this.value = null; });')
                                    )
                   ),
                   
-                  conditionalPanel(condition="input.FileFormat=='projnum'",
+                  conditionalPanel(condition="input.FileFormat=='projnum'||input.DemoDataset!='...'",
                                    uiOutput("Project_box_home")
                   ),
-                  
-                  conditionalPanel(condition="input.FileFormat!='projnum'",
+                  #&&is.null(input.password_home)
+                  conditionalPanel(condition="input.FileFormat!='projnum'&&input.DemoDataset=='...'||input.FileFormat=='fileCounts'",
                                    box(title="Load phylogenetic tree (optional)",width = 3, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
                                        fileInput('fileTree', h6(strong('Select your file (tree)')),width="100%"),
                                        tags$script('$( "#fileTree" ).on( "click", function() { this.value = null; });')

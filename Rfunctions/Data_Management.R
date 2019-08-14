@@ -524,6 +524,7 @@ GetDataFromBIOM <-function(dataBIOM)
     OTUnames = rownames(taxo)
     ## Modif taxo table (remove p__,... and change the colnames)
     taxo_biom = taxo
+    saveRDS(taxo, file="taxo.RDS")
     taxo = as.data.frame(sapply(taxo,gsub,pattern="^.*__",replacement=""))
     colnames(taxo) = c("Kingdom", "Phylum","Class","Order","Family","Genus","Species")
     rownames(taxo) = OTUnames
@@ -540,10 +541,8 @@ GetDataFromBIOM <-function(dataBIOM)
     # Convert from list to dataframe
     target = as.data.frame(target)
     target$SampleID = rownames(target)
-    print(c(dim(target)[2], seq(1, dim(target)[2]-1)))
     target = subset(target, select=c(dim(target)[2], seq(1, dim(target)[2]-1)))
   }
-  print(target)
   if(is.null(obs) && !is.null(counts)) {taxo = data.frame(rownames(counts),row.names = rownames(counts));names(taxo)=NA; taxoCreated = TRUE}
   
   CheckTaxo = CheckTaxoTable(taxo,counts,taxoCreated)
@@ -575,6 +574,9 @@ GetDataFromCT <-function(dataC,dataT, MGSTable)
   taxo_temp = as.matrix(taxo)
   if(dim(taxo_temp)[2] < 7){
     taxo_temp = cbind(taxo_temp, matrix(NA, dim(taxo_temp)[1], 7 - dim(taxo_temp)[2]))
+  }else if (dim(taxo_temp)[2] > 7){
+    taxo_temp = taxo_temp[,1:7]
+    # send sweet alert
   }
   # All OTU must be referenced
   if(dim(taxo_temp)[1] != dim(counts)[1]){ 
@@ -583,7 +585,8 @@ GetDataFromCT <-function(dataC,dataT, MGSTable)
     rownames(mat_missing) = missing_elements
     taxo_temp = rbind(taxo_temp, mat_missing)
   }
-  taxo_biom = t(sapply(as.data.frame(t(taxo_temp)), FUN=function(x){paste(l,na.omit(x),sep="")}))
+  #case with more than 7 levels 
+  taxo_biom = t(sapply(as.data.frame(t(taxo_temp)), FUN=function(x){paste(l,na.exclude(x),sep="")}))
 
   
   ## Pourcentage of annotation
