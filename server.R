@@ -3,9 +3,7 @@ shinyServer(function(input, output,session) {
   hide(id = "loading-content", anim = TRUE, animType = "fade",time=1.5)
   hide(id = "loading-content-bar", anim = TRUE, animType = "fade",time=1.5)
   ###                                               ###
-  ##
   ####                    LOAD FILES ####
-  ##
   ###                                               ###
   
   
@@ -43,13 +41,15 @@ shinyServer(function(input, output,session) {
     
     if (!is.null(values$count_table_masque) && file.exists(values$count_table_masque)){
       tryCatch(read.csv(values$count_table_masque,sep="\t",header=TRUE,check.names=FALSE)->data,
-               error=function(e) sendSweetAlert(messageId="ErrorCounts",
+               #messageId="ErrorCounts",
+               error=function(e) sendSweetAlert(session,
                                                 title = "Oops",
                                                 text=paste("The count file can not be read in SHAMAN.\n \n",e),type ="error"))
     }
     else{
       tryCatch(read.csv(inFile$datapath,sep=input$sepcount,header=TRUE,check.names=FALSE)->data,
-               error=function(e) sendSweetAlert(messageId="ErrorCounts",
+               #messageId="ErrorCounts",
+               error=function(e) sendSweetAlert(session,
                                                 title = "Oops",
                                                 text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
     }
@@ -77,7 +77,8 @@ shinyServer(function(input, output,session) {
     if(input$TypeTaxo=="Table" && !is.null(inFile)) 
     {
       tryCatch(read.csv(inFile$datapath,sep=input$septaxo,header=TRUE)->data,
-               error=function(e) sendSweetAlert(messageId="ErrorTaxo",
+               #messageId="ErrorTaxo",
+               error=function(e) sendSweetAlert(session,
                                                 title = "Oops",
                                                 text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
       
@@ -98,13 +99,15 @@ shinyServer(function(input, output,session) {
     {
       if (!is.null(values$rdp_annot_masque) && file.exists(values$rdp_annot_masque)){
         tryCatch(read_rdp(values$rdp_annot_masque,values$rdp_thres_masque)->data,
-                 error=function(e) sendSweetAlert(messageId="ErrorRDP",
+                 #messageId="ErrorRDP",
+                 error=function(e) sendSweetAlert(session,
                                                   title = "Oops",
                                                   text=paste("The annotation file can not be read in SHAMAN.\n \n",e),type ="error"))
       }
       else{
         tryCatch(read_rdp(inFile$datapath,input$RDP_th)->data,
-                 error=function(e) sendSweetAlert(messageId="ErrorRDP",
+                 #messageId="ErrorRDP",
+                 error=function(e) sendSweetAlert(session,
                                                   title = "Oops",
                                                   text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
       }
@@ -128,14 +131,16 @@ shinyServer(function(input, output,session) {
     
     if (!is.null(inFile) && is.null(values$biom_masque)){
       tryCatch(read_biom(inFile$datapath)->data,
-               error=function(e) sendSweetAlert(messageId="ErrorBiom1",
+               #messageId="ErrorBiom1",
+               error=function(e) sendSweetAlert(session,
                                                 title = "Oops",
                                                 text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
       
     }
     if (!is.null(values$biom_masque) && file.exists(values$biom_masque)){ 
       tryCatch(read_biom(values$biom_masque)->data,
-               error=function(e) sendSweetAlert(messageId="ErrorBiom2",
+               #messageId="ErrorBiom2",
+               error=function(e) sendSweetAlert(session,
                                                 title = "Oops",
                                                 text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
     }
@@ -317,7 +322,8 @@ shinyServer(function(input, output,session) {
     if (is.null(inFile)) return(NULL)
     
     tryCatch(read.csv(inFile$datapath,sep=input$sepsize,header=TRUE)->data,
-             error=function(e) sendSweetAlert(messageId="ErrorSizeFactor",
+             #messageId="ErrorSizeFactor",
+             error=function(e) sendSweetAlert(session,
                                               title = "Oops",
                                               text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
     return(as.data.frame(data))
@@ -908,7 +914,8 @@ shinyServer(function(input, output,session) {
       ## Create JSON file
       withProgress(message = 'Creating JSON file...',{CreateJSON(input,values)})
       if(file.exists(values$json_name)) values$num = 1
-      sendSweetAlert(messageId="SuccessMasque",
+      #messageId="SuccessMasque",
+      sendSweetAlert(session,
                      title = "Success",
                      text = paste("Your data have been submitted. You will receive an e-mail once the computation over. <br /> This can take few hours.
                                   <br /> 
@@ -926,7 +933,8 @@ shinyServer(function(input, output,session) {
   observeEvent(input$submit,{  
     
     tryCatch(MasqueSubmit(),
-             error=function(e) sendSweetAlert(messageId="ErrorMasque",
+             #messageId="ErrorMasque",
+             error=function(e) sendSweetAlert(session,
                                               title = "Oops",
                                               text=paste("Something wrong when submitting.\n \n",e),type ="error"))
     
@@ -1305,7 +1313,7 @@ shinyServer(function(input, output,session) {
         }
       }
     }
-    #CHANGEMENT DE COULEUR BORDEL
+    #CHANGEMENT DE COULEUR
     else if(!is.null(Error) && isolate(values$num)>=1) values$error_progress = TRUE
   })
   
@@ -1407,16 +1415,17 @@ shinyServer(function(input, output,session) {
       #PS = Project_status(values$masque_key,values$curdir)
       values$biom_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_silva.biom",sep=""),sep= .Platform$file.sep)
       values$tree_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_silva_tree.nhx",sep=""),sep= .Platform$file.sep)
-      sendSweetAlert(messageId="DemoDataset", title = "Success", text = paste("Data of", DemoDataset[[1]][2], "were successfully loaded. You can go to statistical analysis section."), type = "success", html=TRUE)
-        removeCssClass(class = 'pwdRED', selector = '#password_home')
-        addCssClass(class = 'pwdGREEN', selector = '#password_home')
-        hideElement("masque-form",anim=TRUE)
-        hideElement("masque-infobox",anim=TRUE)
-        hideElement("boxsum",anim=TRUE)
-        showElement("reload-project",anim=TRUE)
-        hideElement("project_over",anim=TRUE)
-        hideElement("pass",anim=TRUE)
-        #showElement("MasqueToShaman",anim=TRUE)
+      #sendSweetAlert(messageId="DemoDataset", title = "Success", text = paste("Data of", DemoDataset[[1]][2], "were successfully loaded. You can go to statistical analysis section."), type = "success", html=TRUE)
+      sendSweetAlert(session, title = "Success", text = paste("Data of", DemoDataset[[1]][2], "were successfully loaded. You can go to statistical analysis section."), type = "success", html=TRUE)
+      removeCssClass(class = 'pwdRED', selector = '#password_home')
+      addCssClass(class = 'pwdGREEN', selector = '#password_home')
+      hideElement("masque-form",anim=TRUE)
+      hideElement("masque-infobox",anim=TRUE)
+      hideElement("boxsum",anim=TRUE)
+      showElement("reload-project",anim=TRUE)
+      hideElement("project_over",anim=TRUE)
+      hideElement("pass",anim=TRUE)
+      #showElement("MasqueToShaman",anim=TRUE)
     }
     else{
       values$tree_masque = NULL
@@ -1851,7 +1860,8 @@ shinyServer(function(input, output,session) {
       values$biom_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_",input$masque_db,".biom",sep=""),sep= .Platform$file.sep)
       values$tree_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_",input$masque_db,"_tree.nhx",sep=""),sep= .Platform$file.sep)
     }
-    sendSweetAlert(messageId="LoadResMasque", title = "Success", text = "Processed data were successfully loaded. You can go to statistical analysis part to analyze your data with SHAMAN.", type = "success", html=TRUE)
+    #sendSweetAlert(messageId="LoadResMasque", title = "Success", text = "Processed data were successfully loaded. You can go to statistical analysis part to analyze your data with SHAMAN.", type = "success", html=TRUE)
+    sendSweetAlert(session, title = "Success", text = "Processed data were successfully loaded. You can go to statistical analysis part to analyze your data with SHAMAN.", type = "success", html=TRUE)
   })
   
   
@@ -1875,7 +1885,8 @@ shinyServer(function(input, output,session) {
       values$biom_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_",input$masque_db_home,".biom",sep=""),sep= .Platform$file.sep)
       values$tree_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_",input$masque_db_home,"_tree.nhx",sep=""),sep= .Platform$file.sep)
     }
-    sendSweetAlert(messageId="LoadResMasque_home", title = "Success", text = "Processed data were successfully loaded. You can go to statistical analysis part to analyze your data with SHAMAN.", type = "success", html=TRUE)
+    #sendSweetAlert(messageId="LoadResMasque_home", title = "Success", text = "Processed data were successfully loaded. You can go to statistical analysis part to analyze your data with SHAMAN.", type = "success", html=TRUE)
+    sendSweetAlert(session, title = "Success", text = "Processed data were successfully loaded. You can go to statistical analysis part to analyze your data with SHAMAN.", type = "success", html=TRUE)
   })
   
   ## Export results in .zip 
@@ -2683,7 +2694,9 @@ shinyServer(function(input, output,session) {
   
   ## Run DESeq2 via RunDESeq button
   observeEvent(input$RunDESeq,{
-    create_forked_task(ResDiffAnal())
+    if(.Platform$OS.type =="windows")
+      ResDiffAnal()
+    else create_forked_task(ResDiffAnal())
   })
   
   

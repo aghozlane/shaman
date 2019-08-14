@@ -104,7 +104,7 @@ Project_box_result <- function(masque_key,curdir){
                     conditionalPanel(condition="input.masque_db=='rdp'",numericInput("rdp_thres",h6(strong("Threshold:")),0.5,step=0.01,min=0.01,max=1)),
                     actionButton("LoadResMasque", "Upload the results",icon=icon('upload')),
                     tags$style(type='text/css', "#LoadResMasque { width:100%; }"),
-                    receiveSweetAlert(messageId = "LoadResMasque")
+                    #receiveSweetAlert(messageId = "LoadResMasque")
                 ),
                 #shinydashboard::box(title="Upload the results",width = NULL, background = "light-blue",
                 #selectInput("masque_database","Select the database",choices=c("Silva" = "silva","Greengenes" = "greengenes", "MARDE"="merde")),
@@ -112,7 +112,6 @@ Project_box_result <- function(masque_key,curdir){
                 #actionButton("RunResMasque",label = "Upload the results",icon=icon('upload')),
                 #tags$style(type='text/css', "#RunResMasque { width:100%; margin-top: 15px;}")
                 #),
-                #receiveSweetAlert(messageId = "WTF2"),
                 box(id="box-zip",title="Download .zip file",width = NULL, status = "success",
                     downloadButton('Download_masque_zip', 'Download the results'),
                     tags$style(type='text/css', "#Download_masque_zip { width:100%;}")

@@ -2,64 +2,60 @@
 options(bitmapType='cairo')
 
 if (!require("Rcpp")){
-  install.packages("Rcpp",  repos="http://cran.univ-paris1.fr/")
+  install.packages("Rcpp",  repos="https://cran.univ-paris1.fr/")
 }
 if(!require(shiny)){
-  install.packages("shiny",  repos="http://cran.univ-paris1.fr/")
+  install.packages("shiny",  repos="https://cran.univ-paris1.fr/")
   library(shiny)
 }
+
 if(!require(shinydashboard)){
   devtools::install_github('aghozlane/shinydashboard')
   library(shinydashboard)
 }
 
 if(!require(rjson)){
-  install.packages('rjson',  repos="http://cran.univ-paris1.fr/")
+  install.packages('rjson',  repos="https://cran.univ-paris1.fr/")
   library(rjson)
 }
 if(!require(ape)){
-  install.packages('ape',  repos="http://cran.univ-paris1.fr/")
+  install.packages('ape',  repos="https://cran.univ-paris1.fr/")
   library(ape)
 }
 
 if(!require(GUniFrac)){
-  install.packages('GUniFrac',  repos="http://cran.univ-paris1.fr/")
+  install.packages('GUniFrac',  repos="https://cran.univ-paris1.fr/")
   library(GUniFrac)
 }
 
-if(!require(devtools)){
-  install.packages('devtools',  repos="http://cran.univ-paris1.fr/")
-  library(devtools)
-}
-
 if (!require(psych)) {
-  install.packages('psych',  repos="http://cran.univ-paris1.fr/")
+  install.packages('psych',  repos="https://cran.univ-paris1.fr/")
   library(psych)
 }
 
 if (!require(ggplot2)) {
-  install.packages('ggplot2',  repos="http://cran.univ-paris1.fr/")
+  install.packages('ggplot2',  repos="https://cran.univ-paris1.fr/")
   library(ggplot2)
 }
 
 if (!require(vegan)) {
-  install.packages('vegan',  repos="http://cran.univ-paris1.fr/")
+  install.packages('vegan',  repos="https://cran.univ-paris1.fr/")
   library(vegan)
 }
 
 if (!require(dendextend)) {
-  install.packages('dendextend',  repos="http://cran.univ-paris1.fr/")
+  install.packages('dendextend',  repos="https://cran.univ-paris1.fr/")
   library(dendextend)
 }
 
 if (!require(circlize)) {
-  install.packages('circlize',  repos="http://cran.univ-paris1.fr/")
+  install.packages('circlize',  repos="https://cran.univ-paris1.fr/")
   library(circlize)
 }
 
 
 if (!require(devtools)) {
-  install.packages('devtools',  repos="http://cran.univ-paris1.fr/")
+  install.packages('devtools',  repos="https://cran.univ-paris1.fr/")
   library(devtools)
 }
 if(!require(treeWeightD3)){
@@ -72,20 +68,23 @@ if(!require(treeWeightD3)){
 #   library(BiocInstaller)
 # }
 
+#torename
 if (!require(d3heatmap)) {
-  devtools::install_github('aghozlane/d3heatmap')
+  #devtools::install_github('aghozlane/d3heatmap')
+  devtools::install_github("rstudio/d3heatmap")
   library(d3heatmap)
 }
 
 # Let us use biomformat instead of biom
-if (!require(biomformat)){
- devtools::install_github("aghozlane/biomformat")
-library(biomformat)
+#torename
+if (!require(biomformatshaman)){
+  devtools::install_github("aghozlane/biomformatshaman")
+  library(biomformatshaman)
 }
 
 if (!require(scatterD3)) {
   #devtools::install_github('aghozlane/scatterD3')
-  install.packages("scatterD3")
+  install.packages("scatterD3", repos="https://cran.univ-paris1.fr/")
   library(scatterD3)
 }
 
@@ -94,19 +93,26 @@ if (!require(rNVD3)) {
   library(rNVD3)
 }
 
+if(!require(BiocManager)){
+  install.packages("BiocManager")
+}
 if (!require(genefilter)) {
-  source("https://bioconductor.org/biocLite.R")
-  biocLite("genefilter")
+  BiocManager::install("genefilter", ask=FALSE)
   library(genefilter)
 }
 
+if(!require("SummarizedExperiment")){
+  BiocManager::install("SummarizedExperiment", ask=FALSE)
+  library(SummarizedExperiment)
+}
+
 if (!require(googleVis)) {
-  install.packages('googleVis',  repos="http://cran.univ-paris1.fr/")
+  install.packages('googleVis',  repos="https://cran.univ-paris1.fr/")
   suppressPackageStartupMessages(library(googleVis))
 }
 
 if (!require(shinyjs)) {
-  install.packages('shinyjs',  repos="http://cran.univ-paris1.fr/")
+  install.packages('shinyjs',  repos="https://cran.univ-paris1.fr/")
   library(shinyjs)
 }
 
@@ -116,42 +122,42 @@ if(!require(d3vennR)){
 }
 
 if (!require(DT)) {
-  install.packages('DT',  repos="http://cran.univ-paris1.fr/")
+  install.packages('DT',  repos="https://cran.univ-paris1.fr/")
   library(DT)
 }
 
 if (!require(RColorBrewer)) {
-  install.packages('RColorBrewer',  repos="http://cran.univ-paris1.fr/")
+  install.packages('RColorBrewer',  repos="https://cran.univ-paris1.fr/")
   library(RColorBrewer)
 }
 
 if (!require(gplots)) {
-  install.packages('gplots',  repos="http://cran.univ-paris1.fr/")
+  install.packages('gplots',  repos="https://cran.univ-paris1.fr/")
   library(gplots)
 }
 
-if (!require(DESeq2)) {
+if (!require(DESeq2shaman)) {
   devtools::install_github("aghozlane/DESeq2shaman")
-  library(DESeq2)
+  library(DESeq2shaman)
 }
 
 if (!require(ade4)) {
-  install.packages('ade4',  repos="http://cran.univ-paris1.fr/")
+  install.packages('ade4',  repos="https://cran.univ-paris1.fr/")
   library(ade4)
 }
 
 if (!require(scales)) {
-  install.packages('scales',  repos="http://cran.univ-paris1.fr/")
+  install.packages('scales',  repos="https://cran.univ-paris1.fr/")
   library(scales)
 }
 
 if (!require(phytools)) {
-  install.packages('phytools',  repos="http://cran.univ-paris1.fr/")
+  install.packages('phytools',  repos="https://cran.univ-paris1.fr/")
   library(phytools)
 }
 
 if(!require(philentropy)){
-  install.packages("philentropy",  repos="http://cran.univ-paris1.fr/")
+  install.packages("philentropy",  repos="https://cran.univ-paris1.fr/")
   library(philentropy)
 }
 
@@ -166,56 +172,57 @@ if (!require("shinytoastr")){
 }
 
 if (!require("shinyWidgets")){
-  devtools::install_github("aghozlane/shinyWidgets")
+  install.packages("shinyWidgets")
+  #devtools::install_github("aghozlane/shinyWidgets")
   library(shinyWidgets)
 }
 
 if (!require("sendmailR")){
-  install.packages("sendmailR",  repos="http://cran.univ-paris1.fr/")
+  install.packages("sendmailR",  repos="https://cran.univ-paris1.fr/")
   library(sendmailR)
 }
 
 if (!require("shinyBS")){
-  install.packages("shinyBS",  repos="http://cran.univ-paris1.fr/")
+  install.packages("shinyBS",  repos="https://cran.univ-paris1.fr/")
   library(shinyBS)
 }
 
 library(tools)
 
 if (!require("flexdashboard")){
-  install.packages("flexdashboard",  repos="http://cran.univ-paris1.fr/")
+  install.packages("flexdashboard",  repos="https://cran.univ-paris1.fr/")
   library(flexdashboard)
 }
 
 if (!require("backports")){
-  install.packages("backports",  repos="http://cran.univ-paris1.fr/")
+  install.packages("backports",  repos="https://cran.univ-paris1.fr/")
   library(backports)
 }
 
 
 if (!require("readr")){
-  install.packages("readr",  repos="http://cran.univ-paris1.fr/")
+  install.packages("readr",  repos="https://cran.univ-paris1.fr/")
   library(readr)
 }
 
 if (!require("jsonlite")){
-  install.packages("jsonlite",  repos="http://cran.univ-paris1.fr/")
+  install.packages("jsonlite",  repos="https://cran.univ-paris1.fr/")
   library(jsonlite)
 }
 
 
 if (!require("shinyFiles")){
-  install.packages("shinyFiles",  repos="http://cran.univ-paris1.fr/")
+  install.packages("shinyFiles",  repos="https://cran.univ-paris1.fr/")
   library(shinyFiles)
 }
 
 if (!require("htmltools")){
-  install.packages("htmltools",  repos="http://cran.univ-paris1.fr/")
+  install.packages("htmltools",  repos="https://cran.univ-paris1.fr/")
   library(htmltools)
 }
 
 # if (!require("V8")){
-#   install.packages("V8",  repos="http://cran.univ-paris1.fr/")
+#   install.packages("V8",  repos="https://cran.univ-paris1.fr/")
 #   library(htmltools)
 # }
 
@@ -225,27 +232,27 @@ if (!require("htmltools")){
 # }
 
 if (!require("rAmCharts")){
-  install.packages("rAmCharts")
+  install.packages("rAmCharts",  repos="https://cran.univ-paris1.fr/")
   library(rAmCharts)
 }
 
 if(!require("colourpicker")){
-  install.packages("colourpicker")
+  install.packages("colourpicker",  repos="https://cran.univ-paris1.fr/")
   library(colourpicker)
 }
 
 if(!require("data.table")){
-  install.packages("data.table")
+  install.packages("data.table",  repos="https://cran.univ-paris1.fr/")
   library(data.table)
 }
 
 if(!require("UpSetR")){
-  install.packages("UpSetR")
+  install.packages("UpSetR",  repos="https://cran.univ-paris1.fr/")
   library(UpSetR)
 }
 
 if(!require("ggrepel")){
-  install.packages("ggrepel")
+  install.packages("ggrepel",  repos="https://cran.univ-paris1.fr/")
   library(ggrepel)
 }
 
@@ -255,16 +262,11 @@ if(!require("ggrepel")){
 # }
 
 if(!require("igraph")){
-  install.packages("igraph")
+  install.packages("igraph",  repos="https://cran.univ-paris1.fr/")
   library(igraph)
 }
 
 if(!require("visNetwork")){
-  install.packages("visNetwork")
+  install.packages("visNetwork",  repos="https://cran.univ-paris1.fr/")
   library(visNetwork)
-}
-
-if(!require("SummarizedExperiment")){
-  BiocManager::install("SummarizedExperiment")
-  library(SummarizedExperiment)
 }
