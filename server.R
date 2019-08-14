@@ -1399,14 +1399,32 @@ shinyServer(function(input, output,session) {
   # Run demo
   observeEvent(input$DemoDataset, {
     if(input$DemoDataset != "..."){ 
-      values$masque_key = input$DemoDataset
+      DemoDataset = strsplit(input$DemoDataset,"|", fixed=T)
+      values$masque_key = DemoDataset[[1]][1]
       updateSelectInput(session, "FileFormat","",selected = "fileBiom")
       reset("fileBiom")
       reset("fileTree")
-      updateSelectInput(session, "DemoDataset","",selected = "...") 
+      #PS = Project_status(values$masque_key,values$curdir)
       values$biom_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_silva.biom",sep=""),sep= .Platform$file.sep)
       values$tree_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_silva_tree.nhx",sep=""),sep= .Platform$file.sep)
-      sendSweetAlert(messageId="DemoDataset", title = "Success", text = "Data of XXX were successfully loaded. You can go to statistical analysis section.", type = "success", html=TRUE)
+      sendSweetAlert(messageId="DemoDataset", title = "Success", text = paste("Data of", DemoDataset[[1]][2], "were successfully loaded. You can go to statistical analysis section."), type = "success", html=TRUE)
+        removeCssClass(class = 'pwdRED', selector = '#password_home')
+        addCssClass(class = 'pwdGREEN', selector = '#password_home')
+        hideElement("masque-form",anim=TRUE)
+        hideElement("masque-infobox",anim=TRUE)
+        hideElement("boxsum",anim=TRUE)
+        showElement("reload-project",anim=TRUE)
+        hideElement("project_over",anim=TRUE)
+        hideElement("pass",anim=TRUE)
+        #showElement("MasqueToShaman",anim=TRUE)
+    }
+    else{
+      values$tree_masque = NULL
+      values$biom_masque = NULL
+      values$masque_key = NULL
+      PS =NULL
+      reset("fileBiom")
+      reset("fileTree")
     }
   })
   
@@ -1883,8 +1901,10 @@ shinyServer(function(input, output,session) {
   output$Project_box_home <- renderUI({
     
     res = NULL
+    demodata = input$DemoDataset
+    FileFormat = input$FileFormat
+
     PS = Project_status(values$masque_key,values$curdir)
-    
     if(PS$passOK){
       
       if(PS$status=="done")
@@ -1906,7 +1926,7 @@ shinyServer(function(input, output,session) {
           diff = tmp-start
         }
         
-        if(file.exists(annot_process))
+        if(file.exists(annot_process) && demodata=="...")
         {
           
           ap = read.csv(annot_process,sep="\t")
@@ -1922,6 +1942,15 @@ shinyServer(function(input, output,session) {
                 tags$style(type='text/css', "#LoadResMasque_home { width:100%; }"),
                 receiveSweetAlert(messageId = "LoadResMasque_home")
             ),
+            box(title="Download .zip file",width = 3, status = "success",
+                downloadButton('Download_masque_zip_home', 'Download the results'),
+                tags$style(type='text/css', "#Download_masque_zip_home { width:100%;}")
+            )
+          )
+        }
+        else if(file.exists(annot_process) && demodata !="..." && FileFormat == "fileBiom" )
+        {
+          res[[1]] = fluidRow(
             box(title="Download .zip file",width = 3, status = "success",
                 downloadButton('Download_masque_zip_home', 'Download the results'),
                 tags$style(type='text/css', "#Download_masque_zip_home { width:100%;}")
@@ -2115,7 +2144,6 @@ shinyServer(function(input, output,session) {
   
   output$ExportBiom  <- downloadHandler(
     filename = function() { 'SHAMAN_data.biom' },
-    #write_biom doesn't handle properly the sample metadata
     content = function(file){
       write_biom(make_biom(dataMergeCounts()$CT_noNorm, sample_metadata=values$TargetWorking[,-1],
                            observation_metadata=dataInput()$data$taxo_biom), file)}

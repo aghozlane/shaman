@@ -900,7 +900,7 @@ Plot_network <- function(input,resDiff,availableTaxo, ind_taxo, qualiVariable, e
     plot <- visIgraphLayout(plot, layout = "layout_nicely", physics = FALSE, smooth = FALSE)
     plot <- visNodes(plot, size = 20)
     plot <- visEdges(plot, width = 1)
-    plot <- visOptions(plot, width = if(isolate(input$modifwidthVisu)){isolate(input$widthVisu)}, height = isolate(input$heightVisu), autoResize = FALSE)
+    plot <- visOptions(plot, width = if(isolate(input$modifwidthVisu)){isolate(input$widthVisu)}, height = isolate(input$heightVisu), autoResize = FALSE, highlightNearest = list(enabled = TRUE, degree = 1, hover = FALSE))
     #plot <- visLegend(plot, addEdges = data.frame(color = c("red", "blue"), label = c("Positive correlation","Negative correlation")))
     
     #plot <- visExport(plot, type = "pdf", name = "network_SHAMAN.pdf", float="bottom")
