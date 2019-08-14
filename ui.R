@@ -63,11 +63,11 @@ function(request) {
                                              p("Pierre Lechat", "(Coding, testing, feature suggestions)"),
                                              h3("Acknowledgements"),
                                              p("Thanks to the following people for patches and other suggestions for improvements:"),
-                                             p("Carine Rey, ", "Hugo Varet,", "Julien Tap, ","Anna Zhukova.")
+                                             p("Carine Rey, ", "Hugo Varet,", "Emeline Perthame,", "Julien Tap, ","Anna Zhukova.")
                                     ),
                                     tabPanel("Citing SHAMAN",
                                              p("If you use SHAMAN for your project, please cite our first application of SHAMAN in Quereda et al. 2016.",style = "font-family: 'times'; font-si16pt"),
-                                             p("Publication using SHAMAN :",style = "font-family: 'times'; font-si18pt; font-style: strong"),
+                                             p("Publication using SHAMAN:",style = "font-family: 'times'; font-si18pt; font-style: strong"),
                                              p(a("Prediction of the intestinal resistome by a three-dimensional structure-based method.", href="https://www.ncbi.nlm.nih.gov/pubmed/30478291"),"Ruppé E, Ghozlane A, Tap J, et al.;Nature microbiology 2018",style = "font-family: 'times'; font-si16pt"),
                                              
                                              p(a("Diverse laboratory colonies of Aedes aegypti harbor the same adult midgut bacterial microbiome.", href="https://www.ncbi.nlm.nih.gov/pubmed/29587819"), "Dickson LB, Ghozlane A, Volant S, Bouchier C, Ma L, Vega-Rúa A, Dusfour I, Jiolle D, Paupy C, Mayanja MN, Kohl A, Lutwama JJ, Duong V, Lambrechts L; Parasit Vectors 2018",style = "font-family: 'times'; font-si16pt"),
@@ -441,9 +441,9 @@ function(request) {
                              ),
                              div(style = "text-align:center;",
                                  actionButton("submit", strong("Check and submit"), icon("chevron-circle-right"),class="btn-primary",style = "color: #fff"),
-                                 receiveSweetAlert(messageId = "ErrorMasque"),
-                                 tags$style(type='text/css', "#submit { width:50%; margin-top: 5px;}"),
-                                 receiveSweetAlert(messageId = "SuccessMasque")
+                                 #receiveSweetAlert(messageId = "ErrorMasque"),
+                                 tags$style(type='text/css', "#submit { width:50%; margin-top: 5px;}")#,
+                                 #receiveSweetAlert(messageId = "SuccessMasque")
                              )
                              
                          ),
@@ -523,8 +523,8 @@ function(request) {
                       selectInput("FileFormat","",c("Count table & taxonomy (*.csv or *.tsv)"="fileCounts","BIOM file"="fileBiom","Project number"="projnum"),selected="fileCounts"),
                       conditionalPanel(condition="input.FileFormat=='fileCounts'",
                                        checkboxInput("NoTaxoFile","No taxonomy table",value=FALSE),
-                                       selectInput("DemoDataset",h6(strong('Or select a dataset')),c("..."="...","ZymoBIOMICS mock 16S"=c("30a47fca2dc3|Volant et al. 2019 in review")),selected="..."),
-                                       receiveSweetAlert(messageId = "DemoDataset")
+                                       selectInput("DemoDataset",h6(strong('Or select a dataset')),c("..."="...","ZymoBIOMICS mock 16S"=c("30a47fca2dc3|Volant et al. 2019 in review")),selected="...")#,
+                                       #receiveSweetAlert(messageId = "DemoDataset")
                       ),
                       conditionalPanel(condition="input.FileFormat=='projnum'",
                                        inlineCSS(list(.pwdGREEN = "background-color: #DDF0B3",.pwdRED = "background-color: #F0B2AD")),
@@ -592,13 +592,13 @@ function(request) {
                   
                   
                 ),
-                column(id="tabboxdata_col",width=12,uiOutput("TabBoxData")),
-                receiveSweetAlert(messageId = "ErrorTaxo"),
-                receiveSweetAlert(messageId = "ErrorBiom1"),
-                receiveSweetAlert(messageId = "ErrorBiom2"),
-                receiveSweetAlert(messageId = "ErrorSizeFactor"),
-                receiveSweetAlert(messageId = "ErrorCounts"),
-                receiveSweetAlert(messageId = "ErrorRDP")
+                column(id="tabboxdata_col",width=12,uiOutput("TabBoxData"))#,
+                # receiveSweetAlert(messageId = "ErrorTaxo"),
+                # receiveSweetAlert(messageId = "ErrorBiom1"),
+                # receiveSweetAlert(messageId = "ErrorBiom2"),
+                # receiveSweetAlert(messageId = "ErrorSizeFactor"),
+                # receiveSweetAlert(messageId = "ErrorCounts"),
+                # receiveSweetAlert(messageId = "ErrorRDP")
         ),
         
         #### STATISTICAL ANALYSIS ####
