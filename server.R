@@ -1950,8 +1950,8 @@ shinyServer(function(input, output,session) {
                 selectInput("masque_db_home","Select the database",choices=db_choices),
                 conditionalPanel(condition="input.masque_db_home=='rdp'",numericInput("rdp_thres_home",h6(strong("Threshold:")),0.5,step=0.01,min=0.01,max=1)),
                 actionButton("LoadResMasque_home", "Upload the results",icon=icon('upload')),
-                tags$style(type='text/css', "#LoadResMasque_home { width:100%; }"),
-                receiveSweetAlert(messageId = "LoadResMasque_home")
+                tags$style(type='text/css', "#LoadResMasque_home { width:100%; }")#,
+                #receiveSweetAlert(messageId = "LoadResMasque_home")
             ),
             box(title="Download .zip file",width = 3, status = "success",
                 downloadButton('Download_masque_zip_home', 'Download the results'),
