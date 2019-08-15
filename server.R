@@ -163,7 +163,8 @@ shinyServer(function(input, output,session) {
   dataInputTree <-reactive({ 
     
     data = NULL
-    inFile <- input$fileTree
+    {inFile <- input$fileTree
+    values$tree_masque}
     
     if (!is.null(inFile) && is.null(values$tree_masque)) {
       try(read.tree(inFile$datapath)->data, silent=T)
@@ -191,13 +192,14 @@ shinyServer(function(input, output,session) {
   
   # Infobox Tree (Unifrac)
   output$InfoTreePhylo_box <- renderInfoBox({
-    input$fileTree
+    {input$fileTree
+     values$tree_masque}
     tree_tmp = isolate(dataInputTree())
     tree = tree_tmp$data
-    
+
     res = infoBox(h6(strong("Phylogenetic tree")), subtitle = h6(strong("Load the phylogenetic tree (optional)")) ,color = "light-blue",width=NULL,fill=TRUE, icon = icon("upload"))
     if(!is.null(tree)){
-      if(!is.null(isolate(input$fileTree))){
+      #if(!is.null(isolate(input$fileTree))){
         res = infoBox(h6(strong("Phylogenetic tree")), subtitle = h6("The phylogenetic has been loaded") ,color = "green",width=NULL,fill=TRUE, icon = icon("thumbs-o-up"))
         if(!is.null(tree_tmp$Warning)){      
           res = infoBox(h6(strong("Phylogenetic tree")), subtitle = h6(tree_tmp$Warning) ,color = "orange",width=NULL,fill=TRUE, icon = icon("warning"))
@@ -205,7 +207,7 @@ shinyServer(function(input, output,session) {
         if(!is.null(tree_tmp$Error)){      
           res = infoBox(h6(strong("Phylogenetic tree")), subtitle = h6(tree_tmp$Error),color = "red",width=NULL,fill=TRUE, icon = icon("thumbs-o-down"))
         }
-      }
+      #}
     } 
     return(res)
   })
@@ -378,7 +380,6 @@ shinyServer(function(input, output,session) {
       if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target)) 
       {
         design = GetDesign(isolate(input),target)
-        print(design)
         ChTM = CheckTargetModel(input,target,labeled,data$counts)$Error
         if(!is.null(design) && is.null(ChTM))
         {
