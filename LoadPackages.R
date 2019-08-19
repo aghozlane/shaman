@@ -9,11 +9,6 @@ if(!require(shiny)){
   library(shiny)
 }
 
-if(!require(shinydashboard)){
-  devtools::install_github('aghozlane/shinydashboard')
-  library(shinydashboard)
-}
-
 if(!require(rjson)){
   install.packages('rjson',  repos="https://cran.univ-paris1.fr/")
   library(rjson)
@@ -54,44 +49,11 @@ if (!require(circlize)) {
 }
 
 
-if (!require(devtools)) {
-  install.packages('devtools',  repos="https://cran.univ-paris1.fr/")
-  library(devtools)
-}
-if(!require(treeWeightD3)){
-   devtools::install_github('pierreLec/treeWeightD3')
-   library(treeWeightD3)
-}
 # if (!require(BiocInstaller)){
 #   source("https://bioconductor.org/biocLite.R")
 #   biocLite("BiocInstaller")
 #   library(BiocInstaller)
 # }
-
-#torename
-if (!require(d3heatmap)) {
-  #devtools::install_github('aghozlane/d3heatmap')
-  devtools::install_github("rstudio/d3heatmap")
-  library(d3heatmap)
-}
-
-# Let us use biomformat instead of biom
-#torename
-if (!require(biomformatshaman)){
-  devtools::install_github("aghozlane/biomformatshaman")
-  library(biomformatshaman)
-}
-
-if (!require(scatterD3)) {
-  #devtools::install_github('aghozlane/scatterD3')
-  install.packages("scatterD3", repos="https://cran.univ-paris1.fr/")
-  library(scatterD3)
-}
-
-if (!require(rNVD3)) {
-  devtools::install_github('aghozlane/rNVD3')
-  library(rNVD3)
-}
 
 if(!require(BiocManager)){
   install.packages("BiocManager")
@@ -116,11 +78,6 @@ if (!require(shinyjs)) {
   library(shinyjs)
 }
 
-if(!require(d3vennR)){
-  devtools::install_github("timelyportfolio/d3vennR")
-  library(d3vennR)
-}
-
 if (!require(DT)) {
   install.packages('DT',  repos="https://cran.univ-paris1.fr/")
   library(DT)
@@ -134,11 +91,6 @@ if (!require(RColorBrewer)) {
 if (!require(gplots)) {
   install.packages('gplots',  repos="https://cran.univ-paris1.fr/")
   library(gplots)
-}
-
-if (!require(DESeq2shaman)) {
-  devtools::install_github("aghozlane/DESeq2shaman")
-  library(DESeq2shaman)
 }
 
 if (!require(ade4)) {
@@ -159,16 +111,6 @@ if (!require(phytools)) {
 if(!require(philentropy)){
   install.packages("philentropy",  repos="https://cran.univ-paris1.fr/")
   library(philentropy)
-}
-
-if(!require(PhyloTreeMetaR)){
-  devtools::install_github("pierreLec/PhyloTreeMetaR")
-  library(PhyloTreeMetaR)
-}
-
-if (!require("shinytoastr")){
-  devtools::install_github("mangothecat/shinytoastr")
-  library(shinytoastr)
 }
 
 if (!require("shinyWidgets")){
@@ -269,4 +211,63 @@ if(!require("igraph")){
 if(!require("visNetwork")){
   install.packages("visNetwork",  repos="https://cran.univ-paris1.fr/")
   library(visNetwork)
+}
+
+if (!require(devtools)) {
+  install.packages('devtools',  repos="https://cran.univ-paris1.fr/")
+  library(devtools)
+}
+
+if(!require("shinydashboardshaman")){
+  devtools::install_github('aghozlane/shinydashboardshaman')
+  library(shinydashboardshaman)
+}
+
+if(!require("treeWeightD3")){
+  devtools::install_github('pierreLec/treeWeightD3')
+  library(treeWeightD3)
+}
+
+if (!require("d3heatmap")) {
+  #devtools::install_github('aghozlane/d3heatmap')
+  devtools::install_github("rstudio/d3heatmap")
+  library(d3heatmap)
+}
+
+# Let us use biomformat instead of biom
+#torename
+if (!require("biomformatshaman")){
+  devtools::install_github("aghozlane/biomformatshaman")
+  library(biomformatshaman)
+}
+
+if (!require("scatterD3")) {
+  #devtools::install_github('aghozlane/scatterD3')
+  install.packages("scatterD3", repos="https://cran.univ-paris1.fr/")
+  library(scatterD3)
+}
+
+if (!require("rNVD3")) {
+  devtools::install_github('aghozlane/rNVD3')
+  library(rNVD3)
+}
+
+if(!require("PhyloTreeMetaR")){
+  devtools::install_github("pierreLec/PhyloTreeMetaR")
+  library(PhyloTreeMetaR)
+}
+
+if (!require("shinytoastr")){
+  devtools::install_github("mangothecat/shinytoastr")
+  library(shinytoastr)
+}
+
+if(!require("d3vennR")){
+  devtools::install_github("timelyportfolio/d3vennR")
+  library(d3vennR)
+}
+
+if (!require("DESeq2shaman")) {
+  devtools::install_github("aghozlane/DESeq2shaman")
+  library(DESeq2shaman)
 }

@@ -58,42 +58,42 @@ Project_box_result <- function(masque_key,curdir){
           br(),
           column(width=4,
                  h3("OTU building process"),
-                 shinydashboard::valueBox(ap$Count[1],tags$strong(tags$h5("Number of amplicons", style = "width: 70%;")), color = "light-blue", width = NULL, icon = uiOutput("amplicon_icon")),
-                 shinydashboard::valueBox(ap$Count[2],tags$strong(tags$h5("Remaining amplicons after dereplication", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("dereplication_icon")),
-                 shinydashboard::valueBox(ap$Count[3],tags$strong(tags$h5("Remaining amplicons after removing singletons", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("singleton_icon")),
-                 shinydashboard::valueBox(ap$Count[4],tags$strong(tags$h5("Remaining amplicons after removing chimera", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("chimera_icon")),
-                 shinydashboard::valueBox(ap$Count[5],tags$strong(tags$h5("Number of OTU", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("otu_icon"))
+                 shinydashboardshaman::valueBox(ap$Count[1],shiny::tags$strong(shiny::tags$h5("Number of amplicons", style = "width: 70%;")), color = "light-blue", width = NULL, icon = uiOutput("amplicon_icon")),
+                 shinydashboardshaman::valueBox(ap$Count[2],shiny::tags$strong(shiny::tags$h5("Remaining amplicons after dereplication", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("dereplication_icon")),
+                 shinydashboardshaman::valueBox(ap$Count[3],shiny::tags$strong(shiny::tags$h5("Remaining amplicons after removing singletons", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("singleton_icon")),
+                 shinydashboardshaman::valueBox(ap$Count[4],shiny::tags$strong(shiny::tags$h5("Remaining amplicons after removing chimera", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("chimera_icon")),
+                 shinydashboardshaman::valueBox(ap$Count[5],shiny::tags$strong(shiny::tags$h5("Number of OTU", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("otu_icon"))
           ),
           #column(width=5, div(img(src = "masque.png",width = "50%",height = "20%"))),
           if(json_data$type == "16S"){
             column(width=5,
                    strong(h3("16S annotation process")),
-                   shinydashboard::valueBox(ap$Count[6],tags$strong(tags$h5("Number of OTU annotated by SILVA", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("silva_icon")),
-                   shinydashboard::valueBox(ap$Count[7],tags$strong(tags$h5("Number of OTU annotated by Greengenes", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("greengenes_icon")),
-                   shinydashboard::valueBox(ap$Count[8],tags$strong(tags$h5("Number of OTU annotated by RDP", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("rdp_icon"))
+                   shinydashboardshaman::valueBox(ap$Count[6],shiny::tags$strong(shiny::tags$h5("Number of OTU annotated by SILVA", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("silva_icon")),
+                   shinydashboardshaman::valueBox(ap$Count[7],shiny::tags$strong(shiny::tags$h5("Number of OTU annotated by Greengenes", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("greengenes_icon")),
+                   shinydashboardshaman::valueBox(ap$Count[8],shiny::tags$strong(shiny::tags$h5("Number of OTU annotated by RDP", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("rdp_icon"))
             )
           }
           else if(json_data$type == "18S"){
             column(width=5,
                    strong(h3("18S annotation process")),
-                   shinydashboard::valueBox(ap$Count[6],tags$strong(tags$h5("Number of OTU annotated by SILVA", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("silva_icon")),
-                   shinydashboard::valueBox(ap$Count[7],tags$strong(tags$h5("Number of OTU annotated by RDP", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("rdp_icon"))
+                   shinydashboardshaman::valueBox(ap$Count[6],shiny::tags$strong(shiny::tags$h5("Number of OTU annotated by SILVA", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("silva_icon")),
+                   shinydashboardshaman::valueBox(ap$Count[7],shiny::tags$strong(shiny::tags$h5("Number of OTU annotated by RDP", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("rdp_icon"))
             )
           }
           else if(json_data$type == "23S_28S"){
             column(width=5,
                    strong(h3("23S/28S annotation process")),
-                   shinydashboard::valueBox(ap$Count[6],tags$strong(tags$h5("Number of OTU annotated by SILVA", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("silva_icon")),
-                   shinydashboard::valueBox(ap$Count[7],tags$strong(tags$h5("Number of OTU annotated by RDP", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("rdp_icon"))
+                   shinydashboardshaman::valueBox(ap$Count[6],shiny::tags$strong(shiny::tags$h5("Number of OTU annotated by SILVA", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("silva_icon")),
+                   shinydashboardshaman::valueBox(ap$Count[7],shiny::tags$strong(shiny::tags$h5("Number of OTU annotated by RDP", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("rdp_icon"))
             )
           }
           else{
             column(width=5,
                    strong(h3("ITS annotation process")),
-                   shinydashboard::valueBox(ap$Count[6],tags$strong(tags$h5("Number of OTU annotated by Unite", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("unite_icon")),
-                   shinydashboard::valueBox(ap$Count[7],tags$strong(tags$h5("Number of OTU annotated by Findley", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("findley_icon")),
-                   shinydashboard::valueBox(ap$Count[8],tags$strong(tags$h5("Number of OTU annotated by Underhill", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("underhill_icon")),
-                   shinydashboard::valueBox(ap$Count[9],tags$strong(tags$h5("Number of OTU annotated by RDP", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("rdp_icon"))
+                   shinydashboardshaman::valueBox(ap$Count[6],shiny::tags$strong(shiny::tags$h5("Number of OTU annotated by Unite", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("unite_icon")),
+                   shinydashboardshaman::valueBox(ap$Count[7],shiny::tags$strong(shiny::tags$h5("Number of OTU annotated by Findley", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("findley_icon")),
+                   shinydashboardshaman::valueBox(ap$Count[8],shiny::tags$strong(shiny::tags$h5("Number of OTU annotated by Underhill", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("underhill_icon")),
+                   shinydashboardshaman::valueBox(ap$Count[9],shiny::tags$strong(shiny::tags$h5("Number of OTU annotated by RDP", style = "width: 70%;")), color = "light-blue", width = NULL,icon = uiOutput("rdp_icon"))
             )
          },
          #offset = 4,
@@ -103,18 +103,18 @@ Project_box_result <- function(masque_key,curdir){
                     selectInput("masque_db","Select the database",choices=db_choices),
                     conditionalPanel(condition="input.masque_db=='rdp'",numericInput("rdp_thres",h6(strong("Threshold:")),0.5,step=0.01,min=0.01,max=1)),
                     actionButton("LoadResMasque", "Upload the results",icon=icon('upload')),
-                    tags$style(type='text/css', "#LoadResMasque { width:100%; }"),
+                    shiny::tags$style(type='text/css', "#LoadResMasque { width:100%; }")#,
                     #receiveSweetAlert(messageId = "LoadResMasque")
                 ),
-                #shinydashboard::box(title="Upload the results",width = NULL, background = "light-blue",
+                #shinydashboardshaman::box(title="Upload the results",width = NULL, background = "light-blue",
                 #selectInput("masque_database","Select the database",choices=c("Silva" = "silva","Greengenes" = "greengenes", "MARDE"="merde")),
-                #tags$style(type='text/css', "#masque_database { width:100%; margin-top: 5px;}"),
+                #shiny::tags$style(type='text/css', "#masque_database { width:100%; margin-top: 5px;}"),
                 #actionButton("RunResMasque",label = "Upload the results",icon=icon('upload')),
-                #tags$style(type='text/css', "#RunResMasque { width:100%; margin-top: 15px;}")
+                #shiny::tags$style(type='text/css', "#RunResMasque { width:100%; margin-top: 15px;}")
                 #),
                 box(id="box-zip",title="Download .zip file",width = NULL, status = "success",
                     downloadButton('Download_masque_zip', 'Download the results'),
-                    tags$style(type='text/css', "#Download_masque_zip { width:100%;}")
+                    shiny::tags$style(type='text/css', "#Download_masque_zip { width:100%;}")
                 )
          )
         )
