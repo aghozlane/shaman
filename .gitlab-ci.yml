@@ -1,7 +1,14 @@
 stages:
   - build
 
-build_dev:
+services:
+  - docker:dind
+
+variables:
+  DOCKER_HOST: tcp://localhost:2375
+
+
+build_master:
   image: docker:latest
   stage: build
   variables:
