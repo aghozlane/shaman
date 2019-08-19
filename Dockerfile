@@ -45,13 +45,10 @@ RUN R -e """install.packages('packrat', repos='http://cran.univ-paris1.fr/');lib
 
 COPY docker_inst/shiny-server.conf  /etc/shiny-server/shiny-server.conf
 COPY docker_inst/.Rprofile  /srv/shiny-server/
+COPY . /srv/shiny-server/
 
-RUN git clone https://github.com/pworinger/shaman.git /srv/shiny-server/shaman && \
-    #git clone https://github.com/aghozlane/shaman.git /srv/shiny-server/shaman && \
-    git clone https://github.com/pierreLec/KronaRShy.git /srv/shiny-server/kronarshy && \
+RUN git clone https://github.com/pierreLec/KronaRShy.git /srv/shiny-server/kronarshy && \
     git clone https://github.com/aghozlane/shaman_bioblend.git /usr/bin/shaman_bioblend && \
-    mv /srv/shiny-server/shaman/* /srv/shiny-server/ && \
-    rm -rf /srv/shiny-server/shaman && \
     chown -R shiny.shiny  /srv/shiny-server/ && \
     chown -R shiny.shiny  /opt/packman/ && \
     rm /opt/shaman_package_201908.tar.gz && \
