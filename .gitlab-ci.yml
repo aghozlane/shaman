@@ -14,6 +14,8 @@ build_master:
   variables:
     CI_DEBUG_TRACE: "false"
   script:
-    - docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
-    - docker build -t aghozlane/shaman .
+    #- docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+    - docker build -t registry-gitlab.pasteur.fr/aghozlan/shaman .
+    - docker push registry-gitlab.pasteur.fr/aghozlan/shaman
+    #- docker build -t aghozlane/shaman .
     #- docker push -t aghozlane/shaman
