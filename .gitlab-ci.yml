@@ -16,17 +16,8 @@ build_master:
   script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
     - docker build 
-      --build-arg CI_COMMIT_REF_SLUG
-      --build-arg CI_COMMIT_SHA
-      --build-arg CI_COMMIT_SHORT_SHA
-      --cache-from "$CI_REGISTRY_IMAGE:latest"
       --cache-from "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
       --tag "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
-      --tag "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
       --tag "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
       .
-    - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
-    - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
-    #- docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
-    #- docker build -t aghozlane/shaman .
-    #- docker push -t aghozlane/shaman
+    - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
