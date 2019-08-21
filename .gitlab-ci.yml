@@ -31,6 +31,6 @@ build_master:
   script:
     - docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
     - docker build -t aghozlane/shaman .
-    - docker push -t aghozlane/shaman
+    - docker push aghozlane/shaman
   only:
     - master
