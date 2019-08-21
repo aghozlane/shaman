@@ -213,6 +213,17 @@ if(!require("visNetwork")){
   library(visNetwork)
 }
 
+if (!require("shinytoastr")){
+  install.packages("shinytoastr")
+  library(shinytoastr)
+}
+
+if (!require("scatterD3")) {
+  #devtools::install_github('aghozlane/scatterD3')
+  install.packages("scatterD3", repos="https://cran.univ-paris1.fr/")
+  library(scatterD3)
+}
+
 if (!require(devtools)) {
   install.packages('devtools',  repos="https://cran.univ-paris1.fr/")
   library(devtools)
@@ -221,11 +232,6 @@ if (!require(devtools)) {
 if(!require("shinydashboardshaman")){
   devtools::install_github('aghozlane/shinydashboardshaman')
   library(shinydashboardshaman)
-}
-
-if(!require("treeWeightD3")){
-  devtools::install_github('pierreLec/treeWeightD3')
-  library(treeWeightD3)
 }
 
 if (!require("d3heatmap")) {
@@ -241,15 +247,14 @@ if (!require("biomformatshaman")){
   library(biomformatshaman)
 }
 
-if (!require("scatterD3")) {
-  #devtools::install_github('aghozlane/scatterD3')
-  install.packages("scatterD3", repos="https://cran.univ-paris1.fr/")
-  library(scatterD3)
+if (!require("rNVD3shaman")) {
+  devtools::install_github('aghozlane/rNVD3shaman')
+  library(rNVD3shaman)
 }
 
-if (!require("rNVD3")) {
-  devtools::install_github('aghozlane/rNVD3')
-  library(rNVD3)
+if (!require("DESeq2shaman")) {
+  devtools::install_github("aghozlane/DESeq2shaman")
+  library(DESeq2shaman)
 }
 
 if(!require("PhyloTreeMetaR")){
@@ -257,17 +262,12 @@ if(!require("PhyloTreeMetaR")){
   library(PhyloTreeMetaR)
 }
 
-if (!require("shinytoastr")){
-  devtools::install_github("mangothecat/shinytoastr")
-  library(shinytoastr)
+if(!require("treeWeightD3")){
+  devtools::install_github('pierreLec/treeWeightD3')
+  library(treeWeightD3)
 }
 
 if(!require("d3vennR")){
   devtools::install_github("timelyportfolio/d3vennR")
   library(d3vennR)
-}
-
-if (!require("DESeq2shaman")) {
-  devtools::install_github("aghozlane/DESeq2shaman")
-  library(DESeq2shaman)
 }
