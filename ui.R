@@ -241,16 +241,20 @@ function(request) {
                                                            br(),"shiny::runGitHub('aghozlane/shaman')"),width=9,class="mainwell")),
                                     
                                     tabPanel("R install",
-                                             p("SHAMAN is available for R=3.6.1. A more recent installation of R will break the differential abundance interface. The installation, download and execution can all be performed with a small R script:",style = "font-family: 'times'; font-si16pt"),
+                                             p("SHAMAN is available for R=3.6.1. Of note, raw data submission is not possible with this version. The installation, download and execution can all be performed with a small R script:",style = "font-family: 'times'; font-si16pt"),
                                              mainPanel(div(style = 'max-width: 900px; word-wrap: break-word;',"# Load shiny packages",br(),
                                                            "if(!require('shiny')){",br(),"  install.packages('shiny')",br(),"}",br(),
                                                            "system(\"Rscript -e 'shiny::runGitHub(\\\"pierreLec/KronaRShy\\\",port=5438)'\",wait=FALSE)",
                                                            br(),"# Install dependencies,",br(),"# download last version from github,",br(),"# and run SHAMAN in one command:",br(),
                                                            "shiny::runGitHub('aghozlane/shaman')"),width=9,class="mainwell"),
-                                             p("This script can also be dowloaded", a("here", target="_blank", href="shamanapp.R"), "and executed as following :"),
-                                             mainPanel(div(style = 'max-width: 900px; word-wrap: break-word;',"chmod +x ./shamanapp.R && Rscript ./shamanapp.R"),width=6,class="mainwell"),br(),
-                                             p("Of note, contribution to SHAMAN code are always welcome and can be performed with the", a("github deposit.",href="https://github.com/aghozlane/shaman")))
-                                    
+                                             p("This script can also be dowloaded", a("here", target="_blank", href="shaman.R"), "and executed as following :"),
+                                             mainPanel(div(style = 'max-width: 900px; word-wrap: break-word;',"chmod +x ./shaman.R && Rscript ./shaman.R"),width=6,class="mainwell"),br(),
+                                             p("Of note, contribution to SHAMAN code are always welcome and can be performed with the", a("github deposit.",href="https://github.com/aghozlane/shaman"))),
+                                    tabPanel("Conda install",
+                                             p("Conda installation of SHAMAN can be performed as follow: ",style = "font-family: 'times'; font-si16pt"),
+                                             mainPanel(div(style = 'max-width: 900px; word-wrap: break-word;',
+                                                           "# Download and install SHAMAN", br(),"conda install -c aghozlane shaman", br(),
+                                                           "# Now run shaman", br(), "shaman"), width=6,class="mainwell"))
                              )
                          )
                   )
