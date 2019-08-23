@@ -63,7 +63,7 @@ function(request) {
                                              p("Pierre Lechat", "(Coding, testing, feature suggestions)"),
                                              h3("Acknowledgements"),
                                              p("Thanks to the following people for patches and other suggestions for improvements:"),
-                                             p("Carine Rey, ", "Hugo Varet,", "Emeline Perthame,", "Julien Tap, ","Anna Zhukova.")
+                                             p("Valentin Marcon,", "Carine Rey, ", "Hugo Varet,", "Emeline Perthame,", "Julien Tap, ","Anna Zhukova.")
                                     ),
                                     tabPanel("Citing SHAMAN",
                                              p("If you use SHAMAN for your project, please cite our first application of SHAMAN in Quereda et al. 2016.",style = "font-family: 'times'; font-si16pt"),

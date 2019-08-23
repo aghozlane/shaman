@@ -1,3 +1,5 @@
 #!/usr/bin/Rscript --vanilla
-system("Rscript -e 'library(\"shiny\");runApp(appDir= KronaRShy\", port=5438)'",wait=FALSE)
-runApp("appDir= shaman")
+prefix=Sys.getenv(x = "PREFIX")
+prefix=paste(prefix, "bin", sep=.Platform$file.sep)
+system(paste("Rscript -e 'library(\"shiny\");runApp(appDir=", prefix,"KronaRShy\", port=5438)'", sep=.Platform$file.sep, wait=FALSE)
+runApp(paste("appDir= ", prefix, "shaman", sep=.Platform$file.sep)
