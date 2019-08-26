@@ -251,10 +251,12 @@ function(request) {
                                              mainPanel(div(style = 'max-width: 900px; word-wrap: break-word;',"chmod +x ./shaman.R && Rscript ./shaman.R"),width=6,class="mainwell"),br(),
                                              p("Of note, contribution to SHAMAN code are always welcome and can be performed with the", a("github deposit.",href="https://github.com/aghozlane/shaman"))),
                                     tabPanel("Conda install",
-                                             p("Conda installation of SHAMAN can be performed as follow: ",style = "font-family: 'times'; font-si16pt"),
+                                             p("Conda installation of SHAMAN is available on linux and soon on mac. It can be performed as follow: ",style = "font-family: 'times'; font-si16pt"),
                                              mainPanel(div(style = 'max-width: 900px; word-wrap: break-word;',
-                                                           "# Download and install SHAMAN", br(),"conda install -c aghozlane shaman", br(),
-                                                           "# Now run shaman", br(), "shaman"), width=6,class="mainwell"))
+                                                           "# Download and install SHAMAN", br(),
+                                                           "conda create -n shaman -c aghozlane shaman", br(),
+                                                           "conda activate shaman", br(),
+                                                           "# Now run shaman", br(), "Rscript shaman"), width=6,class="mainwell"))
                              )
                          )
                   )
