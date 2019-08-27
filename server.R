@@ -13,6 +13,7 @@ shinyServer(function(input, output,session) {
   namesfile = tempfile(pattern = "BaseContrast", tmpdir = tempdir(), fileext = "")
   file.create(namesfile,showWarnings=FALSE)
   target = NULL
+  taxo = NULL
   
   ## JSON name for masque
   curdir  = getwd()
@@ -25,7 +26,7 @@ shinyServer(function(input, output,session) {
   observe(if(input$AddRegScatter) info("By adding the regression line, you will lose interactivity."))
   
   ## Reactive target
-  values <- reactiveValues(TargetWorking = target,labeled=NULL,fastq_names_only=NULL,R1fastQ=NULL,R2fastQ=NULL,
+  values <- reactiveValues(TargetWorking = target, TaxoWorking = taxo, labeled=NULL,fastq_names_only=NULL,R1fastQ=NULL,R2fastQ=NULL,
                            json_name=json_name,num=0,pass=pass,login_email = NULL,is.valid =NULL,
                            biom_masque = NULL,tree_masque=NULL, masque_key = NULL, count_table_masque = NULL, 
                            rdp_annot_masque = NULL, rdp_thres_masque = NULL,
@@ -68,9 +69,8 @@ shinyServer(function(input, output,session) {
   
   ## Taxo File
   dataInputTaxo <-reactive({ 
-    
     inFile <- input$fileTaxo
-    
+    values$TaxoWorking = NULL
     if (is.null(inFile) && is.null(values$rdp_annot_masque)) return(NULL)
     #if (is.null(inFile)) return(NULL)
     
@@ -260,15 +260,14 @@ shinyServer(function(input, output,session) {
     data = NULL
     check = NULL
     percent = NULL
-    Taxo = NULL
+    Taxo = values$TaxoWorking
     Counts = NULL
     inputData = NULL
     target = NULL
-    
     if(input$FileFormat=="fileCounts")
     {
       Counts = dataInputCounts()
-      if(!input$NoTaxoFile) Taxo = dataInputTaxo()
+      if(!input$NoTaxoFile && is.null(Taxo)) Taxo = dataInputTaxo()
       if(!is.null(Counts) && input$NoTaxoFile) {Taxo = data.frame(rownames(Counts),row.names = rownames(Counts));names(Taxo)=NA}
       
       if(!is.null(Counts) && !is.null(Taxo))
@@ -280,21 +279,30 @@ shinyServer(function(input, output,session) {
         
         check = list(CheckCounts=tmp$CheckCounts,CheckTaxo=tmp$CheckTaxo,CheckPercent=tmp$CheckPercent)
         percent = tmp$Percent
-      }    
+      }
     }
+    
     
     if(input$FileFormat=="fileBiom")
     {
       tmpBIOM = dataInputBiom()
-      if(!is.null(tmpBIOM))
+      if(!is.null(tmpBIOM) && is.null(data))
       {
         tmp = GetDataFromBIOM(tmpBIOM)
-        data = list(counts=tmp$counts,taxo=tmp$taxo, target=tmp$target, taxo_biom=tmp$taxo_biom)
+        if(!is.null(Taxo)){ 
+          data = list(counts=tmp$counts,taxo=Taxo, target=tmp$target, taxo_biom=tmp$taxo_biom)
+          tmp_check = CheckTaxoTable(Taxo,tmp$counts)
+          tmp_annot = PercentAnnot(tmp$counts,Taxo)
+          check = list(CheckCounts=tmp_check$CheckCounts,CheckTaxo=tmp_check$CheckTaxo,Percent=tmp_annot$Percent,CheckPercent=tmp_annot$Error)
+          percent = tmp_annot$Percent
+          }
+        else{ 
+          data = list(counts=tmp$counts,taxo=tmp$taxo, target=tmp$target, taxo_biom=tmp$taxo_biom)
         ## Remove row with only O
         # data[["counts"]] = data[["counts"]][rowSums(data[["counts"]])>1,]
         
-        check = list(CheckCounts=tmp$CheckCounts,CheckTaxo=tmp$CheckTaxo,CheckPercent=tmp$CheckPercent)
-        percent = tmp$Percent
+          check = list(CheckCounts=tmp$CheckCounts,CheckTaxo=tmp$CheckTaxo,CheckPercent=tmp$CheckPercent)
+          percent = tmp$Percent}
         #if(!is.null(data$target)) values$TargetWorking = data$target
       }
     }
@@ -452,9 +460,10 @@ shinyServer(function(input, output,session) {
   
   # Infobox Error counts
   output$valueErrorPercent <- renderInfoBox({
-    
-    tmp = dataInput()
+    {values$TaxoWorking
+    tmp = dataInput()}
     data = tmp$data
+    if(!is.null(values$TaxoWorking)) tmp = dataInput()
     check = tmp$check
     cond = (!is.null(data$counts) && nrow(data$counts)>0 && !is.null(data$taxo) && nrow(data$taxo)>0)
     res = shinydashboardshaman::valueBox(paste0(0, "%"),h6(strong("Annotated features")), color = "light-blue",width=NULL,icon = icon("list"))
@@ -613,11 +622,26 @@ shinyServer(function(input, output,session) {
   ## Taxonomy table
   output$DataTaxo <- DT::renderDataTable(
     dataInput()$data$taxo, 
+    editable=T, 
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE, processing=FALSE
-    ))
-  
-  
+                                     pageLength = 10,scrollX=TRUE, processing=FALSE)
+)
+  # "table.on('click', '#DataTaxo button', function () {
+  #                    Shiny.onInputChange('lastClickId',this.id);
+  #                    Shiny.onInputChange('lastClick', Math.random())
+  #                  );")
+  proxy = dataTableProxy('DataTaxo')
+  observeEvent(input$DataTaxo_cell_edit, {
+    info = input$DataTaxo_cell_edit
+    str(info)
+    i = info$row
+    j = info$col
+    v = info$value
+    tmp=as.matrix(dataInput()$data$taxo)
+    tmp[i,j] = v
+    values$TaxoWorking = as.data.frame(tmp)
+    replaceData(proxy, values$TaxoWorking, resetPaging = FALSE)
+  })
   ## Tab box for data visualisation
   output$TabBoxData <- renderUI({
     tree = dataInputTree()$data
@@ -627,22 +651,25 @@ shinyServer(function(input, output,session) {
     {
       res = tabBox(width = NULL, selected = "Count table",
                    tabPanel("Count table",DT::dataTableOutput("DataCounts")),
-                   tabPanel("Taxonomy",DT::dataTableOutput("DataTaxo")),
+                   tabPanel("Taxonomy",DT::dataTableOutput("DataTaxo"), 
+                            actionButton("deleteTax", "Delete annotation"),
+                            downloadButton('ExportTaxo', 'Export taxonomy file')),
                    tabPanel("Summary",h5(strong("Percentage of annotation")),htmlOutput("SummaryView"),
                             br(),h5(strong("Number of features by level:")),plotOutput("SummaryViewBarplot",width = 1200,height=500)),
                    tabPanel("Phylogeny", PhyloTreeMetaROutput('PhyloTreeMetaR'))
       )
       
     }
-    else if(is.null(tree))
+    else
     {
       res = tabBox(width = NULL,selected = "Count table",
                    tabPanel("Count table",DT::dataTableOutput("DataCounts")),
-                   tabPanel("Taxonomy",DT::dataTableOutput("DataTaxo")),
+                   tabPanel("Taxonomy",DT::dataTableOutput("DataTaxo"),
+                            actionButton("deleteTax", "Delete annotation"),
+                            downloadButton('ExportTaxo', 'Export taxonomy file')),
                    tabPanel("Summary",h5(strong("Percentage of annotation")),htmlOutput("SummaryView"),
                             br(),h5(strong("Number of features by level:")),plotOutput("SummaryViewBarplot",width = 1200,height=500))
       )
-      
     }
     return(res)
   })
@@ -1978,7 +2005,15 @@ shinyServer(function(input, output,session) {
   ######################## END MASQUE #################################
   
   
-  
+  observeEvent(input$deleteTax,{
+    if(is.null(values$TaxoWorking)) values$TaxoWorking= dataInput()$data$taxo
+    if (!is.null(input$DataTaxo_rows_selected)) {
+      
+      if(nrow(values$TaxoWorking)!=0) values$labeled <- (nrow(values$TaxoWorking)-length(input$DataTaxo_rows_selected))*values$labeled/nrow(values$TaxoWorking)
+      else values$labeled <- 0
+      values$TaxoWorking <- values$TaxoWorking[-as.numeric(input$DataTaxo_rows_selected),]
+    }
+  })
   
   observeEvent(input$deleteRows,{
     
