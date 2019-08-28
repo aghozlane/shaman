@@ -31,7 +31,7 @@ shinyServer(function(input, output,session) {
                            json_name=json_name,num=0,pass=pass,login_email = NULL,is.valid =NULL,
                            biom_masque = NULL,tree_masque=NULL, masque_key = NULL, count_table_masque = NULL, 
                            rdp_annot_masque = NULL, rdp_thres_masque = NULL,
-                           paths_fastq_tmp=NULL,curdir=curdir, error_progress=FALSE)
+                           paths_fastq_tmp=NULL,curdir=curdir, error_progress=FALSE, visTarget=FALSE)
   
   ## Counts file
   dataInputCounts <-reactive({ 
@@ -776,9 +776,9 @@ shinyServer(function(input, output,session) {
   
   ## Load target file
   observe({ 
-    
     inFile <- input$fileTarget
     #values$TargetWorking = NULL
+
     counts = dataInput()$data$counts
     labeled = 0
     data = NULL
@@ -814,6 +814,7 @@ shinyServer(function(input, output,session) {
         if(length(ind_num)==0){data = as.data.frame(apply(data,2,gsub,pattern = "-",replacement = "."))}
       }
       values$TargetWorking = as.data.frame(data)
+      values$visTarget = FALSE
       #       ind_sel = Target_selection()
       #       if(length(ind))
       # target = as.data.frame(apply(target,2,gsub,pattern = "-",replacement = "."))
@@ -873,6 +874,8 @@ shinyServer(function(input, output,session) {
   
   ## Action with submit button
   MasqueSubmit <- eventReactive(input$submit,{
+    galaxyAlertfile=paste(values$curdir,"www","galaxy_pasteur_alert.txt",sep= .Platform$file.sep)
+    galaxyAlert = NULL
     #activate check_mail
     CMP = CheckMasque(input, values,check_mail = TRUE)
     Error = CMP$Error
@@ -935,16 +938,24 @@ shinyServer(function(input, output,session) {
       withProgress(message = 'Creating JSON file...',{CreateJSON(input,values)})
       if(file.exists(values$json_name)) values$num = 1
       #messageId="SuccessMasque",
-      sendSweetAlert(session,
-                     title = "Success",
-                     text = paste("Your data have been submitted. You will receive an e-mail once the computation over. <br /> This can take few hours.
-                                  <br /> 
-                                  <br /> 
-                                  <br /> 
-                                  <em> Remind: You can close shaman and use your key to check the progression and get your results: </em>",values$pass),
-                     type = "success",
-                     html=TRUE
-      )
+      if(file.exists(galaxyAlertfile)){
+      suppressWarnings(try(readLines(galaxyAlertfile,warn=FALSE) ->galaxyAlert,silent=TRUE))
+      if(!is.null(galaxyAlert)){
+        sendSweetAlert(session, title = "Warning",text = HTML(paste(galaxyAlert,values$pass)), type = "warning",html=TRUE)
+        } 
+      }
+      else{
+        sendSweetAlert(session,
+                       title = "Success",
+                       text = HTML(paste("Your data have been submitted. You will receive an e-mail once the computation over. <br /> This can take few hours.
+                                    <br /> 
+                                    <br /> 
+                                    <br /> 
+                                    <em> Remind: You can close SHAMAN and use your key to check the progression and get your results: </em>",values$pass)),
+                       type = "success",
+                       html=TRUE
+        )
+      }
     }
     
   })
@@ -2026,12 +2037,16 @@ shinyServer(function(input, output,session) {
   output$SelectInterestVar <- renderUI({
     
     target=values$TargetWorking
-    if(!is.null(target)) 
+    if(!is.null(target) && !values$visTarget ) 
     {
       namesTarget = colnames(target)[2:ncol(target)]
       selectInput("InterestVar",h6(strong("Select the variables")),namesTarget,selected=namesTarget,multiple=TRUE)
     }
-    
+    else if(!is.null(target) && values$visTarget )
+    {
+      namesTarget = colnames(target)[2:ncol(target)]
+      selectInput("InterestVar",h6(strong("Select the variables")), namesTarget,selected=namesTarget[2],multiple=TRUE)
+    }
   })
   
   ## Interactions
@@ -2048,6 +2063,27 @@ shinyServer(function(input, output,session) {
     if(length(input$InterestVar)==1) res = NULL
     
     return(res)
+  })
+  
+  ## Box for merged counts
+  output$BoxCountsMerge <- renderUI({
+    # input$RunDESeq
+    # #counts = isolate(dataMergeCounts()$counts)
+    counts = isolate(dataMergeCounts()$CT_Norm)
+    taxo = input$TaxoSelect
+    # 
+    # if(!is.null(counts) && taxo != "...")
+    # {
+    resDiff = ResDiffAnal()
+    int = input$Interaction2
+    
+    if(!is.null(resDiff)){
+      box(title=paste("Count table (",taxo,")",sep=""),width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
+          DT::dataTableOutput("CountsMerge"),
+          downloadButton('ExportCounts', 'Export normalized counts'),
+          downloadButton('ExportRelative', 'Export relative abundance')
+      )  
+    }
   })
   
   ## Run button
@@ -2069,24 +2105,41 @@ shinyServer(function(input, output,session) {
     return(res)
   })
   
-  # ## Vis button
-  # output$VisButton <- renderUI({
-  #   
-  #   res = NULL
-  #   ChTM = "Error"
-  #   target = values$TargetWorking
-  #   labeled = values$labeled
-  #   CT = dataInput()$data$counts
-  #   taxo = input$TaxoSelect
-  #   VarInt = input$InterestVar
-  #   
-  #   ## Return NULL if there is no error
-  #   if(!is.null(CT) && length(VarInt)>=1) ChTM = CheckTargetModel(input,target,labeled,CT)$Error
-  #   
-  #   if(!is.null(target) && taxo!="..." && is.null(ChTM) && length(VarInt)>=1) res = actionButton("RunDESeq",strong("Run analysis"),icon = icon("caret-right"))
-  #   
-  #   return(res)
-  # })
+  
+  SetUpVis <-eventReactive(input$RunVis,{
+    target = NULL
+    CT = dataInput()$data$counts
+    fakeCondition = c("Samples", "Samples", "fakeCondition")
+    samples = colnames(CT)
+    samples = gsub(pattern = "-",replacement = ".",as.character(samples))
+    condition = sample(c("A", "B"), length(samples), replace =T)
+    target = data.frame(samples,samples,condition, row.names = samples)
+    colnames(target) = fakeCondition
+    values$TargetWorking = target
+    values$labeled = 100.0
+    values$visTarget = TRUE
+    sendSweetAlert(session, title = "Success", text = "A fake condition was as assigned to samples. Now you select the taxonomy level and run analysis.", type = "success", html=TRUE)
+  })
+  
+  ## Add contrast 
+  observeEvent(input$RunVis,{  
+    
+    SetUpVis()
+    
+  },priority=1)
+  
+  ## Vis button
+  output$VisButton <- renderUI({
+
+    res = NULL
+    target = values$TargetWorking
+    VarInt = input$InterestVar
+
+    if(is.null(target) && length(VarInt) == 0) {
+      res = actionButton("RunVis",strong("Setup visualization"),icon = icon("caret-right"))
+    }
+    return(res)
+  })
   
   ## Var for normalization
   output$SelectVarNorm <- renderUI({
@@ -2193,12 +2246,59 @@ shinyServer(function(input, output,session) {
     }
   })
   
-  output$ButtonBiom  <- renderUI({
+ observeEvent(input$confirmTarget,{
+    target = NULL
+    values$biom_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_silva.biom",sep=""),sep= .Platform$file.sep)
+    # Get the old biom
+    if (!is.null(values$biom_masque) && file.exists(values$biom_masque)){ 
+      tryCatch(read_biom(values$biom_masque)->data,
+               error=function(e) sendSweetAlert(session,
+                                                title = "Oops",
+                                                text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
+    }
+    if(!is.null(data)){
+      if(is.null(sample_metadata(data))){
+        tryCatch(write_biom(make_biom(dataMergeCounts()$CT_noNorm, sample_metadata=values$TargetWorking[,-1],
+                    observation_metadata=dataInput()$data$taxo_biom), values$biom_masque),
+                 error=function(e) sendSweetAlert(session,
+                                                  title = "Oops",
+                                                  text=paste("The new experiment data cannot be saved in SHAMAN.\n \n",e),type ="error"),
+                 finally = sendSweetAlert(session, title = "Success", text = HTML(paste("The target file was successfully saved in the project ", values$masque_key,".
+                                  <br />
+                                  <br />
+                                  <br />
+                                  <em> Remind: We recommand to perform this association for every annotation database.</em>")), type = "success", html=TRUE))
+      }
+      else{
+        sendSweetAlert(session,
+                       title = "Oops",
+                       text=paste("There is alread some metadata saved for this experiment.\n Contact shaman@pasteur.fr to reset modification."),type ="error")
+      }
+    }
+  })
+  
+  ## Add contrast 
+  observeEvent(input$SaveTarget,{  
+    confirmSweetAlert(session = session, inputId = "confirmTarget", type = "warning", 
+                      title = "The target file can be saved only once.\n Do you confirm the modification ?",
+                      danger_mode = TRUE)
+    #SetNewTarget()
+  },priority=1)
+  
+  output$SaveExperiment  <- renderUI({
+    res = NULL
     resDiff = ResDiffAnal()
     int = input$Interaction2
-    
-    if(!is.null(resDiff)) downloadButton('ExportBiom', 'Export BIOM')
+    if(!is.null(resDiff) && !is.null(values$masque_key)) res = list(downloadButton('ExportBiom', 'Export BIOM'), actionButton("SaveTarget", "Save target",icon = icon("caret-right")))
+    else if(!is.null(resDiff)) res = downloadButton('ExportBiom', 'Export BIOM')
+    return(res)
   })
+  
+  # output$SaveExperiment  <- renderUI({
+  #   resDiff = ResDiffAnal()
+  #   int = input$Interaction2
+  #   if(!is.null(resDiff) && !is.null(values$masque_key)) actionButton("SaveTarget", "Save target",icon = icon("caret-right"))
+  # })
   
   output$ExportBiom  <- downloadHandler(
     filename = function() { 'SHAMAN_data.biom' },

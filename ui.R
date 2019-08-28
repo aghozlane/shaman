@@ -630,10 +630,8 @@ function(request) {
                                column(width=6,uiOutput("SelectInteraction2"))
                              ),
                              fluidRow( 
-                               column(width=6,uiOutput('ButtonBiom')),
-                               #column(width=6,downloadButton('ExportBiom', 'Export BIOM')),
-                               #uiOutput("VisButton"),
-                               column(width=6,uiOutput("RunButton"))
+                               column(width=6,uiOutput('SaveExperiment')),
+                               column(width=6,uiOutput("VisButton"),uiOutput("RunButton"))
                              )
                          ),
                          fluidRow(uiOutput("InfoModel"),uiOutput("InfoModelHowTo")),
