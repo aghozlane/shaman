@@ -14,6 +14,7 @@ shinyServer(function(input, output,session) {
   file.create(namesfile,showWarnings=FALSE)
   target = NULL
   taxo = NULL
+  proxy = dataTableProxy('DataTaxo')
   
   ## JSON name for masque
   curdir  = getwd()
@@ -264,6 +265,7 @@ shinyServer(function(input, output,session) {
     Counts = NULL
     inputData = NULL
     target = NULL
+    
     if(input$FileFormat=="fileCounts")
     {
       Counts = dataInputCounts()
@@ -319,7 +321,6 @@ shinyServer(function(input, output,session) {
     #         percent = inputData$percent
     #       }
     #     }
-    
     return(list(data=data,check=check,percent=percent))
   })
   
@@ -363,11 +364,6 @@ shinyServer(function(input, output,session) {
     
     return(list(Check = Check,Error = Error,normFactors=normFactors))
   })
-  
-  
-  
-  
-  
   
   ## Merge counts data
   dataMergeCounts <-reactive({
@@ -626,11 +622,7 @@ shinyServer(function(input, output,session) {
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
                                      pageLength = 10,scrollX=TRUE, processing=FALSE)
 )
-  # "table.on('click', '#DataTaxo button', function () {
-  #                    Shiny.onInputChange('lastClickId',this.id);
-  #                    Shiny.onInputChange('lastClick', Math.random())
-  #                  );")
-  proxy = dataTableProxy('DataTaxo')
+
   observeEvent(input$DataTaxo_cell_edit, {
     info = input$DataTaxo_cell_edit
     str(info)
@@ -652,7 +644,7 @@ shinyServer(function(input, output,session) {
       res = tabBox(width = NULL, selected = "Count table",
                    tabPanel("Count table",DT::dataTableOutput("DataCounts")),
                    tabPanel("Taxonomy",DT::dataTableOutput("DataTaxo"), 
-                            actionButton("deleteTax", "Delete annotation"),
+                            actionButton("deleteTaxo", "Delete annotation"),
                             downloadButton('ExportTaxo', 'Export taxonomy file')),
                    tabPanel("Summary",h5(strong("Percentage of annotation")),htmlOutput("SummaryView"),
                             br(),h5(strong("Number of features by level:")),plotOutput("SummaryViewBarplot",width = 1200,height=500)),
@@ -665,7 +657,7 @@ shinyServer(function(input, output,session) {
       res = tabBox(width = NULL,selected = "Count table",
                    tabPanel("Count table",DT::dataTableOutput("DataCounts")),
                    tabPanel("Taxonomy",DT::dataTableOutput("DataTaxo"),
-                            actionButton("deleteTax", "Delete annotation"),
+                            actionButton("deleteTaxo", "Delete annotation"),
                             downloadButton('ExportTaxo', 'Export taxonomy file')),
                    tabPanel("Summary",h5(strong("Percentage of annotation")),htmlOutput("SummaryView"),
                             br(),h5(strong("Number of features by level:")),plotOutput("SummaryViewBarplot",width = 1200,height=500))
@@ -2005,7 +1997,7 @@ shinyServer(function(input, output,session) {
   ######################## END MASQUE #################################
   
   
-  observeEvent(input$deleteTax,{
+  observeEvent(input$deleteTaxo,{
     if(is.null(values$TaxoWorking)) values$TaxoWorking= dataInput()$data$taxo
     if (!is.null(input$DataTaxo_rows_selected)) {
       
@@ -2076,6 +2068,25 @@ shinyServer(function(input, output,session) {
     
     return(res)
   })
+  
+  # ## Vis button
+  # output$VisButton <- renderUI({
+  #   
+  #   res = NULL
+  #   ChTM = "Error"
+  #   target = values$TargetWorking
+  #   labeled = values$labeled
+  #   CT = dataInput()$data$counts
+  #   taxo = input$TaxoSelect
+  #   VarInt = input$InterestVar
+  #   
+  #   ## Return NULL if there is no error
+  #   if(!is.null(CT) && length(VarInt)>=1) ChTM = CheckTargetModel(input,target,labeled,CT)$Error
+  #   
+  #   if(!is.null(target) && taxo!="..." && is.null(ChTM) && length(VarInt)>=1) res = actionButton("RunDESeq",strong("Run analysis"),icon = icon("caret-right"))
+  #   
+  #   return(res)
+  # })
   
   ## Var for normalization
   output$SelectVarNorm <- renderUI({
@@ -2196,6 +2207,10 @@ shinyServer(function(input, output,session) {
                            observation_metadata=dataInput()$data$taxo_biom), file)}
   )
   
+  output$ExportTaxo <- downloadHandler(
+    filename = function() { 'SHAMAN_taxo.csv' },
+    content = function(file){write.csv(dataInput()$data$taxo, file)}
+  )
   ## Export in .csv
   output$ExportCounts <- downloadHandler(
     filename = function() { 'NormCounts.csv' },

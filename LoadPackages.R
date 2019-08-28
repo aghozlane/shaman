@@ -51,13 +51,13 @@ if (!require(circlize)) {
 if(!require(BiocManager)){
   install.packages("BiocManager")
 }
-if (!require(genefilter)) {
-  BiocManager::install("genefilter", ask=FALSE)
-}
-
-if(!require("SummarizedExperiment")){
-  BiocManager::install("SummarizedExperiment", ask=FALSE)
-}
+# if (!require(genefilter)) {
+#   BiocManager::install("genefilter", ask=FALSE)
+# }
+# 
+# if(!require("SummarizedExperiment")){
+#   BiocManager::install("SummarizedExperiment", ask=FALSE)
+# }
 
 if (!require(googleVis)) {
   install.packages('googleVis',  repos="https://cran.univ-paris1.fr/")
