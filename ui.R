@@ -632,6 +632,7 @@ function(request) {
                              fluidRow( 
                                column(width=6,uiOutput('ButtonBiom')),
                                #column(width=6,downloadButton('ExportBiom', 'Export BIOM')),
+                               #uiOutput("VisButton"),
                                column(width=6,uiOutput("RunButton"))
                              )
                          ),
