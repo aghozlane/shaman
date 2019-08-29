@@ -1,6 +1,7 @@
 stages:
   - build_dev
   - build_master
+  - build_conda
 
 services:
   - docker:dind
