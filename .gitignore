@@ -2,8 +2,4 @@
 *.Rhistory
 *.RData
 .Rproj.user
-*.Rproj
-www/masque/doing/*
-www/masque/todo/*
-www/masque/error/*
 www/masque.png

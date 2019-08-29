@@ -70,7 +70,6 @@ function(request) {
                                              p("Publication using SHAMAN:",style = "font-family: 'times'; font-si18pt; font-style: strong"),
                                              p(a("Prediction of the intestinal resistome by a three-dimensional structure-based method.", href="https://www.ncbi.nlm.nih.gov/pubmed/30478291"),"Ruppé E, Ghozlane A, Tap J, et al.;Nature microbiology 2018",style = "font-family: 'times'; font-si16pt"),
                                              
-                                             p(a("Diverse laboratory colonies of Aedes aegypti harbor the same adult midgut bacterial microbiome.", href="https://www.ncbi.nlm.nih.gov/pubmed/29587819"), "Dickson LB, Ghozlane A, Volant S, Bouchier C, Ma L, Vega-Rúa A, Dusfour I, Jiolle D, Paupy C, Mayanja MN, Kohl A, Lutwama JJ, Duong V, Lambrechts L; Parasit Vectors 2018",style = "font-family: 'times'; font-si16pt"),
                                              p(a("Combined bacterial and fungal intestinal microbiota analyses: Impact of storage conditions and DNA extraction protocols", href="https://www.ncbi.nlm.nih.gov/pubmed/30074988"), "Angebault C, Ghozlane A, Volant S, Botterel F, d’Enfert C, Bougnoux ME, PloS one 2018",style = "font-family: 'times'; font-si16pt"),
                                              p(a("Clinical Efficacy and Microbiome Changes Following Fecal Microbiota Transplantation in Children With Recurrent Clostridium Difficile Infection", href="https://www.ncbi.nlm.nih.gov/pubmed/26566371"), "Li X, Gao X, Hu H, Xiao Y, Li D, Yu G, Yu D, Zhang T, Wang Y, Frontiers in Microbiology",style = "font-family: 'times'; font-si16pt"),
                                              p(a("Diverse laboratory colonies of Aedes aegypti harbor the same adult midgut bacterial microbiome", href="https://www.ncbi.nlm.nih.gov/pubmed/29587819"),"Dickson LB, Ghozlane A, Volant S, Bouchier C, Ma L, Vega-Rúa A, Dusfour I, Jiolle D, Paupy C, Mayanja MN, Kohl A, Lutwama JJ, Duong V, Lambrechts L",style = "font-family: 'times'; font-si16pt"),
@@ -215,9 +214,7 @@ function(request) {
                                              p("Docker install is the easiest way to use SHAMAN locally."),
                                              p("- Install docker on ubuntu (Linux):",a("here",href="https://docs.docker.com/engine/installation/linux/ubuntulinux/")),
                                              p("- Install docker on Windows and Mac:"),
-                                             p("Download and install docker from",a("https://www.docker.com/", href="https://www.docker.com/"),
-                                               "Then, you will need to install the", a("Docker toolbox.", href="https://www.docker.com/products/docker-toolbox"),
-                                               "Once installed, run ‘Docker Quickstart Terminal’ application."),
+                                             p("Download and install docker from",a("https://www.docker.com/", href="https://www.docker.com/")),
                                              p("- Running SHAMAN:"),
                                              mainPanel(div(style = 'max-width: 900px',"docker pull aghozlane/shaman && docker run --rm -p 80:80 -p 5438:5438 aghozlane/shaman"),width=8,class="mainwell"),
                                              p("Then connect to http://0.0.0.0/ with your favorite web navigator."),
@@ -227,21 +224,23 @@ function(request) {
                                              p("- Docker update after an update of SHAMAN:"),
                                              mainPanel(div(style = 'max-width: 900px',"docker pull aghozlane/shaman"),width=4,class="mainwell")
                                     ),
-                                    tabPanel("R install with Packrat",
+                                    tabPanel("R install with Packrat (linux only)",
                                              p("SHAMAN is available for R=3.6.1. Packrat framework allows an easy installation of all the dependencies. Of note, raw data submission is not possible with this version.",style = "font-family: 'times'; font-si16pt"),
                                              mainPanel(div(style = 'max-width: 900px; word-wrap: break-word;',
                                                            "# Download packrat package",br(),"wget ftp://shiny01.hosting.pasteur.fr/pub/shaman_package_201908.tar.gz", br(),
                                                            "mkdir packrat/shaman"), width=9,class="mainwell"),
                                              p("Now you can run R:"),
                                              mainPanel(div(style = 'max-width: 900px; word-wrap: break-word;',
-                                                           "install.packages(c(\"packrat\", \"shiny\"))",br(),
+                                                           "install.packages(\"packrat\")",br(),
                                                            "packrat::unbundle(\"shaman_package_201908.tar.gz\", \"packrat/shaman\")", br(),
                                                            "packrat::init(\"packrat/shaman\")",br(),
                                                            "system(\"Rscript -e 'shiny::runGitHub(\\\"pierreLec/KronaRShy\\\",port=5438)'\",wait=FALSE)",
                                                            br(),"shiny::runGitHub('aghozlane/shaman')"),width=9,class="mainwell")),
                                     
                                     tabPanel("R install",
-                                             p("SHAMAN is available for R=3.6.1. Of note, raw data submission is not possible with this version. The installation, download and execution can all be performed with a small R script:",style = "font-family: 'times'; font-si16pt"),
+                                             p("SHAMAN is available for R=3.6.1. Gfortran is required on mac (https://cran.r-project.org/bin/macosx/tools/) and Rtools on windows (https://cran.r-project.org/bin/windows/Rtools/index.html). 
+                                             Of note, raw data submission is not possible with this version. 
+                                               The installation, download and execution can all be performed with a small R script:",style = "font-family: 'times'; font-si16pt"),
                                              mainPanel(div(style = 'max-width: 900px; word-wrap: break-word;',"# Load shiny packages",br(),
                                                            "if(!require('shiny')){",br(),"  install.packages('shiny')",br(),"}",br(),
                                                            "system(\"Rscript -e 'shiny::runGitHub(\\\"pierreLec/KronaRShy\\\",port=5438)'\",wait=FALSE)",
@@ -251,11 +250,11 @@ function(request) {
                                              mainPanel(div(style = 'max-width: 900px; word-wrap: break-word;',"chmod +x ./shaman.R && Rscript ./shaman.R"),width=6,class="mainwell"),br(),
                                              p("Of note, contribution to SHAMAN code are always welcome and can be performed with the", a("github deposit.",href="https://github.com/aghozlane/shaman"))),
                                     tabPanel("Conda install",
-                                             p("Conda installation of SHAMAN is available on linux and soon on mac. It can be performed as follow: ",style = "font-family: 'times'; font-si16pt"),
+                                             p("Conda installation of SHAMAN is available for linux and mac. It can be performed as follow: ",style = "font-family: 'times'; font-si16pt"),
                                              mainPanel(div(style = 'max-width: 900px; word-wrap: break-word;',
                                                            "# Download and install SHAMAN", br(),
                                                            "conda install -c aghozlane shaman", br(),
-                                                           "# Now run shaman", br(), "Rscript shaman_conda.R"), width=6,class="mainwell"))
+                                                           "# Now run shaman", br(), "shaman_conda.R"), width=6,class="mainwell"))
                              )
                          )
                   )

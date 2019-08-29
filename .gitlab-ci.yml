@@ -33,13 +33,15 @@ build_master:
     - docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
     - docker build -t aghozlane/shaman .
     - docker push aghozlane/shaman
-  only:
-    - master
+  except:
+    - dev
 
 
 build_conda:
   image: continuumio/miniconda3:latest
   stage: build_conda
+  variables:
+    CI_DEBUG_TRACE: "false"
   before_script:
     - conda config --add channels bioconda
     - conda config --add channels conda-forge
@@ -49,7 +51,9 @@ build_conda:
     - conda install conda-verify
     - conda install anaconda-client
     - conda install conda-build
-
   script:
     - anaconda login --username "$DOCKER_USER" --password "$DOCKER_PASS"
     - conda build conda_inst
+  except:
+    - dev
+    - master
