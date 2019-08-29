@@ -36,14 +36,18 @@ build_master:
     - master
 
 
-# build_conda:
-#     image: continuumio/miniconda3:latest
-#     stage: build_conda
-#     before_script:
-#       - conda config --add channels bioconda
-#       - conda config --add channels conda-forge
-#       - conda config --add channels aghozlane
-#       - conda config --set anaconda_upload yes
-#     script:
-#       - anaconda login --username "$DOCKER_USER" --password "$DOCKER_PASS"
-#       - conda-build conda_inst
+build_conda:
+  image: continuumio/miniconda3:latest
+  stage: build_conda
+  before_script:
+    - conda config --add channels bioconda
+    - conda config --add channels conda-forge
+    - conda config --add channels r
+    - conda config --add channels aghozlane
+    - conda config --set anaconda_upload yes
+    - conda install conda-verify
+    - conda install anaconda-client
+
+  script:
+    - anaconda login --username "$DOCKER_USER" --password "$DOCKER_PASS"
+    - conda-build conda_inst

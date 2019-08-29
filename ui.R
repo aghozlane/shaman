@@ -254,9 +254,8 @@ function(request) {
                                              p("Conda installation of SHAMAN is available on linux and soon on mac. It can be performed as follow: ",style = "font-family: 'times'; font-si16pt"),
                                              mainPanel(div(style = 'max-width: 900px; word-wrap: break-word;',
                                                            "# Download and install SHAMAN", br(),
-                                                           "conda create -n shaman -c aghozlane shaman", br(),
-                                                           "conda activate shaman", br(),
-                                                           "# Now run shaman", br(), "Rscript shaman"), width=6,class="mainwell"))
+                                                           "conda install -c aghozlane shaman", br(),
+                                                           "# Now run shaman", br(), "Rscript shaman_conda.R"), width=6,class="mainwell"))
                              )
                          )
                   )

@@ -1,0 +1,115 @@
+{% set version = GIT_DESCRIBE_TAG %}
+
+package:
+    name: shaman
+    version: {{ version }}
+
+channels:
+    - defaults
+    - conda-forge
+    - bioconda
+    - r
+    - aghozlane
+
+source:
+    - git_url: https://gitlab.pasteur.fr/aghozlan/shaman.git
+      git_rev: {{ version }}
+      folder: shamanapp
+    - git_url: https://github.com/aghozlane/KronaRShy.git
+      git_rev: 0.9
+      folder: KronaRShy
+    - git_url: https://github.com/aghozlane/shaman_bioblend.git
+      git_rev: 1.0
+      folder: shaman_bioblend
+
+requirements:
+    host:
+        - r-base
+        - python=3
+        - libgfortran=3.0.0
+        
+    run:
+        - libgfortran=3.0.0
+        - r-base
+        - python=3
+        - r-rcpp
+        - r-shiny
+        - r-rjson
+        - r-ape
+        - r-psych
+        - r-ggplot2
+        - r-vegan
+        - r-dendextend
+        - r-circlize
+        #- bioconductor-genefilter
+        #- bioconductor-summarizedexperiment
+        - r-biocmanager
+        - r-googlevis
+        - r-shinyjs
+        - r-dt
+        - r-rcolorbrewer
+        - r-gplots
+        - r-ade4
+        - r-scales
+        - r-phytools
+        - r-shinywidgets
+        - r-sendmailr
+        - r-shinybs
+        - r-flexdashboard
+        - r-backports
+        - r-readr
+        - r-jsonlite
+        - r-shinyfiles
+        - r-htmltools
+        - r-colourpicker
+        - r-data.table
+        - r-upsetr
+        - r-ggrepel
+        - r-igraph
+        - r-visnetwork
+        - r-philentropy
+        - r-ramcharts
+        - r-gunifrac
+        - r-scatterd3
+        - r-d3heatmap
+        - r-biomformatshaman
+        - r-rnvd3shaman
+        - r-kronar
+        - r-phylotreemetar
+        - r-treeweightd3
+        - r-deseq2shaman
+        - r-d3vennr
+        - r-devtools
+        - r-shinytoastr
+        - r-shinydashboardshaman
+        - lockfile
+        - python-daemon
+        - bioblend
+test:
+    commands:
+        - 'R -e "libshaman=c(\"shiny\", \"rjson\", \"ape\", \"GUniFrac\", \"psych\", \"ggplot2\", \"vegan\", \"dendextend\", 
+                          \"circlize\", \"genefilter\", \"SummarizedExperiment\", \"shinyjs\", \"DT\", \"RColorBrewer\",
+                          \"gplots\", \"ade4\", \"scales\", \"phytools\", \"philentropy\", \"shinyWidgets\", \"sendmailR\",
+                          \"shinyBS\", \"tools\", \"flexdashboard\", \"backports\", \"readr\", \"jsonlite\", \"shinyFiles\",
+                          \"htmltools\", \"rAmCharts\", \"colourpicker\", \"data.table\", \"UpSetR\", \"ggrepel\", \"igraph\",
+                          \"visNetwork\", \"shinytoastr\", \"scatterD3\", \"devtools\", \"shinydashboardshaman\", \"d3heatmap\",
+                          \"biomformatshaman\", \"rNVD3shaman\", \"DESeq2shaman\", \"PhyloTreeMetaR\", \"treeWeightD3\", \"d3vennR\",
+                          \"googleVis\"); lapply(libshaman, require, character.only = TRUE)"'
+    imports:
+        - daemon
+        - lockfile
+        - bioblend
+
+about:
+  home: http://shaman.pasteur.fr
+  license: GPL (>= 3)
+  summary: 'SHAMAN is a SHiny application for Metagenomic ANalysis including a bioinformatic workflow, the statistical analysis and multiple visualization.'
+  description: |
+    SHAMAN is a shiny application for differential analysis of metagenomic data (16S, 18S, 23S, 28S, ITS and WGS) including bioinformatics treatment 
+    of raw reads for targeted metagenomics, statistical analysis and results visualization with a large variety of plots (barplot, boxplot, heatmap, …). 
+    The statistical analysis performed by SHAMAN is based on DESeq2 R package Anders and Huber 2010 ] which robustly identifies the differential abundant 
+    features as suggested in McMurdie and Holmes 2014 and Jonsson2016. SHAMAN robustly identifies the differential abundant genera with the Generalized 
+    Linear Model implemented in DESeq2 Love 2014. SHAMAN is compatible with standard formats for metagenomic analysis (.csv, .tsv, .biom) and generated 
+    figures can be downloaded in several formats. Hereafter is the global workflow of the SHAMAN application:
+  dev_url: https://github.com/aghozlane/shaman
+  license_family: GPL3
