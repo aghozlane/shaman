@@ -1,17 +1,10 @@
 package:
     name: shaman
-    version: {{ GIT_DESCRIBE_TAG }}
-
-channels:
-    - defaults
-    - conda-forge
-    - bioconda
-    - r
-    - aghozlane
+    version: {{ environ.get('GIT_DESCRIBE_TAG', '') }}
 
 source:
     - git_url: https://gitlab.pasteur.fr/aghozlan/shaman.git
-      git_rev: {{ GIT_DESCRIBE_TAG }}
+      git_rev: {{ environ.get('GIT_DESCRIBE_TAG', '') }}
       folder: shamanapp
     - git_url: https://github.com/aghozlane/KronaRShy.git
       git_rev: 0.9
@@ -39,8 +32,6 @@ requirements:
         - r-vegan
         - r-dendextend
         - r-circlize
-        #- bioconductor-genefilter
-        #- bioconductor-summarizedexperiment
         - r-biocmanager
         - r-googlevis
         - r-shinyjs
@@ -83,6 +74,9 @@ requirements:
         - lockfile
         - python-daemon
         - bioblend
+        - bioconductor-genomicranges=1.32.7
+        #- bioconductor-genefilter
+        - bioconductor-summarizedexperiment=1.10.1
 test:
     commands:
         - 'R -e "libshaman=c(\"shiny\", \"rjson\", \"ape\", \"GUniFrac\", \"psych\", \"ggplot2\", \"vegan\", \"dendextend\", 

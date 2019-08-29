@@ -524,7 +524,6 @@ GetDataFromBIOM <-function(dataBIOM)
     OTUnames = rownames(taxo)
     ## Modif taxo table (remove p__,... and change the colnames)
     taxo_biom = taxo
-    saveRDS(taxo, file="taxo.RDS")
     taxo = as.data.frame(sapply(taxo,gsub,pattern="^.*__",replacement=""))
     colnames(taxo) = c("Kingdom", "Phylum","Class","Order","Family","Genus","Species")
     rownames(taxo) = OTUnames
