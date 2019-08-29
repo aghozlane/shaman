@@ -1,8 +1,6 @@
-{% set version = GIT_DESCRIBE_TAG %}
-
 package:
     name: shaman
-    version: {{ version }}
+    version: {{ GIT_DESCRIBE_TAG }}
 
 channels:
     - defaults
@@ -13,7 +11,7 @@ channels:
 
 source:
     - git_url: https://gitlab.pasteur.fr/aghozlan/shaman.git
-      git_rev: {{ version }}
+      git_rev: {{ GIT_DESCRIBE_TAG }}
       folder: shamanapp
     - git_url: https://github.com/aghozlane/KronaRShy.git
       git_rev: 0.9
