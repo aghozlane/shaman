@@ -48,7 +48,8 @@ build_conda:
     - conda config --set anaconda_upload yes
     - conda install conda-verify
     - conda install anaconda-client
+    - conda install conda-build
 
   script:
     - anaconda login --username "$DOCKER_USER" --password "$DOCKER_PASS"
-    - conda-build conda_inst
+    - conda build conda_inst
