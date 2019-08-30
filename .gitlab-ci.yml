@@ -40,7 +40,8 @@ build_master:
 
 
 build_conda:
-  image: continuumio/miniconda3:latest
+  #image: continuumio/miniconda3:latest mutex issue
+  image: conda/miniconda3-centos7:latest
   stage: build_conda
   variables:
     CI_DEBUG_TRACE: "false"
@@ -50,9 +51,9 @@ build_conda:
     - conda config --add channels r
     - conda config --add channels aghozlane
     - conda config --set anaconda_upload yes
-    - conda install conda-verify
-    - conda install anaconda-client
-    - conda install conda-build
+    - conda install -y conda-verify
+    - conda install -y anaconda-client
+    - conda install -y conda-build
   script:
     - anaconda login --username "$DOCKER_USER" --password "$DOCKER_PASS"
     - conda build conda_inst

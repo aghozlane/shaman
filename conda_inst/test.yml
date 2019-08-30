@@ -1,0 +1,62 @@
+#name: shaman_dev0
+
+channels:
+    - defaults
+    - conda-forge
+    - bioconda
+    - r
+    - aghozlane
+
+dependencies:
+    - bioconda:r-base=3.5.1
+    - python
+    - r-rcpp
+    - r-shiny
+    - r-rjson
+    - r-ape
+    - r-psych
+    - r-ggplot2
+    - r-vegan
+    - r-dendextend
+    - r-circlize
+    - bioconductor-genefilter
+    - bioconductor-summarizedexperiment
+    - r-biocmanager
+    - r-googlevis
+    - r-shinyjs
+    - r-dt
+    - r-rcolorbrewer
+    - r-gplots
+    - r-ade4
+    - r-scales
+    - r-phytools
+    - r-shinywidgets
+    - r-sendmailr
+    - r-shinybs
+    - r-flexdashboard
+    - r-backports
+    - r-readr
+    - r-jsonlite
+    - r-shinyfiles
+    - r-htmltools
+    - r-colourpicker
+    - r-data.table
+    - r-upsetr
+    - r-ggrepel
+    - r-igraph
+    - r-visnetwork
+    - r-philentropy
+    - r-ramcharts
+    - r-gunifrac
+    - r-scatterd3
+    - r-d3heatmap
+    - r-biomformatshaman
+    - r-rnvd3shaman
+    - r-kronar
+    - r-phylotreemetar
+    - r-deseq2shaman
+    - r-d3vennr
+    - r-devtools
+    - r-treeweightd3
+    - bioblend
+    - python-daemon
