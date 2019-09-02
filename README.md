@@ -13,10 +13,12 @@
 
 ## Introduction
 
-SHAMAN is a shiny application for differential analysis of metagenomic data (16S, 18S, 23S, 28S, ITS and WGS) including bioinformatics treatment of raw reads for targeted metagenomics, statistical analysis and results visualization with a large variety of plots (barplot, boxplot, heatmap, …).
-The statistical analysis performed by SHAMAN is based on DESeq2 R package [[Anders and Huber 2010](http://www.ncbi.nlm.nih.gov/pubmed/20979621)] which robustly identifies the differential abundant features as suggested in  [[McMurdie and Holmes 2014](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3974642/)] and [[Jonsson2016](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC4727335/)].
-SHAMAN robustly identifies the differential abundant genera with the Generalized Linear Model implemented in DESeq2 [[Love 2014](http://www.ncbi.nlm.nih.gov/pubmed/25516281)].
-SHAMAN is compatible with standard formats for metagenomic analysis (.csv, .tsv, .biom) and figures can be downloaded in several formats. Hereafter is the global workflow of the SHAMAN application:  
+SHAMAN is a shiny application for differential analysis of metagenomic data (16S, 18S, 23S, 28S, ITS and WGS) including bioinformatics treatment of raw reads for targeted metagenomics, statistical analysis and results visualization with a large variety of plots (barplot, boxplot, heatmap, …).  
+The bioinformatics treatment is based on Vsearch [[Rognes 2016](http://www.ncbi.nlm.nih.gov/pubmed/27781170)] which showed to be both accurate and fast [[Wescott 2015](http://www.ncbi.nlm.nih.gov/pubmed/26664811)].The statistical analysis is based on DESeq2 R package [[Anders and Huber 2010](http://www.ncbi.nlm.nih.gov/pubmed/20979621)] which robustly identifies the differential abundant features as suggested in  [[McMurdie and Holmes 2014](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3974642/)] and [[Jonsson2016](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC4727335/)].
+SHAMAN robustly identifies the differential abundant genera with the Generalized Linear Model implemented in DESeq2 [[Love 2014](http://www.ncbi.nlm.nih.gov/pubmed/25516281)].  
+SHAMAN is compatible with standard formats for metagenomic analysis (.csv, .tsv, .biom) and figures can be downloaded in several formats.
+A presentation about SHAMAN is available [here](www/shaman_presentation.pdf) and a poster [here](www/shaman_poster.pdf).
+Hereafter is the global workflow of the SHAMAN application:  
 <img src="www/Workflow.png" align="center" />
 
 ## Installation
