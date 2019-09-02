@@ -1,0 +1,10 @@
+Type	Count	Mean_length	Median_length
+Amplicon	204399	240	249
+Dereplication	33091	253	259
+Singleton_removed	3310	257	261
+Chimera_removed	3238	257	261
+OTU	1	117640	117640
+unite_annotation	166
+findley_annotation	152
+underhill_annotation	144
+rdp_annotation	464
