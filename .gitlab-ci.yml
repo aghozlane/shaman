@@ -1,7 +1,8 @@
 stages:
+  - build_conda
   - build_dev
   - build_master
-  - build_conda
+  
 
 services:
   - docker:dind
@@ -34,8 +35,7 @@ build_master:
     - docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
     - docker build -t aghozlane/shaman .
     - docker push aghozlane/shaman
-  except:
-    - dev
+  only:
     - master
 
 
@@ -54,6 +54,7 @@ build_conda:
     - conda install -y conda-verify
     - conda install -y anaconda-client
     - conda install -y conda-build
+    - conda install -y git
   script:
     - anaconda login --username "$DOCKER_USER" --password "$DOCKER_PASS"
     - conda build conda_inst

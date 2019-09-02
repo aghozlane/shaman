@@ -1444,10 +1444,10 @@ shinyServer(function(input, output,session) {
       reset("fileBiom")
       reset("fileTree")
       #PS = Project_status(values$masque_key,values$curdir)
-      values$biom_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_silva.biom",sep=""),sep= .Platform$file.sep)
-      values$tree_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_silva_tree.nhx",sep=""),sep= .Platform$file.sep)
+      values$biom_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_",DemoDataset[[1]][2],".biom",sep=""),sep= .Platform$file.sep)
+      values$tree_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_",DemoDataset[[1]][2],"_tree.nhx",sep=""),sep= .Platform$file.sep)
       #sendSweetAlert(messageId="DemoDataset", title = "Success", text = paste("Data of", DemoDataset[[1]][2], "were successfully loaded. You can go to statistical analysis section."), type = "success", html=TRUE)
-      sendSweetAlert(session, title = "Success", text = paste("Data of", DemoDataset[[1]][2], "were successfully loaded. You can go to statistical analysis section."), type = "success", html=TRUE)
+      sendSweetAlert(session, title = "Success", text = paste("Data of", DemoDataset[[1]][3], "were successfully loaded. You can go to statistical analysis section."), type = "success", html=TRUE)
       removeCssClass(class = 'pwdRED', selector = '#password_home')
       addCssClass(class = 'pwdGREEN', selector = '#password_home')
       hideElement("masque-form",anim=TRUE)
@@ -2248,7 +2248,6 @@ shinyServer(function(input, output,session) {
   
  observeEvent(input$confirmTarget,{
     target = NULL
-    values$biom_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_silva.biom",sep=""),sep= .Platform$file.sep)
     # Get the old biom
     if (!is.null(values$biom_masque) && file.exists(values$biom_masque)){ 
       tryCatch(read_biom(values$biom_masque)->data,
