@@ -600,7 +600,7 @@ function(request) {
                 tags$script("$(document).on('click', '#DataTaxo button', function () {
                     Shiny.onInputChange('lastClickId',this.id);
                     Shiny.onInputChange('lastClick', Math.random())
-                    );")
+                    });")
                 # receiveSweetAlert(messageId = "ErrorTaxo"),
                 # receiveSweetAlert(messageId = "ErrorBiom1"),
                 # receiveSweetAlert(messageId = "ErrorBiom2"),
