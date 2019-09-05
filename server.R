@@ -3275,7 +3275,10 @@ shinyServer(function(input, output,session) {
       else if(input$PlotVisuSelect=="Heatmap") Plot_Visu_Heatmap(input,ResDiffAnal(),export=TRUE)
       else if(input$PlotVisuSelect=="Boxplot") print(Plot_Visu_Boxplot(input,ResDiffAnal(),alpha=ifelse(input$Exp_format_Visu=="eps",1,0.7)))
       else if(input$PlotVisuSelect=="Scatterplot") print(Plot_Visu_Scatterplot(input,ResDiffAnal(),export=TRUE,lmEst = FALSE))
-      else if(input$PlotVisuSelect=="Diversity") print(Plot_Visu_Diversity(input,ResDiffAnal())$plot)
+      else if(input$PlotVisuSelect=="Diversity"){
+        if(input$Exp_format_Visu == "eps") print(Plot_Visu_Diversity(input, ResDiffAnal(), FALSE, 1)$plot)
+        else print(Plot_Visu_Diversity(input,ResDiffAnal())$plot)
+      }
       else if(input$PlotVisuSelect=="Rarefaction") print(Plot_Visu_Rarefaction(input,ResDiffAnal(),ranges$x,ranges$y,ylab=taxo))
       dev.off()
       
