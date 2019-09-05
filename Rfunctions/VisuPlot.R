@@ -834,13 +834,16 @@ Plot_Visu_Tree <- function(input,resDiff,CT_Norm_OTU,taxo_table)
     if(nrow(tmp$counts)>0 && !is.null(tmp$counts))
     {
       #save(tmp,taxo_table,nodeFind,file="testTree.RData")
-      merge_dat = merge(taxo_table,round(t(tmp$counts)),by="row.names")
-      colnames(merge_dat)[1] = "OTU"
-      levels <- c("OTU", colnames(taxo_table))
+      merge_dat = merge(cbind(taxo_table,rownames(taxo_table)),round(t(tmp$counts)),by="row.names")
+      colnames(merge_dat)[1] = "Category"
+      colnames(merge_dat)[dim(taxo_table)[2]+2]="OTU"
+      merge_dat[is.na(merge_dat)] = ""
+      levels <- c("Category", colnames(taxo_table), "OTU")
       conditions <- rownames(tmp$counts)
       #nodeFind = input$TaxoTree
       nodeFind =input$selectTaxoPlot
       if(length(input$selectTaxoPlot) == 0) nodeFind = NULL
+      #save(merge_dat,conditions,levels,nodeFind,file="abuntree.RDATA")
       res = treeWeightD3(merge_dat,conditions,levels,nodeFind=nodeFind, height =input$heightVisu+10, width=if(input$modifwidthVisu){input$widthVisu})
     }
   }
