@@ -538,7 +538,11 @@ GetDataFromBIOM <-function(dataBIOM)
   if(!is.null(target))
   {
     # Convert from list to dataframe
-    target = as.data.frame(target)
+    target=as.data.frame(target)
+    # Check if numeric variable in the biom metadata
+    for(i in seq(1,dim(target)[2])){
+      if(TRUE%in%!is.na(as.numeric(target[,i]))) target[,i]=as.numeric(target[,i])
+    }
     target$SampleID = rownames(target)
     target = subset(target, select=c(dim(target)[2], seq(1, dim(target)[2]-1)))
   }
