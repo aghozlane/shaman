@@ -413,7 +413,7 @@ Plot_Visu_Scatterplot<- function(input,resDiff,export=FALSE,lmEst = FALSE,CorEst
 ##                       ##
 ##      Diversity ####
 ##                       ##
-Plot_Visu_Diversity <- function(input,resDiff,ForScatter=FALSE){
+Plot_Visu_Diversity <- function(input,resDiff,ForScatter=FALSE, alpha_transparency=0.8){
   gg = NULL
   dataTmp = NULL
   dds = resDiff$dds
@@ -441,34 +441,48 @@ Plot_Visu_Diversity <- function(input,resDiff,ForScatter=FALSE){
   
   if(nrow(counts_tmp_combined)>0 && !is.null(counts_tmp_combined) && !is.null(targetInt))
   { 
-    sqrt.nb = sqrt(table(targetInt$AllVar))
-    # save(counts_tmp_combined,targetInt,file = "testDiv.RData")
+    cond = table(targetInt$AllVar)
+    cond=cond[cond!=0]
+    sqrt.nb = sqrt(cond)
+
+    #save(counts_tmp_combined,targetInt,file = "testDiv.RData")
     alpha <- tapply(TaxoNumber(counts_tmp_combined), targetInt$AllVar, mean)
-    ci.alpha.down = pmax(alpha - 1.96*tapply(TaxoNumber(counts_tmp_combined), targetInt$AllVar, sd)/sqrt.nb,0)
-    ci.alpha.up = alpha + 1.96*tapply(TaxoNumber(counts_tmp_combined), targetInt$AllVar, sd)/sqrt.nb
+    alpha=alpha[!is.na(alpha)]
+    alpha_sd = tapply(TaxoNumber(counts_tmp_combined), targetInt$AllVar, sd)
+    alpha_sd=alpha_sd[!is.na(alpha_sd)]
+    ci.alpha.down = pmax(alpha - 1.96*alpha_sd/sqrt.nb,0)
+    ci.alpha.up = alpha + 1.96*alpha_sd/sqrt.nb
     
     shan <- tapply(vegan::diversity(counts_tmp_combined, index = "shannon"), targetInt$AllVar, mean)
-    ci.shan.down = pmax(shan - 1.96*tapply(vegan::diversity(counts_tmp_combined, index = "shannon"), targetInt$AllVar, sd)/sqrt.nb,0)
-    ci.shan.up = shan + 1.96*tapply(vegan::diversity(counts_tmp_combined, index = "shannon"), targetInt$AllVar, sd)/sqrt.nb
+    shan = shan[!is.na(shan)]
+    shan_sd = tapply(vegan::diversity(counts_tmp_combined, index = "shannon"), targetInt$AllVar, sd)
+    shan_sd = shan_sd[!is.na(shan_sd)]
+    ci.shan.down = pmax(shan - 1.96*shan_sd/sqrt.nb,0)
+    ci.shan.up = shan + 1.96*shan_sd/sqrt.nb
     
     simpson <- tapply(vegan::diversity(counts_tmp_combined, index = "simpson"), targetInt$AllVar, mean)
-    ci.simpson.down = pmax(simpson - 1.96*tapply(vegan::diversity(counts_tmp_combined, index = "simpson"), targetInt$AllVar, sd)/sqrt.nb,0)
-    ci.simpson.up = simpson + 1.96*tapply(vegan::diversity(counts_tmp_combined, index = "simpson"), targetInt$AllVar, sd)/sqrt.nb
+    simpson = simpson[!is.na(simpson)]
+    simpson_sd = tapply(vegan::diversity(counts_tmp_combined, index = "simpson"), targetInt$AllVar, sd)
+    simpson_sd = simpson_sd[!is.na(simpson_sd)]
+    ci.simpson.down = pmax(simpson - 1.96*simpson_sd/sqrt.nb,0)
+    ci.simpson.up = simpson + 1.96*simpson_sd/sqrt.nb
     
     invsimpson <- tapply(vegan::diversity(counts_tmp_combined, index = "invsimpson"), targetInt$AllVar, mean)
-    ci.invsimpson.down = pmax(invsimpson - 1.96*tapply(vegan::diversity(counts_tmp_combined, index = "invsimpson"), targetInt$AllVar, sd)/sqrt.nb,0)
-    ci.invsimpson.up = invsimpson + 1.96*tapply(vegan::diversity(counts_tmp_combined, index = "invsimpson"), targetInt$AllVar, sd)/sqrt.nb
+    invsimpson = invsimpson[!is.na(invsimpson)]
+    invsimpson_sd = tapply(vegan::diversity(counts_tmp_combined, index = "invsimpson"), targetInt$AllVar, sd)
+    invsimpson_sd = invsimpson_sd[!is.na(invsimpson_sd)]
+    ci.invsimpson.down = pmax(invsimpson - 1.96*invsimpson_sd/sqrt.nb,0)
+    ci.invsimpson.up = invsimpson + 1.96*invsimpson_sd/sqrt.nb
     
     gamma <- TaxoNumber(counts_tmp_combined, targetInt$AllVar)
+    gamma = gamma[!is.na(gamma)]
     beta = gamma/alpha - 1
     nb = length(alpha)
-    
     dataTmp = data.frame(value=c(alpha,beta,gamma,shan,simpson,invsimpson),
                          ci.down=c(ci.alpha.down,beta,gamma,ci.shan.down,ci.simpson.down,ci.invsimpson.down),
                          ci.up=c(ci.alpha.up,beta,gamma,ci.shan.up,ci.simpson.up,ci.invsimpson.up),
                          diversity = c(rep("Alpha",nb),rep("Beta",nb),rep("Gamma",nb),rep("Shannon",nb),rep("Simpson",nb),rep("Inv.Simpson",nb)),
                          Var = as.character(rep(names(alpha),6)))
-    
     if(!ForScatter)
     {                  
       dataTmp = dataTmp[dataTmp$diversity%in%input$WhichDiv,]
@@ -508,10 +522,9 @@ Plot_Visu_Diversity <- function(input,resDiff,ForScatter=FALSE){
       
       colors = rep(c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c","#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5","#8c564b",
                      "#c49c94","#e377c2","#f7b6d2","#7f7f7f", "#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"),ceiling(nrow(targetInt)/20))
-      
       gg = ggplot(dataTmp, aes(x=VarX, y=value, fill=VarCol)) 
       gg = gg + theme_bw() + theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust=0.5), legend.title=element_blank())
-      gg = gg + geom_bar(stat = "identity",width=0.4,position = position_dodge(width=0.5),alpha=0.8) 
+      gg = gg + geom_bar(stat = "identity",width=0.4,position = position_dodge(width=0.5),alpha=alpha_transparency) 
       if(input$DivAddError=="Add") gg = gg + geom_errorbar(aes(ymin=ci.down, ymax=ci.up,color=VarCol,width=.2),position = position_dodge(width=0.5))
       if(input$SensPlotVisu=="Horizontal") gg = gg + coord_flip() + facet_wrap(~ diversity,scales="fixed")
       if(input$SensPlotVisu=="Vertical") gg = gg + facet_wrap(~ diversity,scales=input$DivScale)
@@ -575,6 +588,7 @@ TaxoNumber <-  function (x, groups, mar = 1)
   }
   if (length(dim(x)) > 1) res = apply(x > 0, mar, sum)
   else res = sum(x > 0)
+  return(res)
 }
 
 
