@@ -2112,7 +2112,9 @@ shinyServer(function(input, output,session) {
     fakeCondition = c("Samples", "Samples", "fakeCondition")
     samples = colnames(CT)
     samples = gsub(pattern = "-",replacement = ".",as.character(samples))
-    condition = sample(c("A", "B"), length(samples), replace =T)
+    # random is disappointing
+    #condition = sample(c("A", "B"), length(samples), replace =T)
+    condition = c(rep("A",round(length(samples)/2,0)),rep("B",length(samples)-round(length(samples)/2,0)))
     target = data.frame(samples,samples,condition, row.names = samples)
     colnames(target) = fakeCondition
     values$TargetWorking = target
