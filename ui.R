@@ -1174,7 +1174,15 @@ function(request) {
                                                 column(width=6,sliderInput("lowerMargin", h6("Lower"),min=0,max=30,value = 6,step = 1))
                                               )
                              ),
-                             
+                             ###            ###
+                             ### _______TreeWeightplot ####
+                             ###            ###
+                             conditionalPanel(condition="input.PlotVisuSelect=='Tree'",
+                                              fluidRow(
+                                                column(width=12,checkboxInput("isColorRandom", "Random colors", value = FALSE)),
+                                                column(width=12,sliderInput("colorLevel", h6("Color Level"),min=1,max=4,value = 1,step = 1))
+                                              )
+                             ),
                              ###            ###
                              ### _______scatterplot ####
                              ###            ###
@@ -1212,12 +1220,12 @@ function(request) {
                              ##           ###
                              ## _______common to several plots ####
                              ###          ###
-                             conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Scatterplot' && input.PlotVisuSelect!='Krona' && input.PlotVisuSelect!='Phylogeny' && input.PlotVisuSelect!='Network'",
+                             conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Scatterplot' && input.PlotVisuSelect!='Krona' && input.PlotVisuSelect!='Tree' && input.PlotVisuSelect!='Phylogeny' && input.PlotVisuSelect!='Network'",
                                               radioButtons(inputId = "SensPlotVisu",label = h6(strong("Orientation")),choices = c("Vertical" = "Vertical", "Horizontal" = "Horizontal"),selected = "Vertical",inline = TRUE)
                              )
                          ),
                          ### _____Export ####
-                         conditionalPanel(condition="input.PlotVisuSelect!='Krona' && input.PlotVisuSelect!='Phylogeny' ",
+                         conditionalPanel(condition="input.PlotVisuSelect!='Krona' && input.PlotVisuSelect!='Phylogeny' && input.PlotVisuSelect!='Tree'",
                                           box(title = "Export",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
                                               conditionalPanel(condition="input.PlotVisuSelect=='Barplot'",
                                                                radioButtons("positionBarPlot","Position",c("Grouped"="dodge","Stacked"="fill"), selected = "fill",inline=TRUE)

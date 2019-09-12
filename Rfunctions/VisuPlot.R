@@ -844,7 +844,7 @@ Plot_Visu_Tree <- function(input,resDiff,CT_Norm_OTU,taxo_table)
       nodeFind =input$selectTaxoPlot
       if(length(input$selectTaxoPlot) == 0) nodeFind = NULL
       #save(merge_dat,conditions,levels,nodeFind,file="abuntree.RDATA")
-      res = treeWeightD3(merge_dat,conditions,levels,nodeFind=nodeFind, height =input$heightVisu+10, width=if(input$modifwidthVisu){input$widthVisu})
+      res = treeWeightD3(merge_dat,conditions,levels,nodeFind=nodeFind, height =input$heightVisu+10, width=if(input$modifwidthVisu){input$widthVisu}, input$isColorRandom, input$colorLevel)
     }
   }
   return(res)
