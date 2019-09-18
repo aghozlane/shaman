@@ -230,7 +230,7 @@ function(request) {
                                              p("Now you can run R:"),
                                              mainPanel(div(style = 'max-width: 900px; word-wrap: break-word;',
                                                            "install.packages(\"packrat\")",br(),
-                                                           "packrat::unbundle(\"shaman_package_201908.tar.gz\", \"packrat/shaman\")", br(),
+                                                           "packrat::unbundle(\"shaman_package_201909.tar.gz\", \"packrat/shaman\")", br(),
                                                            "packrat::init(\"packrat/shaman\")",br(),
                                                            "system(\"Rscript -e 'shiny::runGitHub(\\\"pierreLec/KronaRShy\\\",port=5438)'\",wait=FALSE)",
                                                            br(),"shiny::runGitHub('aghozlane/shaman')"),width=9,class="mainwell")),
