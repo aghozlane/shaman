@@ -3121,7 +3121,7 @@ shinyServer(function(input, output,session) {
   ## Export Distancetable in .csv
   output$ExportDistancetable <- downloadHandler(
     filename = function() {
-      if(input$sepdiversity=="\t") 'SHAMAN_Distance.tsv'
+      if(input$sepdistance=="\t") 'SHAMAN_Distance.tsv'
       else 'SHAMAN_Distance.csv'
     },
     content = function(file){
@@ -3129,7 +3129,7 @@ shinyServer(function(input, output,session) {
       ## Phylogenetic tree
       tree = dataInputTree()$data
       tmp = as.matrix(Plot_diag_pcoaEigen(input,resDiff,tree)$dataDiv)
-      datatable(tmp,rownames= FALSE)
+      #datatable(tmp,rownames= FALSE)
       write.table(tmp, file,row.names = FALSE, sep=input$sepdistance)
     })
   
@@ -3843,7 +3843,7 @@ shinyServer(function(input, output,session) {
       resDiff = ResDiffAnal()
       tmp = Plot_Visu_Diversity(input,resDiff)$dataDiv
       tmp$VarX=NULL; tmp$VarCol=NULL
-      datatable(tmp[,c(4,5,1,2,3)],rownames= FALSE)
+      #datatable(tmp[,c(4,5,1,2,3)],rownames= FALSE)
       write.table(tmp, file,row.names = FALSE, sep=input$sepdiversity)
     }
   )
