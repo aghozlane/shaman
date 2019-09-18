@@ -53,7 +53,7 @@ RUN git clone https://github.com/pierreLec/KronaRShy.git /srv/shiny-server/krona
     git clone https://github.com/aghozlane/shaman_bioblend.git /usr/bin/shaman_bioblend && \
     chown -R shiny.shiny  /srv/shiny-server/ && \
     chown -R shiny.shiny  /opt/packman/ && \
-    rm /opt/shaman_package_201908.tar.gz && \
+    rm /opt/shaman_package_201909.tar.gz && \
     cp /srv/shiny-server/.Rprofile /srv/shiny-server/kronarshy/.Rprofile && \
     chmod +x /usr/bin/shiny-server.sh
 
