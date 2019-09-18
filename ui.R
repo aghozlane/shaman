@@ -225,7 +225,7 @@ function(request) {
                                     tabPanel("R install with Packrat (linux only)",
                                              p("SHAMAN is available for R=3.6.1. Packrat framework allows an easy installation of all the dependencies. Of note, raw data submission is not possible with this version.",style = "font-family: 'times'; font-si16pt"),
                                              mainPanel(div(style = 'max-width: 900px; word-wrap: break-word;',
-                                                           "# Download packrat package",br(),"wget ftp://shiny01.hosting.pasteur.fr/pub/shaman_package_201908.tar.gz", br(),
+                                                           "# Download packrat package",br(),"wget ftp://shiny01.hosting.pasteur.fr/pub/shaman_package_201909.tar.gz", br(),
                                                            "mkdir packrat/shaman"), width=9,class="mainwell"),
                                              p("Now you can run R:"),
                                              mainPanel(div(style = 'max-width: 900px; word-wrap: break-word;',
