@@ -63,7 +63,8 @@ Get_dds_object <- function(input,counts,target,design,normFactorsOTU,CT_noNorm,C
     # dds <- nbinomWaldTest(dds,modelMatrixType = "expanded")
    if(nrow(counts)*nrow(target)>=50000)
     {
-     dds = DESeq2shaman::DESeq(dds,fitType=input$fitType,parallel = TRUE,minReplicatesForReplace = Inf, modelMatrixType = "expanded")
+     dds = DESeq2shaman::DESeq(dds,test="Wald",fitType=input$fitType,parallel = TRUE,minReplicatesForReplace = Inf, modelMatrixType = "expanded")
+     #
         # try(DESeq(dds,fitType=input$fitType,parallel = TRUE,minReplicatesForReplace = Inf) ->ddstmp,silent = TRUE)
         # if(!is.null(ddstmp)) dds = ddstmp
     }
