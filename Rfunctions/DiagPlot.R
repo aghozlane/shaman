@@ -413,7 +413,7 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree,col = c("SpringGreen",
   ## Get the group corresponding to the modalities
   group = group[ind_kept]
   nb = length(unique((group)))
-  group = as.factor(group)
+  group = factor(group, levels = Kval)
   
   if(nlevels(group)!=0 && !is.null(input$PCaxe1) && !is.null(input$PCaxe2))
   { 
