@@ -678,7 +678,7 @@ function(request) {
                                     tabPanel("Normalization", 
                                              fluidRow(
                                                column(width=3,
-                                                      selectizeInput("AccountForNA", h6(strong("Normalization method")),choices = c("Usual"="All", "Remove null counts"="NonNull", "Weighted"="Weighted","Total counts"="Total counts"),selected = "NonNull")),
+                                                      selectizeInput("AccountForNA", h6(strong("Normalization method")),choices = c("DESeq2"="All", "Non-null normalization"="NonNull", "Weighted non-null normalization"="Weighted","Total counts"="Total counts"),selected = "Weighted")),
                                                column(width=3,
                                                       uiOutput("SelectVarNorm")),
                                                column(width=3,
