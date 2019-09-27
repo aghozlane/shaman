@@ -17,7 +17,6 @@ Plot_Visu_Barplot <- function(input,resDiff)
   counts_tmp_combined = tmp_combined$counts
   nbKept = length(ind_taxo)
   SamplesNames = tmp_combined$namesCounts
-  
   if(nbKept>1) namesTax = colnames(counts_tmp_combined)
   else if(nbKept==1) namesTax = ind_taxo
   
@@ -106,6 +105,8 @@ Plot_Visu_Heatmap <- function(input,resDiff,export=FALSE){
   
   VarInt = input$VisuVarInt
   ind_taxo = input$selectTaxoPlot
+  sortrow = input$SortHeatRow
+  sortcol = input$SortHeatColumn
   
   counts_tmp_combined = GetDataToPlot(input,resDiff,VarInt,ind_taxo)$counts
   
@@ -122,19 +123,22 @@ Plot_Visu_Heatmap <- function(input,resDiff,export=FALSE){
     
     ## Transpose matrix if Horizontal
     if(input$SensPlotVisu=="Horizontal") counts_tmp_combined = t(as.matrix(counts_tmp_combined))
-    
-    if(!export) {plot = d3heatmap(counts_tmp_combined, dendrogram = "none", Rowv = (input$SortHeatRow == "Yes"), 
-                                  Colv = (input$SortHeatColumn == "Yes"), na.rm = TRUE, width=ifelse(input$modifwidthVisu,input$widthVisu, "100%"), 
-                                  height = input$heightVisu, show_grid = FALSE, colors = col, scale = input$scaleHeatmap, cexRow = as.numeric(input$LabelSizeHeatmap), margins=c(12,30), 
-                                  cexCol=as.numeric(input$LabelSizeHeatmap), offsetCol=input$LabelColOffsetHeatmap, offsetRow=input$LabelRowOffsetHeatmap)
+    if(nrow(counts_tmp_combined) == 1) sortrow = "No"
+    if(ncol(counts_tmp_combined) == 1) sortcol = "No"
+    if(!export) {
+      plot = d3heatmap(counts_tmp_combined, dendrogram = "none", Rowv = (sortrow == "Yes"), 
+                                  Colv = (sortcol == "Yes"), na.rm = TRUE, width=ifelse(input$modifwidthVisu,input$widthVisu, "100%"), 
+                                  height = input$heightVisu, show_grid = FALSE, colors = col, scale = input$scaleHeatmap, cexRow = as.numeric(input$LabelSizeHeatmap), 
+                                  margins=c(12,30), cexCol=as.numeric(input$LabelSizeHeatmap), offsetCol=input$LabelColOffsetHeatmap, offsetRow=input$LabelRowOffsetHeatmap)
+      
     }
     if(export){ 
       dendrogram="none"
       if(input$SortHeatColumn == "Yes" && input$SortHeatRow == "Yes" ) dendrogram ="both"
       else if(input$SortHeatColumn == "Yes") dendrogram ="column"
       else if(input$SortHeatRow == "Yes") dendrogram ="row"
-      plot = heatmap.2(counts_tmp_combined, dendrogram = dendrogram, Rowv = (input$SortHeatRow == "Yes"), 
-                                 Colv = (input$SortHeatColumn == "Yes"), na.rm = TRUE, density.info="none", margins=c(as.numeric(input$lowerMargin),as.numeric(input$rightMargin)),trace="none",
+      plot = heatmap.2(counts_tmp_combined, dendrogram = dendrogram, Rowv = (sortrow == "Yes"), 
+                                 Colv = (sortcol == "Yes"), na.rm = TRUE, density.info="none", margins=c(as.numeric(input$lowerMargin),as.numeric(input$rightMargin)),trace="none",
                                  srtCol=45, col = col, scale = input$scaleHeatmap, cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, 
                                  offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap,symm=FALSE,symkey=FALSE,symbreaks=FALSE)
     }
@@ -249,8 +253,6 @@ Plot_Visu_Krona <- function(input,resDiff,CT_OTU,taxo_table){
       # Remove zero counts 
       # Required for Krona
       res = merge_dat[merge_dat[,1]>0,]
-      #print(input$TaxoSelect)
-      #print(res)
     }
   }
   return(res)
@@ -315,12 +317,9 @@ Plot_Visu_Scatterplot<- function(input,resDiff,export=FALSE,lmEst = FALSE,CorEst
   {counts = as.data.frame(round(counts(dds, normalized = FALSE)))}
 
   target = as.data.frame(resDiff$target)
-  #print("target")
-  #print(target)
+
   ## Get the diversity values
   tmp_div = Plot_Visu_Diversity(input,resDiff,ForScatter=TRUE)$dataDiv
-  #print("tmp_div")
-  #print(tmp_div)
   
   if(!is.null(tmp_div)){
     div = cbind(round(tmp_div$value[tmp_div$diversity =="Alpha"],3),
@@ -697,7 +696,7 @@ GetDataToPlot <- function(input,resDiff,VarInt,ind_taxo,sec_variable = NULL, agg
         namesCounts = counts_tmp_combined$Group.1
         counts_tmp_combined = as.matrix(counts_tmp_combined[,-1])
       }
-      if(!aggregate && nrow(counts_tmp)>0 && nrow(targetInt)>0)
+      else if(!aggregate && nrow(counts_tmp)>0 && nrow(targetInt)>0)
       {  
         ## Proportion verified
         counts_tmp_combined = t(counts_tmp)
@@ -712,9 +711,14 @@ GetDataToPlot <- function(input,resDiff,VarInt,ind_taxo,sec_variable = NULL, agg
       {
         MeanCounts = apply(counts_tmp_combined,2,mean)
         ord = order(MeanCounts,decreasing=TRUE)
-        counts_tmp_combined = as.matrix(counts_tmp_combined[,ord])
-        if(!aggregate) prop_tmp_combined = as.matrix(prop_tmp_combined[,ord])
-        prop_all = as.matrix(prop_all[,ord])
+        if(nrow(counts_tmp_combined)==1) counts_tmp_combined[ord]
+        else counts_tmp_combined = counts_tmp_combined[,ord]
+        if(!aggregate){
+          if(nrow(prop_tmp_combined)==1) prop_tmp_combined[ord]
+          else prop_tmp_combined = prop_tmp_combined[,ord]
+        }
+        if(nrow(prop_all)==1) prop_all[ord]
+        else prop_all = prop_all[,ord]
       }
     }
   }
