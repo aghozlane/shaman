@@ -770,12 +770,12 @@ w.sizefactor <- function(CT)
   CT[which(CT<1)]=NA
   gm = apply(CT,1,geometric.mean,na.rm=TRUE)
   weights = nbsamp - apply(CT,1,FUN=function(x){tmp =length(which(is.na(x))) ;return(tmp)})
-  weights_tmp = weights
   
   for(i in 1:ncol(CT))
   {
     ind = which(is.na(CT[,i]))
     gm_tmp = gm
+    weights_tmp = weights
     tmp = CT[,i]
     if(length(ind)>0) {tmp = CT[-ind,i]; gm_tmp = gm[-ind]; weights_tmp = weights[-ind]}
     sf[i] = w.median(tmp/gm_tmp,weights_tmp, na.rm = TRUE)
