@@ -446,32 +446,36 @@ Plot_Visu_Diversity <- function(input,resDiff,ForScatter=FALSE, alpha_transparen
 
     #save(counts_tmp_combined,targetInt,file = "testDiv.RData")
     alpha <- tapply(TaxoNumber(counts_tmp_combined), targetInt$AllVar, mean)
-    alpha=alpha[!is.na(alpha)]
+    alpha_selected = !is.na(alpha)
+    alpha=alpha[alpha_selected]
     alpha_sd = tapply(TaxoNumber(counts_tmp_combined), targetInt$AllVar, sd)
-    alpha_sd=alpha_sd[!is.na(alpha_sd)]
-    ci.alpha.down = pmax(alpha - 1.96*alpha_sd/sqrt.nb,0)
-    ci.alpha.up = alpha + 1.96*alpha_sd/sqrt.nb
+    alpha_sd=alpha_sd[alpha_selected]
+    ci.alpha.down = pmax(alpha - 1.96*alpha_sd/sqrt.nb[alpha_selected],0)
+    ci.alpha.up = alpha + 1.96*alpha_sd/sqrt.nb[alpha_selected]
     
     shan <- tapply(vegan::diversity(counts_tmp_combined, index = "shannon"), targetInt$AllVar, mean)
-    shan = shan[!is.na(shan)]
+    shan_selected = !is.na(shan)
+    shan = shan[shan_selected]
     shan_sd = tapply(vegan::diversity(counts_tmp_combined, index = "shannon"), targetInt$AllVar, sd)
-    shan_sd = shan_sd[!is.na(shan_sd)]
-    ci.shan.down = pmax(shan - 1.96*shan_sd/sqrt.nb,0)
-    ci.shan.up = shan + 1.96*shan_sd/sqrt.nb
+    shan_sd = shan_sd[shan_selected]
+    ci.shan.down = pmax(shan - 1.96*shan_sd/sqrt.nb[shan_selected],0)
+    ci.shan.up = shan + 1.96*shan_sd/sqrt.nb[shan_selected]
     
     simpson <- tapply(vegan::diversity(counts_tmp_combined, index = "simpson"), targetInt$AllVar, mean)
-    simpson = simpson[!is.na(simpson)]
+    simpson_selected = !is.na(simpson)
+    simpson = simpson[simpson_selected]
     simpson_sd = tapply(vegan::diversity(counts_tmp_combined, index = "simpson"), targetInt$AllVar, sd)
-    simpson_sd = simpson_sd[!is.na(simpson_sd)]
-    ci.simpson.down = pmax(simpson - 1.96*simpson_sd/sqrt.nb,0)
-    ci.simpson.up = simpson + 1.96*simpson_sd/sqrt.nb
+    simpson_sd = simpson_sd[simpson_selected]
+    ci.simpson.down = pmax(simpson - 1.96*simpson_sd/sqrt.nb[simpson_selected],0)
+    ci.simpson.up = simpson + 1.96*simpson_sd/sqrt.nb[simpson_selected]
     
     invsimpson <- tapply(vegan::diversity(counts_tmp_combined, index = "invsimpson"), targetInt$AllVar, mean)
-    invsimpson = invsimpson[!is.na(invsimpson)]
+    invsimpson_selected = !is.na(invsimpson)
+    invsimpson = invsimpson[invsimpson_selected]
     invsimpson_sd = tapply(vegan::diversity(counts_tmp_combined, index = "invsimpson"), targetInt$AllVar, sd)
-    invsimpson_sd = invsimpson_sd[!is.na(invsimpson_sd)]
-    ci.invsimpson.down = pmax(invsimpson - 1.96*invsimpson_sd/sqrt.nb,0)
-    ci.invsimpson.up = invsimpson + 1.96*invsimpson_sd/sqrt.nb
+    invsimpson_sd = invsimpson_sd[invsimpson_selected]
+    ci.invsimpson.down = pmax(invsimpson - 1.96*invsimpson_sd/sqrt.nb[invsimpson_selected],0)
+    ci.invsimpson.up = invsimpson + 1.96*invsimpson_sd/sqrt.nb[invsimpson_selected]
     
     gamma <- TaxoNumber(counts_tmp_combined, targetInt$AllVar)
     gamma = gamma[!is.na(gamma)]
