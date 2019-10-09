@@ -1050,7 +1050,7 @@ function(request) {
                              # conditionalPanel(condition="input.PlotVisuSelect=='Tree'",
                              #                  uiOutput("VarIntVisuTree")),
                              conditionalPanel(condition="input.PlotVisuSelect!='Network' && input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && input.PlotVisuSelect!='Scatterplot' && input.PlotVisuSelect!='Krona'",
-                                              radioButtons("SelectSpecifTaxo","Select the features",c("Most abundant"="Most","All"="All", "Differential features" = "Diff", "Non differential features" = "NoDiff", "Custom selection" = "Custom"))
+                                              radioButtons("SelectSpecifTaxo","Select the features",c("Most abundant"="Most","All"="All", "Differential features" = "Diff", "Non differential features" = "NoDiff"))
                              ),
                              conditionalPanel(condition="input.PlotVisuSelect!='Network' && input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && input.PlotVisuSelect!='Scatterplot' && (input.SelectSpecifTaxo=='Diff' || input.SelectSpecifTaxo=='NoDiff') && input.PlotVisuSelect!='Krona' ",
                                               selectizeInput("ContrastList_table_Visu","",choices = "", multiple = TRUE),
