@@ -51,7 +51,7 @@ function(request) {
                                                ". SHAMAN robustly identifies the differential abundant genera with the Generalized Linear Model implemented in DESeq2", a("[Love 2014]", href="http://www.ncbi.nlm.nih.gov/pubmed/25516281"),".",
                                                 "SHAMAN is compatible with standard formats for metagenomic analysis (.csv, .tsv, .biom) and figures can be downloaded in several formats.",
                                                 "A presentation about SHAMAN is available", a("here",target="_blank",href="shaman_presentation.pdf")," and a poster", a("here.",target="_blank",href="shaman_poster.pdf"),style = "font-family: 'times'; font-si16pt"), br(),
-                                             p("Hereafter is the global workflow of the SHAMAN application:"),
+                                             p("This website is free and open to all users and there is no login requirement. Hereafter is the global workflow of the SHAMAN application:",style = "font-family: 'times'; font-si16pt"),
                                              div(img(src = "Workflow_sh.png",width = "100%",height = "100%",style="max-width: 800px;"),Align="center")
                                     ),
                                     tabPanel("Authors", h3("The main contributors to SHAMAN:"),
