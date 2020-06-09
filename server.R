@@ -642,7 +642,8 @@ shinyServer(function(input, output,session) {
     if(!is.null(tree))
     {
       res = tabBox(width = NULL, selected = "Count table",
-                   tabPanel("Count table",DT::dataTableOutput("DataCounts")),
+                   tabPanel("Count table",DT::dataTableOutput("DataCounts"),
+                            downloadButton('ExportRawCounts', 'Export count table file')),
                    tabPanel("Taxonomy",DT::dataTableOutput("DataTaxo"), 
                             actionButton("deleteTaxo", "Delete annotation"),
                             downloadButton('ExportTaxo', 'Export taxonomy file')),
@@ -655,7 +656,8 @@ shinyServer(function(input, output,session) {
     else
     {
       res = tabBox(width = NULL,selected = "Count table",
-                   tabPanel("Count table",DT::dataTableOutput("DataCounts")),
+                   tabPanel("Count table",DT::dataTableOutput("DataCounts"),
+                            downloadButton('ExportRawCounts', 'Export count table file')),
                    tabPanel("Taxonomy",DT::dataTableOutput("DataTaxo"),
                             actionButton("deleteTaxo", "Delete annotation"),
                             downloadButton('ExportTaxo', 'Export taxonomy file')),
@@ -2306,6 +2308,10 @@ shinyServer(function(input, output,session) {
     content = function(file){
       write_biom(make_biom(dataMergeCounts()$CT_noNorm, sample_metadata=values$TargetWorking[,-1],
                            observation_metadata=dataInput()$data$taxo_biom), file)}
+  )
+  output$ExportRawCounts <- downloadHandler(
+    filename = function() { 'SHAMAN_count.csv' },
+    content = function(file){write.csv(dataInput()$data$counts, file)}
   )
   
   output$ExportTaxo <- downloadHandler(
