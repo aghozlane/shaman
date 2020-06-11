@@ -3296,7 +3296,8 @@ shinyServer(function(input, output,session) {
   
   #### Export Visu
   output$exportVisuComp <- downloadHandler(
-    filename <- function() { paste(input$PlotVisuSelectComp,paste('SHAMAN',input$Exp_format_Visu,sep="."),sep="_") },
+    filename <- function() { 
+      paste(input$PlotVisuSelectComp,paste('SHAMAN',input$Exp_format_VisuComp,sep="."),sep="_") },
     content <- function(file) {
       
       taxo = input$TaxoSelect
@@ -3314,7 +3315,7 @@ shinyServer(function(input, output,session) {
         if(filesize!=0) print(Plot_Visu_Venn(input,BaseContrast,ResDiffAnal(),ContrastListVennDebounce, export=TRUE)$res)
       }
       if(input$PlotVisuSelectComp=="Heatmap_comp"){
-        if(filesize!=0) Plot_Visu_Heatmap_FC(input,BaseContrast,ResDiffAnal(),ContrastListDebounce, SelectTaxoPlotCompDebounce, export=TRUE)
+        if(filesize!=0) print(Plot_Visu_Heatmap_FC(input,BaseContrast,ResDiffAnal(),ContrastListDebounce, SelectTaxoPlotCompDebounce, export=TRUE))
       }
       if(input$PlotVisuSelectComp=="pValueDensity"){
         if(filesize!=0) print(Plot_pValue_Density(input, BaseContrast, ResDiffAnal(), ContrastListDebounce, input$AlphaVal, InputpValueDensityfocus))
