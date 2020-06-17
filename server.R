@@ -649,7 +649,8 @@ shinyServer(function(input, output,session) {
                             downloadButton('ExportTaxo', 'Export taxonomy file')),
                    tabPanel("Summary",h5(strong("Percentage of annotation")),htmlOutput("SummaryView"),
                             br(),h5(strong("Number of features by level:")),plotOutput("SummaryViewBarplot",width = 1200,height=500)),
-                   tabPanel("Phylogeny", PhyloTreeMetaROutput('PhyloTreeMetaR'))
+                   tabPanel("Phylogeny", PhyloTreeMetaROutput('PhyloTreeMetaR'),
+                            downloadButton('ExportPhylo', 'Export phylogeny file'))
       )
       
     }
@@ -2317,6 +2318,10 @@ shinyServer(function(input, output,session) {
   output$ExportTaxo <- downloadHandler(
     filename = function() { 'SHAMAN_taxo.csv' },
     content = function(file){write.csv(dataInput()$data$taxo, file)}
+  )
+  output$ExportPhylo <- downloadHandler(
+    filename = function() { 'SHAMAN_tree.nhx' },
+    content = function(file){write.tree(dataInputTree()$data, file=file)}
   )
   ## Export in .csv
   output$ExportCounts <- downloadHandler(
