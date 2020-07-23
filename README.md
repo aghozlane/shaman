@@ -50,13 +50,13 @@ chmod +x ./shaman/www/shaman.R && Rscript ./shaman/www/shaman.R
 SHAMAN is available for R=3.6.1. Packrat framework allows an easy installation of all the dependencies. Of note, raw data submission is not possible with this version.
 ```
 # Download packrat package
-wget ftp://shiny01.hosting.pasteur.fr/pub/shaman_package_201908.tar.gz
+wget ftp://shiny01.hosting.pasteur.fr/pub/shaman_package_202007.tar.gz
 mkdir packrat/shaman
 ```
 Now you can run R:
 ```
 install.packages("packrat")
-packrat::unbundle("shaman_package_201908.tar.gz", "packrat/shaman")
+packrat::unbundle("shaman_package_202007.tar.gz", "packrat/shaman")
 packrat::init("packrat/shaman")
 system("Rscript -e 'shiny::runGitHub("pierreLec/KronaRShy",port=5438)'",wait=FALSE),
 shiny::runGitHub('aghozlane/shaman')

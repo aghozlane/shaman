@@ -209,7 +209,7 @@ Volcano_Plot <- function(input, data, export = FALSE) {
                          axis.text = element_text(size = input$axisFontSize),
                          legend.title = element_text(size = input$axisFontSize),
                          legend.text = element_text(size = input$axisFontSize))
-    plot <- plot + geom_text(aes(label = labels, color = color_var), size = input$labelsSize %/% 3, hjust = 1, vjust = 1, show.legend = FALSE)
+    plot <- plot + geom_text_repel(aes(label = labels, color = color_var), size = input$labelsSize %/% 3, hjust = 1, vjust = 1, show.legend = FALSE)
     plot <- plot + scale_color_manual(name = "Group", values = c("Down" = input$colour1,"Not significant" = input$colour2,"Up" = input$colour3))
     if(input$showSignifThresholds){
       plot <- plot + geom_hline(yintercept = y_signif, linetype = "dashed", size = input$signifThresholdsWidth/2)
