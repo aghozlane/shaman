@@ -450,32 +450,32 @@ Plot_Visu_Diversity <- function(input,resDiff,ForScatter=FALSE, alpha_transparen
     alpha=alpha[alpha_selected]
     alpha_sd = tapply(TaxoNumber(counts_tmp_combined), targetInt$AllVar, sd)
     alpha_sd=alpha_sd[alpha_selected]
-    ci.alpha.down = pmax(alpha - 1.96*alpha_sd/sqrt.nb[alpha_selected],0)
-    ci.alpha.up = alpha + 1.96*alpha_sd/sqrt.nb[alpha_selected]
-    
+    ci.alpha.down = pmax(alpha - 1.96*alpha_sd/sqrt.nb,0)
+    ci.alpha.up = alpha + 1.96*alpha_sd/sqrt.nb
+
     shan <- tapply(vegan::diversity(counts_tmp_combined, index = "shannon"), targetInt$AllVar, mean)
     shan_selected = !is.na(shan)
     shan = shan[shan_selected]
     shan_sd = tapply(vegan::diversity(counts_tmp_combined, index = "shannon"), targetInt$AllVar, sd)
     shan_sd = shan_sd[shan_selected]
-    ci.shan.down = pmax(shan - 1.96*shan_sd/sqrt.nb[shan_selected],0)
-    ci.shan.up = shan + 1.96*shan_sd/sqrt.nb[shan_selected]
+    ci.shan.down = pmax(shan - 1.96*shan_sd/sqrt.nb,0)
+    ci.shan.up = shan + 1.96*shan_sd/sqrt.nb
     
     simpson <- tapply(vegan::diversity(counts_tmp_combined, index = "simpson"), targetInt$AllVar, mean)
     simpson_selected = !is.na(simpson)
     simpson = simpson[simpson_selected]
     simpson_sd = tapply(vegan::diversity(counts_tmp_combined, index = "simpson"), targetInt$AllVar, sd)
     simpson_sd = simpson_sd[simpson_selected]
-    ci.simpson.down = pmax(simpson - 1.96*simpson_sd/sqrt.nb[simpson_selected],0)
-    ci.simpson.up = simpson + 1.96*simpson_sd/sqrt.nb[simpson_selected]
+    ci.simpson.down = pmax(simpson - 1.96*simpson_sd/sqrt.nb,0)
+    ci.simpson.up = simpson + 1.96*simpson_sd/sqrt.nb
     
     invsimpson <- tapply(vegan::diversity(counts_tmp_combined, index = "invsimpson"), targetInt$AllVar, mean)
     invsimpson_selected = !is.na(invsimpson)
     invsimpson = invsimpson[invsimpson_selected]
     invsimpson_sd = tapply(vegan::diversity(counts_tmp_combined, index = "invsimpson"), targetInt$AllVar, sd)
     invsimpson_sd = invsimpson_sd[invsimpson_selected]
-    ci.invsimpson.down = pmax(invsimpson - 1.96*invsimpson_sd/sqrt.nb[invsimpson_selected],0)
-    ci.invsimpson.up = invsimpson + 1.96*invsimpson_sd/sqrt.nb[invsimpson_selected]
+    ci.invsimpson.down = pmax(invsimpson - 1.96*invsimpson_sd/sqrt.nb,0)
+    ci.invsimpson.up = invsimpson + 1.96*invsimpson_sd/sqrt.nb
     
     gamma <- TaxoNumber(counts_tmp_combined, targetInt$AllVar)
     gamma = gamma[!is.na(gamma)]
