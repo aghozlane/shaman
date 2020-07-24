@@ -1,5 +1,5 @@
 FROM ubuntu:18.04
-
+ARG SOURCE_VERSION=202007
 MAINTAINER Amine Ghozlane "amine.ghozlane@pasteur.fr"
 
 RUN apt-get update && apt-get install -y \
@@ -38,10 +38,10 @@ RUN wget --no-verbose https://cran.r-project.org/src/base/R-3/R-3.6.1.tar.gz -P 
     wget --no-verbose "https://s3.amazonaws.com/rstudio-shiny-server-os-build/ubuntu-12.04/x86_64/shiny-server-$VERSION-amd64.deb" -O ss-latest.deb && \
     gdebi -n ss-latest.deb && \
     rm -f version.txt ss-latest.deb && \
-    wget ftp://shiny01.hosting.pasteur.fr/pub/shaman_package_202007.tar.gz -P /opt && \
+    wget ftp://shiny01.hosting.pasteur.fr/pub/shaman_package_${SOURCE_VERSION}.tar.gz -P /opt && \
     mkdir /opt/packman
 
-RUN R -e """install.packages('packrat', repos='http://cran.univ-paris1.fr/');library("packrat");packrat::unbundle('/opt/shaman_package_202007.tar.gz', '/opt/packman')"""
+RUN R -e """install.packages('packrat', repos='http://cran.univ-paris1.fr/');library("packrat");packrat::unbundle('/opt/shaman_package_${SOURCE_VERSION}.tar.gz', '/opt/packman')"""
 
 COPY docker_inst/shiny-server.conf  /etc/shiny-server/shiny-server.conf
 COPY docker_inst/.Rprofile  /srv/shiny-server/
@@ -53,7 +53,7 @@ RUN git clone https://github.com/pierreLec/KronaRShy.git /srv/shiny-server/krona
     git clone https://github.com/aghozlane/shaman_bioblend.git /usr/bin/shaman_bioblend && \
     chown -R shiny.shiny  /srv/shiny-server/ && \
     chown -R shiny.shiny  /opt/packman/ && \
-    rm /opt/shaman_package_201909.tar.gz && \
+    rm /opt/shaman_package_${SOURCE_VERSION}.tar.gz && \
     cp /srv/shiny-server/.Rprofile /srv/shiny-server/kronarshy/.Rprofile && \
     chmod +x /usr/bin/shiny-server.sh
 
