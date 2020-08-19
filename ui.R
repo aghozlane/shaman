@@ -64,7 +64,8 @@ function(request) {
                                              p("Valentin Marcon,", "Carine Rey, ", "Hugo Varet,", "Emeline Perthame,", "Julien Tap, ","Anna Zhukova.")
                                     ),
                                     tabPanel("Citing SHAMAN",
-                                             p("If you use SHAMAN for your project, please cite our first application of SHAMAN in Quereda et al. 2016.",style = "font-family: 'times'; font-si16pt"),
+                                             p("If you use SHAMAN for your project, please cite the following publication:",style = "font-family: 'times'; font-si16pt"),
+                                             p(a("SHAMAN: a user-friendly website for metataxonomic analysis from raw reads to statistical analysis", href="https://pubmed.ncbi.nlm.nih.gov/32778056/"), "Volant S, Lechat P, Woringer P, Motreff L, Campagne P, Malabat C, Kennedy S, Ghozlane A; BMC Bioinformatics 2020 Aug 10;21(1):345.",style = "font-family: 'times'; font-si16pt"),
                                              p("Publication using SHAMAN:",style = "font-family: 'times'; font-si18pt; font-style: strong"),
                                              p(a("Prediction of the intestinal resistome by a three-dimensional structure-based method.", href="https://www.ncbi.nlm.nih.gov/pubmed/30478291"),"Ruppé E, Ghozlane A, Tap J, et al.;Nature microbiology 2018",style = "font-family: 'times'; font-si16pt"),
                                              
@@ -85,6 +86,7 @@ function(request) {
                          box(
                            title = "What's new in SHAMAN", width = NULL, status = "primary",
                            div(style = 'overflow-y: scroll; height: 550px',
+                               addNews("August 19th 2020","SHAMAN paper is out","We are really happy to announce that the paper describing in depth shaman and comparing this application to other available is out in BMC Bioinformatics. Moreover we keep improving the stability and functions of the application and we hope that we will be able to maintain this application for a long time."),
                                addNews("August 14th 2019","Major update","We performed a global improvement of SHAMAN. The application is now migrated to R 3.6.1. We implemented several visualization for differential analysis and network of abundance. We hope you will enjoy this new version."),
                                addNews("April 11th 2019","Debugging","We fixed few bugs in export system and scatterplot visualisation system."),
                                addNews("March 28th 2019","Packaging","SHAMAN is now available as packrat package. Take a look at download section."),

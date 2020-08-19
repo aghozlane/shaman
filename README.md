@@ -95,7 +95,8 @@ Then connect to http://0.0.0.0/.
 
 ## Citation
 
-If you use SHAMAN for your project, please cite our first application of SHAMAN in Quereda et al. 2016.
+If you use SHAMAN for your project, please cite the following publication:  
+SHAMAN: a user-friendly website for metataxonomic analysis from raw reads to statistical analysis Volant S, Lechat P, Woringer P, Motreff L, Campagne P, Malabat C, Kennedy S, Ghozlane A; BMC Bioinformatics 2020 Aug 10;21(1):345. [PUBMED](https://pubmed.ncbi.nlm.nih.gov/32778056/)  
 Publication using SHAMAN :  
 - Prediction of the intestinal resistome by a three-dimensional structure-based method, Ruppé E, Ghozlane A, Tap J, et al.;Nature microbiology 2018 [PUBMED](https://www.ncbi.nlm.nih.gov/pubmed/30478291)
 - Combined bacterial and fungal intestinal microbiota analyses: Impact of storage conditions and DNA extraction protocols, Angebault C, Ghozlane A, Volant S, Botterel F, d’Enfert C, Bougnoux ME, PloS one 2018 [PUBMED](https://www.ncbi.nlm.nih.gov/pubmed/30074988)
