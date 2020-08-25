@@ -4,7 +4,7 @@ options(bitmapType='cairo')
 if (!require("Rcpp")){
   install.packages("Rcpp",  repos="https://cran.univ-paris1.fr/")
 }
-
+# Limited shiny 1.3.2
 if(!require(shiny)){
   install.packages("shiny",  repos="https://cran.univ-paris1.fr/")
 }
