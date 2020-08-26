@@ -25,42 +25,6 @@ Hereafter is the global workflow of the SHAMAN application:
 
 SHAMAN is available for R 3.6.1. Here are different ways to install the application:
 
-### R install
-
-R install will require Gfortran on mac (https://cran.r-project.org/bin/macosx/tools/) and Rtools on windows (https://cran.r-project.org/bin/windows/Rtools/index.html). 
-Of note, raw data submission is not possible with this version.The installation, download and execution can all be performed with a small R script :
-```
-# Load shiny packages
-if(!require('shiny')){
- install.packages('shiny')
- library(shiny)
-}
-
-# Install dependencies, download last version of SHAMAN from github and run shaman in one command :
-runGitHub('aghozlane/shaman')
-```
-This script can also be executed as following : 
-```
-chmod +x ./shaman/www/shaman.R && Rscript ./shaman/www/shaman.R
-```
-
-
-### R install with packrat (linux only)
-
-SHAMAN is available for R=3.6.1. Packrat framework allows an easy installation of all the dependencies. Of note, raw data submission is not possible with this version.
-```
-# Download packrat package
-wget ftp://shiny01.hosting.pasteur.fr/pub/shaman_package_202007.tar.gz
-mkdir packrat/shaman
-```
-Now you can run R:
-```
-install.packages("packrat")
-packrat::unbundle("shaman_package_202007.tar.gz", "packrat/shaman")
-packrat::init("packrat/shaman")
-system("Rscript -e 'shiny::runGitHub("pierreLec/KronaRShy",port=5438)'",wait=FALSE),
-shiny::runGitHub('aghozlane/shaman')
-```
 ### Docker install
 
 Docker install is the easiest way to use SHAMAN locally. First, install docker:
@@ -80,6 +44,43 @@ Then connect to http://0.0.0.0:3838/.
 Docker update after an update of SHAMAN:
 ```
 docker pull aghozlane/shaman
+```
+
+### R install with packrat (linux only)
+
+SHAMAN is available for R=3.6.1. Packrat framework allows an easy installation of all the dependencies. Of note, raw data submission is not possible with this version.
+```
+# Download packrat package
+wget ftp://shiny01.hosting.pasteur.fr/pub/shaman_package_202009.tar.gz
+mkdir packrat/
+```
+Now you can run R:
+```
+install.packages("devtools")
+devtools::install_github("rstudio/packrat")
+packrat::unbundle("shaman_package_202009.tar.gz", "packrat/")
+packrat::init("packrat/shaman")
+system("Rscript -e 'shiny::runGitHub("pierreLec/KronaRShy",port=5438)'",wait=FALSE),
+shiny::runGitHub('aghozlane/shaman')
+```
+
+### R install (deprecated)
+
+R install will require Gfortran on mac (https://cran.r-project.org/bin/macosx/tools/) and Rtools on windows (https://cran.r-project.org/bin/windows/Rtools/index.html). 
+Of note, raw data submission is not possible with this version.The installation, download and execution can all be performed with a small R script :
+```
+# Load shiny packages
+if(!require('shiny')){
+ install.packages('shiny')
+ library(shiny)
+}
+
+# Install dependencies, download last version of SHAMAN from github and run shaman in one command :
+runGitHub('aghozlane/shaman')
+```
+This script can also be executed as following : 
+```
+chmod +x ./shaman/www/shaman.R && Rscript ./shaman/www/shaman.R
 ```
 
 ### CONDA

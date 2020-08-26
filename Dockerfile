@@ -1,5 +1,5 @@
 FROM ubuntu:18.04
-ARG SOURCE_VERSION=202007
+ARG SOURCE_VERSION=202009
 MAINTAINER Amine Ghozlane "amine.ghozlane@pasteur.fr"
 
 RUN apt-get update && apt-get install -y \
@@ -41,7 +41,7 @@ RUN wget --no-verbose https://cran.r-project.org/src/base/R-3/R-3.6.1.tar.gz -P 
     wget ftp://shiny01.hosting.pasteur.fr/pub/shaman_package_${SOURCE_VERSION}.tar.gz -P /opt && \
     mkdir /opt/packman
 
-RUN R -e """install.packages('packrat', repos='http://cran.univ-paris1.fr/');library("packrat");packrat::unbundle('/opt/shaman_package_${SOURCE_VERSION}.tar.gz', '/opt/packman')"""
+RUN R -e """install.packages('devtools', repos='http://cran.univ-paris1.fr/');devtools::install_github('rstudio/packrat');packrat::unbundle('/opt/shaman_package_${SOURCE_VERSION}.tar.gz', '/opt/packman')"""
 
 COPY docker_inst/shiny-server.conf  /etc/shiny-server/shiny-server.conf
 COPY docker_inst/.Rprofile  /srv/shiny-server/
