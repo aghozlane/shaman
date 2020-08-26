@@ -227,17 +227,18 @@ function(request) {
                                     tabPanel("R install with Packrat (linux only)",
                                              p("SHAMAN is available for R=3.6.1. Packrat framework allows an easy installation of all the dependencies. Of note, raw data submission is not possible with this version.",style = "font-family: 'times'; font-si16pt"),
                                              mainPanel(div(style = 'max-width: 900px; word-wrap: break-word;',
-                                                           "# Download packrat package",br(),"wget ftp://shiny01.hosting.pasteur.fr/pub/shaman_package_201909.tar.gz", br(),
-                                                           "mkdir packrat/shaman"), width=9,class="mainwell"),
+                                                           "# Download packrat package",br(),"wget ftp://shiny01.hosting.pasteur.fr/pub/shaman_package_202009.tar.gz", br(),
+                                                           "mkdir packrat/"), width=9,class="mainwell"),
                                              p("Now you can run R:"),
                                              mainPanel(div(style = 'max-width: 900px; word-wrap: break-word;',
-                                                           "install.packages(\"packrat\")",br(),
-                                                           "packrat::unbundle(\"shaman_package_201909.tar.gz\", \"packrat/shaman\")", br(),
+                                                           "install.packages(\"devtools\")",br(),
+                                                           "devtools::install_github(\"rstudio/packrat\")",br(),
+                                                           "packrat::unbundle(\"shaman_package_202009.tar.gz\", \"packrat/\")", br(),
                                                            "packrat::init(\"packrat/shaman\")",br(),
                                                            "system(\"Rscript -e 'shiny::runGitHub(\\\"pierreLec/KronaRShy\\\",port=5438)'\",wait=FALSE)",
                                                            br(),"shiny::runGitHub('aghozlane/shaman')"),width=9,class="mainwell")),
                                     
-                                    tabPanel("R install",
+                                    tabPanel("R install (deprecated)",
                                              p("SHAMAN is available for R=3.6.1. Gfortran is required on mac (https://cran.r-project.org/bin/macosx/tools/) and Rtools on windows (https://cran.r-project.org/bin/windows/Rtools/index.html). 
                                              Of note, raw data submission is not possible with this version. 
                                                The installation, download and execution can all be performed with a small R script:",style = "font-family: 'times'; font-si16pt"),
