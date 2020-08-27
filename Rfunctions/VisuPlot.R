@@ -715,14 +715,11 @@ GetDataToPlot <- function(input,resDiff,VarInt,ind_taxo,sec_variable = NULL, agg
       {
         MeanCounts = apply(counts_tmp_combined,2,mean)
         ord = order(MeanCounts,decreasing=TRUE)
-        if(nrow(counts_tmp_combined)==1) counts_tmp_combined[ord]
-        else counts_tmp_combined = counts_tmp_combined[,ord]
+        if(ncol(counts_tmp_combined)> 1) counts_tmp_combined = counts_tmp_combined[,ord]
         if(!aggregate){
-          if(nrow(prop_tmp_combined)==1) prop_tmp_combined[ord]
-          else prop_tmp_combined = prop_tmp_combined[,ord]
+          if(ncol(counts_tmp_combined)> 1) prop_tmp_combined = prop_tmp_combined[,ord]
         }
-        if(nrow(prop_all)==1) prop_all[ord]
-        else prop_all = prop_all[,ord]
+        if(ncol(prop_all)>1) prop_all = prop_all[,ord]
       }
     }
   }
