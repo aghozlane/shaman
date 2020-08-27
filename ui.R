@@ -525,7 +525,7 @@ function(request) {
                                        checkboxInput("NoTaxoFile","No taxonomy table",value=FALSE),
                                        selectInput("DemoDataset",h6(strong('Or select a dataset')),
                                                    c("..."="...",
-                                                     "ZymoBIOMICS mock 16S: Volant et al. 2019"=c("10b0238abee0d|silva|Volant et al. 2019 in review"),
+                                                     "ZymoBIOMICS mock 16S: Volant et al. 2020"=c("10b0238abee0d|silva|Volant et al. 2020 in review"),
                                                      "Afribiota: Vonaesch et al. 2018"=c("1be225fc935c7|silva|Vonaesch et al. 2018"),
                                                      "DNA extraction protocols 16S: Angebault et al. 2018"=c("eec74b27d162|silva|Angebault et al. 2018"),
                                                      "DNA extraction protocols ITS1: Angebault et al. 2018"=c("3580714197f5|unite|Angebault et al. 2018"),
