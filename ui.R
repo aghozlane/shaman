@@ -415,7 +415,7 @@ function(request) {
                                  # br(),
                                  column(width=12,
                                         
-                                        fileInput("dir",label = 'Select your fastq files',accept = c(".fastq,.fastq.gz,.fgz,.gz"),multiple = TRUE),
+                                        fileInput("dir",label = 'Select your fastq files',accept = c(".fastq,.fastq.gz,.fq,.fq.gz"),multiple = TRUE),
                                         # shinyDirButton("dir", "Select a directory", "Upload",buttonType = "primary")
                                         
                                         # tags$input(id = "dir2", webkitdirectory = TRUE, type = "file", onchange="pressed()"),
