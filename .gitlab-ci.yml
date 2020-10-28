@@ -5,19 +5,20 @@ stages:
   
 
 services:
-  - docker:dind
+  - registry-gitlab.pasteur.fr/dsi-tools/docker-images/docker:dind
 
 variables:
   DOCKER_HOST: tcp://localhost:2375
 
 
 build_dev:
-  image: docker:latest
+  image: registry-gitlab.pasteur.fr/dsi-tools/docker-images/docker:latest
   stage: build_dev
   variables:
     CI_DEBUG_TRACE: "false"
   script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+    # - docker pull aghozlane/shaman:latest || true
     - docker build 
       --tag "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
       .
@@ -27,12 +28,13 @@ build_dev:
     - master
 
 build_master:
-  image: docker:latest
+  image: registry-gitlab.pasteur.fr/dsi-tools/docker-images/docker:latest
   stage: build_master
   variables:
     CI_DEBUG_TRACE: "false"
   script:
     - docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
+    # - docker pull aghozlane/shaman:latest || true
     - docker build -t aghozlane/shaman .
     - docker push aghozlane/shaman
   only:
@@ -51,6 +53,7 @@ build_conda:
     - conda config --add channels r
     - conda config --add channels aghozlane
     - conda config --set anaconda_upload yes
+    - conda update conda
     - conda install -y conda-verify
     - conda install -y anaconda-client
     - conda install -y conda-build
