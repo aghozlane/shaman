@@ -837,7 +837,7 @@ function(request) {
                            checkboxInput("modifwidthDiag","Set width",FALSE),
                            conditionalPanel(condition="input.modifwidthDiag",
                                             sliderInput("widthDiag", "Width",min=100,max=2500,value = 800,step =10)),
-                           
+                           selectInput("colorsdiag", label=h6(strong("Gradient of colors")),choices = c("shaman-palette1", "shaman-palette2"),selected = "shaman-palette1"),
                            conditionalPanel(condition="input.DiagPlot=='clustPlot'",
                                             h6(strong("Layout")),
                                             selectInput("typeHculst", h6("Type"),c("Horizontal"="hori","Fan"="fan")),
@@ -849,7 +849,6 @@ function(request) {
                                             sliderInput("cexcircle", "Circle size",min=0,max=2,value = 0.9,step =0.1),
                                             sliderInput("cexpoint", "Point size",min=0,max=3,value = 1,step =0.1),
                                             sliderInput("cexstar", "Star height",min=0,max=1,value = 0.95,step =0.1)
-                                            
                            ),
                            
                            conditionalPanel(condition="input.DiagPlot=='SfactorsVStot'",

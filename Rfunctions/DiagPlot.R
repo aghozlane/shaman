@@ -28,8 +28,11 @@ Plot_diag <- function(input,resDiff,tree,getTable=FALSE)
   
   if(ncol(group)>0 && nrow(counts)>0 && !getTable)
   { 
-    colors = rep(c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c","#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5","#8c564b",
-                   "#c49c94","#e377c2","#f7b6d2","#7f7f7f", "#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"),ceiling(nrow(target)/20))
+    colors = switch(input$colorsdiag,
+                    "shaman-palette1"=rep(c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c","#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5","#8c564b",
+                   "#c49c94","#e377c2","#f7b6d2","#7f7f7f", "#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"),ceiling(nrow(target)/20)),
+                   "shaman-palette2"=rep(c("#4c4c4c", "#bdbdbd", "#ff4cff", "#bc62f4", "#1613ef", "#1391ef", "#ef1340"), ceiling(nrow(target)/7))
+    )
     
     if(input$DiagPlot=="barplotTot") res = barplotTot(input,counts,group = group, col=colors)
     if(input$DiagPlot=="barplotNul") res = barPlotNul(input,counts, group = group, col=colors)
