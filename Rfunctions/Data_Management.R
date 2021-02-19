@@ -660,14 +660,14 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
     if(0%in%colSums(counts_annot)){Error = "At least one of the column of the counts table is 0" }
     else{
       ## Create the dds object
-      dds <- DESeqDataSetFromMatrix(countData=CT, colData=target, design=design,ignoreRank=TRUE)
+      dds <- DESeq2shaman::DESeqDataSetFromMatrix(countData=CT, colData=target, design=design,ignoreRank=TRUE)
       #save(dds,file="testdds.RData")
       if(is.null(VarNorm)){
         ## Counts normalisation
         ## Normalisation with or without 0
-        if(input$AccountForNA=="NonNull" || RowProd==0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT))
-        if(input$AccountForNA=="All" && RowProd!=0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)))
-        if(input$AccountForNA=="Weighted" && input$AccountForNA!="NonNull" ) {dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT)); sizeFactors(dds) = w.sizefactor(CT)}
+        if(input$AccountForNA=="NonNull" || RowProd==0) dds = DESeq2shaman::estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT))
+        if(input$AccountForNA=="All" && RowProd!=0) dds = DESeq2shaman::estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)))
+        if(input$AccountForNA=="Weighted" && input$AccountForNA!="NonNull" ) {dds = DESeq2shaman::estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT)); sizeFactors(dds) = w.sizefactor(CT)}
         if(input$AccountForNA=="Total counts") { sizeFactors(dds) = colSums(CT)/mean(colSums(CT))}
         normFactors = sizeFactors(dds)
         
@@ -684,16 +684,16 @@ GetCountsMerge <- function(input,dataInput,taxoSelect,target,design)
             CT_tmp = CT[,indgrp]
             CT_tmp = removeNulCounts(CT_tmp) 
             target_tmp = data.frame(labels = rownames(target)[indgrp])
-            dds_tmp <- DESeqDataSetFromMatrix(countData=CT_tmp, colData=target_tmp, design=~labels,ignoreRank=TRUE)
-            if(input$AccountForNA=="NonNull") {dds_tmp = estimateSizeFactors(dds_tmp,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT_tmp)); normFactors[indgrp] = sizeFactors(dds_tmp)}
-            if(input$AccountForNA=="All") {dds_tmp = estimateSizeFactors(dds_tmp,locfunc=eval(as.name(input$locfunc))); normFactors[indgrp] = sizeFactors(dds_tmp)}
-            if(input$AccountForNA=="Weighted" && input$AccountForNA!="NonNull" ) {dds_tmp = estimateSizeFactors(dds_tmp,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT_tmp)); normFactors[indgrp] = w.sizefactor(CT_tmp)}
+            dds_tmp <- DESeq2shaman::DESeqDataSetFromMatrix(countData=CT_tmp, colData=target_tmp, design=~labels,ignoreRank=TRUE)
+            if(input$AccountForNA=="NonNull") {dds_tmp = DESeq2shaman::estimateSizeFactors(dds_tmp,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT_tmp)); normFactors[indgrp] = sizeFactors(dds_tmp)}
+            if(input$AccountForNA=="All") {dds_tmp = DESeq2shaman::estimateSizeFactors(dds_tmp,locfunc=eval(as.name(input$locfunc))); normFactors[indgrp] = sizeFactors(dds_tmp)}
+            if(input$AccountForNA=="Weighted" && input$AccountForNA!="NonNull" ) {dds_tmp = DESeq2shaman::estimateSizeFactors(dds_tmp,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT_tmp)); normFactors[indgrp] = w.sizefactor(CT_tmp)}
             if(input$AccountForNA=="Total counts") { normFactors[indgrp] = colSums(CT_tmp)/mean(colSums(CT_tmp))}
           }
         } else{
-          if(input$AccountForNA=="NonNull" || RowProd==0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT))
-          if(input$AccountForNA=="All" && RowProd!=0) dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)))
-          if(input$AccountForNA=="Weighted" && input$AccountForNA!="NonNull" ) {dds = estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT)); sizeFactors(dds) = w.sizefactor(CT)}
+          if(input$AccountForNA=="NonNull" || RowProd==0) dds = DESeq2shaman::estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT))
+          if(input$AccountForNA=="All" && RowProd!=0) dds = DESeq2shaman::estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)))
+          if(input$AccountForNA=="Weighted" && input$AccountForNA!="NonNull" ) {dds = DESeq2shaman::estimateSizeFactors(dds,locfunc=eval(as.name(input$locfunc)),geoMeans=GeoMeansCT(CT)); sizeFactors(dds) = w.sizefactor(CT)}
           if(input$AccountForNA=="Total counts") { sizeFactors(dds) = colSums(CT)/mean(colSums(CT))}
           normFactors = sizeFactors(dds)
         }

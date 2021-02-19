@@ -31,7 +31,7 @@ shinyServer(function(input, output,session) {
                            json_name=json_name,num=0,pass=pass,login_email = NULL,is.valid =NULL,
                            biom_masque = NULL,tree_masque=NULL, masque_key = NULL, count_table_masque = NULL, 
                            rdp_annot_masque = NULL, rdp_thres_masque = NULL,
-                           paths_fastq_tmp=NULL,curdir=curdir, error_progress=FALSE, visTarget=FALSE)
+                           paths_fastq_tmp=NULL,curdir=curdir, error_progress=FALSE, visTarget=FALSE, colors_diag=NULL)
   
   ## Counts file
   dataInputCounts <-reactive({ 
@@ -62,7 +62,7 @@ shinyServer(function(input, output,session) {
       if(!TRUE%in%duplicated(data[,1])) rownames(data)=data[,1];data=data[,-1]
       try(round(data, 0)->data, silent=T)
     }
-    
+    print(data)
     return(as.data.frame(data))
   })
   
@@ -119,10 +119,31 @@ shinyServer(function(input, output,session) {
     data=as.matrix(data)
     indNa = which(data=="")
     data[indNa]=NA
-    
+    print(data)
     return(as.data.frame(data))
   })
   
+  
+  ## BIOM File
+  dataInputEpi2me <-reactive({
+    
+    data = NULL
+    inFile <- input$fileEpi2me
+    
+    if (!is.null(inFile) && is.null(values$biom_masque)){
+      tryCatch(read.csv(inFile$datapath,sep=input$sepepi2me,header=TRUE)->data,
+               #messageId="ErrorBiom1",
+               error=function(e) sendSweetAlert(session,
+                                                title = "Oops",
+                                                text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
+      if(FALSE %in% c(c("accuracy", "barcode", "genus", "species") %in% colnames(data))){
+        data = NULL
+        sendSweetAlert(session, title = "Missing data",
+                       text="Shaman looks for accuracy, barcode, genus and species colnames in Epi2me files\n \n",type ="error")
+      }
+    }
+    return(data)
+  })
   
   ## BIOM File
   dataInputBiom <-reactive({ 
@@ -284,6 +305,38 @@ shinyServer(function(input, output,session) {
       }
     }
     
+    if(input$FileFormat=="fileEpi2me")
+    {
+      tmpEpi2me = dataInputEpi2me()
+
+      if(!is.null(tmpEpi2me) && is.null(data))
+      {
+        tmpEpi2me = tmpEpi2me[which(tmpEpi2me$accuracy >= as.numeric(input$Epi2me_th) & !is.na(tmpEpi2me$barcode) ),]
+        tmp = plyr::count(tmpEpi2me,c("barcode", "genus", "species"))
+        tmp$ids = paste(tmp$genus, tmp$species, sep="|")
+        tmp$index = paste0("Seq_",match(tmp$ids, unique(tmp$ids)))
+        Counts = as.data.frame.matrix(t(xtabs(freq~.,tmp[,c("freq", "barcode","index")])))
+        Taxo = unique(tmp[,c("index", "genus", "species")])
+        rownames(Taxo) = Taxo$index
+        Taxo= Taxo[,c("genus","species")]
+        names(Taxo)=c("Genus","Specie")
+
+        if(!is.null(Counts) && !is.null(Taxo))
+        { 
+          tmp = GetDataFromCT(Counts,Taxo, FALSE)
+          # print(tmp)
+          data = list(counts=tmp$counts,taxo=tmp$taxo, taxo_biom=tmp$taxo_biom)
+          ## Remove row with only O
+          # data[["counts"]] = data[["counts"]][rowSums(data[["counts"]])>1,]
+          
+          check = list(CheckCounts=tmp$CheckCounts,CheckTaxo=tmp$CheckTaxo,CheckPercent=tmp$CheckPercent)
+          # print(check)
+          percent = tmp$Percent
+        }
+      ## Remove row with only O
+      # data[["counts"]] = data[["counts"]][rowSums(data[["counts"]])>1,]
+      }
+    }
     
     if(input$FileFormat=="fileBiom")
     {
@@ -2365,7 +2418,25 @@ shinyServer(function(input, output,session) {
     
   })
   
-  
+  ## Box for color selection
+  # output$BoxColors <- renderUI({
+  #   input$addcoldiag
+  #   print("Here doing nothing")
+  #   #print( input$coldiag)
+  #   #print(CPCOLS)
+  #   # colors = input$coldiag
+  #   # if(!is.null(colors)){
+  #   #   res=
+  #   # }
+  #   # return(res)
+  #   values$colors_diag = c(values$colors_diag, input$coldiag)
+  #   tagList(
+  #     for ( i in 1:length(values$colors_diag)+1){
+  #     #colourWidget(height = "35px",width = "35px",value = "white", allowTransparent = TRUE, showColour = "background", closeOnClick=TRUE)
+  #     colourpicker::colourInput("coldiag", "Select colour", "purple", allowTransparent = TRUE, closeOnClick=TRUE, showColour = "background")
+  #     }
+  #   )
+  # })
   
   ###                                               ###
   ##
@@ -2979,6 +3050,21 @@ shinyServer(function(input, output,session) {
     }
   })
   
+  output$InfoEpi2me<- renderUI({
+    
+    if(input$FileFormat=="fileEpi2me")
+    {
+      inFile <- input$fileEpi2me
+      tmpEpi2me = dataInputEpi2me()
+      
+      if(!is.null(inFile) && is.null(tmpEpi2me)) {   
+        toastr_error(title="Error",message=paste("<h5>","This file can not be loaded.","</h5>","<br/> <br/>","<em>The loaded file is not in the Epi2me format or its format is not currently supported by SHAMAN software.</em>"),
+                     closeButton = TRUE,position ="bottom-right",preventDuplicates = TRUE,newestOnTop = TRUE,
+                     progressBar = TRUE,showDuration = 300,showMethod="show",timeOut = 20000,extendedTimeOut = 2000)
+      }
+      
+    }
+  })
   
   output$InfoCountsFile<- renderUI({
     

@@ -2,6 +2,7 @@
 options(bitmapType='cairo')
 
 if (!require("Rcpp")){
+  #RcppArmadillo_0.9.800.3.0
   install.packages("Rcpp",  repos="https://cran.univ-paris1.fr/")
 }
 # Limited shiny 1.3.2

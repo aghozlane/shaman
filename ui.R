@@ -86,6 +86,7 @@ function(request) {
                          box(
                            title = "What's new in SHAMAN", width = NULL, status = "primary",
                            div(style = 'overflow-y: scroll; height: 550px',
+                               addNews("Feburary 19th 2020","New feature","Shaman now support Epi2me data output. Let us know if you meet any issue."),
                                addNews("August 19th 2020","SHAMAN paper is out","We are really happy to announce that the paper describing in depth shaman and comparing this application to other available is out in BMC Bioinformatics. Moreover we keep improving the stability and functions of the application and we hope that we will be able to maintain this application for a long time."),
                                addNews("August 14th 2019","Major update","We performed a global improvement of SHAMAN. The application is now migrated to R 3.6.1. We implemented several visualization for differential analysis and network of abundance. We hope you will enjoy this new version."),
                                addNews("April 11th 2019","Debugging","We fixed few bugs in export system and scatterplot visualisation system."),
@@ -520,7 +521,7 @@ function(request) {
                 fluidRow(
                   box(title="Select your file format",width = 3,status = "success", solidHeader = TRUE,collapsible = FALSE,
                       # selectInput("FileFormat","",c("Count table & taxonomy (*.csv or *.tsv)"="fileCounts","BIOM file"="fileBiom","Saved project"="fileRData"),selected="fileCounts"),
-                      selectInput("FileFormat","",c("Count table & taxonomy (*.csv or *.tsv)"="fileCounts","BIOM file"="fileBiom","Project number"="projnum"),selected="fileCounts"),
+                      selectInput("FileFormat","",c("Count table & taxonomy (*.csv or *.tsv)"="fileCounts","BIOM file"="fileBiom","Epi2me file"="fileEpi2me","Project number"="projnum"),selected="fileCounts"),
                       conditionalPanel(condition="input.FileFormat=='fileCounts'",
                                        checkboxInput("NoTaxoFile","No taxonomy table",value=FALSE),
                                        selectInput("DemoDataset",h6(strong('Or select a dataset')),
@@ -579,6 +580,18 @@ function(request) {
                                    )
                   ),
                   
+                  conditionalPanel(condition="input.FileFormat=='fileEpi2me'&&input.DemoDataset=='...'",
+                                   box(title="Load the Epi2me file",width = 3, status = "primary", solidHeader = TRUE,collapsible = FALSE,
+                                       column(width=6,
+                                              selectInput("sepepi2me", h6(strong("Separator:")), c("Semicolon" = ";", "Tab" = "\t", "Comma" = ","))),
+                                       column(width=6,
+                                              numericInput("Epi2me_th",h6(strong("Minimum accuracy level:")),70,step=0.5,min=1,max=100)),
+                                       column(width=12,
+                                       fileInput('fileEpi2me', h6(strong('Select your file')),width="100%",accept = c(".csv", ".tsv"))),
+                                       tags$script('$( "#fileEpi2me" ).on( "click", function() { this.value = null; });')
+                                   )
+                  ),
+                  
                   conditionalPanel(condition="input.FileFormat=='projnum'||input.DemoDataset!='...'",
                                    uiOutput("Project_box_home")
                   ),
@@ -593,6 +606,7 @@ function(request) {
                   fluidRow(column(width=3,
                                   uiOutput("InfoCountsFile"),
                                   uiOutput("InfoTaxoFile"),
+                                  uiOutput("InfoEpi2me"),
                                   uiOutput("InfoBIOM")
                   )
                   )
@@ -688,7 +702,7 @@ function(request) {
                                                       fileInput('fileSizeFactors', h6(strong('Define your own size factors')),width="100%"),
                                                       tags$script('$( "#fileSizeFactors" ).on( "click", function() { this.value = null; });')
                                                ),
-                                               column(width=3, selectInput("sepsize", h6(strong("Separator:")), c("Tab" = "\t", "," = "Comma", "Semicolon" = ";"))),
+                                               column(width=3, selectInput("sepsize", h6(strong("Separator:")), c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";"))),
                                                column(width=3,br(),htmlOutput("InfoSizeFactor"))
                                              )
                                     ),
@@ -838,6 +852,10 @@ function(request) {
                            conditionalPanel(condition="input.modifwidthDiag",
                                             sliderInput("widthDiag", "Width",min=100,max=2500,value = 800,step =10)),
                            selectInput("colorsdiag", label=h6(strong("Gradient of colors")),choices = c("shaman-palette1", "shaman-palette2"),selected = "shaman-palette1"),
+                           #plotHelper(colours = c("red", "#123ABC")),
+                           #fluidRow(
+                             actionButton("addcoldiag",label=NULL, icon=icon('plus')), actionButton("delcoldiag",label=NULL,icon=icon('trash')), uiOutput("BoxColors"),
+                           #   ),
                            conditionalPanel(condition="input.DiagPlot=='clustPlot'",
                                             h6(strong("Layout")),
                                             selectInput("typeHculst", h6("Type"),c("Horizontal"="hori","Fan"="fan")),
@@ -913,9 +931,9 @@ function(request) {
                              box(title = "Plot options", width = NULL, status = "primary", solidHeader = TRUE, collapsible = TRUE, collapsed = FALSE,
                                                     ### _______both ####
                                                    h5(strong("Choose colours")),
-                                                   fluidRow(column(width = 7, colourInput("colour1", NULL, value = "#008B00", showColour = "both")), column(width = 5, h6(strong("Down")), style='padding:0px;')),
-                                                   fluidRow(column(width = 7, colourInput("colour2", NULL, value = "#999999", showColour = "both")), column(width = 5, h6(strong("Not significant")), style='padding:0px;')),
-                                                   fluidRow(column(width = 7, colourInput("colour3", NULL, value = "#FF7F00", showColour = "both")), column(width = 5, h6(strong("Up")), style='padding:0px;')),
+                                                   fluidRow(column(width = 7, colourpicker::colourInput("colour1", NULL, value = "#008B00", showColour = "both")), column(width = 5, h6(strong("Down")), style='padding:0px;')),
+                                                   fluidRow(column(width = 7, colourpicker::colourInput("colour2", NULL, value = "#999999", showColour = "both")), column(width = 5, h6(strong("Not significant")), style='padding:0px;')),
+                                                   fluidRow(column(width = 7, colourpicker::colourInput("colour3", NULL, value = "#FF7F00", showColour = "both")), column(width = 5, h6(strong("Up")), style='padding:0px;')),
                                                     ### _______bar chart ####
                                                     conditionalPanel(condition = "input.tabBoxPlotTables == 'Bar chart'",
                                                                     uiOutput("RadioButtonSelectedBarChart"),
@@ -1204,19 +1222,19 @@ function(request) {
                                                  column(width=6,sliderInput("linkWidth", h6("Link width"),min=0,max=10,value = 1,step = 0.5))
                                               ),
                                               fluidRow(
-                                                column(width=6,colourInput("edgeColorPositive", "Positive correlation", value = "red", showColour = "both")),
-                                                column(width=6,colourInput("edgeColorNegative",  "Negative correlation", value = "blue", showColour = "both"))
+                                                column(width=6,colourpicker::colourInput("edgeColorPositive", "Positive correlation", value = "red", showColour = "both")),
+                                                column(width=6,colourpicker::colourInput("edgeColorNegative",  "Negative correlation", value = "blue", showColour = "both"))
                                               ),
                                               conditionalPanel(condition="!input.colorCorr",
-                                                               fluidRow(column(width=7,colourInput("colorBackground", "Node color", value = "#BBBBBB", showColour = "both")),
-                                                                        column(width=5,colourInput("colorHighlightBackground", "if selected", value = "#BBBBBB", showColour = "both")))),
+                                                               fluidRow(column(width=7,colourpicker::colourInput("colorBackground", "Node color", value = "#BBBBBB", showColour = "both")),
+                                                                        column(width=5,colourpicker::colourInput("colorHighlightBackground", "if selected", value = "#BBBBBB", showColour = "both")))),
                                               conditionalPanel(condition="input.colorCorr",
                                                                selectInput("colorPalette", label=h6(strong("Gradient of colors")),choices = c("green-blue"="GnBu", "blue-white-red"="RdBu", "purple-white-orange"="PuOr", "red-yellow-green"="RdYlGn"),selected = "RdBu"),
                                                                checkboxInput("scaleFree", "Free scale")
                                               ),
                                               fluidRow(
-                                                column(width=7,colourInput("colorBorder", "Node border", value = "#AAAAAA", showColour = "both")),
-                                                column(width=5,colourInput("colorHighlightBorder",  "if selected", value = "#000000", showColour = "both"))
+                                                column(width=7,colourpicker::colourInput("colorBorder", "Node border", value = "#AAAAAA", showColour = "both")),
+                                                column(width=5,colourpicker::colourInput("colorHighlightBorder",  "if selected", value = "#000000", showColour = "both"))
                                               )
                              ),
                              
@@ -1322,10 +1340,10 @@ function(request) {
                              ## _______logit plot ####
                              conditionalPanel(condition="input.PlotVisuSelectComp=='LogitPlot'",
                                               h5(strong("Choose colours")),
-                                              fluidRow(column(width = 7, colourInput("colour01", NULL, value = "#999999", showColour = "both")), column(width = 5, h6(strong("Not significant")), style='padding:0px;')),
-                                              fluidRow(column(width = 7, colourInput("colour02", NULL, value = "#1E90FF", showColour = "both")), column(width = 5, h6(strong("Significant for contrast 1")), style='padding:0px;')),
-                                              fluidRow(column(width = 7, colourInput("colour03", NULL, value = "#FF7F00", showColour = "both")), column(width = 5, h6(strong("Significant for contrast 2")), style='padding:0px;')),
-                                              fluidRow(column(width = 7, colourInput("colour04", NULL, value = "#008B00", showColour = "both")), column(width = 5, h6(strong("Significant for both contrasts")), style='padding:0px;')),
+                                              fluidRow(column(width = 7, colourpicker::colourInput("colour01", NULL, value = "#999999", showColour = "both")), column(width = 5, h6(strong("Not significant")), style='padding:0px;')),
+                                              fluidRow(column(width = 7, colourpicker::colourInput("colour02", NULL, value = "#1E90FF", showColour = "both")), column(width = 5, h6(strong("Significant for contrast 1")), style='padding:0px;')),
+                                              fluidRow(column(width = 7, colourpicker::colourInput("colour03", NULL, value = "#FF7F00", showColour = "both")), column(width = 5, h6(strong("Significant for contrast 2")), style='padding:0px;')),
+                                              fluidRow(column(width = 7, colourpicker::colourInput("colour04", NULL, value = "#008B00", showColour = "both")), column(width = 5, h6(strong("Significant for both contrasts")), style='padding:0px;')),
                                               checkboxInput("showSignifThresholdsLogitPlot", "Show significance thresholds", TRUE),
                                               checkboxInput("showDiagonal", "Show diagonal", TRUE),
                                               conditionalPanel(condition="input.showSignifThresholdsLogitPlot || input.showDiagonal", 
