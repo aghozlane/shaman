@@ -312,6 +312,8 @@ shinyServer(function(input, output,session) {
       if(!is.null(tmpEpi2me) && is.null(data))
       {
         tmpEpi2me = tmpEpi2me[which(tmpEpi2me$accuracy >= as.numeric(input$Epi2me_th) & !is.na(tmpEpi2me$barcode) ),]
+        # remove missing levels
+        tmpEpi2me = droplevels(tmpEpi2me)
         tmp = plyr::count(tmpEpi2me,c("barcode", "genus", "species"))
         tmp$ids = paste(tmp$genus, tmp$species, sep="|")
         tmp$index = paste0("Seq_",match(tmp$ids, unique(tmp$ids)))
