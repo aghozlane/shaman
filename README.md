@@ -51,7 +51,7 @@ docker pull aghozlane/shaman
 SHAMAN is available for R=3.6.1. Packrat framework allows an easy installation of all the dependencies. Of note, raw data submission is not possible with this version.
 ```
 # Download packrat package
-wget ftp://shiny01.hosting.pasteur.fr/pub/shaman_package_202009.tar.gz
+wget ftp://shiny01.hosting.pasteur.fr/pub/shaman_package_202102.tar.gz
 mkdir packrat/
 ```
 Now you can run R:
@@ -120,8 +120,8 @@ If you have any comments, questions or suggestions, or need help to use SHAMAN, 
 ## Acknowledgements
 
 The main contributors to SHAMAN:
+Amine Ghozlane (Maintainer, coding, testing, documentation, evaluation, packaging),
 Stevenn Volant (Initiator, coding, testing, documentation, evaluation),
-Amine Ghozlane (Coding, testing, documentation, evaluation, packaging),
 Perrine Woringer (Coding, testing, documentation, feature suggestions),
 Pierre Lechat (Coding, testing, feature suggestions)  
 

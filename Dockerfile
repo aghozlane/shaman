@@ -1,5 +1,5 @@
 FROM ubuntu:18.04
-ARG SOURCE_VERSION=202009
+ARG SOURCE_VERSION=202102
 MAINTAINER Amine Ghozlane "amine.ghozlane@pasteur.fr"
 
 RUN apt-get update && apt-get install -y \
