@@ -136,10 +136,10 @@ shinyServer(function(input, output,session) {
                error=function(e) sendSweetAlert(session,
                                                 title = "Oops",
                                                 text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
-      if(FALSE %in% c(c("accuracy", "barcode", "genus", "species") %in% colnames(data))){
+      if(FALSE %in% c(c("accuracy", "barcode", "lineage") %in% colnames(data))){
         data = NULL
         sendSweetAlert(session, title = "Missing data",
-                       text="Shaman looks for accuracy, barcode, genus and species colnames in Epi2me files\n \n",type ="error")
+                       text="Shaman looks for accuracy, barcode and lineage colnames in Epi2me files\n \n",type ="error")
       }
     }
     return(data)
@@ -314,14 +314,22 @@ shinyServer(function(input, output,session) {
         tmpEpi2me = tmpEpi2me[which(tmpEpi2me$accuracy >= as.numeric(input$Epi2me_th) & !is.na(tmpEpi2me$barcode) ),]
         # remove missing levels
         tmpEpi2me = droplevels(tmpEpi2me)
-        tmp = plyr::count(tmpEpi2me,c("barcode", "genus", "species"))
-        tmp$ids = paste(tmp$genus, tmp$species, sep="|")
-        tmp$index = paste0("Seq_",match(tmp$ids, unique(tmp$ids)))
+        #tmp = plyr::count(tmpEpi2me,c("barcode", "phylum",	"class",	"order",	"family", "genus", "species"))
+        tmp = plyr::count(tmpEpi2me,c("barcode", "lineage"))
+        #tmp$ids = paste(tmp$genus, tmp$species, sep="|")
+        #tmp$index = paste0("Seq_",match(tmp$ids, unique(tmp$ids)))
+        tmp$index = paste0("Seq_",match(tmp$lineage, unique(tmp$lineage)))
         Counts = as.data.frame.matrix(t(xtabs(freq~.,tmp[,c("freq", "barcode","index")])))
-        Taxo = unique(tmp[,c("index", "genus", "species")])
-        rownames(Taxo) = Taxo$index
-        Taxo= Taxo[,c("genus","species")]
-        names(Taxo)=c("Genus","Specie")
+        #Taxo = unique(tmp[,c("index", "phylum",	"class",	"order",	"family", "genus", "species")])
+        Taxotmp = unique(tmp[,c("index", "lineage")])
+        Taxo = stringr::str_split_fixed(Taxotmp$lineage, ";", 7)
+        Taxo[Taxo == ""] =NA
+        colnames(Taxo) = c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Specie")
+        rownames(Taxo) = Taxotmp$index
+        names(Taxo) = c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Specie")
+         #rownames(Taxo) = Taxo$index
+        #Taxo= Taxo[,c("genus","species")]
+        #names(Taxo)=c("Genus","Specie")
 
         if(!is.null(Counts) && !is.null(Taxo))
         { 

@@ -583,7 +583,7 @@ function(request) {
                   conditionalPanel(condition="input.FileFormat=='fileEpi2me'&&input.DemoDataset=='...'",
                                    box(title="Load the Epi2me file",width = 3, status = "primary", solidHeader = TRUE,collapsible = FALSE,
                                        column(width=6,
-                                              selectInput("sepepi2me", h6(strong("Separator:")), c("Semicolon" = ";", "Tab" = "\t", "Comma" = ","))),
+                                              selectInput("sepepi2me", h6(strong("Separator:")), c("Comma" = ",", "Semicolon" = ";", "Tab" = "\t"))),
                                        column(width=6,
                                               numericInput("Epi2me_th",h6(strong("Minimum accuracy level:")),70,step=0.5,min=1,max=100)),
                                        column(width=12,

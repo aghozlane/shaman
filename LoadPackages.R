@@ -174,6 +174,10 @@ if (!require("scatterD3")) {
   install.packages("scatterD3", repos="https://cran.univ-paris1.fr/")
 }
 
+if (!require("stringr")) {
+  install.packages("stringr", repos="https://cran.univ-paris1.fr/")
+}
+
 if (!require(devtools)) {
   install.packages('devtools',  repos="https://cran.univ-paris1.fr/")
 }
@@ -218,5 +222,5 @@ libshaman=c("shiny", "rjson", "ape", "GUniFrac", "psych", "ggplot2", "vegan", "d
             "htmltools", "rAmCharts", "colourpicker", "data.table", "UpSetR", "ggrepel", "igraph", 
             "visNetwork", "shinytoastr", "scatterD3", "devtools", "shinydashboardshaman", "d3heatmap", 
             "biomformatshaman", "rNVD3shaman", "DESeq2shaman", "PhyloTreeMetaR", "treeWeightD3", "d3vennR",
-            "googleVis")
+            "googleVis", "stringr")
 lapply(libshaman, require, character.only = TRUE)
