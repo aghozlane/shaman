@@ -71,6 +71,7 @@ requirements:
         - r-devtools
         - r-shinytoastr
         - r-shinydashboardshaman
+        - r-stringr
         - lockfile
         - python-daemon
         - bioblend
