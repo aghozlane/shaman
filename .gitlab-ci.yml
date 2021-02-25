@@ -58,9 +58,11 @@ build_conda:
     - conda install -y anaconda-client
     - conda install -y conda-build
     - conda install -y git
+    - conda config --set anaconda_upload no
   script:
+    - res=$(conda build conda_inst --output)
     - anaconda login --username "$DOCKER_USER" --password "$DOCKER_PASS"
-    - conda build conda_inst
+    - anaconda upload $res
   except:
     - dev
     - master
