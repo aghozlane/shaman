@@ -59,7 +59,7 @@ build_conda:
     - conda install -y conda-build
     - conda install -y git
   script:
-    - res=$(conda build conda_inst --output)
+    - res=$(conda build conda_inst --output --output-folder .)
     - anaconda login --username "$DOCKER_USER" --password "$DOCKER_PASS"
     - anaconda upload $res
   except:
