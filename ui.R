@@ -218,10 +218,10 @@ function(request) {
                                              p("Download and install docker from",a("https://www.docker.com/", href="https://www.docker.com/")),
                                              p("- Running SHAMAN:"),
                                              mainPanel(div(style = 'max-width: 900px',"docker pull aghozlane/shaman && docker run --rm -p 80:80 -p 5438:5438 aghozlane/shaman"),width=8,class="mainwell"),
-                                             p("Then connect to http://0.0.0.0/ with your favorite web navigator."),
+                                             p("Then connect to http://localhost/ or http://0.0.0.0/  with your favorite web navigator."),
                                              p("Failed: port is already allocated ?"),
                                              mainPanel(div(style = 'max-width: 900px',"docker run --rm -p 3838:80 -p 5438:5438 aghozlane/shaman"),width=6,class="mainwell"),
-                                             p("Then connect to http://0.0.0.0:3838/."),
+                                             p("Then connect to http://localhost:3838/ http://0.0.0.0:3838/."),
                                              p("- Docker update after an update of SHAMAN:"),
                                              mainPanel(div(style = 'max-width: 900px',"docker pull aghozlane/shaman"),width=4,class="mainwell")
                                     ),

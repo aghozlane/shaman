@@ -35,12 +35,12 @@ Now in your terminal:
 ```
 docker pull aghozlane/shaman && docker run --rm -p 80:80 -p 5438:5438 aghozlane/shaman
 ```
-Then connect to http://0.0.0.0/ with your favorite web navigator.
+Then connect to http://localhost/ or http://0.0.0.0/ with your favorite web navigator.
 Failed: port is already allocated ?
 ```
 docker run --rm -p 3838:80 -p 5438:5438 aghozlane/shaman
 ```
-Then connect to http://0.0.0.0:3838/.
+Then connect to http://localhost:3838/ or http://0.0.0.0:3838/.
 Docker update after an update of SHAMAN:
 ```
 docker pull aghozlane/shaman
@@ -58,7 +58,7 @@ Now you can run R:
 ```
 install.packages("devtools")
 devtools::install_github("rstudio/packrat")
-packrat::unbundle("shaman_package_202009.tar.gz", "packrat/")
+packrat::unbundle("shaman_package_202102.tar.gz", "packrat/")
 packrat::init("packrat/shaman")
 system("Rscript -e 'shiny::runGitHub("pierreLec/KronaRShy",port=5438)'",wait=FALSE),
 shiny::runGitHub('aghozlane/shaman')
@@ -92,7 +92,7 @@ conda install -c aghozlane shaman
 # Now run shaman
 shaman_conda.R
 ```
-Then connect to http://0.0.0.0/.
+Then connect to http://localhost/ or http://0.0.0.0/.
 
 ## Citation
 
