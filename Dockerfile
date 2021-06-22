@@ -1,7 +1,8 @@
 FROM ubuntu:18.04
 ARG SOURCE_VERSION=202102
 MAINTAINER Amine Ghozlane "amine.ghozlane@pasteur.fr"
-
+ENV TZ=Europe/Paris
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN apt-get update && apt-get install -y \
     wget \
     gdebi-core \
@@ -24,9 +25,12 @@ RUN apt-get update && apt-get install -y \
     g++ \
     make \
     openjdk-8-jdk \
-    libmagick++-dev 
+    libmagick++-dev \
+    tzdata
     
 RUN pip3 install bioblend python-daemon
+
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 #Download and install shiny server
 RUN wget --no-verbose https://cran.r-project.org/src/base/R-3/R-3.6.1.tar.gz -P /opt/ && \
