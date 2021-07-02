@@ -285,8 +285,10 @@ Plot_UpSet <- function(input,BaseContrast, resDiff, ContrastListDebounce, export
     maxRow = max(apply(df,2,FUN=function(x) length(which(!is.na(x)))))
     df = df[1:max(maxRow,1),]
     df = df[,which(apply(!is.na(df),2,any))]
-  }}
-  return(list(plot=plot,table=df, contrasts_without_diff=contrasts_without_diff))
+    }}
+  if(export) res = list(plot=plot,table=df, contrasts_without_diff=contrasts_without_diff)
+  else res = list(table=df, contrasts_without_diff=contrasts_without_diff)
+  return(res)
 }
 
 
