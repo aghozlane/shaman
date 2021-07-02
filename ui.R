@@ -1392,14 +1392,16 @@ function(request) {
                                                 column(width=6,numericInput("widthVisuExportComp", "Width (in px)",min=100,max=NA,value = 800,step =1))
                                               ),
                                               downloadButton("exportVisuComp", "Export plot"),
-                                              conditionalPanel(condition = "input.PlotVisuSelectComp=='UpSet'", br(), h5(strong("Export table")), fluidRow(column(width = 7, br(), downloadButton("exportVisuCompTableUpSet", "Export table")), 
-                                                                                                                         column(width = 5, selectInput("sepTabUpset", h6(strong("Separator:")), c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))))
+                                              conditionalPanel(condition = "input.PlotVisuSelectComp=='UpSet'", br(), h5(strong("Export table")), fluidRow(column(width = 7, selectInput("sepTabUpset", h6(strong("Separator:")), c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")),
+                                                                                                                                                                  br(), downloadButton("exportVisuCompTableUpSet", "Export table")) 
+                                                                                                                         ))
                                           )
                          ),
                          conditionalPanel(condition="input.PlotVisuSelectComp=='Venn'",
                                           box(title = "Export table",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
-                                              fluidRow(column(width = 7, br(), downloadButton("exportVisuCompTableVenn", "Export table")), 
-                                                       column(width = 5, selectInput("sepTabVenn", h6(strong("Separator:")), c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";"))))))
+                                              fluidRow(column(width = 7, selectInput("sepTabVenn", h6(strong("Separator:")), c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")), 
+                                                                  br(), downloadButton("exportVisuCompTableVenn", "Export table")) 
+                                                       )))
                   )
                 )
         ),

@@ -3425,7 +3425,7 @@ shinyServer(function(input, output,session) {
         if(filesize!=0) print(Plot_MultipleVenn(input, BaseContrast, ResDiffAnal(), ContrastListDebounce)$plot)
       }
       if(input$PlotVisuSelectComp=="UpSet"){
-        if(filesize!=0) print(Plot_UpSet(input, BaseContrast, ResDiffAnal(), ContrastListDebounce)$plot)
+        if(filesize!=0) print(Plot_UpSet(input, BaseContrast, ResDiffAnal(), ContrastListDebounce, export=TRUE)$plot)
       }
       if(input$PlotVisuSelectComp=="LogitPlot"){
         if(filesize!=0) print(Plot_Comp_Logit(input, BaseContrast, ResDiffAnal(), SelectTaxoPlotCompDebounce, export = TRUE))
@@ -3825,7 +3825,7 @@ shinyServer(function(input, output,session) {
     if(is.na(filesize)){filesize=0}
     if(filesize!=0){
       BaseContrast = read.table(namesfile,header=TRUE)
-      if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_UpSet(input, BaseContrast, resDiff, ContrastListDebounce)$plot)
+      if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_UpSet(input, BaseContrast, resDiff, ContrastListDebounce, export=TRUE)$plot)
     }
   })
   
