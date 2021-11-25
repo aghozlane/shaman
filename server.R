@@ -931,10 +931,34 @@ shinyServer(function(input, output,session) {
     fastaName = paste(tmp,paste(basename(file_path_sans_ext(json_name)),"_contaminant.fasta",sep=""),sep = .Platform$file.sep)
     
     if(!file.exists(fastaName)) file.create(fastaName,showWarnings=FALSE)
-    if(input$PairedOrNot=="y"){seq =paste("#Seq1\n",input$R1primer,"\n \n","#Seq2\n",input$R2primer,sep="")}
-    if(input$PairedOrNot=="n"){seq =input$primerSingle}
-    if(!is.null(seq))  write(seq, file=fastaName)
-    
+    if(input$PairedOrNot=="y"){seq =paste("\n>Seq1\n",input$R1primer,"\n \n",">Seq2\n",input$R2primer,sep="")}
+    if(input$PairedOrNot=="n"){seq =paste("\n>Seq1\n",input$primerSingle)}
+    if(!is.null(seq)){
+      known_adaptators=">poly-A
+AAAAAAAAAAAAAAAAAAAA
+>poly-C
+CCCCCCCCCCCCCCCCCCCC
+>poly-G
+GGGGGGGGGGGGGGGGGGGG
+>poly-T
+TTTTTTTTTTTTTTTTTTTT
+>Adapter 1
+GATCGGAAGAGCTCGTATGCCGTCTTCTGCTTG
+>Adapter 2
+ACACTCTTTCCCTACACGACGCTCTTCCGATCT
+>PCR Primer 1
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCT
+>PCR Primer 2
+CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT
+>Genomic DNA Sequencing Primer
+ACACTCTTTCCCTACACGACGCTCTTCCGATCT
+>PCR Primer 1
+AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCT
+>PCR Primer 2
+CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
+      seq = paste(known_adaptators, seq, sep="")
+      write(seq, file=fastaName)
+    }
   })
   
   
