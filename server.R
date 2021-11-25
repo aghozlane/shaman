@@ -932,7 +932,7 @@ shinyServer(function(input, output,session) {
     
     if(!file.exists(fastaName)) file.create(fastaName,showWarnings=FALSE)
     if(input$PairedOrNot=="y"){seq =paste("\n>Seq1\n",input$R1primer,"\n \n",">Seq2\n",input$R2primer,sep="")}
-    if(input$PairedOrNot=="n"){seq =paste("\n>Seq1\n",input$primerSingle)}
+    if(input$PairedOrNot=="n"){seq =paste("\n>Seq1\n",input$primerSingle, sep="")}
     if(!is.null(seq)){
       known_adaptators=">poly-A
 AAAAAAAAAAAAAAAAAAAA
