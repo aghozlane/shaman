@@ -346,11 +346,10 @@ CheckMasque <- function(input, values, check_mail=FALSE)
   if(is.null(Error) && !isValidPrimer(input$primerSingle)){ Error = "<h6><strong>The primer must only contain letters from A to Z</strong></h6>" }
   
   if(is.null(Error)) {
-    
     res = SamplesMasque(input,values)
     if(length(res$samples)==0) {
       Error = "<h6><strong>0 sample detected</strong></h6>"
-      if(input$PairedOrNot=='y') HowTo = '<h6><strong>Make sure that you click the &laquo Match &raquo button. <br /> Change the working directory and/or verify the pairs matching.</strong></h6>'
+      if(input$PairedOrNot=='y') HowTo = '<h6><strong>Make sure that your samples have the correct extension (.fastq, .fq, .fastq.gz or .fq.gz) and you clicked the &laquo Match &raquo button. <br /> Change the working directory and/or verify the pairs matching.</strong></h6>'
       if(input$PairedOrNot=='n') HowTo = '<h6><strong>Make sure that your samples have the correct extension (.fastq, .fq, .fastq.gz or .fq.gz). <br /> Change the working directory.</strong></h6>'
     }
     
@@ -387,13 +386,17 @@ SamplesMasque <- function(input,values)
     tmpR1 = gsub(input$R1files,x=values$R1fastQ,"") 
     tmpR2 = gsub(input$R2files,x=values$R2fastQ,"")
     
-    
     R1samples = tmpR1[tmpR1%in%tmpR2]; R1samples_removed = values$R1fastQ[!tmpR1%in%tmpR2]
     R2samples = tmpR2[tmpR2%in%tmpR1]; R2samples_removed = values$R2fastQ[!tmpR2%in%tmpR1]
     
     samples = unique(c(R1samples,R2samples))
     samples_removed = c(R1samples_removed,R2samples_removed)
-  } else {samples = unique(values$fastq_names_only)}
+  } else {
+    samples = unique(values$fastq_names_only)
+    validext = grepl(".f.*q.*", samples, perl=T)
+    samples_removed=samples[!validext]
+    samples = samples[validext]
+  }
   
   return(list(samples=samples,samples_removed=samples_removed))
 }
