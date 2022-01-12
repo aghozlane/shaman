@@ -86,7 +86,7 @@ function(request) {
                          box(
                            title = "What's new in SHAMAN", width = NULL, status = "primary",
                            div(style = 'overflow-y: scroll; height: 550px',
-                               addNews("January 7th 2022","Server maintenance from 10-11 January 2021","Raw reads submission will be temporarly desactivated from January 10 until 11 due to a cluster maintenance."),
+                               addNews("January 7th 2022","Server maintenance from 10-12 January 2021","Raw reads submission will be temporarly desactivated from January 10 until 11 due to a cluster maintenance."),
                                addNews("May 5th 2021","Server maintenance is done","Raw reads submission is back. We updated vsearch to 2.17, RDP classifier to 2.13, Bowtie to 2.3.5.1 and Biom to 2.1.10. Let us know if you meet any issue."),
                                addNews("April 28th 2021","Server maintenance from 3-6 Mai 2021","Raw reads submission will be temporarly desactivated from Mai 3 until 6 due to a cluster maintenance."),
                                addNews("Feburary 19th 2020","New feature","Shaman now support Epi2me data output. Let us know if you meet any issue."),
