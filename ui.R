@@ -86,6 +86,7 @@ function(request) {
                          box(
                            title = "What's new in SHAMAN", width = NULL, status = "primary",
                            div(style = 'overflow-y: scroll; height: 550px',
+                               addNews("March 11th 2022","Server maintenance on march 18th", "Raw reads submission will be temporarly desactivated from March 18th. For now we keep improving our workflows, submissions from the docker machine should now be much more improved !"),
                                addNews("February 29th 2022","Workflow updates","We updated the workflow with Alientrimmer 2 to improve speed and resilience. Let us know if you meet some trouble!"),
                                addNews("February 29th 2022","Upgrades on 29 feb !","Raw reads submission will be temporarly desactivated 29 February to upgrade the bioinformatic workflow."),
                                addNews("January 13th 2022","Server maintenance is done","Raw reads submission is back."),
