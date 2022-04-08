@@ -1,5 +1,6 @@
 FROM ubuntu:18.04
-ARG SOURCE_VERSION=202102
+ARG SOURCE_VERSION=202204
+ARG CRAN_SOURCE=http://cran.irsn.fr/
 MAINTAINER Amine Ghozlane "amine.ghozlane@pasteur.fr"
 ENV TZ=Europe/Paris
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
@@ -45,7 +46,7 @@ RUN wget --no-verbose https://cran.r-project.org/src/base/R-3/R-3.6.1.tar.gz -P 
     wget ftp://shiny01.hosting.pasteur.fr/pub/shaman_package_${SOURCE_VERSION}.tar.gz -P /opt && \
     mkdir /opt/packman
 
-RUN R -e """install.packages('devtools', repos='http://cran.irsn.fr/');devtools::install_github('rstudio/packrat');packrat::unbundle('/opt/shaman_package_${SOURCE_VERSION}.tar.gz', '/opt/packman')"""
+RUN R -e """install.packages('devtools', repos='${CRAN_SOURCE}');devtools::install_github('rstudio/packrat');packrat::unbundle('/opt/shaman_package_${SOURCE_VERSION}.tar.gz', '/opt/packman')"""
 
 COPY docker_inst/shiny-server.conf  /etc/shiny-server/shiny-server.conf
 COPY docker_inst/.Rprofile  /srv/shiny-server/
