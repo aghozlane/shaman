@@ -84,13 +84,15 @@ Plot_Visu_Barplot <- function(input,resDiff)
     
     dataBarPlot_mat$Taxonomy = factor(dataBarPlot_mat$Taxonomy,levels = namesTax)
     dataBarPlot_mat$AllVar = factor(dataBarPlot_mat$AllVar,levels = unique(dataBarPlot_mat$AllVar))
-    
+
     gg= ggplot(dataBarPlot_mat, aes(x=AllVar, y=Proportions, fill=Taxonomy)) 
-    gg= gg +geom_bar(position=input$positionBarPlot, stat="identity")
+    if(input$CountsOrProp=="counts" && input$positionBarPlot=="fill") gg= gg +geom_col()
+    else gg= gg +geom_col(position=input$positionBarPlot)
     gg= gg + theme_bw()+ scale_fill_manual(values=tax.colors)
     gg = gg +theme(panel.grid.minor.x=element_blank(),panel.grid.major.x=element_blank()) 
     if(input$CountsOrProp=="prop") gg = gg+labs(y="Relative abundance (%)",x="")
-    if(input$CountsOrProp=="counts") gg = gg+labs(y="Abundance",x="")
+    if(input$CountsOrProp=="counts" && input$NormOrRaw=="norm") gg = gg+labs(y="Normalized counts",x="")
+    else if(input$CountsOrProp=="counts" && input$NormOrRaw!="norm") gg = gg+labs(y="Raw counts",x="")
     if(input$SensPlotVisu == "Horizontal") gg = gg + coord_flip()
   } 
   return(list(plotd3=plotd3,gg=gg))
