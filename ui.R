@@ -1040,7 +1040,12 @@ function(request) {
                                           useShinyjs(),
                                           br(),
                                           box(title = "Correlation table",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
-                                              DT::dataTableOutput("CorTable")
+                                              DT::dataTableOutput("CorTable"),
+                                              fluidRow(
+                                                column(width=3,downloadButton('ExportCorTable', 'Export table')),
+                                                column(width=3,selectInput("sepcortable", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
+                                              ),
+                                              tags$style(type='text/css', "#ExportCortable { margin-top: 37px;}")
                                           )
                          ),
                          

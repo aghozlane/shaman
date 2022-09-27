@@ -3918,6 +3918,18 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
                    pageLength = 10,scrollX=TRUE, processing=FALSE
     ))
   
+  ## Export Diversitytable in .csv
+  output$ExportCorTable <- downloadHandler(
+    filename = function() { 
+      if(input$sepcortable=="\t") 'SHAMAN_correlation.tsv'
+      else 'SHAMAN_correlation.csv'
+    },
+    content = function(file){
+      tmp = Plot_Visu_Scatterplot(input,ResDiffAnal(),CorEst=TRUE)$cor.est
+      write.table(tmp, file,row.names = FALSE, sep=input$sepcortable)
+    }
+  )
+  
   output$lmEquation <- renderPrint({ 
     res = Plot_Visu_Scatterplot(input,ResDiffAnal(),lmEst=TRUE)
     coef = res$regCoef
