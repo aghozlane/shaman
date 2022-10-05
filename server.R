@@ -3299,18 +3299,12 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     
     dist_phyl = getDistMethods()[!getDistMethods() %in% c("additive_symm", "jensen-shannon", "jensen_difference", "minkowski", "topsoe")]
     
-    print("Here WTF")
     res = selectInput("DistClust","Distance", unique(sort(c("altGower", "binomial", "bray", "canberra", "cao", "chao", "euclidean","gower", "horn",
                                                             "jaccard", "kulczynski",  "mahalanobis", "morisita", "mountford","raup",
                                                             "SERE"="sere", dist_phyl))),selected="bray")
-    print(tree)
-    print(input$fileTree)
-    print(ErrorTree)
-    print(TaxoSelect)
     ## Add the unifrac distance
     if(!is.null(tree) && is.null(ErrorTree)  && TaxoSelect %in% c("OTU/Gene", "MGS"))
     {
-      print("Why not ???")
       res = selectInput("DistClust","Distance",unique(sort(c("altGower", "binomial", "bray", "canberra", "cao", "chao", "euclidean","gower", "horn",
                                                              "jaccard","kulczynski",  "mahalanobis", "morisita", "mountford", "raup",
                                                              "SERE"="sere","Unifrac", dist_phyl))),selected="bray")
