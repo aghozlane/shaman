@@ -43,8 +43,9 @@ RUN wget --no-verbose https://cran.r-project.org/src/base/R-3/R-3.6.1.tar.gz -P 
     wget --no-verbose "https://s3.amazonaws.com/rstudio-shiny-server-os-build/ubuntu-12.04/x86_64/shiny-server-$VERSION-amd64.deb" -O ss-latest.deb && \
     gdebi -n ss-latest.deb && \
     rm -f version.txt ss-latest.deb && \
-    wget ftp://shiny01.hosting.pasteur.fr/pub/shaman_package_${SOURCE_VERSION}.tar.gz -P /opt && \
+    wget https://zenodo.org/record/7418309/files/shaman_package_${SOURCE_VERSION}.tar.gz?download=1 -P /opt && \
     mkdir /opt/packman
+# https://zenodo.org/record/7418309/files/shaman_package_202204.tar.gz?download=1
 
 RUN R -e """install.packages('packrat', repos='${CRAN_SOURCE}');packrat::unbundle('/opt/shaman_package_${SOURCE_VERSION}.tar.gz', '/opt/packman')"""
 
