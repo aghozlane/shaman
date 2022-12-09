@@ -89,7 +89,7 @@ Plot_Visu_Barplot <- function(input,resDiff)
     if(input$CountsOrProp=="counts" && input$positionBarPlot=="fill") gg= gg +geom_col()
     else gg= gg +geom_col(position=input$positionBarPlot)
     gg= gg + theme_bw()+ scale_fill_manual(values=tax.colors)
-    gg = gg +theme(panel.grid.minor.x=element_blank(),panel.grid.major.x=element_blank()) 
+    gg = gg +theme(panel.grid.minor.x=element_blank(),panel.grid.major.x=element_blank(), axis.text.x = element_text(angle = XRotate)) 
     if(input$CountsOrProp=="prop") gg = gg+labs(y="Relative abundance (%)",x="")
     if(input$CountsOrProp=="counts" && input$NormOrRaw=="norm") gg = gg+labs(y="Normalized counts",x="")
     else if(input$CountsOrProp=="counts" && input$NormOrRaw!="norm") gg = gg+labs(y="Raw counts",x="")
@@ -214,8 +214,9 @@ Plot_Visu_Boxplot <- function(input,resDiff,alpha=0.7){
     dataBarPlot_mat$Samples = factor(dataBarPlot_mat$Samples,levels=levelsMod)
     dataBarPlot_mat$Colors = factor(dataBarPlot_mat$Colors,levels=levelsMod)
     gg = ggplot(dataBarPlot_mat,aes(x=Samples,y=Value,fill=Colors))  + geom_boxplot(alpha=alpha) +theme_bw()
-    gg = gg  +theme(axis.text=element_text(size=16,face="bold"),axis.title=element_text(size=18,face="bold"),panel.background = element_blank(),
-                    panel.grid.major = element_blank(),panel.grid.minor = element_blank(), axis.title.x=element_blank(), axis.text.x = element_text(angle = 90, hjust = 1,vjust=0.5)) 
+    gg = gg  +theme(axis.text=element_text(size=18,face="bold"),axis.title=element_text(size=18,face="bold"),panel.background = element_blank(),
+                    panel.grid.major = element_blank(),panel.grid.minor = element_blank(), axis.title.x=element_blank(), axis.text.x = element_text(angle = 90, hjust = 1,vjust=0.5),
+                    strip.text = element_text(size = 20)) 
     gg = gg + ylab(paste(input$typeDataBox, "abundance")) +scale_fill_manual(values = colors) + guides(fill=FALSE)
     if(input$CheckAddPointsBox) gg = gg + geom_point(position=position_jitterdodge(dodge.width=0.9))
     if(input$SensPlotVisu=="Horizontal") gg = gg + coord_flip()
