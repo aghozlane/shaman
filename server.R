@@ -62,7 +62,7 @@ shinyServer(function(input, output,session) {
       if(!TRUE%in%duplicated(data[,1])) rownames(data)=data[,1];data=data[,-1]
       try(round(data, 0)->data, silent=T)
     }
-    print(data)
+    #print(data)
     return(as.data.frame(data))
   })
   
@@ -119,7 +119,7 @@ shinyServer(function(input, output,session) {
     data=as.matrix(data)
     indNa = which(data=="")
     data[indNa]=NA
-    print(data)
+    #print(data)
     return(as.data.frame(data))
   })
   
