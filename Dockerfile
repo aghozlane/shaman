@@ -63,7 +63,7 @@ RUN git clone https://github.com/pierreLec/KronaRShy.git /srv/shiny-server/krona
     cp /srv/shiny-server/.Rprofile /srv/shiny-server/kronarshy/.Rprofile && \
     chmod +x /usr/bin/shiny-server.sh
 
-EXPOSE 3838
+EXPOSE 80
 
 EXPOSE 5438
 
