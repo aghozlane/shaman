@@ -58,7 +58,7 @@ Now you can run R:
 ```
 install.packages("devtools")
 devtools::install_github("rstudio/packrat")
-packrat::unbundle("shaman_package_202102.tar.gz", "packrat/")
+packrat::unbundle("shaman_package_202204.tar.gz", "packrat/")
 packrat::init("packrat/shaman")
 system("Rscript -e 'shiny::runGitHub("pierreLec/KronaRShy",port=5438)'",wait=FALSE),
 shiny::runGitHub('aghozlane/shaman')
@@ -83,7 +83,7 @@ This script can also be executed as following :
 chmod +x ./shaman/www/shaman.R && Rscript ./shaman/www/shaman.R
 ```
 
-### CONDA
+### CONDA (deprecated)
 
 Conda installation of SHAMAN is available for linux and mac. It can be performed as follow:
 ```
