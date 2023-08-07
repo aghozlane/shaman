@@ -2394,7 +2394,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   output$ExportBiom  <- downloadHandler(
     filename = function() { 'SHAMAN_data.biom' },
     content = function(file){
-      write_biom(make_biom(dataMergeCounts()$CT_noNorm, sample_metadata=values$TargetWorking[,-1],
+      write_biom(make_biom(dataMergeCounts()$CT_noNorm, sample_metadata=values$TargetWorking[,-1, drop=F],
                            observation_metadata=dataInput()$data$taxo_biom), file)}
   )
   output$ExportRawCounts <- downloadHandler(
