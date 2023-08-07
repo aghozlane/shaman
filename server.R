@@ -2349,7 +2349,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     }
     if(!is.null(data)){
       if(is.null(sample_metadata(data))){
-        tryCatch(write_biom(make_biom(dataMergeCounts()$CT_noNorm, sample_metadata=values$TargetWorking[,-1],
+        tryCatch(write_biom(make_biom(dataMergeCounts()$CT_noNorm, sample_metadata=values$TargetWorking[,-1, drop=F],
                     observation_metadata=dataInput()$data$taxo_biom), values$biom_masque),
                  error=function(e) sendSweetAlert(session,
                                                   title = "Oops",
