@@ -45,7 +45,6 @@ RUN wget --no-verbose https://cran.r-project.org/src/base/R-3/R-3.6.1.tar.gz -P 
     rm -f version.txt ss-latest.deb && \
     wget https://zenodo.org/record/7418309/files/shaman_package_${SOURCE_VERSION}.tar.gz -P /opt && \
     mkdir /opt/packman
-# https://zenodo.org/record/7418309/files/shaman_package_202204.tar.gz?download=1
 
 RUN R -e """install.packages('packrat', repos='${CRAN_SOURCE}');packrat::unbundle('/opt/shaman_package_${SOURCE_VERSION}.tar.gz', '/opt/packman')"""
 
