@@ -534,6 +534,10 @@ GetDataFromBIOM <-function(dataBIOM)
     taxo[taxo==""] = NA
     taxo[taxo=="Unassigned"] = NA
     taxo=taxo[rowSums(is.na(taxo))!=dim(taxo)[2], ]
+    # header
+    side = tolower(substr(colnames(taxo), 1, 1))
+    # Add OTU_annotation field
+    taxo$OTU_annotation = apply(tibble::rownames_to_column(taxo), 1, function(x) paste(x[1], "_",side[which(tail(na.omit(x), 1) == x) -1], "_", tail(na.omit(x), 1), sep=""))
   }
   
   ## Sample metadata
@@ -575,13 +579,17 @@ GetDataFromCT <-function(dataC,dataT, MGSTable)
   ## Taxonomy table
   taxo = as.data.frame(dataT)
   CheckTaxo = CheckTaxoTable(taxo,counts, MGSTable)
+  # header
+  side = tolower(substr(colnames(taxo), 1, 1))
+  # Add OTU_annotation field
+  taxo$OTU_annotation = apply(tibble::rownames_to_column(taxo), 1, function(x) paste(x[1], "_",side[which(tail(na.omit(x), 1) == x) -1], "_", tail(na.omit(x), 1), sep=""))
 
-  # Biom taxonomy must have seven levels
+  # Biom taxonomy must have seven levels + 1 with the OTU_annotation
   taxo_temp = as.matrix(taxo)
-  if(dim(taxo_temp)[2] < 7){
-    taxo_temp = cbind(taxo_temp, matrix(NA, dim(taxo_temp)[1], 7 - dim(taxo_temp)[2]))
-  }else if (dim(taxo_temp)[2] > 7){
-    taxo_temp = taxo_temp[,1:7]
+  if(dim(taxo_temp)[2] < 8){
+    taxo_temp = cbind(taxo_temp, matrix(NA, dim(taxo_temp)[1], 8 - dim(taxo_temp)[2]))
+  }else if (dim(taxo_temp)[2] > 8){
+    taxo_temp = taxo_temp[,1:8]
     # send sweet alert
   }
   # All OTU must be referenced
@@ -594,7 +602,6 @@ GetDataFromCT <-function(dataC,dataT, MGSTable)
   #case with more than 7 levels 
   taxo_biom = t(sapply(as.data.frame(t(taxo_temp)), FUN=function(x){paste(l,na.exclude(x),sep="")}))
 
-  
   ## Pourcentage of annotation
   tmp = PercentAnnot(counts,taxo)
   

@@ -77,7 +77,7 @@ shinyServer(function(input, output,session) {
     
     if(input$TypeTaxo=="Table" && !is.null(inFile)) 
     {
-      tryCatch(read.csv(inFile$datapath,sep=input$septaxo,header=TRUE)->data,
+      tryCatch(read.csv(inFile$datapath,sep=input$septaxo,header=TRUE, na.strings=c(""))->data,
                #messageId="ErrorTaxo",
                error=function(e) sendSweetAlert(session,
                                                 title = "Oops",
@@ -116,9 +116,9 @@ shinyServer(function(input, output,session) {
     }
     
     ## Add NA
-    data=as.matrix(data)
-    indNa = which(data=="")
-    data[indNa]=NA
+    # data=as.matrix(data)
+    # indNa = which(data=="")
+    # data[indNa]=NA
     #print(data)
     return(as.data.frame(data))
   })
