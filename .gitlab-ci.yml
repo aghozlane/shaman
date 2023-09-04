@@ -4,38 +4,35 @@ stages:
   - build_master
   
 
-services:
-  - registry-gitlab.pasteur.fr/dsi-tools/docker-images/docker:dind
-
-variables:
-  DOCKER_HOST: tcp://localhost:2375
+.build:
+  image: docker:24
+  stage: build
+  
+  
 
 
 build_dev:
-  image: registry-gitlab.pasteur.fr/dsi-tools/docker-images/docker:latest
-  stage: build_dev
-  variables:
-    CI_DEBUG_TRACE: "false"
+  image: docker:24
+  stage: build
+  before_script:
+    - i=0; while [ "$i" -lt 12 ]; do docker info && break; sleep 5; i=$(( i + 1 )) ; done
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
-    # - docker pull aghozlane/shaman:latest || true
-    - docker build 
-      --tag "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
-      .
+    - docker build -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" --build-arg="BUILD_OPTIONS=$OPTIONS" -f ./Dockerfile .
     - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
   only:
     - dev
     - master
 
 build_master:
-  image: registry-gitlab.pasteur.fr/dsi-tools/docker-images/docker:latest
+  image: docker:24
   stage: build_master
-  variables:
-    CI_DEBUG_TRACE: "false"
-  script:
+  before_script:
+    - i=0; while [ "$i" -lt 12 ]; do docker info && break; sleep 5; i=$(( i + 1 )) ; done
     - docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
-    # - docker pull aghozlane/shaman:latest || true
-    - docker build -t aghozlane/shaman .
+  script:
+    - docker pull aghozlane/shaman:latest || true
+    - docker build --pull --cache-from aghozlane:latest  -t aghozlane/shaman .
     - docker push aghozlane/shaman
   only:
     - master
