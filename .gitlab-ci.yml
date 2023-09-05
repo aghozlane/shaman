@@ -25,7 +25,7 @@ build_master:
     - docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
   script:
     - docker pull $CI_REGISTRY_IMAGE:latest || true
-    - docker build --pull --cache-from $CI_REGISTRY_IMAGE:latest  -t aghozlane/shaman .
+    - docker tag $CI_REGISTRY_IMAGE:latest aghozlane/shaman
     - docker push aghozlane/shaman
   only:
     - master
