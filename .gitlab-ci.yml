@@ -1,25 +1,31 @@
+stages:
+  - build_dev
+  - build_master
+  - build_conda
+
 build_dev:
   image: docker:24
-  stage: build
+  stage: build_dev
   before_script:
     - i=0; while [ "$i" -lt 12 ]; do docker info && break; sleep 5; i=$(( i + 1 )) ; done
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker build -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" --build-arg="BUILD_OPTIONS=$OPTIONS" -f ./Dockerfile .
-    - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - docker pull $CI_REGISTRY_IMAGE:latest || true
+    - docker build -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" -t "$CI_REGISTRY_IMAGE:latest" .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE:latest
   only:
     - dev
     - master
 
 build_master:
   image: docker:24
-  stage: build
+  stage: build_master
   before_script:
     - i=0; while [ "$i" -lt 12 ]; do docker info && break; sleep 5; i=$(( i + 1 )) ; done
     - docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
   script:
-    - docker pull aghozlane/shaman:latest || true
-    - docker build --pull --cache-from aghozlane:latest  -t aghozlane/shaman .
+    - docker pull $CI_REGISTRY_IMAGE:latest || true
+    - docker build --pull --cache-from $CI_REGISTRY_IMAGE:latest  -t aghozlane/shaman .
     - docker push aghozlane/shaman
   only:
     - master
