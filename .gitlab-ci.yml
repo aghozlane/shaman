@@ -34,7 +34,7 @@ build_master:
 build_conda:
   #image: continuumio/miniconda3:latest mutex issue
   image: conda/miniconda3-centos7:latest
-  stage: build
+  stage: build_conda
   variables:
     CI_DEBUG_TRACE: "false"
   before_script:
