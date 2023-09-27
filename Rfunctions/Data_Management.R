@@ -534,10 +534,12 @@ GetDataFromBIOM <-function(dataBIOM)
     taxo[taxo==""] = NA
     taxo[taxo=="Unassigned"] = NA
     taxo=taxo[rowSums(is.na(taxo))!=dim(taxo)[2], ]
-    # header
-    side = tolower(substr(colnames(taxo), 1, 1))
-    # Add OTU_annotation field
-    taxo$OTU_annotation = apply(tibble::rownames_to_column(taxo), 1, function(x) paste(x[1], "_",side[which(tail(na.omit(x), 1) == x) -1], "_", tail(na.omit(x), 1), sep=""))
+    if( length(colnames(taxo)) > 1) {
+      # header
+      side = tolower(substr(colnames(taxo), 1, 1))
+      # Add OTU_annotation field
+      taxo$OTU_annotation = apply(tibble::rownames_to_column(taxo), 1, function(x) paste(x[1], "_",side[which(tail(na.omit(x), 1) == x) -1], "_", tail(na.omit(x), 1), sep=""))
+    }
   }
   
   ## Sample metadata
@@ -579,11 +581,12 @@ GetDataFromCT <-function(dataC,dataT, MGSTable)
   ## Taxonomy table
   taxo = as.data.frame(dataT)
   CheckTaxo = CheckTaxoTable(taxo,counts, MGSTable)
-  # header
-  side = tolower(substr(colnames(taxo), 1, 1))
-  # Add OTU_annotation field
-  taxo$OTU_annotation = apply(tibble::rownames_to_column(taxo), 1, function(x) paste(x[1], "_",side[which(tail(na.omit(x), 1) == x) -1], "_", tail(na.omit(x), 1), sep=""))
-
+  if( length(colnames(taxo)) > 1) {
+    # header
+    side = tolower(substr(colnames(taxo), 1, 1))
+    # Add OTU_annotation field
+    taxo$OTU_annotation = apply(tibble::rownames_to_column(taxo), 1, function(x) paste(x[1], "_",side[which(tail(na.omit(x), 1) == x) -1], "_", tail(na.omit(x), 1), sep=""))
+  }
   # Biom taxonomy must have seven levels + 1 with the OTU_annotation
   taxo_temp = as.matrix(taxo)
   if(dim(taxo_temp)[2] < 8){
