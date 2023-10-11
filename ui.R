@@ -783,7 +783,11 @@ function(request) {
                                                 plotOutput("PlotEigen",height="100%")
                                             )
                            ),
-                           
+                           conditionalPanel(condition="input.DiagPlot=='pcaPlot' && (input.radioPCA == 2 || input.radioPCA == 3)",
+                                            box(title = "Contribution",  width = 6, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
+                                                plotOutput("PlotContrib",height="100%")
+                                            )
+                           ),
                            conditionalPanel(condition="input.DiagPlot=='pcoaPlot'",
                                             box(title = "Eigen values",  width = 6, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
                                                 plotOutput("PlotpcoaEigen",height="100%")
@@ -794,7 +798,7 @@ function(request) {
                                                 plotOutput("PlotnmdsStress",height="100%")
                                             )
                            ),
-                           conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='nmdsPlot'",
+                           conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='nmdsPlot' || (input.DiagPlot=='pcaPlot' && input.radioPCA == 1)",
                                             uiOutput("ResPermaTestBox")
                            ),
                            conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='nmdsPlot'",
@@ -802,12 +806,24 @@ function(request) {
                                             box(title = "Distance values",  width = 6, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
                                                 DT::dataTableOutput("Distancetable"),
                                                 fluidRow(
-                                                  column(width=3,downloadButton('ExportDistancetable', 'Export table')),
-                                                  column(width=3,selectInput("sepdistance", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
+                                                  column(width = 3, offset = 0, style = "margin-top: 55px", downloadButton('ExportDistancetable', 'Export table')),
+                                                  column(width = 3, offset = 1, style = "margin-top: 30px", selectInput("sepdistance", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
                                                 ),
-                                                tags$style(type='text/css', "#ExportDistancetable { margin-top: 37px;}")
+                                                tags$style(".leftAlign{float:left};")
+                                            )
+                           ),
+                           conditionalPanel(condition="input.DiagPlot=='pcaPlot'",
+                                            br(),
+                                            box(title = "Matrix coordinates",  width = 6, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
+                                                DT::dataTableOutput("MatrixCoordinatetable"),
+                                                fluidRow(
+                                                  column(width = 3, offset = 0, style = "margin-top: 55px", downloadButton('ExportDistancetablePCA', 'Export table')),
+                                                  column(width = 3, offset = 1, style = "margin-top: 30px", selectInput("sepdistancePCA", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
+                                                ),
+                                                tags$style(".leftAlign{float:left};")
                                             )
                            )
+                           
                          )
                          
                   ),
@@ -833,15 +849,26 @@ function(request) {
                                                 column(width=2,br(),br(),p("VS")),
                                                 column(width=5,uiOutput("PC2_sel"))
                                               )
+                                  
                              ),
-                             conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='nmdsPlot' || input.DiagPlot=='SERE' || input.DiagPlot=='clustPlot' ",
+                             conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='nmdsPlot' || input.DiagPlot=='SERE' || input.DiagPlot=='clustPlot'",
                                               uiOutput("DistList")
                              ),
                              conditionalPanel(condition="input.DistClust=='Unifrac' && (input.DiagPlot=='pcoaPlot' || input.DiagPlot=='nmdsPlot'  || input.DiagPlot=='clustPlot')",
                                               column(width=12,
                                                      selectInput("DistClustUnifrac","Which unifrac distance ?",c("Weighted UniFrac"="WU", "Unweighted UniFrac"="UWU", "Variance adjusted weighted UniFrac"="VAWU"))
                                               )
-                             )
+                             ),
+                             conditionalPanel(condition="input.DiagPlot=='pcaPlot'",
+                                              radioButtons("radioPCA", label = h5(strong("Visualizing principal component analysis")), choices = list("Individuals" = 1, "Biplot" = 2, "Variables" = 3), selected = 1)
+                             ),
+                             conditionalPanel(condition="input.DiagPlot=='pcaPlot' && input.radioPCA == 2 && input.checkLabelBiplot[1]",
+                                              sliderInput("indivSlider", "Select the number of individuals to display", min = 1, max = 100, value = 1, step = 1)
+                             ),
+                             conditionalPanel(condition="input.DiagPlot=='pcaPlot' && (input.radioPCA == 2 || input.radioPCA == 3)",
+                                              sliderInput("varSlider", "Select the contribution threshold", min = 0, max = 1, value = 0.5, step = 0.1),
+                                              checkboxInput("sumContrib", "Display the sum of the contributions of each variable")
+                              )
                              
                              
                              #                 conditionalPanel(condition="input.RadioPlotBi=='Nuage'",selectInput("ColorBiplot", "Couleur",choices=c("Bleue" = 'blue',"Rouge"='red',"Vert"='green', "Noir"='black'),width="50%")),
@@ -849,9 +876,8 @@ function(request) {
                              #                 conditionalPanel(condition="input.RadioPlotBi!='Nuage'", radioButtons("SensGraphBi","Sens du graph",choices=c("Vertical"="Vert","Horizontal"="Hori"))),
                              #                 conditionalPanel(condition="input.RadioPlotBi=='box'", checkboxInput("CheckAddPointsBoxBi","Ajouter les données",value=FALSE)) 
                          ),
-                         
                          box(
-                           title = "Appearance",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
+                           title = "Appearance",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE, 
                            #                     conditionalPanel(condition="input.DiagPlot=='Sfactors'",
                            #                                      h6(strong("Layout")),
                            #                                      numericInput("NbcolSfactors", h6("Columns"),min=1,value = NA)
@@ -860,7 +886,7 @@ function(request) {
                            checkboxInput("modifwidthDiag","Set width",FALSE),
                            conditionalPanel(condition="input.modifwidthDiag",
                                             sliderInput("widthDiag", "Width",min=100,max=2500,value = 800,step =10)),
-                           selectInput("colorsdiag", label=h6(strong("Gradient of colors")),choices = c("shaman-palette1", "shaman-palette2"),selected = "shaman-palette1"),
+                           selectInput("colorsdiag", label=h6(strong("Gradient of colors")),choices = c("retro palette", "easter palette", "warm palette", "basic palette (1)", "basic palette (2)", "basic palette (3)", "basic palette (4)"),selected = "retro palette"),
                            #plotHelper(colours = c("red", "#123ABC")),
                            #fluidRow(
                              actionButton("addcoldiag",label=NULL, icon=icon('plus')), actionButton("delcoldiag",label=NULL,icon=icon('trash')), uiOutput("BoxColors"),
@@ -881,11 +907,34 @@ function(request) {
                            conditionalPanel(condition="input.DiagPlot=='SfactorsVStot'",
                                             checkboxInput("addLabelSFact","Add label",FALSE)
                            ),
-                           
+                           conditionalPanel(condition="input.DiagPlot=='pcaPlot'",
+                                            uiOutput("centeringButton")
+                           ),
+                           #Display the label button only for individual or correlation plot
+                           conditionalPanel(condition="input.DiagPlot=='pcaPlot'",
+                                            uiOutput("labelBiplotButton")
+                           ),
                            fluidRow(
+                             shinyjs::useShinyjs(),
                              column(width=12, p(strong("Size"))),
                              column(width=6,sliderInput("cexTitleDiag", h6("Axis"),min=0,max=5,value = 1,step =0.1)),
-                             conditionalPanel(condition="input.DiagPlot=='SfactorsVStot' || input.DiagPlot=='pcaPlot' || input.DiagPlot=='pcoaPlot' || input.DiagPlot=='nmdsPlot' ",column(width=6,sliderInput("cexLabelDiag", h6("Points"),min=0,max=5,value = 1,step =0.1)))
+                             conditionalPanel(condition="input.DiagPlot=='SfactorsVStot' || (input.DiagPlot=='pcaPlot' && input.radioPCA !=3) || input.DiagPlot=='pcoaPlot' || input.DiagPlot=='nmdsPlot' ",column(width=6,sliderInput("cexLabelDiag", h6("Points"),min=0,max=5,value = 1,step =0.1))),
+                             conditionalPanel(condition="input.DiagPlot=='pcaPlot'",
+                                              column(width=6, sliderInput("cexAxisLabelDiag", h6("Axis label"), min=0,max=5,value=1,step=0.1)),
+                                              column(width=6, sliderInput("cexScaleLabelDiag", h6("X-scale and Y-scale labels"),min=0,max=5,value=1,step=0.1)),
+                                              column(width=6, sliderInput("cexTitlePlotDiag", h6("Title"),min=0,max=5,value=1,step=0.1))
+                                              
+                            ),
+                            conditionalPanel(
+                              condition = "input.checkLabelIndiv == true || $('input[name=checkLabelBiplot]:checked').length > 0",
+                              column(width=6, sliderInput("cexPointsLabelDiag", h6("Data label"), min = 0, max = 5, value = 1, step = 0.1))
+                            ),
+                            conditionalPanel(
+                              condition="input.radioPCA != 3",
+                              column(width=6, sliderInput("cexSubtitleDiag", h6("Subtitle"),min=0,max=5,value=1,step=0.1))
+                            ),
+                            
+                              column(width=6, sliderInput("cexLegendDiag", h6("Legend"),min=0,max=5,value=1,step=0.1))
                            )
                            
                            #                   sliderInput("widthDiag", "width",min=100,max=1500,value = 1000,step =10)
@@ -912,95 +961,96 @@ function(request) {
         #### ___TABLES ####
         tabItem(tabName = "TableDiff",
                 fluidRow(
-                      ### _____Tables and plots ####
-                      column(width=9,
-                             div(id = "plot-container", tags$img(src = "gears.gif",id ="loading-spinner"),tags$head(tags$style(HTML(spincss))),
-                                div(
-                                    uiOutput("TabBoxDataDiff"),
-                                    tabBox(id = "tabBoxPlotTables",
-                                          width = NULL,
-                                          height = 430,
-                                          selected = "Bar chart",
-                                          #selected = "Volcano plot",
-                                          tabPanel("Bar chart", uiOutput("BarChartContainer")),
-                                          tabPanel("Volcano plot",uiOutput("VolcanoPlotContainer"))),
-                                    style = "background-color: white;")
-                                )
-                            ),
-                      column(width=3,
-                             box(title = "Select your contrast",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
-                                 selectInput("ContrastList_table",h6(strong("Contrast list")),"", multiple = FALSE),
-                                 htmlOutput("ContrastOverviewTable")),
-                             
-                             box(title = "Reorder data", width = NULL, status = "primary", solidHeader = TRUE, collapsible = TRUE, collapsed = FALSE,
-                                 selectInput("ColumnOrder","Order by",c("Id" = "Id", "baseMean" = "baseMean", "FoldChange"="log2FoldChange",       ######## "log2FoldChange"="log2FoldChange" 
-                                              "pvalue_adjusted"="pvalue_adjusted"), selected = "pvalue_adjusted"),
-                                 checkboxInput("Decreasing","Decreasing order",value=FALSE)),
-                             ### _____Plot options ####
-                             box(title = "Plot options", width = NULL, status = "primary", solidHeader = TRUE, collapsible = TRUE, collapsed = FALSE,
-                                                    ### _______both ####
-                                                   h5(strong("Choose colours")),
-                                                   fluidRow(column(width = 7, colourpicker::colourInput("colour1", NULL, value = "#008B00", showColour = "both")), column(width = 5, h6(strong("Down")), style='padding:0px;')),
-                                                   fluidRow(column(width = 7, colourpicker::colourInput("colour2", NULL, value = "#999999", showColour = "both")), column(width = 5, h6(strong("Not significant")), style='padding:0px;')),
-                                                   fluidRow(column(width = 7, colourpicker::colourInput("colour3", NULL, value = "#FF7F00", showColour = "both")), column(width = 5, h6(strong("Up")), style='padding:0px;')),
-                                                    ### _______bar chart ####
-                                                    conditionalPanel(condition = "input.tabBoxPlotTables == 'Bar chart'",
-                                                                    uiOutput("RadioButtonSelectedBarChart"),
-                                                                    uiOutput("TaxoToPlotBarChart"),
-                                                                    uiOutput("SetHeightBarChart"),
-                                                                    sliderInput("fontSize", h6(strong("Font size")),min=5,max=20,value = 10)),
-                                                    ### _______volcano ####
-                                                   conditionalPanel(condition = "input.tabBoxPlotTables == 'Volcano plot'",
-                                                                    radioButtons(
-                                                                      "SelectSpecifTaxoTablesVolcano",
-                                                                      label = textOutput("SelectTheToLabel"),
-                                                                      c(
-                                                                        "None" = "None",
-                                                                        "Differential features" = "Diff",
-                                                                        "Most abundant" = "Most",
-                                                                        "All" = "All"
-                                                                      )
-                                                                    ),
-                                                                    uiOutput("TaxoToLabelVolcanoPlot"),
-                                                                    checkboxInput("showSignifThresholds", "Show significance thresholds", value = TRUE),
-                                                                    conditionalPanel(condition = "input.showSignifThresholds", sliderInput("signifThresholdsWidth", "Significance thresholds width", min = 0, max = 3, value = 1, step = 0.1),
-                                                                                     checkboxInput("setXsignifThreshold","Set significance threshold for Log 2 fold change",value=FALSE),
-                                                                                     conditionalPanel(condition="input.setXsignifThreshold",
-                                                                                                      sliderInput("XsignifThreshold", h6(strong("Threshold")),min=0,max=20,value = 1))),
-                                                                    #checkboxInput("showLegend", "Show legend", value = TRUE),
-                                                                    sliderInput("heightVolcanoPlot", h6(strong("Height")),min=100,max=4000,value = 500),
-                                                                    checkboxInput("modifwidthVolcano","Set width",value=FALSE),
-                                                                    conditionalPanel(condition="input.modifwidthVolcano",
-                                                                                     sliderInput("widthVolcanoPlot", h6(strong("Width")),min=100,max=4000,value = 800)),
-                                                                    fluidRow(column(width = 6, sliderInput("pointSize", h6(strong("Points size")),min=10,max=300,value = 64)),
-                                                                             column(width = 6, sliderInput("pointOpacity", h6(strong("Points opacity")),min=0,max=1,value = 0.6))),
-                                                                    fluidRow(column(width = 6, sliderInput("axisFontSize", h6(strong("Axes font size")),min=5,max=20,value = 10)),
-                                                                             column(width = 6, sliderInput("labelsSize", h6(strong("Labels size")),min=5,max=30,value = 10)))
-                                                                    #,
-                                                                    #fluidRow(column(width = 6, sliderInput("legendFontSize", h6(strong("Legend font size")),min=50,max=200,value = 100)),
-                                                                    #        column(width = 6, sliderInput("legendWidth", h6(strong("Legend width")),min=100,max=200,value = 125)))
-                                                   )),
-                             ### _____Export ####
-                             box(title = "Export",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
-                                 fluidRow(
-                                   column(width=8,selectInput("WhichExportTable", "Select the table to export",c("Significant"="Significant","Complete"="Complete","Up"="Up","Down"="Down"))),
-                                   column(width=4,selectInput("sepexpdiff", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))),
-                                 uiOutput("ExportTableButton"),
-                                 br(),
-                                 fluidRow(
-                                   column(width=8,selectInput("WhichPlotTables",h5(strong("Select the plot to export")),c("Bar chart"="BarChart","Volcano plot"="VolcanoPlot"), multiple = FALSE)),
-                                   column(width=4,selectInput("Exp_format_PlotTables",h5(strong("Export format")),c("png"="png","pdf"="pdf","eps"="eps","svg"="svg"), multiple = FALSE))),
-                                 fluidRow(
-                                   column(width=6,numericInput("heightTablePlotExport", "Height (in px)", min = 100, max = NA, value = 500, step = 1)),
-                                   column(width=6,numericInput("widthTablePlotExport", "Width (in px)", min = 100, max = NA, value = 500, step = 1))),
-                                 conditionalPanel(condition = "input.WhichPlotTables == 'BarChart'", checkboxInput("removeLabelsBarChart", "Remove ticks labels", value = FALSE)),
-                                 downloadButton("exportPlotTables", "Export plot")
-                                )
-                             )
+                  ### _____Tables and plots ####
+                  column(width=9,
+                         div(id = "plot-container", tags$img(src = "gears.gif",id ="loading-spinner"),tags$head(tags$style(HTML(spincss))),
+                             div(
+                               uiOutput("TabBoxDataDiff"),
+                               tabBox(id = "tabBoxPlotTables",
+                                      width = NULL,
+                                      height = 430,
+                                      selected = "Bar chart",
+                                      #selected = "Volcano plot",
+                                      tabPanel("Bar chart", uiOutput("BarChartContainer")),
+                                      tabPanel("Volcano plot",uiOutput("VolcanoPlotContainer"))),
+                               style = "background-color: white;")
+                         )
+                  ),
+                  column(width=3,
+                         box(title = "Select your contrast",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
+                             selectInput("ContrastList_table",h6(strong("Contrast list")),"", multiple = FALSE),
+                             htmlOutput("ContrastOverviewTable")),
+                         
+                         box(title = "Reorder data", width = NULL, status = "primary", solidHeader = TRUE, collapsible = TRUE, collapsed = FALSE,
+                             selectInput("ColumnOrder","Order by",c("Id" = "Id", "baseMean" = "baseMean", "FoldChange"="log2FoldChange",       ######## "log2FoldChange"="log2FoldChange" 
+                                                                    "pvalue_adjusted"="pvalue_adjusted"), selected = "pvalue_adjusted"),
+                             checkboxInput("Decreasing","Decreasing order",value=FALSE)),
+                         ### _____Plot options ####
+                         box(title = "Plot options", width = NULL, status = "primary", solidHeader = TRUE, collapsible = TRUE, collapsed = FALSE,
+                             ### _______both ####
+                             h5(strong("Choose colours")),
+                             fluidRow(column(width = 7, colourpicker::colourInput("colour1", NULL, value = "#008B00", showColour = "both")), column(width = 5, h6(strong("Down")), style='padding:0px;')),
+                             fluidRow(column(width = 7, colourpicker::colourInput("colour2", NULL, value = "#999999", showColour = "both")), column(width = 5, h6(strong("Not significant")), style='padding:0px;')),
+                             fluidRow(column(width = 7, colourpicker::colourInput("colour3", NULL, value = "#FF7F00", showColour = "both")), column(width = 5, h6(strong("Up")), style='padding:0px;')),
+                             ### _______bar chart ####
+                             conditionalPanel(condition = "input.tabBoxPlotTables == 'Bar chart'",
+                                              uiOutput("RadioButtonSelectedBarChart"),
+                                              uiOutput("TaxoToPlotBarChart"),
+                                              uiOutput("SetHeightBarChart"),
+                                              sliderInput("fontSize", h6(strong("Font size")),min=5,max=20,value = 10)),
+                             ### _______volcano ####
+                             conditionalPanel(condition = "input.tabBoxPlotTables == 'Volcano plot'",
+                                              radioButtons(
+                                                "SelectSpecifTaxoTablesVolcano",
+                                                label = textOutput("SelectTheToLabel"),
+                                                c(
+                                                  "None" = "None",
+                                                  "Differential features" = "Diff",
+                                                  "Most abundant" = "Most",
+                                                  "All" = "All"
+                                                )
+                                              ),
+                                              uiOutput("TaxoToLabelVolcanoPlot"),
+                                              checkboxInput("showSignifThresholds", "Show significance thresholds", value = TRUE),
+                                              conditionalPanel(condition = "input.showSignifThresholds", sliderInput("signifThresholdsWidth", "Significance thresholds width", min = 0, max = 3, value = 1, step = 0.1),
+                                                               checkboxInput("setXsignifThreshold","Set significance threshold for Log 2 fold change",value=FALSE),
+                                                               conditionalPanel(condition="input.setXsignifThreshold",
+                                                                                sliderInput("XsignifThreshold", h6(strong("Threshold")),min=0,max=20,value = 1))),
+                                              #checkboxInput("showLegend", "Show legend", value = TRUE),
+                                              sliderInput("heightVolcanoPlot", h6(strong("Height")),min=100,max=4000,value = 500),
+                                              checkboxInput("modifwidthVolcano","Set width",value=FALSE),
+                                              conditionalPanel(condition="input.modifwidthVolcano",
+                                                               sliderInput("widthVolcanoPlot", h6(strong("Width")),min=100,max=4000,value = 800)),
+                                              fluidRow(column(width = 6, sliderInput("pointSize", h6(strong("Points size")),min=10,max=300,value = 64)),
+                                                       column(width = 6, sliderInput("pointOpacity", h6(strong("Points opacity")),min=0,max=1,value = 0.6))),
+                                              fluidRow(column(width = 6, sliderInput("axisFontSize", h6(strong("Axes font size")),min=5,max=20,value = 10)),
+                                                       column(width = 6, sliderInput("labelsSize", h6(strong("Labels size")),min=5,max=30,value = 10)))
+                                              #,
+                                              #fluidRow(column(width = 6, sliderInput("legendFontSize", h6(strong("Legend font size")),min=50,max=200,value = 100)),
+                                              #        column(width = 6, sliderInput("legendWidth", h6(strong("Legend width")),min=100,max=200,value = 125)))
+                             )),
+                         ### _____Export ####
+                         box(title = "Export",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
+                             fluidRow(
+                               column(width=8,selectInput("WhichExportTable", "Select the table to export",c("Significant"="Significant","Complete"="Complete","Up"="Up","Down"="Down"))),
+                               column(width=4,selectInput("sepexpdiff", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))),
+                             uiOutput("ExportTableButton"),
+                             br(),
+                             fluidRow(
+                               column(width=8,selectInput("WhichPlotTables",h5(strong("Select the plot to export")),c("Bar chart"="BarChart","Volcano plot"="VolcanoPlot"), multiple = FALSE)),
+                               column(width=4,selectInput("Exp_format_PlotTables",h5(strong("Export format")),c("png"="png","pdf"="pdf","eps"="eps","svg"="svg"), multiple = FALSE))),
+                             fluidRow(
+                               column(width=6,numericInput("heightTablePlotExport", "Height (in px)", min = 100, max = NA, value = 500, step = 1)),
+                               column(width=6,numericInput("widthTablePlotExport", "Width (in px)", min = 100, max = NA, value = 500, step = 1))),
+                             conditionalPanel(condition = "input.WhichPlotTables == 'BarChart'", checkboxInput("removeLabelsBarChart", "Remove ticks labels", value = FALSE)),
+                             downloadButton("exportPlotTables", "Export plot")
+                         )
                   )
-                ),
+                )
+        ),
         
         #### VISUALIZATION ####
+        
         
         #### ___GLOBAL VIEWS ####
         tabItem(tabName = "GlobVisu",
@@ -1120,7 +1170,7 @@ function(request) {
                              conditionalPanel(condition="input.PlotVisuSelect=='Network'",
                                               uiOutput("SelectToLabelNetwork")
                              ),
-                            
+                             
                              ###            ###
                              ## _______barplot ####
                              ###            ###
@@ -1162,7 +1212,7 @@ function(request) {
                          
                          ###                                    ###
                          #                                        #
-                              ### _____Appearance ####
+                         ### _____Appearance ####
                          #                                        #
                          ###                                    ###
                          box(title = "Appearance",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
@@ -1171,13 +1221,13 @@ function(request) {
                              conditionalPanel(condition="input.modifwidthVisu",
                                               sliderInput("widthVisu", h6(strong("Width")),min=100,max=4000,value = 800)),
                              ###            ###
-                              ### _______barplot ####
+                             ### _______barplot ####
                              ###            ###
                              conditionalPanel(condition="input.PlotVisuSelect=='Barplot'",
                                               sliderInput("rotateXLabel", h6(strong("Rotate X labels (Only vertical orientation)")),min=-90, max=90,value = 0, step = 5)  
                              ),
                              ###            ###
-                              ### _______boxplot ####
+                             ### _______boxplot ####
                              ###            ###
                              conditionalPanel(condition="input.PlotVisuSelect=='Boxplot'",
                                               uiOutput("ColBoxplot"),
@@ -1232,8 +1282,8 @@ function(request) {
                              ###              ###
                              conditionalPanel(condition="input.PlotVisuSelect=='Network'",
                                               fluidRow(
-                                                 column(width=6,sliderInput("nodeSizeNetwork", h6("Node size"),min=0,max=100,value = 20,step = 1)),
-                                                 column(width=6,sliderInput("linkWidth", h6("Link width"),min=0,max=10,value = 1,step = 0.5))
+                                                column(width=6,sliderInput("nodeSizeNetwork", h6("Node size"),min=0,max=100,value = 20,step = 1)),
+                                                column(width=6,sliderInput("linkWidth", h6("Link width"),min=0,max=10,value = 1,step = 0.5))
                                               ),
                                               fluidRow(
                                                 column(width=6,colourpicker::colourInput("edgeColorPositive", "Positive correlation", value = "red", showColour = "both")),
@@ -1266,18 +1316,19 @@ function(request) {
                                                                radioButtons("positionBarPlot","Position",c("Grouped"="dodge","Stacked"="fill"), selected = "fill",inline=TRUE)
                                               ),
                                               conditionalPanel(condition = "input.PlotVisuSelect!='Network'",
-                                              selectInput("Exp_format_Visu",h5(strong("Export format")),c("png"="png","pdf"="pdf","eps"="eps","svg"="svg"), multiple = FALSE),
-                                              fluidRow(
-                                                column(width=6,numericInput("heightVisuExport", "Height (in px)",min=100,max=NA,value = 500,step =1)),
-                                                column(width=6,numericInput("widthVisuExport", "Width (in px)",min=100,max=NA,value = 500,step =1))
-                                              ),
-                                              downloadButton("exportVisu", "Export")),
+                                                               selectInput("Exp_format_Visu",h5(strong("Export format")),c("png"="png","pdf"="pdf","eps"="eps","svg"="svg"), multiple = FALSE),
+                                                               fluidRow(
+                                                                 column(width=6,numericInput("heightVisuExport", "Height (in px)",min=100,max=NA,value = 500,step =1)),
+                                                                 column(width=6,numericInput("widthVisuExport", "Width (in px)",min=100,max=NA,value = 500,step =1))
+                                                               ),
+                                                               downloadButton("exportVisu", "Export")),
                                               conditionalPanel(condition = "input.PlotVisuSelect=='Network'", downloadButton("downloadNetwork", "Export as .html"))
                                           )
                          )
                   )
                 )
         ),
+        
         #### ___COMPARISON PLOTS ####
         tabItem(tabName = "CompPlot",
                 fluidRow(
@@ -1325,9 +1376,9 @@ function(request) {
                              )
                          ),
                          
-                      ###                  ###
-                      ### _____Appearance ####
-                      ###                  ###
+                         ###                  ###
+                         ### _____Appearance ####
+                         ###                  ###
                          box(title = "Appearance",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
                              ## _______common to several plots ####
                              sliderInput("heightVisuComp", h6(strong("Height")),min=100,max=4000,value = 800),
@@ -1369,8 +1420,8 @@ function(request) {
                                               fluidRow(column(width = 6, sliderInput("axisFontSizeLogit", h6(strong("Axes font size")),min=5,max=20,value = 10)),
                                                        column(width = 6, sliderInput("labelsSizeLogit", h6(strong("Labels size")),min=5,max=30,value = 10))),
                                               conditionalPanel(condition = "input.showLegendLogit",
-                                                              fluidRow(column(width = 6, sliderInput("legendFontSizeLogit", h6(strong("Legend font size")),min=5,max=20,value = 10)),
-                                                                       column(width = 6, sliderInput("legendWidthLogit", h6(strong("Legend width")),min=100,max=300,value = 200)))
+                                                               fluidRow(column(width = 6, sliderInput("legendFontSizeLogit", h6(strong("Legend font size")),min=5,max=20,value = 10)),
+                                                                        column(width = 6, sliderInput("legendWidthLogit", h6(strong("Legend width")),min=100,max=300,value = 200)))
                                               )
                              ),
                              ## _______density plot ####
@@ -1392,9 +1443,9 @@ function(request) {
                                                        column(width = 6, checkboxInput("decreasingUpset", "Decreasing order", TRUE))),
                                               checkboxInput("orderBySize", "Order contrasts by size", FALSE),
                                               checkboxInput("showNumbers", "Show values", FALSE))
-                                              
+                             
                          ),
-                      ### _____Export ####
+                         ### _____Export ####
                          conditionalPanel(condition="input.PlotVisuSelectComp!='Venn'",
                                           box(title = "Export",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
                                               
@@ -1406,14 +1457,14 @@ function(request) {
                                               downloadButton("exportVisuComp", "Export plot"),
                                               conditionalPanel(condition = "input.PlotVisuSelectComp=='UpSet'", br(), h5(strong("Export table")), fluidRow(column(width = 7, selectInput("sepTabUpset", h6(strong("Separator:")), c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")),
                                                                                                                                                                   br(), downloadButton("exportVisuCompTableUpSet", "Export table")) 
-                                                                                                                         ))
+                                              ))
                                           )
                          ),
                          conditionalPanel(condition="input.PlotVisuSelectComp=='Venn'",
                                           box(title = "Export table",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
                                               fluidRow(column(width = 7, selectInput("sepTabVenn", h6(strong("Separator:")), c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")), 
-                                                                  br(), downloadButton("exportVisuCompTableVenn", "Export table")) 
-                                                       )))
+                                                              br(), downloadButton("exportVisuCompTableVenn", "Export table")) 
+                                              )))
                   )
                 )
         ),
@@ -1447,6 +1498,3 @@ function(request) {
                 body
   )
 }
-
-
-
