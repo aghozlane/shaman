@@ -2774,7 +2774,6 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   
   observeEvent(input$Select1_contrast,{ 
-    
     ModifMod_ContEasy()
   })
   
@@ -3156,17 +3155,167 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     }
     
   })
+
+  pca_data <- reactive( {
+    
+    resDiff = ResDiffAnal()
+    
+    #Variable of interest
+    VarInt = input$VarInt
+    dds = resDiff$dds
+    counts = resDiff$raw_counts
+    if(input$CountsType=="Normalized") counts = resDiff$countsNorm
+    target = resDiff$target
+    normFactors = resDiff$normFactors
+
+    
+    group_init = as.data.frame(target[,VarInt])
+    rownames(group_init) = rownames(target)
+    n = min(500, nrow(counts(dds)))
+    type.trans = c("VST", "rlog")
+    
+    group = as.character(apply(group_init,1,paste, collapse = "-"))
+    group_init = group
+    
+    ## Keep only some sample 
+    val = c()
+    for(i in 1:length(VarInt))
+    { 
+      Tinput = paste("input$","Mod",VarInt[i],sep="") 
+      expr=parse(text=Tinput)
+      ## All the modalities for all the var of interest
+      val = c(val,eval(expr))
+    }
+    if(length(VarInt)>1) Kval = apply(expand.grid(val,val),1,paste, collapse = "-")
+    else Kval = val
+    ind_kept = which(as.character(group)%in%Kval)
+    
+    # save(val,Kval,dds,group_init,type.trans,VarInt,ind_kept,file="testLDA")
+    ## Get the group corresponding to the modalities
+    group = group[ind_kept]
+    nb = length(unique((group)))
+    
+    #Get the order of apperance of each variable in the group
+    order_of_appearance <- ave(group, group, FUN = seq_along)
+    group = as.factor(group)
+    
+    ## To select the colors
+    indgrp =as.integer(as.factor(group_init))[ind_kept]
+    
+    
+    if(nlevels(group)!=0)
+    { 
+      type.trans <- type.trans[1]
+      
+      if (type.trans == "VST") counts.trans <- SummarizedExperiment::assay(varianceStabilizingTransformation(dds))
+      else counts.trans <- SummarizedExperiment::assay(rlogTransformation(dds))
+      counts.trans = counts.trans[,ind_kept]
+      
+      rv = apply(counts.trans, 1, var, na.rm = TRUE)
+      #Méthodes avec l'opérateur de résolution de portée
+      
+      #PCA data
+      dat <- t(counts.trans[order(rv, decreasing = TRUE),][1:n, ]) %>% data.frame
+      pca_res <- FactoMineR::PCA(dat, ncp = 10, scale.unit = TRUE, graph = FALSE)
+      #ncp.max = 11
+      
+      
+      # dat$pc1 <- pca$ind$coord[, input$PCaxe1]
+      # dat$pc2 <- pca$ind$coord[, input$PCaxe2]
+      # 
+      # pca.vars <- pca$var$coord %>% data.frame
+      # pca.vars$vars <- rownames(pca.vars)
+      # pca.vars.m <- melt(pca.vars, id.vars = "vars")
+      
+      
+      # pca_df <- data.frame(
+      #   PC1 = pca$x[, as.numeric(gsub("PC", "", input$PCaxe1))],
+      #   PC2 = pca$x[, as.numeric(gsub("PC", "", input$PCaxe2))],
+      #   Cos2_PC1 = pca$x[, as.numeric(gsub("PC", "", input$PCaxe1))]^2 / (pca$x[, as.numeric(gsub("PC", "", input$PCaxe1))]^2 + pca$x[, as.numeric(gsub("PC", "", input$PCaxe2))]^2),
+      #   Cos2_PC2 = pca$x[, as.numeric(gsub("PC", "", input$PCaxe2))]^2 / (pca$x[, as.numeric(gsub("PC", "", input$PCaxe1))]^2 + pca$x[, as.numeric(gsub("PC", "", input$PCaxe2))]^2)
+      # )
+      
+      #nbBar = max(7, max(c(as.numeric(gsub("PC", "", input$PCaxe1)), as.numeric(gsub("PC", "", input$PCaxe2)))))
+      #col = rep("grey", nbBar)
+      #eigen = pca$sdev[1:nbBar]^2
+      #col[c(as.numeric(gsub("PC", "", input$PCaxe1)), as.numeric(gsub("PC", "", input$PCaxe2)))] = "black"
+        
+      
+      # eigen_df <- data.frame(
+      #   Dimensions = 1:nbBar,
+      #   Eigenvalues = eigen,
+      #   PercentageExplained = (eigen / sum(eigen)) *100)
+      
+      #pca_res$ChosenComponents <- ifelse(as.numeric(substr(rownames(pca_res$eig), nchar(rownames(pca_res$eig)), nchar(rownames(pca_res$eig)))) %in% c(as.numeric(gsub("PC", "", input$PCaxe1)), as.numeric(gsub("PC", "", input$PCaxe2))), "Chosen", "Not Chosen")
+
+      pca_res$group <- group
+      pca_res$eigen_df <- data.frame(
+        Dimensions = 1:min(10, length(pca_res$eig[, 1])),
+        Eigenvalues = pca_res$eig[1:min(10, length(pca_res$eig[, 1])), 1],
+        PercentageExplained = (pca_res$eig[1:min(10, length(pca_res$eig[, 1])), 1]/ sum(pca_res$eig[1:min(10, length(pca_res$eig[, 1])), 1])) *100
+      )
+      contrib_df <- data.frame(
+        contrib = t((pca_res$var$contrib / colSums(pca_res$var$contrib)) * 100)
+      )
+      contrib_df <- t(contrib_df)
+
+      pca_res$contrib_df <- as.data.frame(contrib_df)
+      pca_res$contrib_df$Variable <- rownames(pca_res$contrib_df)
+      pca_res$contrib_df <- tidyr::gather(pca_res$contrib_df, Dimension, Contribution, -Variable)
+      
+      pca_res$contrib_df$Variable <- sub("^contrib\\.", "", pca_res$contrib_df$Variable)
+      pca_res$contrib_df$Variable <- substr(pca_res$contrib_df$Variable, 1, 20)
+      
+      updateSliderInput(session = session, inputId = "indivSlider", min = 1, max = length(rownames(pca_res$ind$contrib)), value = 1) #max = nbCol * nb of elements for each columns (i.e. the contribution of each individual)
+      return(pca_res = pca_res)
+    }
+  })
+  
+  output$centeringButton <- renderUI({
+    if ((input$radioPCA == 3) && (input$DiagPlot=='pcaPlot')) {
+      return(NULL)  # Hide the button when the third radio button is selected
+    } else {
+      return(checkboxInput("checkCenteringPCA", label = h5(strong("Center plot")), value = TRUE))
+    }
+  })
+  
+  
+  output$labelBiplotButton <- renderUI({
+    if ((input$DiagPlot=='pcaPlot') && (input$radioPCA ==1)) {
+      return(checkboxInput("checkLabelIndiv", label = h5(strong("Display label")), value = FALSE))   
+    }else if ((input$DiagPlot=='pcaPlot') && (input$radioPCA ==3)) {
+      return(checkboxInput("checkLabelIndiv", label = h5(strong("Display label")), value = TRUE))   
+    }else if((input$DiagPlot=='pcaPlot') && (input$radioPCA == 2)){
+      return(checkboxGroupInput("checkLabelBiplot", label = h5(strong("Display label")), choices = list("Individuals" = 1, "Variables" = 2), selected = 2))
+    } else {
+      return(NULL)
+    }
+  })  
+  
+  observeEvent(input$checkLabelIndiv | length(input$checkLabelBiplot) > 0, {
+    shinyjs::toggle("cexPointsLabelDiag", condition = input$checkLabelIndiv | length(input$checkLabelBiplot) > 0)
+  })
+  
+  observeEvent(input$radioPCA!=3,{
+    shinyjs::toggle("cexSubtitleDiag", condition=input$radioPCA != 3)
+  })
+  
+  observeEvent(input$checkLabelBiplot[1],{
+    shinyjs::toggle("indivSlider", condition=input$checkLabelBiplot[1])
+  })
+
   
   
   output$PlotDiag <- renderPlot({
     input$RunDESeq
     
-    resDiff = isolate(ResDiffAnal())
-    ## Phylogenetic tree
+resDiff = isolate(ResDiffAnal())
+  ## Phylogenetic tree
     tree = dataInputTree()$data
     
-    Plot_diag(input,resDiff,tree)
+    Plot_diag(input,resDiff,tree, pca_calcul = pca_data())
   },height = reactive(input$heightDiag), width = reactive(ifelse(input$modifwidthDiag,input$widthDiag,"auto")))
+  
   
   
   
@@ -3178,7 +3327,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     tree = dataInputTree()$data
     
     if(!is.null(resDiff)){ 
-      pca_tab = Plot_diag(input,resDiff,tree,getTable=TRUE)
+      pca_tab = Plot_diag(input,resDiff,tree,getTable=TRUE, pca_calcul = pca_data())
       if(!is.null(pca_tab)) 
       {
         pc_axes = paste("PC",seq(1,ncol(pca_tab)),sep="")
@@ -3195,11 +3344,11 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     tree = dataInputTree()$data
     
     if(!is.null(resDiff)){ 
-      pca_tab = Plot_diag(input,resDiff,tree,getTable=TRUE)
+      pca_tab = Plot_diag(input,resDiff,tree,getTable=TRUE, pca_calcul = pca_data())
       if(!is.null(pca_tab)) 
       {
-        pc_axes = paste("PC",seq(1,ncol(pca_tab)),sep="")
-        res = selectizeInput("PCaxe2","Y-axis",pc_axes,selected=pc_axes[min(2,ncol(pca_tab))])
+        pc_axes = paste("PC",seq(1,ncol(pca_tab[, 1:ncol(pca_tab)])),sep="")
+        res = selectizeInput("PCaxe2","Y-axis",pc_axes,selected=pc_axes[min(2,ncol(pca_tab[, 1:ncol(pca_tab)]))])
       }
     }
     return(res)
@@ -3228,7 +3377,13 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   output$PlotEigen <- renderPlot({
     
     resDiff = ResDiffAnal()
-    Plot_diag_Eigen(input,resDiff)
+    Plot_diag_Eigen(input,resDiff, pca_data())
+  },height =400)
+  
+  output$PlotContrib <- renderPlot({
+    
+    resDiff = ResDiffAnal()
+    Plot_diag_Contrib(input, resDiff, pca_data())
   },height =400)
   
   
@@ -3243,17 +3398,31 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       resDiff = ResDiffAnal()
       ## Phylogenetic tree
       tree = dataInputTree()$data
-      as.matrix(Plot_diag_pcoaEigen(input,resDiff,tree)$dataDiv)
+      if(!is.null(Plot_diag_pcoaEigen(input,resDiff,tree)$dataDiv))
+        as.matrix(Plot_diag_pcoaEigen(input,resDiff,tree)$dataDiv)
     }, rownames= FALSE, options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')), scroller = TRUE,
                                        pageLength = 10,scrollX=TRUE
     ))
   )
   
+  output$MatrixCoordinatetable <- renderDataTable(
+    datatable({
+      resDiff = ResDiffAnal()
+      ## Phylogenetic tree
+      tree = dataInputTree()$data
+      if(!is.null(Plot_diag_pcoaEigen(input,resDiff,tree)$dataDiv))
+        as.matrix(Plot_diag_pcoaEigen(input,resDiff,tree)$dataDiv)
+    }, rownames= TRUE, options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')), scroller = TRUE,
+                                      pageLength = 10,scrollX=TRUE
+    ))
+  )
+  
+  
   ## Export Distancetable in .csv
   output$ExportDistancetable <- downloadHandler(
     filename = function() {
-      if(input$sepdistance=="\t") 'SHAMAN_Distance.tsv'
-      else 'SHAMAN_Distance.csv'
+      if(input$sepdistance=="\t") 'SHAMAN_PCA_Matrix.tsv'
+      else 'SHAMAN_PCA_Matrix.csv'
     },
     content = function(file){
       resDiff = ResDiffAnal()
@@ -3263,6 +3432,26 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       #datatable(tmp,rownames= FALSE)
       write.table(tmp, file,row.names = FALSE, sep=input$sepdistance)
     })
+  
+  output$ExportDistancetablePCA <- downloadHandler(
+    filename = function() {
+      if (input$sepdistancePCA == "\t") 'SHAMAN_Distance.tsv'
+      else 'SHAMAN_Distance.csv'
+    },
+    content = function(file) {
+      resDiff = ResDiffAnal()
+      ## Phylogenetic tree
+      tree = dataInputTree()$data
+      tmp = as.data.frame(Plot_diag_pcoaEigen(input, resDiff, tree)$dataDiv)
+      
+      # Write to file
+      write.table(tmp, file, row.names = TRUE, col.names = NA, sep = input$sepdistancePCA, fileEncoding = "UTF-8")
+    }
+  )
+  
+  
+  
+  
   
   
   output$ResPermaTestBox <- renderUI({
@@ -3279,7 +3468,11 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       ## Title
       res$title = paste("<center><b><font size='+3'>","Permanova test","</font></b></center><br/>")
       ## Subtitle
+      if(input$DiagPlot == 'pcaPlot')
+        res$subtitle = paste("<center><em>","Analysis of variance using Euclidean distance from matrix coordinates","</em></center><br/>")
+      else{  
       res$subtitle = paste("<center><em>","Analysis of variance using distance matrices","</em></center><br/>")
+      }
       ## Pvalue   
       res$ccl = paste("<center><b><font size='+1'>p-value :",round(resTest,5),"</font></b></center><br/>")
       
@@ -3298,7 +3491,6 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     TaxoSelect = input$TaxoSelect
     
     dist_phyl = getDistMethods()[!getDistMethods() %in% c("additive_symm", "jensen-shannon", "jensen_difference", "minkowski", "topsoe")]
-    
     res = selectInput("DistClust","Distance", unique(sort(c("altGower", "binomial", "bray", "canberra", "cao", "chao", "euclidean","gower", "horn",
                                                             "jaccard", "kulczynski",  "mahalanobis", "morisita", "mountford","raup",
                                                             "SERE"="sere", dist_phyl))),selected="bray")
@@ -3309,9 +3501,9 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
                                                              "jaccard","kulczynski",  "mahalanobis", "morisita", "mountford", "raup",
                                                              "SERE"="sere","Unifrac", dist_phyl))),selected="bray")
     }
-    
     return(res)
   })
+
   
   
   output$SizeFactTable <- DT::renderDataTable(
@@ -3378,7 +3570,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       resDiff = ResDiffAnal()
       tree = isolate(dataInputTree()$data)
       
-      print(Plot_diag(input,resDiff,tree))
+      print(Plot_diag(input,resDiff,tree, pca_calcul = pca_data()))
       dev.off()
     }
   )
@@ -3693,7 +3885,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   output$exportPlotTables <- downloadHandler(
     filename <- function() { paste(input$WhichPlotTables,paste('SHAMAN',input$Exp_format_PlotTables,sep="."),sep="_") },
     content <- function(file) {
-
+      
       if(input$Exp_format_PlotTables=="png") png(file, width = input$widthTablePlotExport, height = input$heightTablePlotExport)
       else if(input$Exp_format_PlotTables=="pdf") pdf(file, width = input$widthTablePlotExport/96, height = input$heightTablePlotExport/96)
       else if(input$Exp_format_PlotTables=="eps") postscript(file, width = input$widthTablePlotExport/96, height = input$heightTablePlotExport/96, paper="special")
@@ -3701,7 +3893,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       
       if(input$WhichPlotTables=="BarChart") {print(Bar_Chart_Tables(input, dataDiff(), export = TRUE))}
       else if(input$WhichPlotTables=="VolcanoPlot") 
-        {print(Volcano_Plot(input, dataDiff(), export = TRUE))}
+      {print(Volcano_Plot(input, dataDiff(), export = TRUE))}
       dev.off()
     }
   )
@@ -3780,7 +3972,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     resDiff = ResDiffAnal()
     ## Just for reactivity
     #SelContrast = input$ContrastList_table_FC
-
+    
     resplot = NULL
     filesize = file.info(namesfile)[,"size"]
     if(is.na(filesize)){filesize=0}
@@ -3861,7 +4053,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_MultipleVenn(input, BaseContrast, resDiff, ContrastListDebounce)$plot)
     }
   })
-
+  
   # Warning about contrasts without significant differential element (common to UpSet, Venn and Contrasts comparison)
   output$contrastsNoDiff <- renderUI({
     res = NULL
@@ -3876,7 +4068,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
         else{if(input$PlotVisuSelectComp == "Venn"){lst <- Plot_Visu_Venn(input,BaseContrast,resDiff, ContrastListVennDebounce)$contrasts_without_diff}
           else{if(input$PlotVisuSelectComp == "multipleVenn"){lst <- Plot_MultipleVenn(input, BaseContrast, resDiff, ContrastListDebounce)$contrasts_without_diff}
           }}
-    
+        
         if(!is.null(lst)){print(lst)
           res <- div(h5("The following contrasts have no significant differential element:"), div(paste(lst, sep = "  ", collapse = "  "), align = "center"), h5(strong("Select minimum two contrasts with differential elements.")))}
         return(res)}}
@@ -4025,7 +4217,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     
     if(!is.null(resDiff) && !is.null(ind_taxo)) withProgress(message="Loading...",Plot_network(input,resDiff,Available_taxo, ind_taxo, qualiVariable)$plot)
   })
-
+  
   # React only once to change in one or several of the inputs
   InputColorCorr <- reactive({
     input$colorCorr
@@ -4079,7 +4271,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     else if(input$PlotVisuSelect=="Rarefaction") res = plotOutput("RarefactionPlot",dblclick = "RarefactionPlot_dblclick",brush = brushOpts(id = "RarefactionPlot_brush",resetOnNew = TRUE), height = input$heightVisu+10, width=if(input$modifwidthVisu){input$widthVisu})
     else if(input$PlotVisuSelect=="Phylogeny") res = PhyloTreeMetaROutput('PhyloTreeMetaR2')
     else if(input$PlotVisuSelect=="Network") res = visNetworkOutput("NetworkPlot")
-                                            
+    
     return(res)
   })
   
@@ -4091,10 +4283,10 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     if(input$PlotVisuSelectComp=="Venn") res =  d3vennROutput("VennD3", height = input$heightVisuComp+10, width=ifelse(input$modifwidthComp,input$widthComp,"100%"))
     if(input$PlotVisuSelectComp=="LogitPlot") res = scatterD3Output("LogitPlotD3", height = input$heightVisuComp+10, width=ifelse(input$modifwidthComp,input$widthComp,"100%"))
     if(input$PlotVisuSelectComp=="pValueDensity") res = div(style = "position:relative",
-                                      plotOutput("pValueDensity", height = input$heightVisuComp+10, width=ifelse(input$modifwidthComp,input$widthComp,"100%")
-                                                 , hover = hoverOpts(id = "plot_hover_pValueDensity", delay = 10, delayType = "throttle")),
-                                       uiOutput("tooltippValueDensity")
-                                                )
+                                                            plotOutput("pValueDensity", height = input$heightVisuComp+10, width=ifelse(input$modifwidthComp,input$widthComp,"100%")
+                                                                       , hover = hoverOpts(id = "plot_hover_pValueDensity", delay = 10, delayType = "throttle")),
+                                                            uiOutput("tooltippValueDensity")
+    )
     if(input$PlotVisuSelectComp=="UpSet") res = plotOutput("UpSet", height = input$heightVisuComp+10, width=ifelse(input$modifwidthComp,input$widthComp,"100%"))
     if(input$PlotVisuSelectComp=="multipleVenn") res = plotOutput("multipleVennPlot", height = input$heightVisuComp+10, width=ifelse(input$modifwidthComp,input$widthComp,"100%"))
     return(res)
@@ -4125,7 +4317,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       (h5(strong(ContrastListDebounce()[point$group])))
     )
   })
-
+  
   pValueDensityData <- reactive({
     resDiff = ResDiffAnal()
     filesize = file.info(namesfile)[,"size"]
@@ -4135,7 +4327,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       if(!is.null(resDiff$dds))
       {p <- Plot_pValue_Density(input, BaseContrast, resDiff, ContrastListDebounce, input$AlphaVal, InputpValueDensityfocus)
       if(!is.null(p)){
-      data <- ggplot_build(p)$data[[1]]}}
+        data <- ggplot_build(p)$data[[1]]}}
     }})
   ####
   
@@ -4151,7 +4343,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   #     resDiff = ResDiffAnal()
   #     if(!is.null(resDiff$dds)) Plot_Visu_Diversity(input,resDiff,type="box")
   #   })
-
+  
   output$TaxoToPlotVisu <- renderUI({
     
     data = dataInput()$data 
@@ -4234,27 +4426,27 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   output$TaxoToPlotNetwork <- renderUI({
     withProgress({
-    data = dataInput()$data 
-    taxo = input$TaxoSelect
-    resDiff = ResDiffAnal()
-    res = NULL
-    
-    if(!is.null(input$SelectTaxoNetwork) && !is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="...") 
-    {
-      counts = dataMergeCounts()$counts
-      sumTot = rowSums(counts)
-      ord = order(sumTot,decreasing=TRUE)
-      Available_taxo = rownames(counts)[ord]
+      data = dataInput()$data 
+      taxo = input$TaxoSelect
+      resDiff = ResDiffAnal()
+      res = NULL
       
-      if(input$SelectTaxoNetwork=="All") res = selectizeInput("selectTaxoPlotNetwork",h6(strong("Custom selection")),Available_taxo, selected = Available_taxo,multiple = TRUE)
-      if(input$SelectTaxoNetwork=="Linked") {edges <- Plot_network(input,ResDiffAnal(),Available_taxo, Available_taxo, qualiVariable)$data$edges
-                                             edgesFrom <- unique(edges$from)
-                                             edgesTo <- unique(edges$to)
-                                             linked <- unique(c(edgesFrom, edgesTo))
-                                             res = selectizeInput("selectTaxoPlotNetwork",h6(strong("Custom selection")),Available_taxo, selected = linked,multiple = TRUE)
+      if(!is.null(input$SelectTaxoNetwork) && !is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="...") 
+      {
+        counts = dataMergeCounts()$counts
+        sumTot = rowSums(counts)
+        ord = order(sumTot,decreasing=TRUE)
+        Available_taxo = rownames(counts)[ord]
+        
+        if(input$SelectTaxoNetwork=="All") res = selectizeInput("selectTaxoPlotNetwork",h6(strong("Custom selection")),Available_taxo, selected = Available_taxo,multiple = TRUE)
+        if(input$SelectTaxoNetwork=="Linked") {edges <- Plot_network(input,ResDiffAnal(),Available_taxo, Available_taxo, qualiVariable)$data$edges
+        edgesFrom <- unique(edges$from)
+        edgesTo <- unique(edges$to)
+        linked <- unique(c(edgesFrom, edgesTo))
+        res = selectizeInput("selectTaxoPlotNetwork",h6(strong("Custom selection")),Available_taxo, selected = linked,multiple = TRUE)
+        }
       }
-    }
-    return(res)} , message = "Loading...")
+      return(res)} , message = "Loading...")
   })
   
   output$Research <- renderUI(
@@ -4275,7 +4467,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     if(!is.null(target)) {
       if(!is.numeric(target[,input$sec_variable])){shinyjs::show("ValueOfQualitativeVaribale")}else{shinyjs::hide("ValueOfQualitativeVaribale")}
       return(!is.numeric(target[,input$sec_variable]))
-      }
+    }
   })
   
   output$SelectValueQualiVar <- renderUI({
@@ -4299,9 +4491,9 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       sumTot = rowSums(counts)
       ord = order(sumTot,decreasing=TRUE)
       Available_taxo = rownames(counts)[ord]
-     res = selectizeInput("ToLabelNetwork", "Nodes to label", Available_taxo, selected = NULL, multiple = TRUE)}
+      res = selectizeInput("ToLabelNetwork", "Nodes to label", Available_taxo, selected = NULL, multiple = TRUE)}
     return(res)
-    })
+  })
   
   ## For comp plot
   output$TaxoToPlotVisuComp <- renderUI({
@@ -4388,7 +4580,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     taxo = input$TaxoSelect
     resDiff = ResDiffAnal()
     res = NULL
-
+    
     if (!is.null(input$SelectSpecifTaxoTablesVolcano) &&
         !is.null(data$counts) &&
         !is.null(data$taxo) &&
@@ -4400,7 +4592,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       ord = order(sumTot, decreasing = TRUE)
       Available_taxo = rownames(counts)[ord]
       selTaxo = Available_taxo[1:min(12, length(Available_taxo))]
-
+      
       if (input$SelectSpecifTaxoTablesVolcano == "Most"){
         res = selectizeInput(
           "selectTaxoLabelVolcano",
@@ -4437,7 +4629,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
           selected = NULL,
           multiple = TRUE
         )
-        }
+      }
     }
     return(res)
   })
@@ -4716,10 +4908,10 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   observeEvent(input$searchNode, {
     if(input$searchNode == "..."){visNetworkProxy("NetworkPlot") %>% visFit()}
     else{
-    visNetworkProxy("NetworkPlot") %>%
-      visFocus(id = input$searchNode, scale = 1) %>%
-      visSetSelection(nodesId = input$searchNode)
-      }
+      visNetworkProxy("NetworkPlot") %>%
+        visFocus(id = input$searchNode, scale = 1) %>%
+        visSetSelection(nodesId = input$searchNode)
+    }
   })
   
   observe({
@@ -4760,32 +4952,32 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     input$edgeColorNegative
     
     if(!is.null(data$nodes)){
-    if(isolate(input$colorCorr)){scale <- if(input$scaleFree){max(c(max(as.numeric(data$nodes$cor)),-min(as.numeric(data$nodes$cor))))}else{1}
-                                 data$nodes$color.background <- sapply(as.numeric(data$nodes$cor), function(x) colorRampPalette(rev(brewer.pal(9, input$colorPalette)))(200)[round(x, digits = 2)*100/scale+100])
-                                 data$nodes$color.highlight.background <- data$nodes$color.background}
-    else{data$nodes$color.background <- input$colorBackground
-         data$nodes$color.highlight.background <- input$colorHighlightBackground}
-    data$nodes$color.border <- input$colorBorder
-    data$nodes$color.highlight.border <- input$colorHighlightBorder
-    
-    
-    list_to_label <- input$ToLabelNetwork
-    data$nodes$label <- sapply(data$nodes$id, function(x)if(is.element(x, list_to_label)){x}else{""})}
+      if(isolate(input$colorCorr)){scale <- if(input$scaleFree){max(c(max(as.numeric(data$nodes$cor)),-min(as.numeric(data$nodes$cor))))}else{1}
+      data$nodes$color.background <- sapply(as.numeric(data$nodes$cor), function(x) colorRampPalette(rev(brewer.pal(9, input$colorPalette)))(200)[round(x, digits = 2)*100/scale+100])
+      data$nodes$color.highlight.background <- data$nodes$color.background}
+      else{data$nodes$color.background <- input$colorBackground
+      data$nodes$color.highlight.background <- input$colorHighlightBackground}
+      data$nodes$color.border <- input$colorBorder
+      data$nodes$color.highlight.border <- input$colorHighlightBorder
+      
+      
+      list_to_label <- input$ToLabelNetwork
+      data$nodes$label <- sapply(data$nodes$id, function(x)if(is.element(x, list_to_label)){x}else{""})}
     
     if(!is.null(data$edges)){
-    data$edges$color <- sapply(data$edges$weight, function(x)if(x==1){input$edgeColorPositive}else{input$edgeColorNegative})}
+      data$edges$color <- sapply(data$edges$weight, function(x)if(x==1){input$edgeColorPositive}else{input$edgeColorNegative})}
     
     visNetworkProxy("NetworkPlot") %>%
       visUpdateNodes(nodes = data$nodes) %>%
       visUpdateEdges(edges = data$edges)
-      })
+  })
   
   # output$legendNetworkCorr <- renderPlot({
   #   par(mar=c(1,0,0,0))
   #   image(as.matrix(seq(-1,1,by=0.01)), col=colorRampPalette(rev(brewer.pal(9, input$colorPalette)))(200), axes = FALSE)
   #   axis(1, at = c(-1,-0.5,0,0.5,1), labels = c("-1","-0.5","0","+0.5","+1"))
   # }, bg = "transparent")
-
+  
   ListSelectTaxoToPlotNetwork <- reactive({
     input$selectTaxoPlotNetwork})
   
@@ -4802,3 +4994,4 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     }
   )
 })
+
