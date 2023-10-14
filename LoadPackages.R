@@ -178,6 +178,14 @@ if (!require("stringr")) {
   install.packages("stringr", repos="http://cran.irsn.fr/")
 }
 
+if(!require("FactoMineR")){
+  install.packages("FactoMineR", repos="http://cran.irsn.fr/")
+}
+
+if(!require("factoextra")){
+  install.packages("factoextra", repos="http://cran.irsn.fr/")
+}
+
 if (!require(devtools)) {
   install.packages('devtools',  repos="http://cran.irsn.fr/")
 }
@@ -222,5 +230,5 @@ libshaman=c("shiny", "rjson", "ape", "GUniFrac", "psych", "ggplot2", "vegan", "d
             "htmltools", "rAmCharts", "colourpicker", "data.table", "UpSetR", "ggrepel", "igraph", 
             "visNetwork", "shinytoastr", "scatterD3", "devtools", "shinydashboardshaman", "d3heatmap", 
             "biomformatshaman", "rNVD3shaman", "DESeq2shaman", "PhyloTreeMetaR", "treeWeightD3", "d3vennR",
-            "googleVis", "stringr")
+            "googleVis", "stringr", "FactoMineR", "factoextra")
 lapply(libshaman, require, character.only = TRUE)
