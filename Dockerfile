@@ -1,9 +1,10 @@
-FROM rocker/shiny:3.6.1
+FROM ubuntu:18.04
 ARG CRAN_SOURCE=http://cran.irsn.fr/
 MAINTAINER Amine Ghozlane "amine.ghozlane@pasteur.fr"
 ENV TZ=Europe/Paris
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN apt-get update && apt-get install -y \
+    wget \
     gdebi-core \
     libcurl4-openssl-dev\
     libcairo2-dev \
@@ -31,10 +32,21 @@ RUN pip3 install bioblend python-daemon==2.3.2
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
+#Download and install shiny server
+RUN wget --no-verbose https://cran.r-project.org/src/base/R-3/R-3.6.1.tar.gz -P /opt/ && \
+    tar -zxf /opt/R-3.6.1.tar.gz -C /opt && rm /opt/R-3.6.1.tar.gz && \
+    cd /opt/R-3.6.1/ && ./configure --with-x=no && \
+    make -j 4  && make install && cd / && rm -rf  /opt/R-3.6.1 && \  
+    wget --no-verbose https://s3.amazonaws.com/rstudio-shiny-server-os-build/ubuntu-12.04/x86_64/VERSION -O "version.txt" && \
+    VERSION=$(cat version.txt)  && \
+    wget --no-verbose "https://s3.amazonaws.com/rstudio-shiny-server-os-build/ubuntu-12.04/x86_64/shiny-server-$VERSION-amd64.deb" -O ss-latest.deb && \
+    gdebi -n ss-latest.deb && \
+    rm -f version.txt ss-latest.deb
 
 RUN R -e """install.packages('renv', repos='${CRAN_SOURCE}');renv::restore()"""
 
 COPY docker_inst/shiny-server.conf  /etc/shiny-server/shiny-server.conf
+COPY docker_inst/.Rprofile  /srv/shiny-server/
 COPY . /srv/shiny-server/
 COPY docker_inst/shiny-server.sh /usr/bin/shiny-server.sh
 COPY docker_inst/run_kronarshy.R /usr/bin/run_kronarshy.R
