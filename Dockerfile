@@ -27,7 +27,7 @@ RUN apt-get update && apt-get install -y \
     libmagick++-dev \
     tzdata \
     cmake \
-    libnlopt-cxx-dev
+    libnlopt-dev
     
 RUN pip3 install bioblend python-daemon==2.3.2
 
