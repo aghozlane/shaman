@@ -1,5 +1,4 @@
 FROM ubuntu:18.04
-ARG CRAN_SOURCE=http://cran.irsn.fr/
 MAINTAINER Amine Ghozlane "amine.ghozlane@pasteur.fr"
 ENV TZ=Europe/Paris
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
@@ -57,7 +56,7 @@ RUN git clone https://github.com/pierreLec/KronaRShy.git /srv/shiny-server/krona
     cp /srv/shiny-server/.Rprofile /srv/shiny-server/kronarshy/.Rprofile && \
     chmod +x /usr/bin/shiny-server.sh
 WORKDIR /srv/shiny-server/
-RUN R -e """install.packages('renv', repos='${CRAN_SOURCE}');renv::restore(lockfile="/srv/shiny-server/renv.lock", prompt=F)"""
+RUN R -e """renv::restore(prompt=F)"""
 
 EXPOSE 80
 
