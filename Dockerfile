@@ -26,7 +26,8 @@ RUN apt-get update && apt-get install -y \
     openjdk-8-jdk \
     libmagick++-dev \
     tzdata \
-    cmake
+    cmake \
+    libnlopt-cxx-dev
     
 RUN pip3 install bioblend python-daemon==2.3.2
 
