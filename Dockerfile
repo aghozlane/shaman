@@ -43,7 +43,7 @@ RUN wget --no-verbose https://cran.r-project.org/src/base/R-3/R-3.6.1.tar.gz -P 
     gdebi -n ss-latest.deb && \
     rm -f version.txt ss-latest.deb
 
-RUN R -e """install.packages('renv', repos='${CRAN_SOURCE}');renv::restore()"""
+
 
 COPY docker_inst/shiny-server.conf  /etc/shiny-server/shiny-server.conf
 COPY docker_inst/.Rprofile  /srv/shiny-server/
@@ -56,6 +56,8 @@ RUN git clone https://github.com/pierreLec/KronaRShy.git /srv/shiny-server/krona
     chown -R shiny.shiny  /srv/shiny-server/ && \
     cp /srv/shiny-server/.Rprofile /srv/shiny-server/kronarshy/.Rprofile && \
     chmod +x /usr/bin/shiny-server.sh
+WORKDIR /srv/shiny-server/
+RUN R -e """install.packages('renv', repos='${CRAN_SOURCE}');renv::restore(lockfile="/srv/shiny-server/renv.lock", prompt=F)"""
 
 EXPOSE 80
 
