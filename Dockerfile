@@ -28,7 +28,7 @@ RUN apt-get update && apt-get install -y \
     tzdata \
     cmake
     
-RUN git clone https://github.com/stevengj/nlopt.git && cd nlopt && mkdir build && cd build && cmake .. && make && sudo make install
+RUN git clone https://github.com/stevengj/nlopt.git && cd nlopt && mkdir build && cd build && cmake .. && make && make install
 
 RUN pip3 install bioblend python-daemon==2.3.2
 
