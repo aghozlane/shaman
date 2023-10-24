@@ -46,7 +46,7 @@ RUN wget --no-verbose https://cran.r-project.org/src/base/R-3/R-3.6.1.tar.gz -P 
     rm -f version.txt ss-latest.deb
 
 
-
+USER shiny
 COPY docker_inst/shiny-server.conf  /etc/shiny-server/shiny-server.conf
 COPY docker_inst/.Rprofile  /srv/shiny-server/
 COPY . /srv/shiny-server/
