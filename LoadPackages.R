@@ -1,5 +1,5 @@
 #options(download.file.method = 'wget', bitmapType='cairo')
-options(bitmapType='cairo')
+options(bitmapType='cairo', rlib_downstream_check = FALSE)
 
 if (!require("Rcpp")){
   #RcppArmadillo_0.9.800.3.0
