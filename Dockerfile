@@ -26,9 +26,10 @@ RUN apt-get update && apt-get install -y \
     openjdk-8-jdk \
     libmagick++-dev \
     tzdata \
-    cmake \
-    libnlopt-dev
+    cmake
     
+RUN git clone https://github.com/stevengj/nlopt.git && cd nlopt && mkdir build && cd build && cmake .. && make && sudo make install
+
 RUN pip3 install bioblend python-daemon==2.3.2
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
