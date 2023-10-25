@@ -58,7 +58,6 @@ RUN git clone https://github.com/pierreLec/KronaRShy.git /srv/shiny-server/krona
 WORKDIR /srv/shiny-server/
 RUN R -e """renv::restore(prompt=F)"""
 RUN chown -R shiny.shiny  /srv/shiny-server/
-USER shiny
 EXPOSE 80
 
 EXPOSE 5438
