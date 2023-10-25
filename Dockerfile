@@ -1,5 +1,6 @@
 FROM ubuntu:20.04
 MAINTAINER Amine Ghozlane "amine.ghozlane@pasteur.fr"
+ARG CRAN_SOURCE
 ENV TZ=Europe/Paris
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN apt-get update && apt-get install -y \
@@ -55,7 +56,7 @@ RUN git clone https://github.com/pierreLec/KronaRShy.git /srv/shiny-server/krona
     git clone https://github.com/aghozlane/shaman_bioblend.git /usr/bin/shaman_bioblend && \
     cp /srv/shiny-server/.Rprofile /srv/shiny-server/kronarshy/.Rprofile && \
     chmod +x /usr/bin/shiny-server.sh
-RUN R -e """install.packages("renv", repos="http://cran.irsn.fr/");renv::restore(project='/srv/shiny-server/', prompt=F)"""
+RUN R -e """install.packages('renv', repos='$CRAN_SOURCE');renv::restore(project='/srv/shiny-server/', prompt=F)"""
 RUN mkdir -p /srv/shiny-server/www/masque/todo /srv/shiny-server/www/masque/doing /srv/shiny-server/www/masque/error /srv/shiny-server/www/masque/done && \
     chown -R shiny.shiny /srv/shiny-server/www/* && mkdir -p /var/log/shiny-server && chown shiny.shiny /var/log/shiny-server
 
