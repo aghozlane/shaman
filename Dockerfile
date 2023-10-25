@@ -45,8 +45,6 @@ RUN wget --no-verbose https://cran.r-project.org/src/base/R-3/R-3.6.1.tar.gz -P 
     gdebi -n ss-latest.deb && \
     rm -f version.txt ss-latest.deb
 
-
-USER shiny
 COPY docker_inst/shiny-server.conf  /etc/shiny-server/shiny-server.conf
 COPY docker_inst/.Rprofile  /srv/shiny-server/
 COPY . /srv/shiny-server/
@@ -55,12 +53,11 @@ COPY docker_inst/run_kronarshy.R /usr/bin/run_kronarshy.R
 
 RUN git clone https://github.com/pierreLec/KronaRShy.git /srv/shiny-server/kronarshy && \
     git clone https://github.com/aghozlane/shaman_bioblend.git /usr/bin/shaman_bioblend && \
-    chown -R shiny.shiny  /srv/shiny-server/ && \
     cp /srv/shiny-server/.Rprofile /srv/shiny-server/kronarshy/.Rprofile && \
     chmod +x /usr/bin/shiny-server.sh
 WORKDIR /srv/shiny-server/
 RUN R -e """renv::restore(prompt=F)"""
-
+RUN chown -R shiny.shiny  /srv/shiny-server/
 EXPOSE 80
 
 EXPOSE 5438
