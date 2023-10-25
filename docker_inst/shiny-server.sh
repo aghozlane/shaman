@@ -10,3 +10,4 @@ chown shiny.shiny /var/log/shiny-server
 exec shiny-server >> /var/log/shiny-server.log 2>&1
 
 exec nohup /usr/bin/Rscript /usr/bin/run_kronarshy.R&
+exec /usr/bin/R -s -e 'shiny::runApp(host = "0.0.0.0", port = 80)
