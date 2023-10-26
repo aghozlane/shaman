@@ -347,6 +347,21 @@
       ],
       "Hash": "997471f25a7ed6c782f0090ce52cc63a"
     },
+    "KronaR": {
+      "Package": "KronaR",
+      "Version": "0.0.0.9000",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "KronaR",
+      "RemoteUsername": "pierreLec",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "cdc5407c36fc181e460feeaba8b90bff4a8a86a0",
+      "Requirements": [
+        "R"
+      ],
+      "Hash": "b09125ca57b6ec09764e6cbfa10de542"
+    },
     "MASS": {
       "Package": "MASS",
       "Version": "7.3-51.4",
