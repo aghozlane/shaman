@@ -38,7 +38,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 #Download and install shiny server
 RUN wget --no-verbose https://cran.r-project.org/src/base/R-3/R-3.6.2.tar.gz -P /opt/ && \
     tar -zxf /opt/R-3.6.2.tar.gz -C /opt && rm /opt/R-3.6.2.tar.gz && \
-    cd /opt/R-3.6.1/ && ./configure --with-x=no && \
+    cd /opt/R-3.6.2/ && ./configure --with-x=no && \
     make -j 4  && make install && cd / && rm -rf  /opt/R-3.6.2 && \  
     wget --no-verbose https://s3.amazonaws.com/rstudio-shiny-server-os-build/ubuntu-12.04/x86_64/VERSION -O "version.txt" && \
     VERSION=$(cat version.txt)  && \
