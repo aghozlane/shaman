@@ -3347,6 +3347,8 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
         Eigenvalues = pca_res$eig[1:min(10, length(pca_res$eig[, 1])), 1],
         PercentageExplained = (pca_res$eig[1:min(10, length(pca_res$eig[, 1])), 1]/ sum(pca_res$eig[1:min(10, length(pca_res$eig[, 1])), 1])) *100
       )
+      pca_res$eigen_df$CumulativePercentageExplained <- cumsum(pca_res$eigen_df$PercentageExplained)
+
       contrib_df <- data.frame(
         contrib = t((pca_res$var$contrib / colSums(pca_res$var$contrib)) * 100)
       )

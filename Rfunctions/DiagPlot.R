@@ -494,7 +494,8 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree, col = c("SpringGreen"
     #Variables df depends on the selected axes, so we don't pu this part of code in pcoa_data()
     variables <- as.data.frame(0.5*(results_pcoa$U/max(abs(results_pcoa$U[, PC1_int_value]), results_pcoa$U[, PC2_int_value]))) %>%
       tibble::rownames_to_column(input$TaxoSelect) %>%
-      dplyr::arrange(desc(!!sym(paste0("Axis.", min_axis))))
+      dplyr::arrange(desc(abs(!!sym(paste0("Axis.", min_axis)))))
+    
     
     contribThreshold <- round(length(rownames(variables)) - round(input$varSlider*length(rownames(variables))))
     
@@ -596,7 +597,7 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree, col = c("SpringGreen"
         tibble::column_to_rownames(input$TaxoSelect) %>%
         dplyr::arrange(desc(!!sym(paste0("Axis.", min_axis)))) %>%
         dplyr::slice(1:contribThreshold)
-      
+
       contrib_df <- contrib_df *100
       #rownames(contrib_df) <- substr(contrib_df, 1, 20)
 
@@ -915,8 +916,10 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
       #Find the chosen PCA axis in order to color the chosen bars in blue
       pca_res$eigen_df$ChosenComponents <- ifelse(pca_res$eigen_df$Dimensions %in% c(as.numeric(gsub("PC", "", input$PCaxe1)), 
                                                                                      as.numeric(gsub("PC", "", input$PCaxe2))), "Chosen", "Not Chosen")
+
       eigen_plot <- ggplot(data = pca_res$eigen_df, aes(x = Dimensions, y = PercentageExplained, fill = ChosenComponents)) +
         geom_bar(stat = "identity", width = 0.7) +
+        geom_line(aes(x = Dimensions, y = CumulativePercentageExplained), color = "red") +  # Cumulative line
         labs(
           x = "Dimensions",
           y = "Percentage Explained Variance",
@@ -931,7 +934,7 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
           legend.position = "none"
         ) +
         pca_theme +
-        coord_cartesian(clip = "off")
+        coord_cartesian(clip = "off") 
       return(eigen_plot)
     }
     
