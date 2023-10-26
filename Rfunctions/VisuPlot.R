@@ -153,14 +153,12 @@ Plot_Visu_Heatmap <- function(input,resDiff,export=FALSE){
 ##                       ##
 ##          BOXPLOTS ####
 ##                       ##
-Plot_Visu_Boxplot <- function(input,resDiff,alpha=0.7){
+Plot_Visu_Boxplot <- function(input,resDiff,alpha=0.7, dataDiff, colors = c("#048789", "#D44D27", "#E2A72E", "#EFEBC8",
+                                                                                     "#107E7D", "#7A3D3D", "#F15A22", "#F7D488", "#F4A259",
+                                                                                     "#005F6B", "#4D314A", "#BF6B63", "#FF8C42", "#FF3C38")){
   
   gg = NULL
-  
-  ## Colors
-  colors = rep(c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c","#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5","#8c564b",
-                 "#c49c94","#e377c2","#f7b6d2","#7f7f7f", "#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"),ceiling(nrow(resDiff$target)/20))
-  
+
   ## Get Input for BoxPlot
   VarInt = input$VisuVarInt
   ind_taxo = input$selectTaxoPlot
@@ -195,7 +193,8 @@ Plot_Visu_Boxplot <- function(input,resDiff,alpha=0.7){
       tmp_mat[1:nbKept,3] = as.character(rownames(counts_tmp_combined)[i],nbKept)
       
       ## Conbined the sample
-      dataBarPlot_mat = rbind(dataBarPlot_mat,tmp_mat)
+      dataBarPlot_mat <- rbind(dataBarPlot_mat, tmp_mat)
+      #print(dataBarPlot_mat)
     }
     
     
@@ -204,6 +203,11 @@ Plot_Visu_Boxplot <- function(input,resDiff,alpha=0.7){
     colnames(dataBarPlot_mat) = c("Taxonomy","Value","Samples")
     dataBarPlot_mat[,2] = tmp_counts
     
+    if(!is.null(dataDiff)){
+      dataDiff$complete$pvalue_adjusted[is.na(dataDiff$complete$pvalue_adjusted)] = 0
+    }
+    labels <- sprintf("%s\np-value: %.5f", dataDiff$complete$Id, dataDiff$complete$pvalue_adjusted)
+
     if(is.null(input$BoxColorBy) || length(VarInt)<=1){ dataBarPlot_mat$Colors = dataBarPlot_mat$Samples}
     if(!is.null(input$BoxColorBy) && length(VarInt)>1)
     { 
@@ -213,14 +217,17 @@ Plot_Visu_Boxplot <- function(input,resDiff,alpha=0.7){
     }
     dataBarPlot_mat$Samples = factor(dataBarPlot_mat$Samples,levels=levelsMod)
     dataBarPlot_mat$Colors = factor(dataBarPlot_mat$Colors,levels=levelsMod)
+    #column that is used to print the p-value under the title of each graph
+    dataBarPlot_mat$TaxonomyPvalue = factor(dataBarPlot_mat$Taxonomy, levels = as.vector(dataDiff$complete$Id), labels = labels)
     gg = ggplot(dataBarPlot_mat,aes(x=Samples,y=Value,fill=Colors))  + geom_boxplot(alpha=alpha) +theme_bw()
-    gg = gg  +theme(axis.text=element_text(size=18,face="bold"),axis.title=element_text(size=18,face="bold"),panel.background = element_blank(),
+    gg = gg  +theme(axis.text=element_text(size=18,face="bold"),axis.title=element_text(size=15,face="bold"),panel.background = element_blank(),
                     panel.grid.major = element_blank(),panel.grid.minor = element_blank(), axis.title.x=element_blank(), axis.text.x = element_text(angle = 90, hjust = 1,vjust=0.5),
                     strip.text = element_text(size = 20)) 
     gg = gg + ylab(paste(input$typeDataBox, "abundance")) +scale_fill_manual(values = colors) + guides(fill=FALSE)
     if(input$CheckAddPointsBox) gg = gg + geom_point(position=position_jitterdodge(dodge.width=0.9))
     if(input$SensPlotVisu=="Horizontal") gg = gg + coord_flip()
     if(nbKept>1) gg = gg + facet_wrap(~ Taxonomy,scales = input$ScaleBoxplot)
+    if (!is.null(dataDiff) && !is.null(input$SelectSpecifTaxo) && !is.null(input$ContrastList_table_Visu) && input$SelectSpecifTaxo == "Diff") gg = gg + facet_wrap(~ TaxonomyPvalue, scales = input$ScaleBoxplot) 
   }
   
   return(gg)
@@ -922,13 +929,13 @@ Plot_network <- function(input,resDiff,availableTaxo, ind_taxo, qualiVariable, e
     dataVN$nodes$color.border <- isolate(input$colorBorder)
     dataVN$nodes$color.highlight.border <- isolate(input$colorHighlightBorder)
     
-    plot <- visNetwork(nodes = dataVN$nodes, edges = dataVN$edges)
+    plot <- visNetwork (nodes = dataVN$nodes, edges = dataVN$edges)
     plot <- visIgraphLayout(plot, layout = "layout_nicely", physics = FALSE, smooth = FALSE)
     plot <- visNodes(plot, size = 20)
     plot <- visEdges(plot, width = 1)
     plot <- visOptions(plot, width = if(isolate(input$modifwidthVisu)){isolate(input$widthVisu)}, height = isolate(input$heightVisu), autoResize = FALSE, highlightNearest = list(enabled = TRUE, degree = 1, hover = FALSE))
     #plot <- visLegend(plot, addEdges = data.frame(color = c("red", "blue"), label = c("Positive correlation","Negative correlation")))
-    
+    print(dataVN)
     #plot <- visExport(plot, type = "pdf", name = "network_SHAMAN.pdf", float="bottom")
   }
   }
