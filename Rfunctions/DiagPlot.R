@@ -723,8 +723,8 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
   if(!is.null(pca_res)  && !is.null(input$PCaxe1) && !is.null(input$PCaxe2) && !is.null(input$radioPCA) && !is.null(input$checkLabelSamples))
   {
 
-    row.names(pca_res$var$coord) <- substr(rownames(pca_res$var$coord), 1, 20)
-    row.names(pca_res$ind$coord) <- substr(rownames(pca_res$ind$coord), 1, 20)
+    row.names(pca_res$var$coord) <- rownames(pca_res$var$coord), 1
+    row.names(pca_res$ind$coord) <- rownames(pca_res$ind$coord), 1
     Groups = pca_res$group
     #PCaxes
     PC1 <- pca_res$ind$coord[, as.numeric(gsub("PC", "", input$PCaxe1))]
