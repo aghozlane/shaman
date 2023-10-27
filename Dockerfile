@@ -49,7 +49,7 @@ RUN wget --no-verbose ${CRAN_SOURCE}/src/base/R-3/R-3.6.2.tar.gz -P /opt/ && \
 
 # Package R
 COPY renv.lock /srv/shiny-server/
-RUN R -e """install.packages('renv', repos='$CRAN_SOURCE');renv::restore(project='/srv/shiny-server/', prompt=F)"""
+RUN R -e """install.packages('renv', repos='$CRAN_SOURCE');renv::restore(project='/srv/shiny-server/', prompt=F, repos='$CRAN_SOURCE')"""
 
 # Configuration shiny
 COPY docker_inst/shiny-server.conf  /etc/shiny-server/shiny-server.conf
