@@ -36,7 +36,7 @@ RUN pip3 install bioblend python-daemon==2.3.2
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 #Download and install shiny server
-RUN wget --no-verbose https://cran.r-project.org/src/base/R-3/R-3.6.2.tar.gz -P /opt/ && \
+RUN wget --no-verbose ${CRAN_SOURCE}/src/base/R-3/R-3.6.2.tar.gz -P /opt/ && \
     tar -zxf /opt/R-3.6.2.tar.gz -C /opt && rm /opt/R-3.6.2.tar.gz && \
     cd /opt/R-3.6.2/ && ./configure --with-x=no && \
     make -j 4  && make install && cd / && rm -rf  /opt/R-3.6.2 && \  
