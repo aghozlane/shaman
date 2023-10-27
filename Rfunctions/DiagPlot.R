@@ -27,44 +27,44 @@ Plot_diag <- function(input,resDiff,tree = NULL,getTable=FALSE, calcul_df = NULL
     if(ncol(group)>0 && nrow(counts)>0 && !getTable)
     { 
       colors = switch(input$colorsdiag,
-                      "retro palette" = rep(c(
+                      "retro palette" =c(
                         "#048789", "#503D2E", "#D44D27", "#E2A72E", "#EFEBC8",
                                  "#107E7D", "#7A3D3D", "#F15A22", "#F7D488", "#F4A259",
                                  "#005F6B", "#4D314A", "#BF6B63", "#FF8C42", "#FF3C38"
-                      ), ceiling(nrow(target)/15)),
-                      "easter palette" = rep(c(
+                      ),
+                      "easter palette" = c(
                         "#DED4FF", "#A6E7FF", "#C7FFCD", "#FFF7AD", "#FFDEBA",
                                  "#D1F2A5", "#EFFAB4", "#FFC48C", "#FF9F80", "#FF6B6B",
                                  "#69D2E7", "#A7DBD8", "#E0E4CC", "#F38630", "#FA6900"
-                      ), ceiling(nrow(target)/15)),
-                      "warm palette" = rep(c(
+                      ),
+                      "warm palette" = c(
                         "#FFCC0D", "#FF7326", "#FF194D", "#BF2669", "#702A8C",
                                  "#FFD700", "#FF8C00", "#FF4500", "#FF6347", "#FF1493",
                                  "#FF69B4", "#FFA07A", "#FF7F50", "#CD5C5C", "#8B0000"
-                      ), ceiling(nrow(target)/15)),
-                      "basic palette (1)" = rep(c(
+                      ),
+                      "basic palette (1)" = c(
                         "#f44336", "#e81e63", "#9c27b0", "#673ab7", "#3f51b5",
                                  "#2196f3", "#03a9f4", "#00bcd4", "#009688", "#4caf50",
                                  "#8bc34a", "#cddc39", "#ffeb3b", "#ffc107", "#ff9800",
                                  "#ff5722", "#795548", "#9e9e9e", "#607d8b", "#000000"
-                      ), ceiling(nrow(target)/20)),
-                      "basic palette (2)" = rep(c(
+                      ),
+                      "basic palette (2)" =c(
                         '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
                                  '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
                                  '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000',
                                  '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080',
                                  '#ffffff', '#000000'
-                      ), ceiling(nrow(target)/20)),
-                      "basic palette (3)" = rep(c(
+                      ),
+                      "basic palette (3)" = c(
                         '#C0362C', '#FF8642', '#F4DCB5', '#816C5B', '#C3B7AC',
                                  '#E7E3D7', '#668D3C', '#B1DDA1', '#E5F3CF', '#0097AC',
                                  '#3CD6E6', '#97EAF4', '#007996', '#06C2F4', '#FAD8FA'
-                      ), ceiling(nrow(target)/15)),
-                      "basic palette (4)" = rep(c(
+                      ),
+                      "basic palette (4)" = c(
                         "#6929c4", "#1192e8", "#005d5d", "#9f1853", "#fa4d56",
                                  "#570408", "#198038", "#002d9c", "#ee538b", "#b28600",
                                  "#009d9a", "#012749", "#8a3800", "#a56eff"
-                      ), ceiling(nrow(target)/14))
+                      )
       )
       
       
