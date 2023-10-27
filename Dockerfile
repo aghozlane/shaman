@@ -46,17 +46,25 @@ RUN wget --no-verbose https://cran.r-project.org/src/base/R-3/R-3.6.2.tar.gz -P 
     gdebi -n ss-latest.deb && \
     rm -f version.txt ss-latest.deb
 
-COPY docker_inst/shiny-server.conf  /etc/shiny-server/shiny-server.conf
-COPY . /srv/shiny-server/
-COPY docker_inst/shiny-server.sh /usr/bin/shiny-server.sh
-COPY docker_inst/run_kronarshy.R /usr/bin/run_kronarshy.R
 
+# Package R
+COPY renv.lock /srv/shiny-server/
+RUN R -e """install.packages('renv', repos='$CRAN_SOURCE');renv::restore(project='/srv/shiny-server/', prompt=F)"""
+
+# Configuration shiny
+COPY docker_inst/shiny-server.conf  /etc/shiny-server/shiny-server.conf
+COPY docker_inst/shiny-server.sh /usr/bin/shiny-server.sh
+
+# Other software
+COPY docker_inst/run_kronarshy.R /usr/bin/run_kronarshy.R
 RUN git clone https://github.com/pierreLec/KronaRShy.git /srv/shiny-server/kronarshy && \
     git clone https://github.com/aghozlane/shaman_bioblend.git /usr/bin/shaman_bioblend && \
     chmod +x /usr/bin/shiny-server.sh &&  \
     mkdir -p /srv/shiny-server/www/masque/todo /srv/shiny-server/www/masque/doing /srv/shiny-server/www/masque/error /srv/shiny-server/www/masque/done && \
     chown -R shiny.shiny /srv/shiny-server/www/* && mkdir -p /var/log/shiny-server && chown shiny.shiny /var/log/shiny-server
-RUN R -e """install.packages('renv', repos='$CRAN_SOURCE');renv::restore(project='/srv/shiny-server/', prompt=F)"""
+
+# Copy of shaman
+COPY . /srv/shiny-server/
 
 EXPOSE 80
 
