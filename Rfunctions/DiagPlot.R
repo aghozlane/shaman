@@ -557,7 +557,7 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree, col = c("SpringGreen"
           geom_text_repel(data = variables, aes(label = .data[[input$TaxoSelect]]), color = "#1D4D68", show.legend = FALSE, size = input$cexPointsLabelDiag *2) 
         
         pp <- pp + scale_color_manual(values = col) +
-          new_scale_color() + 
+          ggnewscale::new_scale_color() + 
           scale_color_manual(values = col) +
           scale_fill_manual(values = col) +
           geom_point(aes(fill = group, colour = group),alpha = 1, size = input$cexpoint) 
