@@ -186,6 +186,14 @@ if(!require("factoextra")){
   install.packages("factoextra", repos="http://cran.irsn.fr/")
 }
 
+if(!require("ggnewscale")){
+  install.packages("ggnewscale", repos="http://cran.irsn.fr/")
+}
+
+if(!require("ggforce")){
+  install.packages("ggforce", repos="http://cran.irsn.fr/")
+}
+
 if (!require(devtools)) {
   install.packages('devtools',  repos="http://cran.irsn.fr/")
 }
