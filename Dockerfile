@@ -61,7 +61,7 @@ RUN git clone https://github.com/pierreLec/KronaRShy.git /srv/shiny-server/krona
     git clone https://github.com/aghozlane/shaman_bioblend.git /usr/bin/shaman_bioblend && \
     chmod +x /usr/bin/shiny-server.sh &&  \
     mkdir -p /srv/shiny-server/www/masque/todo /srv/shiny-server/www/masque/doing /srv/shiny-server/www/masque/error /srv/shiny-server/www/masque/done && \
-    chown -R shiny.shiny /srv/shiny-server/www/* && mkdir -p /var/log/shiny-server && chown shiny.shiny /var/log/shiny-server
+    chown -R shiny.shiny /srv/shiny-server/ && mkdir -p /var/log/shiny-server && chown shiny.shiny /var/log/shiny-server
 
 # Copy of shaman
 COPY . /srv/shiny-server/
