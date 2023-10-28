@@ -3155,7 +3155,130 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     }
     
   })
+  pcoa_data <- reactive({
+    resDiff = ResDiffAnal()
+    
+    ## Var of interest
+    VarInt  = input$VarInt
+    
+    dds = resDiff$dds
+    counts = resDiff$raw_counts
+    if(input$CountsType=="Normalized") counts = resDiff$countsNorm
+    target = resDiff$target
+    normFactors = resDiff$normFactors
+    
+    ## Counts at the OTU level
+    CT = resDiff$CT_noNorm
+    if(input$CountsType=="Normalized") CT = resDiff$CT_Norm
+    
+    group_init = as.data.frame(target[,VarInt])
+    rownames(group_init) = rownames(target)
+    
+    dist.counts.norm = NULL
+    cval=c()
+    time_set = 0
+    # Set of shape
+    shape=c(19,17,15,18)
 
+    ## Group
+    group = as.character(apply(group_init,1,paste, collapse = "-"))
+
+    ## Keep only some sample
+    val = c()
+    for(i in 1:length(VarInt))
+    {
+      Tinput = paste("input$","Mod",VarInt[i],sep="")
+      expr=parse(text=Tinput)
+      ## All the modalities for all the var of interest
+      val = c(val,eval(expr))
+    }
+    if(length(VarInt)>1) Kval = apply(expand.grid(val,val),1,paste, collapse = "-")
+    else Kval = val
+    ind_kept = which(as.character(group)%in%Kval)
+
+    ## Get the group corresponding to the modalities
+    group = group[ind_kept]
+    nb = length(unique((group)))
+    group = factor(group, levels = Kval)
+
+    if(nlevels(group)!=0)
+    {
+      ## Get the norm data
+      counts.norm = as.data.frame(round(counts(dds)))
+      if(input$CountsType=="Normalized") counts.norm = as.data.frame(round(counts(dds, normalized = TRUE)))
+      # was removed
+      counts.norm = counts.norm[,ind_kept]
+      # print(head(counts.norm))
+      ## Get the distance
+      if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts.norm))
+      else if(input$DistClust=="Unifrac"){
+        #tmp = UniFracDist(CT,tree)
+        tmp = UniFracDist(counts.norm,tree)
+        if(is.null(tree) || is.null(tmp)) dist.counts.norm = NULL
+        else
+        {
+          dist.counts.norm = switch(input$DistClustUnifrac,
+                                    "WU" = as.dist(tmp[, , "d_1"]),
+                                    "UWU" = as.dist(tmp[, , "d_UW"]),
+                                    "VAWU" = as.dist(tmp[, , "d_VAW"]))
+        }
+
+      }
+      else if(input$DistClust  %in% getDistMethods()){
+        dist = as.dist(distance(t(sweep(counts.norm,2,colSums(counts.norm),`/`)), method=input$DistClust))
+        dist[is.na(dist)]=0.0
+        dist.counts.norm = dist
+      }
+      else  dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
+      #"additive_symm"
+      if(!is.null(dist.counts.norm))
+      {
+        ## Do PCoA
+        pco.counts.norm = dudi.pco(d = dist.counts.norm, scannf = FALSE,nf=ncol(counts.norm))
+
+        ## Get eigen values
+        eigen=(pco.counts.norm$eig/sum(pco.counts.norm$eig))*100
+
+        ## xlim and ylim of the plot
+        min = min(pco.counts.norm$li)
+        max = max(pco.counts.norm$li)
+
+        ## get condition set
+        condition_set=val[which(val %in% unique(group_init$condition))]
+        time_set=val[which(val %in% unique(group_init$time))]
+
+        ## Colors
+        if(length(col)<length(condition_set) * length(time_set))# && !input$colorgroup)
+        {
+          col = rainbow(length(condition_set) * length(time_set))
+        }
+        #else if(length(col)<length(condition_set) * length(time_set) && input$colorgroup){
+        #  col = rep(col[1:length(condition_set)], length(time_set))
+        #}
+        if (length(time_set) == 1 && length(condition_set) <= 4){
+          cval = apply(expand.grid(condition_set,time_set),1,paste, collapse = "-")
+          cval = sort(cval)
+        }
+
+        # to reactivate
+        pco.counts.norm$li = pco.counts.norm$li[ind_kept,]
+
+        pcoa_df_ape <- ape::pcoa(dist.counts.norm)
+        results_pcoa <- compute_arrows(pcoa_df_ape, t(counts.norm))
+        
+        eigen_df <- data.frame(
+          Dimensions = 1:length(results_pcoa$values$Eigenvalues),
+          PercentageExplained = (results_pcoa$values$Eigenvalues/sum(results_pcoa$values$Eigenvalues))*100 #Percentage explained
+        )
+        
+        to_plot <- as.data.frame(results_pcoa$vectors) %>% tibble::rownames_to_column("Sample.name")
+        to_plot$group <- group
+        return(list(results_pcoa = results_pcoa, to_plot = to_plot, eigen_df = eigen_df,dist.counts.norm = dist.counts.norm))
+      }
+      
+    }
+
+  })
   pca_data <- reactive( {
     
     resDiff = ResDiffAnal()
@@ -3217,36 +3340,6 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       #PCA data
       dat <- t(counts.trans[order(rv, decreasing = TRUE),][1:n, ]) %>% data.frame
       pca_res <- FactoMineR::PCA(dat, ncp = 10, scale.unit = TRUE, graph = FALSE)
-      #ncp.max = 11
-      
-      
-      # dat$pc1 <- pca$ind$coord[, input$PCaxe1]
-      # dat$pc2 <- pca$ind$coord[, input$PCaxe2]
-      # 
-      # pca.vars <- pca$var$coord %>% data.frame
-      # pca.vars$vars <- rownames(pca.vars)
-      # pca.vars.m <- melt(pca.vars, id.vars = "vars")
-      
-      
-      # pca_df <- data.frame(
-      #   PC1 = pca$x[, as.numeric(gsub("PC", "", input$PCaxe1))],
-      #   PC2 = pca$x[, as.numeric(gsub("PC", "", input$PCaxe2))],
-      #   Cos2_PC1 = pca$x[, as.numeric(gsub("PC", "", input$PCaxe1))]^2 / (pca$x[, as.numeric(gsub("PC", "", input$PCaxe1))]^2 + pca$x[, as.numeric(gsub("PC", "", input$PCaxe2))]^2),
-      #   Cos2_PC2 = pca$x[, as.numeric(gsub("PC", "", input$PCaxe2))]^2 / (pca$x[, as.numeric(gsub("PC", "", input$PCaxe1))]^2 + pca$x[, as.numeric(gsub("PC", "", input$PCaxe2))]^2)
-      # )
-      
-      #nbBar = max(7, max(c(as.numeric(gsub("PC", "", input$PCaxe1)), as.numeric(gsub("PC", "", input$PCaxe2)))))
-      #col = rep("grey", nbBar)
-      #eigen = pca$sdev[1:nbBar]^2
-      #col[c(as.numeric(gsub("PC", "", input$PCaxe1)), as.numeric(gsub("PC", "", input$PCaxe2)))] = "black"
-        
-      
-      # eigen_df <- data.frame(
-      #   Dimensions = 1:nbBar,
-      #   Eigenvalues = eigen,
-      #   PercentageExplained = (eigen / sum(eigen)) *100)
-      
-      #pca_res$ChosenComponents <- ifelse(as.numeric(substr(rownames(pca_res$eig), nchar(rownames(pca_res$eig)), nchar(rownames(pca_res$eig)))) %in% c(as.numeric(gsub("PC", "", input$PCaxe1)), as.numeric(gsub("PC", "", input$PCaxe2))), "Chosen", "Not Chosen")
 
       pca_res$group <- group
       pca_res$eigen_df <- data.frame(
@@ -3254,6 +3347,8 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
         Eigenvalues = pca_res$eig[1:min(10, length(pca_res$eig[, 1])), 1],
         PercentageExplained = (pca_res$eig[1:min(10, length(pca_res$eig[, 1])), 1]/ sum(pca_res$eig[1:min(10, length(pca_res$eig[, 1])), 1])) *100
       )
+      pca_res$eigen_df$CumulativePercentageExplained <- cumsum(pca_res$eigen_df$PercentageExplained)
+
       contrib_df <- data.frame(
         contrib = t((pca_res$var$contrib / colSums(pca_res$var$contrib)) * 100)
       )
@@ -3265,8 +3360,6 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       
       pca_res$contrib_df$Variable <- sub("^contrib\\.", "", pca_res$contrib_df$Variable)
       pca_res$contrib_df$Variable <- substr(pca_res$contrib_df$Variable, 1, 20)
-      
-      updateSliderInput(session = session, inputId = "indivSlider", min = 1, max = length(rownames(pca_res$ind$contrib)), value = 1) #max = nbCol * nb of elements for each columns (i.e. the contribution of each individual)
       return(pca_res = pca_res)
     }
   })
@@ -3275,45 +3368,113 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     if ((input$radioPCA == 3) && (input$DiagPlot=='pcaPlot')) {
       return(NULL)  # Hide the button when the third radio button is selected
     } else {
-      return(checkboxInput("checkCenteringPCA", label = h5(strong("Center plot")), value = TRUE))
+      return(checkboxInput("centerPlot", label = strong("Center plot"), value = TRUE))
+    }
+  })
+  
+  observeEvent(input$TaxoSelect, {
+    if(input$TaxoSelect != "..."){
+      updateRadioButtons(session, "radioPCA", choiceNames = c("Samples", "Biplot", as.character(input$TaxoSelect)), choiceValues = c(1, 2, 3))
     }
   })
   
   
   output$labelBiplotButton <- renderUI({
     if ((input$DiagPlot=='pcaPlot') && (input$radioPCA ==1)) {
-      return(checkboxInput("checkLabelIndiv", label = h5(strong("Display label")), value = FALSE))   
+      return(checkboxInput("checkLabelSamples", label = strong("Display label"), value = FALSE))   
     }else if ((input$DiagPlot=='pcaPlot') && (input$radioPCA ==3)) {
-      return(checkboxInput("checkLabelIndiv", label = h5(strong("Display label")), value = TRUE))   
+      return(checkboxInput("checkLabelTaxo", label = strong("Display label"), value = TRUE))   
     }else if((input$DiagPlot=='pcaPlot') && (input$radioPCA == 2)){
-      return(checkboxGroupInput("checkLabelBiplot", label = h5(strong("Display label")), choices = list("Individuals" = 1, "Variables" = 2), selected = 2))
+      return(checkboxGroupInput("checkLabelBiplot", label = strong("Display label"), choices = list("Samples" = 1, "Variables" = 2), selected = 2))
     } else {
       return(NULL)
     }
   })  
   
-  observeEvent(input$checkLabelIndiv | length(input$checkLabelBiplot) > 0, {
-    shinyjs::toggle("cexPointsLabelDiag", condition = input$checkLabelIndiv | length(input$checkLabelBiplot) > 0)
+  observe({
+    if ((input$DiagPlot == 'pcaPlot')&& (input$radioPCA == 2)) {
+        updateCheckboxGroupInput(
+          session = session,
+          "checkLabelBiplot",
+          label = NULL,
+          choiceNames = list("Samples", as.character(input$TaxoSelect)),
+          choiceValues = c(1, 2),
+          selected = 2
+        )
+    }
   })
   
-  observeEvent(input$radioPCA!=3,{
-    shinyjs::toggle("cexSubtitleDiag", condition=input$radioPCA != 3)
+  observe({
+    if(input$DiagPlot == 'pcoaPlot'){
+      updateSelectInput(
+        session = session,
+        "labelPCOA",
+        label = NULL,
+        choices = list("Group", "Samples", as.character(input$TaxoSelect)),
+        selected = "Group"
+      )
+    }
   })
   
-  observeEvent(input$checkLabelBiplot[1],{
-    shinyjs::toggle("indivSlider", condition=input$checkLabelBiplot[1])
+  
+  labelPCAConditions <- reactiveValues(
+    checkLabelIndiv = FALSE,
+    checkLabelBiplot = FALSE
+  )
+  
+  observeEvent(input$checkLabelIndiv, {
+    labelPCAConditions$checkLabelIndiv <- input$checkLabelIndiv
   })
+  
+  observeEvent(input$checkLabelBiplot, {
+    labelPCAConditions$checkLabelBiplot <- length(input$checkLabelBiplot) > 0
+  })
+  
+  
+  labelPCAConditions <- reactiveValues(
+    checkLabelIndiv = FALSE,
+    checkLabelBiplot = FALSE
+  )
 
+  observeEvent(input$checkLabelIndiv, {
+    labelPCAConditions$checkLabelIndiv <- input$checkLabelIndiv
+  })
+  
+  observeEvent(input$checkLabelBiplot, {
+    labelPCAConditions$checkLabelBiplot <- length(input$checkLabelBiplot) > 0
+  })
+  
+  observe({
+    if (input$radioPCA == 3) {
+      shinyjs::hide(id = "cexLabelDiag", anim = TRUE, animType = "fade")
+    } else {
+      shinyjs::show(id = "cexLabelDiag", anim = TRUE, animType = "fade")
+    }
+  })
+  
+  observe({
+    if(input$DiagPlot == 'pcoaPlot')
+      shinyjs::hide(id = "cexLabelDiag", anim = TRUE, animType = 'fade')
+    else
+      shinyjs::show(id = "cexLabelDiag", anim = TRUE, animType = 'fade')
+  })
+  
+  
+  
+
+  
   
   
   output$PlotDiag <- renderPlot({
     input$RunDESeq
     
-resDiff = isolate(ResDiffAnal())
+  resDiff = isolate(ResDiffAnal())
   ## Phylogenetic tree
     tree = dataInputTree()$data
-    
-    Plot_diag(input,resDiff,tree, pca_calcul = pca_data())
+    if(input$DiagPlot == 'pcoaPlot')
+      Plot_diag(input,resDiff,tree, calcul_df = pcoa_data())
+    else
+      Plot_diag(input,resDiff,tree, calcul_df = pca_data())
   },height = reactive(input$heightDiag), width = reactive(ifelse(input$modifwidthDiag,input$widthDiag,"auto")))
   
   
@@ -3327,10 +3488,15 @@ resDiff = isolate(ResDiffAnal())
     tree = dataInputTree()$data
     
     if(!is.null(resDiff)){ 
-      pca_tab = Plot_diag(input,resDiff,tree,getTable=TRUE, pca_calcul = pca_data())
-      if(!is.null(pca_tab)) 
+      if(input$DiagPlot == 'pcaPlot')
+        tab = Plot_diag(input,resDiff,tree,getTable=TRUE, calcul_df = pca_data())
+      if(input$DiagPlot == 'pcoaPlot')
+        tab = Plot_diag(input,resDiff,tree,getTable=TRUE, calcul_df = pcoa_data())
+      else
+        tab = Plot_diag(input,resDiff,tree,getTable=TRUE, calcul_df = pca_data())
+      if(!is.null(tab)) 
       {
-        pc_axes = paste("PC",seq(1,ncol(pca_tab)),sep="")
+        pc_axes = paste("PC",seq(1,ncol(tab)),sep="")
         res = selectizeInput("PCaxe1","X-axis",pc_axes)
       }
     }
@@ -3344,11 +3510,16 @@ resDiff = isolate(ResDiffAnal())
     tree = dataInputTree()$data
     
     if(!is.null(resDiff)){ 
-      pca_tab = Plot_diag(input,resDiff,tree,getTable=TRUE, pca_calcul = pca_data())
-      if(!is.null(pca_tab)) 
+      if(input$DiagPlot == 'pcaPlot')
+        tab = Plot_diag(input,resDiff,tree,getTable=TRUE, calcul_df = pca_data())
+      if(input$DiagPlot == 'pcoaPlot')
+        tab = Plot_diag(input,resDiff,tree,getTable=TRUE, calcul_df = pcoa_data())
+      else
+        tab = Plot_diag(input,resDiff,tree,getTable=TRUE, calcul_df = pca_data())
+      if(!is.null(tab)) 
       {
-        pc_axes = paste("PC",seq(1,ncol(pca_tab[, 1:ncol(pca_tab)])),sep="")
-        res = selectizeInput("PCaxe2","Y-axis",pc_axes,selected=pc_axes[min(2,ncol(pca_tab[, 1:ncol(pca_tab)]))])
+        pc_axes = paste("PC",seq(1,ncol(tab[, 1:ncol(tab)])),sep="")
+        res = selectizeInput("PCaxe2","Y-axis",pc_axes,selected=pc_axes[min(2,ncol(tab[, 1:ncol(tab)]))])
       }
     }
     return(res)
@@ -3370,7 +3541,7 @@ resDiff = isolate(ResDiffAnal())
     ## Phylogenetic tree
     tree = dataInputTree()$data
     
-    Plot_diag_pcoaEigen(input,resDiff,tree)$plot
+    Plot_diag_pcoaEigen(input,resDiff,tree, calcul_df = pcoa_data())$plot
   },height = 400)
   
   
@@ -3383,7 +3554,12 @@ resDiff = isolate(ResDiffAnal())
   output$PlotContrib <- renderPlot({
     
     resDiff = ResDiffAnal()
-    Plot_diag_Contrib(input, resDiff, pca_data())
+    if(input$DiagPlot == 'pcaPlot')
+      Plot_diag_Contrib(input, resDiff, pca_data())
+    if(input$DiagPlot == 'pcoaPlot')
+      Plot_diag_Contrib(input, resDiff, pcoa_data())
+    else
+      Plot_diag_Contrib(input, resDiff, pca_data())
   },height =400)
   
   
@@ -3398,23 +3574,40 @@ resDiff = isolate(ResDiffAnal())
       resDiff = ResDiffAnal()
       ## Phylogenetic tree
       tree = dataInputTree()$data
-      if(!is.null(Plot_diag_pcoaEigen(input,resDiff,tree)$dataDiv))
-        as.matrix(Plot_diag_pcoaEigen(input,resDiff,tree)$dataDiv)
-    }, rownames= FALSE, options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')), scroller = TRUE,
+      if(!is.null(Plot_diag_pcoaEigen(input,resDiff,tree, calcul_df = pcoa_data())$dataDiv))
+        mat = as.matrix(Plot_diag_pcoaEigen(input,resDiff,tree, calcul_df = pcoa_data())$dataDiv)
+    }, rownames= TRUE, options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')), scroller = TRUE,
                                        pageLength = 10,scrollX=TRUE
-    ))
+    )) %>%
+      DT::formatRound(c(1:length(colnames(mat))), digits = 3) %>%
+      formatStyle(columns = c(1:length(colnames(mat))), 'text-align' = 'center')
   )
   
   output$MatrixCoordinatetable <- renderDataTable(
     datatable({
       resDiff = ResDiffAnal()
+      VarInt = input$VarInt
+      dds = resDiff$dds
+      counts = resDiff$raw_counts
+      if(input$CountsType=="Normalized") counts = resDiff$countsNorm
+      target = resDiff$target
+      normFactors = resDiff$normFactors
+      
+      ## Counts at the OTU level
+      CT = resDiff$CT_noNorm
+      if(input$CountsType=="Normalized") CT = resDiff$CT_Norm
+      
+      group = as.data.frame(target[,VarInt])
+      rownames(group) = rownames(target)
       ## Phylogenetic tree
       tree = dataInputTree()$data
-      if(!is.null(Plot_diag_pcoaEigen(input,resDiff,tree)$dataDiv))
-        as.matrix(Plot_diag_pcoaEigen(input,resDiff,tree)$dataDiv)
+      if(!is.null(Get_pca_table(input, dds, group)$table))
+        mat = as.matrix(Get_pca_table(input, dds, group)$table)
     }, rownames= TRUE, options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')), scroller = TRUE,
                                       pageLength = 10,scrollX=TRUE
-    ))
+    )) %>%
+      DT::formatRound(c(1:length(colnames(mat))), digits = 3) %>%
+      formatStyle(columns = c(1:length(colnames(mat))), 'text-align' = 'center')
   )
   
   
@@ -3428,9 +3621,9 @@ resDiff = isolate(ResDiffAnal())
       resDiff = ResDiffAnal()
       ## Phylogenetic tree
       tree = dataInputTree()$data
-      tmp = as.matrix(Plot_diag_pcoaEigen(input,resDiff,tree)$dataDiv)
+      tmp = as.matrix(Plot_diag_pcoaEigen(input,resDiff,tree, calcul_df = pcoa_data())$dataDiv)
       #datatable(tmp,rownames= FALSE)
-      write.table(tmp, file,row.names = FALSE, sep=input$sepdistance)
+      write.table(tmp, file,row.names = TRUE, col.names = NA, sep=input$sepdistance, fileEncoding = "UTF-8")
     })
   
   output$ExportDistancetablePCA <- downloadHandler(
@@ -3440,9 +3633,22 @@ resDiff = isolate(ResDiffAnal())
     },
     content = function(file) {
       resDiff = ResDiffAnal()
+      VarInt = input$VarInt
+      dds = resDiff$dds
+      counts = resDiff$raw_counts
+      if(input$CountsType=="Normalized") counts = resDiff$countsNorm
+      target = resDiff$target
+      normFactors = resDiff$normFactors
+      
+      ## Counts at the OTU level
+      CT = resDiff$CT_noNorm
+      if(input$CountsType=="Normalized") CT = resDiff$CT_Norm
+      
+      group = as.data.frame(target[,VarInt])
+      rownames(group) = rownames(target)
       ## Phylogenetic tree
       tree = dataInputTree()$data
-      tmp = as.data.frame(Plot_diag_pcoaEigen(input, resDiff, tree)$dataDiv)
+      tmp = as.data.frame(Get_pca_table(input, dds, group)$table)
       
       # Write to file
       write.table(tmp, file, row.names = TRUE, col.names = NA, sep = input$sepdistancePCA, fileEncoding = "UTF-8")
@@ -3569,8 +3775,10 @@ resDiff = isolate(ResDiffAnal())
       else if(input$Exp_format=="svg") svg(file, width = input$widthDiagExport/96, height = input$heightDiagExport/96)
       resDiff = ResDiffAnal()
       tree = isolate(dataInputTree()$data)
-      
-      print(Plot_diag(input,resDiff,tree, pca_calcul = pca_data()))
+      if(input$DiagPlot == "pcoaPlot")
+        print(Plot_diag(input,resDiff,tree, calcul_df = pcoa_data()))
+      else
+        print(Plot_diag(input,resDiff,tree, calcul_df = pca_data()))
       dev.off()
     }
   )
@@ -3588,7 +3796,47 @@ resDiff = isolate(ResDiffAnal())
     content <- function(file) {
       
       taxo = input$TaxoSelect
-      
+      target = ResDiffAnal()$target
+      colors = switch(input$colorsdiagVisuPlot,
+                      "retro palette" = rep(c(
+                        "#048789", "#503D2E", "#D44D27", "#E2A72E", "#EFEBC8",
+                        "#6B63BF", "#7A3D3D", "#AED427", "#F7D488", "#27AED4",
+                        "#B7BF63", "#4D314A", "#BF6389", "#FF8C42", "#FF3C38"
+                      ), ceiling(nrow(target)/15)),
+                      "easter palette" = rep(c(
+                        "#DED4FF", "#A6E7FF", "#D4FFDE", "#FFF7AD", "#8AEEDD",
+                        "#D1F2A5", "#B56BFF", "#FFC48C", "#DF80FF", "#FF6B6B",
+                        "#FFDED4", "#14FA00", "#80A0FF", "#0091FA", "#FA6900"
+                      ), ceiling(nrow(target)/15)),
+                      "warm palette" = rep(c(
+                        "#FFCC0D", "#FF7326", "#FF194D", "#BF2669", "#702A8C",
+                        "#0D40FF", "#0DFF53", "#0DB9FF", "#0DBFA4", "#FF1493",
+                        "#FF69B4", "#81BF0D", "#FF7F50", "#CD5C5C", "#8B0000"
+                      ), ceiling(nrow(target)/15)),
+                      "basic palette (1)" = rep(c(
+                        "#f44336", "#e81e63", "#9c27b0", "#673ab7", "#3f51b5",
+                        "#2196f3", "#F37E21", "#2DF321", "#009688", "#4caf50",
+                        "#8bc34a", "#cddc39", "#ffeb3b", "#4A044E", "#ff9800",
+                        "#084E04", "#795548", "#7C8B60", "#607d8b", "#000000"
+                      ), ceiling(nrow(target)/20)),
+                      "basic palette (2)" = rep(c(
+                        '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
+                                 '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
+                                 '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000',
+                                 '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080',
+                                 '#ffffff', '#000000'
+                      ), ceiling(nrow(target)/20)),
+                      "basic palette (3)" = rep(c(
+                        '#C0362C', '#FF8642', '#F4DCB5', '#816C5B', '#B70AC3',
+                        '#B5CDF4', '#668D3C', '#B1DDA1', '#F4B5CD', '#0097AC',
+                        '#C3B70A', '#0AC3B7', '#c30a25', '#06C2F4', '#0A25C3'
+                      ), ceiling(nrow(target)/15)),
+                      "basic palette (4)" = rep(c(
+                        "#6929c4", "#1192e8", "#005d5d", "#9f1853", "#05DDAD",
+                        "#570408", "#198038", "#002d9c", "#FC6693", "#b28600",
+                        "#009d9a", "#012749", "#8a3800", "#a56eff"
+                      ), ceiling(nrow(target)/14))
+      )
       if(input$Exp_format_Visu=="png") png(file, width = input$widthVisuExport, height = input$heightVisuExport)
       else if(input$Exp_format_Visu=="pdf") pdf(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96)
       else if(input$Exp_format_Visu=="eps") postscript(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96,paper="special")
@@ -3596,7 +3844,7 @@ resDiff = isolate(ResDiffAnal())
       
       if(input$PlotVisuSelect=="Barplot") print(Plot_Visu_Barplot(input,ResDiffAnal())$gg)
       else if(input$PlotVisuSelect=="Heatmap") Plot_Visu_Heatmap(input,ResDiffAnal(),export=TRUE)
-      else if(input$PlotVisuSelect=="Boxplot") print(Plot_Visu_Boxplot(input,ResDiffAnal(),alpha=ifelse(input$Exp_format_Visu=="eps",1,0.7)))
+      else if(input$PlotVisuSelect=="Boxplot") print(Plot_Visu_Boxplot(input,ResDiffAnal(),alpha=ifelse(input$Exp_format_Visu=="eps",1,0.7), dataDiff(), colors = colors))
       else if(input$PlotVisuSelect=="Scatterplot") print(Plot_Visu_Scatterplot(input,ResDiffAnal(),export=TRUE,lmEst = FALSE))
       else if(input$PlotVisuSelect=="Diversity"){
         if(input$Exp_format_Visu == "eps") print(Plot_Visu_Diversity(input, ResDiffAnal(), FALSE, 1)$plot)
@@ -3802,7 +4050,6 @@ resDiff = isolate(ResDiffAnal())
   ## TabBox for diff table
   output$TabBoxDataDiff <- renderUI({
     data = dataDiff()
-    
     if (!is.null(data))
     {
       tabBox(
@@ -4144,10 +4391,51 @@ resDiff = isolate(ResDiffAnal())
     return(res)
   })
   
-  
   output$Boxplot <- renderPlot({
     resDiff = ResDiffAnal()
-    if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Boxplot(input,resDiff))
+    dataDiff = dataDiff()
+    target = resDiff$target
+    colors = switch(input$colorsdiagVisuPlot,
+                      "retro palette" = rep(c(
+                        "#048789", "#503D2E", "#D44D27", "#E2A72E", "#EFEBC8",
+                        "#6B63BF", "#7A3D3D", "#AED427", "#F7D488", "#27AED4",
+                        "#B7BF63", "#4D314A", "#BF6389", "#FF8C42", "#FF3C38"
+                      ), ceiling(nrow(target)/15)),
+                      "easter palette" = rep(c(
+                        "#DED4FF", "#A6E7FF", "#D4FFDE", "#FFF7AD", "#8AEEDD",
+                        "#D1F2A5", "#B56BFF", "#FFC48C", "#DF80FF", "#FF6B6B",
+                        "#FFDED4", "#14FA00", "#80A0FF", "#0091FA", "#FA6900"
+                      ), ceiling(nrow(target)/15)),
+                      "warm palette" = rep(c(
+                        "#FFCC0D", "#FF7326", "#FF194D", "#BF2669", "#702A8C",
+                        "#0D40FF", "#0DFF53", "#0DB9FF", "#0DBFA4", "#FF1493",
+                        "#FF69B4", "#81BF0D", "#FF7F50", "#CD5C5C", "#8B0000"
+                      ), ceiling(nrow(target)/15)),
+                      "basic palette (1)" = rep(c(
+                        "#f44336", "#e81e63", "#9c27b0", "#673ab7", "#3f51b5",
+                        "#2196f3", "#F37E21", "#2DF321", "#009688", "#4caf50",
+                        "#8bc34a", "#cddc39", "#ffeb3b", "#4A044E", "#ff9800",
+                        "#084E04", "#795548", "#7C8B60", "#607d8b", "#000000"
+                      ), ceiling(nrow(target)/20)),
+                      "basic palette (2)" = rep(c(
+                        '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
+                                 '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
+                                 '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000',
+                                 '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080',
+                                 '#ffffff', '#000000'
+                      ), ceiling(nrow(target)/20)),
+                      "basic palette (3)" = rep(c(
+                        '#C0362C', '#FF8642', '#F4DCB5', '#816C5B', '#B70AC3',
+                        '#B5CDF4', '#668D3C', '#B1DDA1', '#F4B5CD', '#0097AC',
+                        '#C3B70A', '#0AC3B7', '#c30a25', '#06C2F4', '#0A25C3'
+                      ), ceiling(nrow(target)/15)),
+                      "basic palette (4)" = rep(c(
+                        "#6929c4", "#1192e8", "#005d5d", "#9f1853", "#05DDAD",
+                        "#570408", "#198038", "#002d9c", "#FC6693", "#b28600",
+                        "#009d9a", "#012749", "#8a3800", "#a56eff"
+                      ), ceiling(nrow(target)/14))
+      )
+    if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Boxplot(input,resDiff, dataDiff = dataDiff, colors = colors))
   },height=reactive(input$heightVisu))
   
   
@@ -4166,6 +4454,17 @@ resDiff = isolate(ResDiffAnal())
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
                    pageLength = 10,scrollX=TRUE, processing=FALSE
     ))
+  
+  output$CommunityComparison <- DT::renderDataTable(
+    datatable({
+      resDiff = ResDiffAnal()
+      counts = dataMergeCounts()$counts
+      sumTot = rowSums(counts)
+      ord = order(sumTot,decreasing=TRUE)
+      Available_taxo = rownames(counts)[ord]
+      tmp = Plot_network(input, resDiff, Available_taxo, SelectTaxoPlotNetworkDebounce(), qualiVariable)$data
+    })
+  )
   
   ## Export Diversitytable in .csv
   output$ExportDiversitytable <- downloadHandler(
@@ -4452,7 +4751,7 @@ resDiff = isolate(ResDiffAnal())
   output$Research <- renderUI(
     selectizeInput("searchNode", "Research", choices = c("...", SelectTaxoPlotNetworkDebounce()))
   )
-  
+ 
   
   output$SelectSecVariable <- renderUI({
     target=isolate(values$TargetWorking)

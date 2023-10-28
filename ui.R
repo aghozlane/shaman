@@ -783,14 +783,14 @@ function(request) {
                                                 plotOutput("PlotEigen",height="100%")
                                             )
                            ),
-                           conditionalPanel(condition="input.DiagPlot=='pcaPlot' && (input.radioPCA == 2 || input.radioPCA == 3)",
-                                            box(title = "Contribution",  width = 6, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
-                                                plotOutput("PlotContrib",height="100%")
-                                            )
-                           ),
                            conditionalPanel(condition="input.DiagPlot=='pcoaPlot'",
                                             box(title = "Eigen values",  width = 6, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
                                                 plotOutput("PlotpcoaEigen",height="100%")
+                                            )
+                           ),
+                           conditionalPanel(condition=" (input.DiagPlot=='pcoaPlot' && input.labelPCOA == input.TaxoSelect) || (input.DiagPlot=='pcaPlot' && (input.radioPCA == 2 || input.radioPCA == 3))",
+                                            box(title = "Contribution",  width = 6, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
+                                                plotOutput("PlotContrib",height="100%")
                                             )
                            ),
                            conditionalPanel(condition="input.DiagPlot=='nmdsPlot'",
@@ -860,12 +860,10 @@ function(request) {
                                               )
                              ),
                              conditionalPanel(condition="input.DiagPlot=='pcaPlot'",
-                                              radioButtons("radioPCA", label = h5(strong("Visualizing principal component analysis")), choices = list("Individuals" = 1, "Biplot" = 2, "Variables" = 3), selected = 1)
+                                              radioButtons("radioPCA", label = h5(strong("Visualizing principal component analysis")), choices = list("Samples" = 1, "Biplot" = 2, "Variables" = 3), selected = 1)
                              ),
-                             conditionalPanel(condition="input.DiagPlot=='pcaPlot' && input.radioPCA == 2 && input.checkLabelBiplot[1]",
-                                              sliderInput("indivSlider", "Select the number of individuals to display", min = 1, max = 100, value = 1, step = 1)
-                             ),
-                             conditionalPanel(condition="input.DiagPlot=='pcaPlot' && (input.radioPCA == 2 || input.radioPCA == 3)",
+                             
+                             conditionalPanel(condition=" (input.DiagPlot=='pcoaPlot' && input.labelPCOA == input.TaxoSelect) || (input.DiagPlot=='pcaPlot' && (input.radioPCA == 2 || input.radioPCA == 3)) ",
                                               sliderInput("varSlider", "Select the contribution threshold", min = 0, max = 1, value = 0.5, step = 0.1),
                                               checkboxInput("sumContrib", "Display the sum of the contributions of each variable")
                               )
@@ -889,7 +887,6 @@ function(request) {
                            selectInput("colorsdiag", label=h6(strong("Gradient of colors")),choices = c("retro palette", "easter palette", "warm palette", "basic palette (1)", "basic palette (2)", "basic palette (3)", "basic palette (4)"),selected = "retro palette"),
                            #plotHelper(colours = c("red", "#123ABC")),
                            #fluidRow(
-                             actionButton("addcoldiag",label=NULL, icon=icon('plus')), actionButton("delcoldiag",label=NULL,icon=icon('trash')), uiOutput("BoxColors"),
                            #   ),
                            conditionalPanel(condition="input.DiagPlot=='clustPlot'",
                                             h6(strong("Layout")),
@@ -897,44 +894,45 @@ function(request) {
                                             checkboxInput("colorHC","Add color",value=TRUE)
                            ),
                            
-                           conditionalPanel(condition="input.DiagPlot=='pcoaPlot'",  selectInput("labelPCOA","Label type",c("Group", "Sample"),selected="Group"),
-                                            #checkboxInput("colorgroup","Same color for the group",value=FALSE),
-                                            sliderInput("cexcircle", "Circle size",min=0,max=2,value = 0.9,step =0.1),
-                                            sliderInput("cexpoint", "Point size",min=0,max=3,value = 1,step =0.1),
-                                            sliderInput("cexstar", "Star height",min=0,max=1,value = 0.95,step =0.1)
-                           ),
-                           
                            conditionalPanel(condition="input.DiagPlot=='SfactorsVStot'",
                                             checkboxInput("addLabelSFact","Add label",FALSE)
                            ),
-                           conditionalPanel(condition="input.DiagPlot=='pcaPlot'",
+                           conditionalPanel(condition="input.DiagPlot=='pcaPlot' || input.DiagPlot=='pcoaPlot' ",
                                             uiOutput("centeringButton")
                            ),
+                           conditionalPanel(condition="input.DiagPlot=='pcoaPlot'",  selectInput("labelPCOA","Label type",c("Group", "Sample"),selected="Group"),
+                                            #checkboxInput("colorgroup","Same color for the group",value=FALSE),
+                                            #sliderInput("cexcircle", "Circle size",min=0,max=1,value = 0.95,step =0.05),
+                                            sliderInput("cexpoint", "Point size",min=0,max=3,value = 1,step =0.1)
+                                            # sliderInput("cexstar", "Star height",min=0,max=1,value = 0.95,step =0.1)
+                           ),
                            #Display the label button only for individual or correlation plot
-                           conditionalPanel(condition="input.DiagPlot=='pcaPlot'",
+                           conditionalPanel(condition="input.DiagPlot=='pcaPlot' ",
                                             uiOutput("labelBiplotButton")
                            ),
                            fluidRow(
                              shinyjs::useShinyjs(),
                              column(width=12, p(strong("Size"))),
                              column(width=6,sliderInput("cexTitleDiag", h6("Axis"),min=0,max=5,value = 1,step =0.1)),
-                             conditionalPanel(condition="input.DiagPlot=='SfactorsVStot' || (input.DiagPlot=='pcaPlot' && input.radioPCA !=3) || input.DiagPlot=='pcoaPlot' || input.DiagPlot=='nmdsPlot' ",column(width=6,sliderInput("cexLabelDiag", h6("Points"),min=0,max=5,value = 1,step =0.1))),
-                             conditionalPanel(condition="input.DiagPlot=='pcaPlot'",
+                             conditionalPanel(condition="input.DiagPlot=='SfactorsVStot' || input.DiagPlot=='pcaPlot' || input.DiagPlot=='nmdsPlot' ",column(width=6,sliderInput("cexLabelDiag", h6("Points"),min=0,max=5,value = 1,step =0.1))),
+                             conditionalPanel(condition="input.DiagPlot=='pcaPlot' || input.DiagPlot=='pcoaPlot' ",
                                               column(width=6, sliderInput("cexAxisLabelDiag", h6("Axis label"), min=0,max=5,value=1,step=0.1)),
                                               column(width=6, sliderInput("cexScaleLabelDiag", h6("X-scale and Y-scale labels"),min=0,max=5,value=1,step=0.1)),
                                               column(width=6, sliderInput("cexTitlePlotDiag", h6("Title"),min=0,max=5,value=1,step=0.1))
                                               
                             ),
-                            conditionalPanel(
-                              condition = "input.checkLabelIndiv == true || $('input[name=checkLabelBiplot]:checked').length > 0",
-                              column(width=6, sliderInput("cexPointsLabelDiag", h6("Data label"), min = 0, max = 5, value = 1, step = 0.1))
+                            conditionalPanel(condition = " input.DiagPlot=='pcoaPlot' ",
+                                             column(width=6, sliderInput("cexSubtitleDiag", h6("Subtitle"),min=0,max=5,value=1,step=0.1))
                             ),
-                            conditionalPanel(
-                              condition="input.radioPCA != 3",
-                              column(width=6, sliderInput("cexSubtitleDiag", h6("Subtitle"),min=0,max=5,value=1,step=0.1))
+                            conditionalPanel(condition = "input.DiagPlot=='pcaPlot' || input.DiagPlot=='pcoaPlot' ",
+                              column(width=6, sliderInput("cexLegendDiag", h6("Legend"),min=0,max=5,value=1,step=0.1))
                             ),
                             
-                              column(width=6, sliderInput("cexLegendDiag", h6("Legend"),min=0,max=5,value=1,step=0.1))
+                            conditionalPanel(
+                              condition = " (input.DiagPlot=='pcaPlot' && (input.checkLabelSamples == true || $('input[name=checkLabelBiplot]:checked').length > 0)) || input.DiagPlot=='pcoaPlot' ",
+                              column(width=6, sliderInput("cexPointsLabelDiag", h6("Data label"), min = 0, max = 5, value = 2, step = 0.5))
+                            )
+                            
                            )
                            
                            #                   sliderInput("widthDiag", "width",min=100,max=1500,value = 1000,step =10)
@@ -1111,7 +1109,18 @@ function(request) {
                                               ),
                                               tags$style(type='text/css', "#ExportDiversitytable { margin-top: 37px;}")
                                           )
-                         ) 
+                         ),
+                         conditionalPanel(condition="input.PlotVisuSelect=='Network'",
+                                          br(),
+                                          box(title = "Community comparison",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
+                                          DT::dataTableOutput("CommunityComparison"),
+                                          fluidRow(
+                                            column(width=3,downloadButton('ExportCommunitytable', 'Export table')),
+                                            column(width=3,selectInput("sepcommunity", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
+                                          ),
+                                          tags$style(type='text/css', "#ExportDiversitytable { margin-top: 37px;}")
+                                          )
+                         )
                          
                   ),
                   column(width=3,
@@ -1240,6 +1249,9 @@ function(request) {
                              conditionalPanel(condition="input.PlotVisuSelect=='Diversity'",
                                               radioButtons("DivScale","Scales",c("Fixed"="fixed","Free"="free"),selected = "free",inline=TRUE),
                                               radioButtons("DivAddError","Add Error bars",c("Add"="Add","Remove"="Remove"),selected = "Add",inline=TRUE)
+                             ),
+                             conditionalPanel(condition="input.PlotVisuSelect=='Boxplot'",
+                                              selectInput("colorsdiagVisuPlot", label=h6(strong("Gradient of colors")),choices = c("retro palette", "easter palette", "warm palette", "basic palette (1)", "basic palette (2)", "basic palette (3)", "basic palette (4)"),selected = "retro palette")
                              ),
                              ###            ###
                              ### _______heatmap ####
