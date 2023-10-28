@@ -86,6 +86,8 @@ function(request) {
                          box(
                            title = "What's new in SHAMAN", width = NULL, status = "primary",
                            div(style = 'overflow-y: scroll; height: 550px',
+                               addNews("October 28th 2023", "New design of PCA/PCoA", "We redesigned the PCA/PCoA to address the question of contribution of features. Their design was also improved."),
+                               addNews("October 20th 2023", "Databases updates", "We updated greengenes to version 2 and unite to last available version."),
                                addNews("May 9th 2023", "Raw fastq submission is re-activated !", "Shaman submission process is up again. We updated in the mean time the unite database to version 9.0."),
                                addNews("April 12th 2022", "Improvement of the docker and web interface raw read submission", "Raw read submission is now improved for gzip fastq files. We now recommend to send gzip compressed fastq especially for docker instance."),
                                addNews("March 11th 2022","Server maintenance on march 22th", "Raw reads submission will be temporarly desactivated from March 22th. For now we keep improving our workflows, submissions from the docker machine should now be much more improved !"),
