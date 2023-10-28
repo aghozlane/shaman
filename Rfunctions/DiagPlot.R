@@ -8,7 +8,7 @@
 ##
 ##############################################################
 
-Plot_diag <- function(input,resDiff,tree = NULL,getTable=FALSE, pca_calcul = NULL)
+Plot_diag <- function(input,resDiff,tree = NULL,getTable=FALSE, calcul_df = NULL)
 {
     VarInt = input$VarInt
     dds = resDiff$dds
@@ -26,32 +26,27 @@ Plot_diag <- function(input,resDiff,tree = NULL,getTable=FALSE, pca_calcul = NUL
     res = NULL
     if(ncol(group)>0 && nrow(counts)>0 && !getTable)
     { 
-      # colors = switch(input$colorsdiag,
-      #                 "shaman-palette1"=rep(c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c","#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5","#8c564b",
-      #                "#c49c94","#e377c2","#f7b6d2","#7f7f7f", "#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"),ceiling(nrow(target)/20)),
-      #                "shaman-palette2"=rep(c("#4c4c4c", "#bdbdbd", "#ff4cff", "#bc62f4", "#1613ef", "#1391ef", "#ef1340"), ceiling(nrow(target)/7))
-      # )
       colors = switch(input$colorsdiag,
                       "retro palette" = rep(c(
                         "#048789", "#503D2E", "#D44D27", "#E2A72E", "#EFEBC8",
-                                 "#107E7D", "#7A3D3D", "#F15A22", "#F7D488", "#F4A259",
-                                 "#005F6B", "#4D314A", "#BF6B63", "#FF8C42", "#FF3C38"
+                        "#6B63BF", "#7A3D3D", "#AED427", "#F7D488", "#27AED4",
+                        "#B7BF63", "#4D314A", "#BF6389", "#FF8C42", "#FF3C38"
                       ), ceiling(nrow(target)/15)),
                       "easter palette" = rep(c(
-                        "#DED4FF", "#A6E7FF", "#C7FFCD", "#FFF7AD", "#FFDEBA",
-                                 "#D1F2A5", "#EFFAB4", "#FFC48C", "#FF9F80", "#FF6B6B",
-                                 "#69D2E7", "#A7DBD8", "#E0E4CC", "#F38630", "#FA6900"
+                        "#DED4FF", "#A6E7FF", "#D4FFDE", "#FFF7AD", "#8AEEDD",
+                        "#D1F2A5", "#B56BFF", "#FFC48C", "#DF80FF", "#FF6B6B",
+                        "#FFDED4", "#14FA00", "#80A0FF", "#0091FA", "#FA6900"
                       ), ceiling(nrow(target)/15)),
                       "warm palette" = rep(c(
                         "#FFCC0D", "#FF7326", "#FF194D", "#BF2669", "#702A8C",
-                                 "#FFD700", "#FF8C00", "#FF4500", "#FF6347", "#FF1493",
-                                 "#FF69B4", "#FFA07A", "#FF7F50", "#CD5C5C", "#8B0000"
+                        "#0D40FF", "#0DFF53", "#0DB9FF", "#0DBFA4", "#FF1493",
+                        "#FF69B4", "#81BF0D", "#FF7F50", "#CD5C5C", "#8B0000"
                       ), ceiling(nrow(target)/15)),
                       "basic palette (1)" = rep(c(
                         "#f44336", "#e81e63", "#9c27b0", "#673ab7", "#3f51b5",
-                                 "#2196f3", "#03a9f4", "#00bcd4", "#009688", "#4caf50",
-                                 "#8bc34a", "#cddc39", "#ffeb3b", "#ffc107", "#ff9800",
-                                 "#ff5722", "#795548", "#9e9e9e", "#607d8b", "#000000"
+                        "#2196f3", "#F37E21", "#2DF321", "#009688", "#4caf50",
+                        "#8bc34a", "#cddc39", "#ffeb3b", "#4A044E", "#ff9800",
+                        "#084E04", "#795548", "#7C8B60", "#607d8b", "#000000"
                       ), ceiling(nrow(target)/20)),
                       "basic palette (2)" = rep(c(
                         '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
@@ -61,14 +56,14 @@ Plot_diag <- function(input,resDiff,tree = NULL,getTable=FALSE, pca_calcul = NUL
                                  '#ffffff', '#000000'
                       ), ceiling(nrow(target)/20)),
                       "basic palette (3)" = rep(c(
-                        '#C0362C', '#FF8642', '#F4DCB5', '#816C5B', '#C3B7AC',
-                                 '#E7E3D7', '#668D3C', '#B1DDA1', '#E5F3CF', '#0097AC',
-                                 '#3CD6E6', '#97EAF4', '#007996', '#06C2F4', '#FAD8FA'
+                        '#C0362C', '#FF8642', '#F4DCB5', '#816C5B', '#B70AC3',
+                        '#B5CDF4', '#668D3C', '#B1DDA1', '#F4B5CD', '#0097AC',
+                        '#C3B70A', '#0AC3B7', '#c30a25', '#06C2F4', '#0A25C3'
                       ), ceiling(nrow(target)/15)),
                       "basic palette (4)" = rep(c(
-                        "#6929c4", "#1192e8", "#005d5d", "#9f1853", "#fa4d56",
-                                 "#570408", "#198038", "#002d9c", "#ee538b", "#b28600",
-                                 "#009d9a", "#012749", "#8a3800", "#a56eff"
+                        "#6929c4", "#1192e8", "#005d5d", "#9f1853", "#05DDAD",
+                        "#570408", "#198038", "#002d9c", "#FC6693", "#b28600",
+                        "#009d9a", "#012749", "#8a3800", "#a56eff"
                       ), ceiling(nrow(target)/14))
       )
       
@@ -81,8 +76,8 @@ Plot_diag <- function(input,resDiff,tree = NULL,getTable=FALSE, pca_calcul = NUL
       if(input$DiagPlot=="DispPlot") res = plotDispEsts(dds)
       if(input$DiagPlot=="MajTax") res = majTaxPlot(input,counts, group = group, col=colors)
       if(input$DiagPlot=="SfactorsVStot") res = diagSFactors(input,normFactors,resDiff$raw_counts) 
-      if(input$DiagPlot=="pcaPlot") res = PCAPlot_meta(input,dds, group,  type.trans = input$TransType, col = colors, pca_res = pca_calcul)
-      if(input$DiagPlot=="pcoaPlot") res = PCoAPlot_meta(input,dds, group,CT,tree, col = colors, resDiff = resDiff)$plot 
+      if(input$DiagPlot=="pcaPlot") res = PCAPlot_meta(input,dds, group,  type.trans = input$TransType, col = colors, pca_res = calcul_df)
+      if(input$DiagPlot=="pcoaPlot") res = PCoAPlot_meta(input,dds, group,CT,tree, col = colors, resDiff = resDiff, pcoa_df = calcul_df)$plot 
       if(input$DiagPlot=="nmdsPlot") res = NMDSPlot(input, dds, group,CT,tree, col = colors) 
       if(input$DiagPlot=="clustPlot") res = HCPlot(input,dds,group,type.trans=input$TransType,counts,CT,tree,col=colors)
     }
@@ -215,10 +210,11 @@ Plot_diag_Eigen <- function(input,resDiff, pca)
   if(maxFact>=4) colors = rainbow(maxFact) 
   
   res = PCAPlot_meta(input,dds, group,  type.trans = input$TransType, col = colors, plot = "eigen", pca_res = pca)
+  
   return(res)
 }
 
-Plot_diag_Contrib <- function(input, resDiff, pca)
+Plot_diag_Contrib <- function(input, resDiff, calcul_df)
 {
   colors = switch(input$colorsdiag,
                       "retro palette" = rep(c(
@@ -236,17 +232,21 @@ Plot_diag_Contrib <- function(input, resDiff, pca)
   counts = resDiff$counts
   target = resDiff$target
   group = as.data.frame(target[,VarInt])
+  CT = resDiff$CT_noNorm
+  if(input$CountsType=="Normalized") CT = resDiff$CT_Norm
   
   ## If more than 4 levels for one factor
   maxFact =max(sapply(group,FUN=function(x) length(levels(x))))
   if(maxFact>=4) colors = rainbow(maxFact)
-  
-  res = PCAPlot_meta(input,dds, group,  type.trans = input$TransType, col = colors, plot = "contrib", pca_res = pca)
+  if(input$DiagPlot == 'pcaPlot')
+    res = PCAPlot_meta(input,dds, group,  type.trans = input$TransType, col = colors, plot = "contrib", pca_res = calcul_df)
+  if(input$DiagPlot == 'pcoaPlot')
+    res = PCoAPlot_meta(input, dds, group, CT, tree = NULL, col = colors, plot = "contrib", resDiff = resDiff, pcoa_df = calcul_df)$plot
   return(res)
 }
 
 ## PCOA Eigen value
-Plot_diag_pcoaEigen = function(input,resDiff,tree)
+Plot_diag_pcoaEigen = function(input,resDiff,tree, calcul_df = NULL)
 {
   colors = c("SpringGreen","dodgerblue","black","firebrick1")
   VarInt = input$VarInt
@@ -256,7 +256,7 @@ Plot_diag_pcoaEigen = function(input,resDiff,tree)
   rownames(group) = rownames(target)
   CT = resDiff$CT_noNorm
   if(input$CountsType=="Normalized") CT = resDiff$CT_Norm
-  PCoAPlot_meta(input,dds, group,CT=CT,tree, col = colors, plot = "eigen", resDiff = resDiff) 
+  PCoAPlot_meta(input,dds, group,CT=CT,tree, col = colors, plot = "eigen", resDiff = resDiff, pcoa_df = calcul_df) 
 }
 
 
@@ -473,232 +473,216 @@ compute_arrows <-  function(given_pcoa, trait_df) {
 
 
 ### PCoA
-PCoAPlot_meta <-function (input, dds, group_init, CT,tree,col = c("SpringGreen","dodgerblue","black","firebrick1"), plot = "pcoa", pcoa_theme = pca_themes(), resDiff) 
+PCoAPlot_meta <-function (input, dds, group_init, CT,tree, col = c("SpringGreen","dodgerblue","black","firebrick1"), plot = "pcoa", pcoa_theme = pca_themes(), resDiff, pcoa_df = pcoa_res) 
 {
-  dist.counts.norm = NULL
-  target = resDiff$target
+  
+  #Getting global data frames
+  to_plot <- pcoa_df$to_plot
+  eigen_df <- pcoa_df$eigen_df
+  results_pcoa <- pcoa_df$results_pcoa
   pp = NULL
-  cval=c()
-  time_set = 0
-  # Set of shape
-  shape=c(19,17,15,18)
-  
-  ## Var of interest
-  VarInt  = input$VarInt
-  
-  ## Group
-  group = as.character(apply(group_init,1,paste, collapse = "-"))
-  
-  ## Keep only some sample 
-  val = c()
-  for(i in 1:length(VarInt))
-  { 
-    Tinput = paste("input$","Mod",VarInt[i],sep="")
-    expr=parse(text=Tinput)
-    ## All the modalities for all the var of interest
-    val = c(val,eval(expr))
-  }
-  if(length(VarInt)>1) Kval = apply(expand.grid(val,val),1,paste, collapse = "-")
-  else Kval = val
-  ind_kept = which(as.character(group)%in%Kval)
-  
-  ## Get the group corresponding to the modalities
-  group = group[ind_kept]
-  nb = length(unique((group)))
-  group = factor(group, levels = Kval)
-  
-  if(nlevels(group)!=0 && !is.null(input$PCaxe1) && !is.null(input$PCaxe2))
-  { 
-    ## Get the norm data
-    counts.norm = as.data.frame(round(counts(dds)))
-    if(input$CountsType=="Normalized") counts.norm = as.data.frame(round(counts(dds, normalized = TRUE)))
-    # was removed
-    counts.norm = counts.norm[,ind_kept]
-    # print(head(counts.norm))
-    ## Get the distance
-    if(input$DiagPlot == 'pcaPlot'){
-      res = Get_pca_table(input, dds, group_init)$table
-      return(list(plot = NULL, dataDiv = res))
-    }
-    else{
-    if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts.norm))
-    else if(input$DistClust=="Unifrac"){
-      #tmp = UniFracDist(CT,tree)
-      tmp = UniFracDist(counts.norm,tree)
-      if(is.null(tree) || is.null(tmp)) dist.counts.norm = NULL
-      else
-      {
-        dist.counts.norm = switch(input$DistClustUnifrac,
-                                  "WU" = as.dist(tmp[, , "d_1"]), 
-                                  "UWU" = as.dist(tmp[, , "d_UW"]),
-                                  "VAWU" = as.dist(tmp[, , "d_VAW"]))
-      }
-      
-    }
-    else if(input$DistClust  %in% getDistMethods()){
-      dist = as.dist(distance(t(sweep(counts.norm,2,colSums(counts.norm),`/`)), method=input$DistClust))
-      dist[is.na(dist)]=0.0
-      dist.counts.norm = dist
-    }
-    else  dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
-    #"additive_symm"
-    if(!is.null(dist.counts.norm))
-    {
-      ## Do PCoA
-      pco.counts.norm = dudi.pco(d = dist.counts.norm, scannf = FALSE,nf=ncol(counts.norm))
-      
-      ## Get eigen values
-      eigen=(pco.counts.norm$eig/sum(pco.counts.norm$eig))*100
-      
-      ## xlim and ylim of the plot
-      min = min(pco.counts.norm$li)
-      max = max(pco.counts.norm$li)
-      
-      ## get condition set
-      condition_set=val[which(val %in% unique(group_init$condition))]
-      time_set=val[which(val %in% unique(group_init$time))]
-      
-      ## Colors
-      if(length(col)<length(condition_set) * length(time_set))# && !input$colorgroup)
-      {
-        col = rainbow(length(condition_set) * length(time_set))
-      }
-      #else if(length(col)<length(condition_set) * length(time_set) && input$colorgroup){
-      #  col = rep(col[1:length(condition_set)], length(time_set))
-      #}
-      if (length(time_set) == 1 && length(condition_set) <= 4){
-        cval = apply(expand.grid(condition_set,time_set),1,paste, collapse = "-")
-        cval = sort(cval)
-      }
-      
-      # to reactivate
-      #pco.counts.norm$li = pco.counts.norm$li[ind_kept,]
-      
-      # pcoa_df <- data.frame(pco.counts.norm$li) 
-      # 
-      # 
-      # pcoa_df <- pcoa_df %>% 
-      #   tibble::as_tibble(rownames="samples")
-      # 
-      # eigen_df <- data.frame(
-      #   Dimensions = 1:length(pco.counts.norm$eig),
-      #   PercentageExplained = (pco.counts.norm$eig/sum(pco.counts.norm$eig))*100 #Percentage explained 
-      # )
-      # print(pco.counts.norm$li)
-      # print(pco.counts.norm$co)
-      #Code d'Elise
-      # results_PCoA <- ape::pcoa(as.dist(dist.counts.norm))
-      # print(results_PCoA)
-      # 
-      # annot_PCoA <- tibble::tibble(Sample.name = rownames(results_PCoA$vectors)) %>% dplyr::left_join(target, by = c("Sample.name" = "SampleID")) #val is the vector containing the samples
-      # results_PCoA <-  compute_arrows(results_PCoA, t(counts.norm))
-      # 
-      # print("After compute arrows")
-      # print(results_PCoA)
-      # 
-      # DA_results_globale <- Get_pcoa_table(input, dds, group_init,CT,tree)$test 
-      # print(DA_results_globale)
-      # 
-      # variables <-  as.data.frame(0.5*(results_PCoA$U/max(abs(results_PCoA$U[,1:2])))) %>% #scale(center=F)  %>%
-      #   tibble::rownames_to_column("Sample.name") %>%
-      #   dplyr::mutate(signif="Sample.name" %in% dplyr::filter(DA_results_globale, pvalue_adjusted<0.05)$Id) %>%
-      #   dplyr::select(signif, everything())
-      # 
-      # print(variables)
-      # 
-      # 
-      # to_plot <-  as.data.frame(results_PCoA$vectors) %>% tibble::rownames_to_column("Sample.name") %>% 
-      #   dplyr::left_join(annot_PCoA)
-      # 
-      # print(to_plot)
-      # 
-      # means <- to_plot %>%  dplyr::group_by("Sample.name")
-      #   dplyr::summarise(dplyr::across(where(is.numeric), ~mean(.x, na.rm = TRUE)))
-      
-      # A1_axis <- paste0("A", as.character(gsub("PC", "", input$PCaxe1))) #A1
-      # A2_axis <- paste0("A", as.character(gsub("PC", "", input$PCaxe2))) #A2
-      # PC1_int_value <- as.numeric(gsub("PC", "", input$PCaxe1)) #int
-      # PC2_int_value <- as.numeric(gsub("PC", "", input$PCaxe2))
-      # PCo1_axis <- paste0("PCoA", as.character(gsub("PC", "", input$PCaxe1))) #PCoA1
-      # PCo2_axis <- paste0("PCoA", as.character(gsub("PC", "", input$PCaxe2)))
-      
-    }
+  if(!is.null(pcoa_df) && !is.null(input$PCaxe1) && !is.null(input$PCaxe2)){
+    PC1_int_value <- as.numeric(gsub("PC", "", input$PCaxe1)) #int
+    PC2_int_value <- as.numeric(gsub("PC", "", input$PCaxe2))
+    PCo1_axis <- paste0("PCoA", as.character(gsub("PC", "", input$PCaxe1))) #PCoA1
+    PCo2_axis <- paste0("PCoA", as.character(gsub("PC", "", input$PCaxe2)))
+    Dim_1 = paste0("Axis.", as.character(PC1_int_value))
+    Dim_2 = paste0("Axis.", as.character(PC2_int_value))
+    min_axis <- min(PC1_int_value, PC2_int_value)
+    selected_axes <- c(Dim_1, Dim_2)
+    
+    #Variables df depends on the selected axes, so we don't pu this part of code in pcoa_data()
+    variables <- as.data.frame(0.5*(results_pcoa$U/max(abs(results_pcoa$U[, PC1_int_value]), results_pcoa$U[, PC2_int_value]))) %>%
+      tibble::rownames_to_column(input$TaxoSelect) %>%
+      dplyr::arrange(desc(abs(!!sym(paste0("Axis.", min_axis)))))
+    
+    
+    contribThreshold <- round(length(rownames(variables)) - round(input$varSlider*length(rownames(variables))))
+    
       if (plot == "pcoa"){
-        # pp <- ggplot(data = pcoa_df, aes_string(x = A1_axis, y = A2_axis)) + 
-        #   geom_hline(yintercept = 0, linetype = 2) +
-        #   geom_vline(xintercept = 0, linetype = 2) +
-        #   geom_point() +
-        #   labs(
-        #     x = paste0(PCo1_axis, " (", round(eigen_df$PercentageExplained[PC1_int_value], digits = 2), "%)"), 
-        #     y = paste0(PCo2_axis, " (", round(eigen_df$PercentageExplained[PC2_int_value], digits = 2), "%)"),
-        #     title = "Principal Coordinate Analysis",
-        #     subtitle = paste0(input$DistClust, " distance")
-        #   ) +          
-        #   theme_linedraw() + pcoa_theme 
+        variables <- variables %>%
+          dplyr::slice(1:contribThreshold)
         
-        #print(pcoa_df)
-        par(cex=input$cexTitleDiag,mar=c(6,6,4,5))
-        # ## Plot axis, label and circles
-        v_axes = c(paste0("A", as.character(gsub("PC","",input$PCaxe1))),paste0("A", as.character(gsub("PC","",input$PCaxe2))))        
-        pp = plot(pco.counts.norm$li[v_axes],
-             xlab=paste(input$PCaxe1, ": ",round(eigen[v_axes[1]],1),"%") ,
-             ylab=paste(input$PCaxe2, ": ",round(eigen[v_axes[2]],1),"%"),
-             xlim=c(min+0.25*min,max+0.25*max), ylim=c(min-0.1,max+0.1),
-             cex.axis=1, cex.lab=1,lwd=2, type="n")
-        title(main='Principal Coordinates Analysis ',cex.main=1.5)
-        # # pp = ggplot(pcoa_df, aes(x = v_axes[1], y =v_axes[2])) + geom_point() +
-        # #   xlab(paste(input$PCaxe1, ": ",round(eigen[v_axes[1]],1),"%")) + 
-        # #   ylab(paste(input$PCaxe2, ": ",round(eigen[v_axes[2]],1),"%")) +
-        # #   ggtitle("Principal Coordinates Analysis") + pcoa_theme +theme_linedraw()
-        par(font.main=3)
-        if(input$DistClust=="Unifrac") title(main=paste("\n","\n",input$DistClustUnifrac,"distance",sep=" "),cex.main=1)
-        else title(main=paste("\n","\n",input$DistClust,"distance",sep=" "),cex.main=1)
+        pcoa_theme = pca_themes(input)
+        A1_axis <- paste0("Axis.", as.character(gsub("PC", "", input$PCaxe1)))
+        A2_axis <- paste0("Axis.", as.character(gsub("PC", "", input$PCaxe2))) 
+        #Get absolute values of the chosen axes from dataframe
+        Axis1_samples <-  to_plot[, as.numeric(gsub("PC", "", input$PCaxe1)) + 1] #1st col = sample.name
+        Axis2_samples <-  to_plot[, as.numeric(gsub("PC", "", input$PCaxe2)) + 1]
+        Axis1_variables <-  variables[, as.numeric(gsub("PC", "", input$PCaxe1)) + 1]
+        Axis2_variables <-  variables[, as.numeric(gsub("PC", "", input$PCaxe2)) + 1]
+        x_range <- max(abs(min(Axis1_samples)), abs(max(Axis1_samples)), abs(min(Axis1_variables)), abs(max(Axis1_variables)))
+        y_range <- max(abs(min(Axis2_samples)), abs(max(Axis2_samples)), abs(min(Axis2_variables)), abs(max(Axis2_variables)))
+        x_lim <- c(as.numeric(-x_range), as.numeric(x_range)) #to center the plot
+        y_lim <- c(as.numeric(-y_range), as.numeric(y_range))
+        margin_factor <- 0.1
+        x_margin <- x_range * input$cexTitleDiag *margin_factor
+        y_margin <- y_range * input$cexTitleDiag *margin_factor
+        
+        # Update the limits with margin
+        x_limit <- c(-x_range * input$cexTitleDiag - x_margin, x_range * input$cexTitleDiag + x_margin)
+        y_limit <- c(-y_range * input$cexTitleDiag- y_margin, y_range * input$cexTitleDiag + y_margin)
+        
+        pp <- ggplot(data = to_plot, aes(x = !!sym(A1_axis), y = !!sym(A2_axis))) +
+          geom_hline(yintercept = 0, linetype = 2) +
+          geom_vline(xintercept = 0, linetype = 2) +
+          labs(title = "Principal Coordinate Analysis", 
+              subtitle = paste0("using ", input$DistClust, " distance"),
+               x = paste0("Axis ", as.character(PC1_int_value)," (", round(results_pcoa$values$Relative_eig[1] * 100, 2), "%)"),
+               y = paste0("Axis ", as.character(PC2_int_value)," (", round(results_pcoa$values$Relative_eig[2] * 100, 2), "%)")) +
+          theme_minimal() +
+          pcoa_theme 
+          
+        if(input$labelPCOA != as.character(input$TaxoSelect))
+        {
+          x_range <- max(abs(min(Axis1_samples)), abs(max(Axis1_samples)))
+          y_range <- max(abs(min(Axis2_samples)), abs(max(Axis2_samples)))
+          x_lim <- c(as.numeric(-x_range), as.numeric(x_range)) #to center the plot
+          y_lim <- c(as.numeric(-y_range), as.numeric(y_range))
+          margin_factor <- 0.1
+          x_margin <- x_range * input$cexTitleDiag *margin_factor
+          y_margin <- y_range * input$cexTitleDiag *margin_factor
+          
+          # Update the limits with margin
+          x_limit <- c(-x_range * input$cexTitleDiag - x_margin, x_range * input$cexTitleDiag + x_margin)
+          y_limit <- c(-y_range * input$cexTitleDiag- y_margin, y_range * input$cexTitleDiag + y_margin)
+        }
+        
+        if(input$labelPCOA == as.character(input$TaxoSelect))
+          pp <- pp +geom_segment(data = variables,
+                                 x = 0, y = 0, alpha = 0.8,
+                                 mapping = aes(x = 0, y = 0, xend = !!sym(A1_axis), yend = !!sym(A2_axis)),
+                                 color = "#1D4D68",
+                                 arrow = arrow(length = unit(3, "mm"))) +
+          geom_text_repel(data = variables, aes(label = .data[[input$TaxoSelect]]), color = "#1D4D68", show.legend = FALSE, size = input$cexPointsLabelDiag *2) 
+        
+        pp <- pp + scale_color_manual(values = col) +
+          ggnewscale::new_scale_color() + 
+          scale_color_manual(values = col) +
+          scale_fill_manual(values = col) +
+          geom_point(aes(fill = group, colour = group),alpha = 1, size = input$cexpoint) 
+        
+        if(input$labelPCOA == "Group")
+          pp <- pp + ggforce::geom_mark_ellipse(data = to_plot[, -1], mapping = aes(fill = group, label = .data[["group"]]), label.fontsize = input$cexPointsLabelDiag *6)
+        
+        if(input$labelPCOA == as.character(input$TaxoSelect))
+          pp <- pp + ggforce::geom_mark_ellipse(data = to_plot[, -1], mapping = aes(fill = group))
+        
+        
+        if(input$labelPCOA == "Samples")
+        {
+          pp <- pp + geom_text_repel(aes(label = .data[["Sample.name"]], colour = group), show.legend = FALSE, size = input$cexPointsLabelDiag *2)   
+        }
+        
+        if(input$centerPlot){
+          pp <- pp + coord_cartesian(xlim = x_limit, ylim = y_limit)
+        }
+        
+        if(!input$centerPlot){
+          pp <- pp + coord_cartesian(ylim = c(-y_range * input$cexTitleDiag, y_range * input$cexTitleDiag))
+        }
+      
+      }
+    if(plot == "contrib")
+    {
+      contrib_df <- variables %>%
+        dplyr::mutate(dplyr::across(-1, abs)) %>%  # Apply abs to all numeric columns (excluding the first)
+        dplyr::mutate(dplyr::across(-1, ~ . / sum(.)))  # Divide each cell by the sum of its column
+      
+      # Rename the data frame
+      colnames(contrib_df) <- colnames(variables)
+      contrib_df <- contrib_df %>%
+        dplyr::select(as.character(input$TaxoSelect), Dim_1, Dim_2) %>%
+        dplyr::arrange(dplyr::across(all_of(paste0("Axis.", as.character(min_axis))))) %>%
+        tibble::column_to_rownames(input$TaxoSelect) %>%
+        dplyr::arrange(desc(!!sym(paste0("Axis.", min_axis)))) %>%
+        dplyr::slice(1:contribThreshold)
 
-        # Set different shapes
-        if(input$labelPCOA == "Group"){
-          if(!is.null(cval)){
-            for (i in 1:length(cval)){
-              points(pco.counts.norm$li[which(group==cval[i]),v_axes],pch=shape[i],col=col[i], cex=input$cexpoint)
-            }
-            s.class(dfxy = pco.counts.norm$li[v_axes], fac = group, col = col, label = levels(group),
-                    add.plot = TRUE, cpoint = 0, cell=input$cexcircle, clabel=input$cexLabelDiag,  cstar = input$cexstar)
-          }else s.class(dfxy = pco.counts.norm$li[v_axes], fac = group, col = col, label = levels(group),
-                        add.plot = TRUE, cpoint = input$cexpoint, cell=input$cexcircle, clabel=input$cexLabelDiag,  cstar = input$cexstar)
-        }
-        else{
-          s.label(pco.counts.norm$li, clabel = input$cexLabelDiag,boxes=FALSE, add.plot = TRUE)
-          s.class(dfxy = pco.counts.norm$li, fac = group, col = col, label = levels(group), add.plot = TRUE, cpoint = 0, clabel = 0, cstar = input$cexstar, cell=input$cexcircle)
-        }
-      }else{ 
-        v_axes = c(as.numeric(gsub("PC","",input$PCaxe1)),as.numeric(gsub("PC","",input$PCaxe2)))
-        nbBar = max(7,max(v_axes))
-        col = rep("grey",nbBar)
-        col[v_axes] = "black"
-        pp = barplot(eigen[1:nbBar], xlab="Dimensions", ylab="Eigenvalues (%)", names.arg = 1:nbBar, col = col, ylim=c(0,max(eigen)+5), cex.axis=1.2, cex.lab=1.4,cex.names=1.2)
-        # eigen_df$ChosenComponents <- ifelse(eigen_df$Dimensions %in% c(as.numeric(gsub("PC", "", input$PCaxe1)), 
-        #                                                                as.numeric(gsub("PC", "", input$PCaxe2))), "Chosen", "Not Chosen")
-        # 
-        # pp <- ggplot(data = eigen_df, aes(x = Dimensions, y = PercentageExplained, fill = ChosenComponents)) +
-        #   geom_bar(stat = "identity", width = 0.7) +
-        #   labs(
-        #     x = "Dimensions",
-        #     y = "Percentage Explained Variance",
-        #     title = "Scree Plot"
-        #   ) +
-        #   scale_fill_manual(values = c("Chosen" = "#1D4D68", "Not Chosen" = "lightgray")) +
-        #   ylim(0, max(eigen_df$PercentageExplained)) +
-        #   geom_text_repel(aes(label = round(PercentageExplained, 2)), vjust = -0.5) +
-        #   theme_linedraw() +
-        #   theme(
-        #     axis.text.x = element_text(angle = 45, hjust = 1),
-        #     legend.position = "none"
-        #   ) + pcoa_theme +
-        #   coord_cartesian(clip = "off")
+      contrib_df <- contrib_df *100
+      #rownames(contrib_df) <- substr(contrib_df, 1, 20)
+
+
+      summed_contrib_df <- contrib_df %>%
+        dplyr::mutate(summed_dim = rowSums(contrib_df[, c(Dim_1, Dim_2)])) %>%
+        dplyr::select(summed_dim) %>%
+        dplyr::arrange(desc(summed_dim))
+      
+      contrib_df <- contrib_df %>%
+        tibble::rownames_to_column(input$TaxoSelect) 
+      
+      summed_contrib_df <- summed_contrib_df %>%
+        tibble::rownames_to_column(input$TaxoSelect)
+      
+      colnames(contrib_df) <- c(input$TaxoSelect, selected_axes)
+      contrib_df[[input$TaxoSelect]] <- substr(contrib_df[[input$TaxoSelect]], 1, 20)
+      summed_contrib_df[[input$TaxoSelect]] <- substr(summed_contrib_df[[input$TaxoSelect]], 1, 20)
+      if(input$sumContrib){
         
-        }
+        # Plot
+        pp <- ggplot(summed_contrib_df, aes(x = reorder(.data[[input$TaxoSelect]], -summed_dim), y = summed_dim)) +
+          geom_bar(stat = "identity", position = "stack", fill = "#9f1853", alpha = 0.3) +
+          labs(
+            title = paste0("Sum of contributions"),
+            x = input$TaxoSelect,
+            y = "Total contribution (%)"
+          ) +
+          theme_minimal() +
+          pcoa_theme +
+          theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8),
+                legend.title = element_blank()) +
+          scale_x_discrete(labels = function(x) str_wrap(x, width = 20)) + 
+          scale_fill_identity()
+
+      }
+      else{
+        pp <- ggplot(contrib_df, aes(x = reorder(.data[[input$TaxoSelect]], -!!sym(Dim_1)), y = !!sym(Dim_1), fill = "Dimension 1")) +
+          geom_bar(stat = "identity", position = position_dodge(width = 0.8), alpha = 0.3) +
+          geom_bar(aes(y = !!sym(Dim_2), fill = "Dimension 2"),
+                   stat = "identity", position = position_dodge(width = 0.8), alpha = 0.3) +
+          labs(title = paste0("Contribution to Dimensions ", as.character(PC1_int_value), " and ", as.character(PC2_int_value)), x = input$TaxoSelect, y = "Contribution (%)",
+               subtitle = paste0("total Dim.", as.character(PC1_int_value), " : ", as.character(round(sum(contrib_df[[Dim_1]])), 4), "%",
+                                 "\ntotal Dim.", as.character(PC2_int_value), " : ", as.character(round(sum(contrib_df[[Dim_2]])), 4), "%")) +
+          theme_minimal() +
+          pcoa_theme +
+          theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8),
+                legend.title = element_blank()) +
+          scale_fill_manual(values = c("Dimension 1" = "#1192e8", "Dimension 2" = "#198038"),
+                            name = "Dimension",
+                            breaks = c("Dimension 1", "Dimension 2"),
+                            labels = c(paste("Dimension", as.character(PC1_int_value)), paste("Dimension", as.character(PC2_int_value))))+
+          guides(fill = guide_legend(title = NULL))
+        
+      }
+    }
+    if(plot == "eigen") { 
+        # v_axes = c(as.numeric(gsub("PC","",input$PCaxe1)),as.numeric(gsub("PC","",input$PCaxe2)))
+        # nbBar = max(7,max(v_axes))
+        # col = rep("grey",nbBar)
+        # col[v_axes] = "black"
+        # pp = barplot(eigen[1:nbBar], xlab="Dimensions", ylab="Eigenvalues (%)", names.arg = 1:nbBar, col = col, ylim=c(0,max(eigen)+5), cex.axis=1.2, cex.lab=1.4,cex.names=1.2)
+        eigen_df$ChosenComponents <- ifelse(eigen_df$Dimensions %in% c(as.numeric(gsub("PC", "", input$PCaxe1)),
+                                                                       as.numeric(gsub("PC", "", input$PCaxe2))), "Chosen", "Not Chosen")
+
+        pp <- ggplot(data = eigen_df, aes(x = Dimensions, y = PercentageExplained, fill = ChosenComponents)) +
+          geom_bar(stat = "identity", width = 0.7) +
+          labs(
+            x = "Dimensions",
+            y = "Percentage Explained Variance",
+            title = "Scree Plot"
+          ) +
+          scale_fill_manual(values = c("Chosen" = "#1D4D68", "Not Chosen" = "lightgray")) +
+          ylim(0, max(eigen_df$PercentageExplained)) +
+          geom_text_repel(aes(label = round(PercentageExplained, 2)), vjust = -0.5) +
+          theme_minimal() +
+          theme(
+            axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position = "none"
+          ) + pcoa_theme +
+          coord_cartesian(clip = "off")
+        
     }
   }
-  return(list(plot=pp,dataDiv = dist.counts.norm))
+  return(list(plot=pp, dataDiv = pcoa_df$dist.counts.norm))
 }
 
 
@@ -710,9 +694,9 @@ pca_themes <-  function(input = NULL) {
   {
   pca_theme <- theme(
     plot.title = element_text(family = "Helvetica", face = "bold", size = 15 *input$cexTitlePlotDiag, hjust = 0.5),
-    plot.subtitle = element_text(family = "Helvetica", size = 10 * input$cexSubtitleDiag, hjust = 0.5),
-    legend.title = element_text(colour = "black", size =10*input$cexLegendDiag, face = "bold.italic", family = "Helvetica"),
-    legend.text = element_text(face = "italic", size =10*input$cexLegendDiag *2/3, colour = "black", family = "Helvetica"),
+    plot.subtitle = element_text(family = "Helvetica", size = input$cexSubtitleDiag *10, hjust = 0.5),
+    legend.title = element_text(colour = "black", size =12.5*input$cexLegendDiag, face = "bold.italic", family = "Helvetica"),
+    legend.text = element_text(face = "italic", size =12.5*input$cexLegendDiag *2/3, colour = "black", family = "Helvetica"),
     axis.title = element_text(family = "Helvetica", size = input$cexAxisLabelDiag *10, colour = "black"),
     axis.text = element_text(family = "Courier", colour = "black", size = input$cexScaleLabelDiag*10)
   )
@@ -720,7 +704,7 @@ pca_themes <-  function(input = NULL) {
   else{
     pca_theme <- theme(
       plot.title = element_text(family = "Helvetica", face = "bold", size = (15), hjust = 0.5),
-      plot.subtitle = element_text(family = "Helvetica", size = (10), hjust = 0.5),
+      plot.subtitle = element_text(family = "Helvetica", size = 10, hjust = 0.5),
       legend.title = element_text(colour = "black", face = "bold.italic", family = "Helvetica"),
       legend.text = element_text(face = "italic", colour = "black", family = "Helvetica"),
       axis.title = element_text(family = "Helvetica", size = 10, colour = "black"),
@@ -736,220 +720,285 @@ pca_themes <-  function(input = NULL) {
 PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), type.trans = c("VST", "rlog"), 
                         col = c("lightblue", "orange", "MediumVioletRed", "SpringGreen"), plot="pca", pca_res, pca_theme = pca_themes()) 
 {
-        if(!is.null(pca_res)  && !is.null(input$PCaxe1) && !is.null(input$PCaxe2))
-        {
-          row.names(pca_res$var$coord) <- substr(rownames(pca_res$var$coord), 1, 20)
-          row.names(pca_res$ind$coord) <- substr(rownames(pca_res$ind$coord), 1, 20)
-          Groups = pca_res$group
-          #PCaxes
-          PC1 <- pca_res$ind$coord[, as.numeric(gsub("PC", "", input$PCaxe1))]
-          PC2 <- pca_res$ind$coord[, as.numeric(gsub("PC", "", input$PCaxe2))]
-          PC1_axis = as.numeric(gsub("PC", "", input$PCaxe1)) #int
-          PC2_axis = as.numeric(gsub("PC", "", input$PCaxe2))
-          Dim_1 = paste0("Dim.", as.character(PC1_axis))
-          Dim_2 = paste0("Dim.", as.character(PC2_axis))
-          contribThreshold <- round(length(rownames(pca_res$var$contrib)) - round(input$varSlider*length(rownames(pca_res$var$contrib))))
-          if(contribThreshold < 1)
-            contribThreshold = contribThreshold +1
-          if (plot == "pca") {
-            pca_theme = pca_themes(input)
-            #Useful variable to center the plot
-            x_range <- max(abs(min(PC1)), abs(max(PC1)))
-            y_range <- max(abs(min(PC2)), abs(max(PC2)))
-            x_lim <- c(as.numeric(-x_range), as.numeric(x_range))
-            y_lim <- c(as.numeric(-y_range), as.numeric(y_range))
-            var_x_max <- max(abs(pca_res$ind$coord[, min(PC1_axis, PC2_axis)]))
-            var_y_max <- max(abs(pca_res$ind$coord[, max(PC1_axis, PC2_axis)]))
-            x_range <- max(var_x_max, x_range)
-            y_range <- max(y_range, var_y_max)
-            # Add some margin to the limits for better visibility
-            margin_factor <- 0.1  # You can adjust this factor to suit your needs
-            x_margin <- var_x_max * input$cexTitleDiag * margin_factor
-            y_margin <- var_y_max * input$cexTitleDiag * margin_factor
-            
-            # Update the limits with margin
-            x_limit <- c(-var_x_max * input$cexTitleDiag * 0.75 - x_margin, var_x_max * input$cexTitleDiag * 0.75 + x_margin)
-            y_limit <- c(-var_y_max * input$cexTitleDiag * 0.75 - y_margin, var_y_max * input$cexTitleDiag * 0.75 + y_margin)
-            pca_plot <- NULL
-            if (input$radioPCA == 1) {
-              pca_plot <- fviz_pca_ind(pca_res, axes = c(PC1_axis, PC2_axis), pointsize = input$cexLabelDiag, label = "none", geom = "point") +
-                geom_smooth(method = "lm") +
-                geom_point(aes(x = PC1, y = PC2, colour = Groups, fill = Groups), size = input$cexLabelDiag) +
-                scale_colour_manual(values = col, aesthetics = c("colour", "fill")) +
-                coord_cartesian(ylim = c(-y_range * input$cexTitleDiag * 0.75, y_range * input$cexTitleDiag * 0.75)) +
-                theme_linedraw() + pca_theme + labs(subtitle = "Euclidean distance")  
-            } else if (input$radioPCA == 3) {
-              pca_plot <- fviz_pca_var(pca_res, axes = c(PC1_axis, PC2_axis), col.var = "contrib", label = "none", col.circle = "black", select.var = list (contrib = contribThreshold)) +
-                labs(color = "Contribution") +
-                theme_linedraw() + pca_theme +
-                scale_color_gradient(low = "#1565C0", high = "#b92b27") + xlim(c(-1, 1)) +ylim(c(-1, 1))
-            }
-            if(input$checkCenteringPCA && (input$radioPCA!=3))
-            {
-              pca_plot <- pca_plot + xlim(x_lim) +ylim(y_lim)
-            }
-            
-            #Checking for the label
-            if(input$checkLabelIndiv && (input$radioPCA !=2))
-            {
-              if (input$radioPCA == 1) {
-                pca_plot <- fviz_pca_ind(pca_res, labelsize = input$cexPointsLabelDiag*4, axes = c(PC1_axis, PC2_axis), pointsize = input$cexLabelDiag, repel = TRUE, geom = c("point", "text")) +
-                  geom_smooth(method="lm") +
-                  geom_point(aes(x = PC1, y = PC2, colour = Groups, fill = Groups), size = input$cexLabelDiag) +
-                  geom_label(label.size = input$cexPointsLabelDiag) +
-                  geom_text_repel(check_overlap = TRUE) +
-                  scale_colour_manual(values = col, aesthetics = c("colour", "fill")) +
-                  coord_cartesian(ylim=c(-y_range * input$cexTitleDiag*0.75, y_range * input$cexTitleDiag *0.75)) +
-                  theme_linedraw() + pca_theme + labs(subtitle = "Euclidean distance")
-              } else if(input$radioPCA == 3)
-              {
-                pca_plot <- fviz_pca_var(pca_res, labelsize = input$cexPointsLabelDiag*4, axes = c(PC1_axis, PC2_axis), col.var = "contrib", repel = TRUE, geom = c("arrow", "text"), col.circle = "black", select.var = list(contrib = contribThreshold)) +
-                  labs(color = "Contribution") +
-                  scale_color_gradient(low = "#1565C0", high = "#b92b27") +
-                  theme_linedraw() + pca_theme + xlim(c(-1, 1)) +ylim(c(-1, 1))
-              }
-              if(input$checkCenteringPCA && (input$radioPCA!=3))
-              {
-                pca_plot <- pca_plot + coord_cartesian(xlim = c(-var_x_max * input$cexTitleDiag*0.75, var_x_max * input$cexTitleDiag *0.75), ylim=c(-var_y_max * input$cexTitleDiag*0.75, var_y_max * input$cexTitleDiag *0.75))
-              }
-            }
-            if(input$radioPCA == 2){
-              if(!is.null(input$checkLabelBiplot))
-              {
-                if(input$checkLabelBiplot[1] == 2)
-                {
-                  pca_plot <- fviz_pca_biplot(pca_res, labelsize = input$cexPointsLabelDiag*4, axes = c(PC1_axis, PC2_axis), pointsize = input$cexLabelDiag, col.var = "#1d4d68", repel = TRUE, geom.ind = "point", geom.var = c("arrow", "text"), label = "var", select.ind = list(contrib = input$indivSlider), select.var = list(contrib = contribThreshold)) + 
-                     geom_smooth(method="lm") +
-                     geom_point(aes(x = PC1, y = PC2, colour = Groups, fill = Groups), size = input$cexLabelDiag) +
-                     geom_text_repel(check_overlap = TRUE) +
-                     scale_colour_manual(values = col, aesthetics = c("colour", "fill")) +
-                     coord_cartesian(ylim=c(-y_range * input$cexTitleDiag*0.1, y_range * input$cexTitleDiag*0.1)) +
-                     theme_linedraw() + pca_theme + labs(subtitle = "Euclidean distance")
-                } else if(input$checkLabelBiplot[1] == 1)
-                {
-                  pca_plot <- fviz_pca_biplot(pca_res, labelsize = input$cexPointsLabelDiag*4, axes = c(PC1_axis, PC2_axis), pointsize = input$cexLabelDiag, col.var = "#1d4d68", repel = TRUE, geom.ind = c("point", "text"), label = "ind", select.ind = list(contrib = input$indivSlider), select.var = list(contrib = contribThreshold)) +
-                    geom_smooth(method="lm") +
-                    geom_point(aes(x = PC1, y = PC2, colour = Groups, fill = Groups), size = input$cexLabelDiag) +
-                    geom_text_repel(check_overlap = TRUE) +
-                    scale_colour_manual(values = col, aesthetics = c("colour", "fill")) +
-                    coord_cartesian(ylim=c(-y_range * input$cexTitleDiag*0.1, y_range * input$cexTitleDiag*0.1)) +
-                    theme_linedraw() + pca_theme +labs(subtitle = "Euclidean distance") 
-                }
-                if(length(input$checkLabelBiplot) == 2) #if both of label buttons are pressed, the input vector has a length of 2
-                {
-                  pca_plot <- fviz_pca_biplot(pca_res, labelsize = input$cexPointsLabelDiag*4, axes = c(PC1_axis, PC2_axis), pointsize = input$cexLabelDiag, col.var = "#1d4d68", repel = TRUE, geom.ind = c("point", "text"), geom.var = c("arrow", "text"), select.ind = list(contrib = input$indivSlider), select.var = list(contrib = contribThreshold)) +
-                    geom_smooth(method="lm") +
-                    geom_point(aes(x = PC1, y = PC2, colour = Groups, fill = Groups), size = input$cexLabelDiag) +
-                    geom_text_repel(check_overlap = TRUE) +
-                    scale_colour_manual(values = col, aesthetics = c("colour", "fill")) +
-                    coord_cartesian(ylim=c(-y_range * input$cexTitleDiag*0.1, y_range * input$cexTitleDiag*0.1)) +
-                    theme_linedraw() + pca_theme +labs(subtitle = "Euclidean distance") 
-                }
-              }
-              if(is.null(input$checkLabelBiplot)) #None of the label buttons are pressed
-              {
-                pca_plot <- fviz_pca_biplot(pca_res, labelsize = input$cexPointsLabelDiag*4, axes = c(PC1_axis, PC2_axis), pointsize = input$cexLabelDiag, col.var = "#1d4d68", repel = TRUE, geom.ind = "point", geom.var = "arrow", label = "none", select.ind = list(contrib = input$indivSlider), select.var = list(contrib = contribThreshold)) +
-                  geom_point(aes(x = PC1, y = PC2, colour = Groups, fill = Groups), size = input$cexLabelDiag) +
-                  geom_text(check_overlap = TRUE) +
-                  scale_colour_manual(values = col, aesthetics = c("colour", "fill")) +
-                  geom_smooth(method="lm") +
-                  coord_cartesian(ylim=c(-y_range * input$cexTitleDiag*0.1, y_range * input$cexTitleDiag*0.1)) +
-                  theme_linedraw() + pca_theme +labs(subtitle = "Euclidean distance")
-              }
-              if(input$checkCenteringPCA)
-              {
-                pca_plot <- pca_plot + coord_cartesian(xlim = x_limit, ylim = y_limit)              }
-            }
-            return(pca_plot)
-          }
-          
-          if(plot == "eigen")
-          {
-            #Find the chosen PCA axis in order to color the chosen bars in blue
-            pca_res$eigen_df$ChosenComponents <- ifelse(pca_res$eigen_df$Dimensions %in% c(as.numeric(gsub("PC", "", input$PCaxe1)), 
-                                                                                           as.numeric(gsub("PC", "", input$PCaxe2))), "Chosen", "Not Chosen")
-            eigen_plot <- ggplot(data = pca_res$eigen_df, aes(x = Dimensions, y = PercentageExplained, fill = ChosenComponents)) +
-                       geom_bar(stat = "identity", width = 0.7) +
-                       labs(
-                         x = "Dimensions",
-                         y = "Percentage Explained Variance",
-                         title = "Scree Plot"
-                       ) +
-                       scale_fill_manual(values = c("Chosen" = "#1D4D68", "Not Chosen" = "lightgray")) +
-                       ylim(0, max(pca_res$eigen_df$PercentageExplained)) +
-                       geom_text_repel(aes(label = round(PercentageExplained, 2)), vjust = -0.5) +
-                       theme_linedraw() +
-                       theme(
-                         axis.text.x = element_text(angle = 45, hjust = 1),
-                         legend.position = "none"
-                       ) +
-                       pca_theme +
-                       coord_cartesian(clip = "off")
-            return(eigen_plot)
-          }
-          
-          if(plot == "contrib")
-          {
-            Dim_1 = paste0("Dim.", as.character(PC1_axis))
-            Dim_2 = paste0("Dim.", as.character(PC2_axis))
-            min_axis <- min(PC1_axis, PC2_axis)
-            
-            contrib_df_filtered <- pca_res$contrib_df %>%
-              dplyr::filter(Dimension %in% paste0("Dim.", c(PC1_axis, PC2_axis))) %>%
-              dplyr::arrange(Variable, Dimension) %>%
-              tidyr::pivot_wider(names_from = Dimension, values_from = Contribution) %>%
-              dplyr::arrange(desc(!!sym(paste0("Dim.", min_axis)))) %>%
-              dplyr::slice(1:contribThreshold)
-            
+  if(!is.null(pca_res)  && !is.null(input$PCaxe1) && !is.null(input$PCaxe2) && !is.null(input$radioPCA) && !is.null(input$checkLabelSamples))
+  {
 
-            summed_contrib_df <- contrib_df_filtered %>%
-              dplyr::mutate(summed_dimensions = rowSums(contrib_df_filtered[, c(Dim_1, Dim_2)])) %>%
-              dplyr::select(Variable, summed_dimensions)
-            if(input$sumContrib)
-            {
-              melted_df <- reshape2::melt(summed_contrib_df, id.vars = "Variable")
-              
-              # Plot
-              contrib_plot <- ggplot(melted_df, aes(x = reorder(Variable, -value), y = value, fill = variable)) +
-                geom_bar(stat = "identity", position = "stack", alpha = 0.3) +
-                labs(title = "Sum of contributions",
-                     y = "Total contribution",
-                     x = input$TaxoSelect) +
-                theme_linedraw() +
-                pca_theme +
-                theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8),
-                        legend.title = element_blank()) +
-                scale_fill_manual(values = "#9f1853") + 
-                guides(fill = FALSE)
-              
-            }
-            else{
-            contrib_plot <- ggplot(contrib_df_filtered, aes(x = reorder(Variable, -!!sym(Dim_1)), y = !!sym(Dim_1), fill = "Dimension 1")) +
-              geom_bar(stat = "identity", position = position_dodge(width = 0.8), alpha = 0.3) +
-              geom_bar(aes(y = !!sym(Dim_2), fill = "Dimension 2"),
-                       stat = "identity", position = position_dodge(width = 0.8), alpha = 0.3) +
-              labs(title = paste0("Contribution to Dimensions ", as.character(PC1_axis), " and ", as.character(PC2_axis)), x = input$TaxoSelect, y = "Contribution") +
-              theme_linedraw() +
-              pca_theme +
-              theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8),
-                    legend.title = element_blank()) +
-              scale_fill_manual(values = c("Dimension 1" = "#1192e8", "Dimension 2" = "#198038"),
-                                name = "Dimension",
-                                breaks = c("Dimension 1", "Dimension 2"),
-                                labels = c(paste("Dimension", as.character(PC1_axis)), paste("Dimension", as.character(PC2_axis)))) +
-              guides(fill = guide_legend(title = NULL))
-            }
-            
-            # contrib_plot <- ggplot(contrib_df_filtered, aes(x = Dimension, y = Contribution, fill = Variable, width = CumulativeProportion)) +
-            #   geom_bar(stat = "identity") +
-            #   coord_flip() +
-            #   theme_minimal() +
-            #   labs(x = "Dimension", y = "Contribution") +
-            #   scale_x_discrete(expand = c(0.1, 0)) + theme_linedraw() + pca_theme
-            
+    row.names(pca_res$var$coord) <- rownames(pca_res$var$coord)
+    row.names(pca_res$ind$coord) <- rownames(pca_res$ind$coord)
+    Groups = pca_res$group
+    #PCaxes
+    PC1 <- pca_res$ind$coord[, as.numeric(gsub("PC", "", input$PCaxe1))]
+    PC2 <- pca_res$ind$coord[, as.numeric(gsub("PC", "", input$PCaxe2))]
+    PC1_axis = as.numeric(gsub("PC", "", input$PCaxe1)) #int
+    PC2_axis = as.numeric(gsub("PC", "", input$PCaxe2))
+    Dim_1 = paste0("Dim.", as.character(PC1_axis))
+    Dim_2 = paste0("Dim.", as.character(PC2_axis))
+    contribThreshold <- round(length(rownames(pca_res$var$contrib)) - round(input$varSlider*length(rownames(pca_res$var$contrib))))
+    if(contribThreshold < 1)
+      contribThreshold = contribThreshold +1
+    if (plot == "pca") {
+      pca_theme = pca_themes(input)
+      #Useful variable to center the plot
+      x_range <- max(abs(min(PC1)), abs(max(PC1)))
+      y_range <- max(abs(min(PC2)), abs(max(PC2)))
+      x_lim <- c(as.numeric(-x_range), as.numeric(x_range))
+      y_lim <- c(as.numeric(-y_range), as.numeric(y_range))
+      var_x_max <- max(abs(pca_res$ind$coord[, min(PC1_axis, PC2_axis)]))
+      var_y_max <- max(abs(pca_res$ind$coord[, max(PC1_axis, PC2_axis)]))
+      x_range <- max(var_x_max, x_range)
+      y_range <- max(y_range, var_y_max)
+      # Add some margin to the limits for better visibility
+      margin_factor <- 0.5  # You can adjust this factor to suit your needs
+      x_margin <- var_x_max * input$cexTitleDiag * margin_factor
+      y_margin <- var_y_max * input$cexTitleDiag * margin_factor
+      
+      # Update the limits with margin
+      x_limit <- c(-var_x_max * input$cexTitleDiag * 0.75 - x_margin, var_x_max * input$cexTitleDiag * 0.75 + x_margin)
+      y_limit <- c(-var_y_max * input$cexTitleDiag * 0.75 - y_margin, var_y_max * input$cexTitleDiag * 0.75 + y_margin)
+      pca_plot <- NULL
+      if (isFALSE(input$checkLabelSamples) && (input$radioPCA == 1)) {
+        
+        pca_plot <- fviz_pca_ind(pca_res, axes = c(PC1_axis, PC2_axis), pointsize = input$cexLabelDiag, repel = TRUE, label = "none", geom = "point") +
+          geom_point(aes(x = PC1, y = PC2, colour = Groups, fill = Groups), size = input$cexLabelDiag) +
+          scale_colour_manual(values = col, aesthetics = c("colour", "fill")) +
+          coord_cartesian(ylim = c(-y_range * input$cexTitleDiag, y_range * input$cexTitleDiag)) +
+          theme_minimal() + pca_theme 
+      } 
+      if (isFALSE(input$checkLabelTaxo) && (input$radioPCA == 3)) {
+        pca_plot <- fviz_pca_var(pca_res, axes = c(PC1_axis, PC2_axis), col.var = "contrib", label = "none", col.circle = "black", select.var = list (contrib = contribThreshold)) +
+          labs(color = "Contribution (%)") +
+          theme_minimal() + pca_theme +
+          scale_color_gradient(low = "#1565C0", high = "#b92b27") + xlim(c(-1, 1)) +ylim(c(-1, 1))
+      }
+      #Checking for the label
+      if(isTRUE(input$checkLabelSamples) && (input$radioPCA == 1)) {
+        pca_plot <- NULL
+        pca_plot <- fviz_pca_ind(
+          pca_res,
+          axes = c(PC1_axis, PC2_axis),
+          pointsize = input$cexLabelDiag,
+          geom = "none"
+        ) +
+          geom_point(
+            aes(x = PC1, y = PC2, colour = Groups, fill = Groups),
+            size = input$cexLabelDiag
+          ) +
+          geom_text_repel(
+            aes(x = PC1, y = PC2, colour = Groups, label = rownames(pca_res$ind$coord)), 
+            show.legend = FALSE,
+            vjust = -0.5,
+            hjust = 0.5,
+            size = input$cexPointsLabelDiag * 2
+          ) +
+          scale_colour_manual(values = col, aesthetics = c("colour", "fill")) +
+          coord_cartesian(
+            ylim = c(-y_range * input$cexTitleDiag, y_range * input$cexTitleDiag)
+          ) +
+          theme_minimal() +
+          pca_theme 
+      }
+      if(isTRUE(input$checkLabelTaxo) && (input$radioPCA == 3))
+      {
+        pca_plot <- fviz_pca_var(pca_res, axes = c(PC1_axis, PC2_axis), col.var = "contrib", label = "all", col.circle = "black", select.var = list (contrib = contribThreshold)) +
+          labs(color = "Contribution (%)") +
+          theme_minimal() + pca_theme +
+          scale_color_gradient(low = "#1565C0", high = "#b92b27") + xlim(c(-1, 1)) +ylim(c(-1, 1))
+      }
+      if(input$radioPCA == 2){
+        if(!is.null(input$checkLabelBiplot))
+        {
+          if(input$checkLabelBiplot[1] == 2)
+          {
+            pca_plot <- NULL
+            pca_plot <- fviz_pca_biplot(
+              pca_res,
+              labelsize = input$cexPointsLabelDiag * 2,
+              axes = c(PC1_axis, PC2_axis),
+              pointsize = input$cexLabelDiag,
+              col.var = "#1d4d68",
+              repel = TRUE,
+              geom.ind = "point",
+              geom.var = c("arrow", "text"),
+              label = "var",
+              select.var = list(contrib = contribThreshold)
+              ) +
+              geom_point(aes(colour = as.factor(pca_res$group)), size = input$cexLabelDiag) +
+              scale_color_manual(values = col, name = "Groups") + 
+              coord_cartesian(ylim = c(-y_range * input$cexTitleDiag, y_range * input$cexTitleDiag)) +
+              theme_minimal() +
+              pca_theme 
+
+          } else if(input$checkLabelBiplot[1] == 1)
+          {
+            pca_plot <- NULL
+            pca_plot <- fviz_pca_biplot(
+              pca_res,
+              labelsize = input$cexPointsLabelDiag * 2, 
+              axes = c(PC1_axis, PC2_axis),
+              pointsize = input$cexLabelDiag,
+              col.var = "#1d4d68",
+              repel = TRUE,
+              geom.ind = c("point"),
+              label = "ind",
+              select.var = list(contrib = contribThreshold)
+              ) +
+              geom_point(aes(colour = as.factor(pca_res$group)), size = input$cexLabelDiag) + 
+              geom_text_repel(
+                aes(x = PC1, y = PC2, colour = Groups, label = rownames(pca_res$ind$coord)),  
+                vjust = -0.5,
+                show.legend = FALSE,
+                hjust = 0.5,
+                size = input$cexPointsLabelDiag * 2
+              ) +
+              scale_color_manual(values = col, name = "Groups") + 
+              coord_cartesian(ylim = c(-y_range * input$cexTitleDiag, y_range * input$cexTitleDiag)) +
+              theme_minimal() +
+              pca_theme
+          }
+          if(length(input$checkLabelBiplot) == 2) #if both of label buttons are pressed, the input vector has a length of 2
+          {
+            pca_plot <- NULL
+            pca_plot <- fviz_pca_biplot(
+              pca_res,
+              labelsize = input$cexPointsLabelDiag * 2,
+              axes = c(PC1_axis, PC2_axis),
+              pointsize = input$cexLabelDiag,
+              col.var = "#1d4d68",
+              repel = TRUE,
+              geom.ind = c("point"),
+              geom.var = c("arrow", "text"),
+              select.var = list(contrib = contribThreshold)            ) +
+              geom_point(aes(colour = as.factor(pca_res$group)), size = input$cexLabelDiag) +  
+              geom_text_repel(
+                aes(x = PC1, y = PC2, colour = Groups, label = rownames(pca_res$ind$coord)),  
+                vjust = -0.5,
+                show.legend = FALSE,
+                hjust = 0.5,
+                size = input$cexPointsLabelDiag * 2
+              ) +
+              scale_color_manual(values = col, name = "Groups") + 
+              coord_cartesian(ylim = c(-y_range * input$cexTitleDiag, y_range * input$cexTitleDiag)) +
+              theme_minimal() +
+              pca_theme
           }
         }
+        if(is.null(input$checkLabelBiplot)) #None of the label buttons are pressed
+        {
+          pca_plot <- NULL
+          pca_plot <- fviz_pca_biplot(
+            pca_res,
+            labelsize = input$cexPointsLabelDiag * 2,
+            axes = c(PC1_axis, PC2_axis),
+            pointsize = input$cexLabelDiag,
+            col.var = "#1d4d68",
+            repel = TRUE,
+            geom.ind = "point",
+            geom.var = "arrow",
+            label = "none",
+            select.var = list(contrib = contribThreshold)          ) +
+            geom_point(aes(colour = as.factor(pca_res$group)), size = input$cexLabelDiag) +  
+            scale_color_manual(values = col, name = "Groups") + 
+            coord_cartesian(ylim = c(-y_range * input$cexTitleDiag, y_range * input$cexTitleDiag)) +
+            theme_minimal() +
+            pca_theme
+        }
+      }
+      #checking for center
+      if(input$centerPlot && (input$radioPCA!=3))
+      {
+        pca_plot <- pca_plot + coord_cartesian(xlim = c(-var_x_max * input$cexTitleDiag, var_x_max * input$cexTitleDiag), ylim=c(-var_y_max * input$cexTitleDiag, var_y_max * input$cexTitleDiag))
+      }
+      return(pca_plot)
+    }
+    
+    if(plot == "eigen")
+    {
+      #Find the chosen PCA axis in order to color the chosen bars in blue
+      pca_res$eigen_df$ChosenComponents <- ifelse(pca_res$eigen_df$Dimensions %in% c(as.numeric(gsub("PC", "", input$PCaxe1)), 
+                                                                                     as.numeric(gsub("PC", "", input$PCaxe2))), "Chosen", "Not Chosen")
+
+      eigen_plot <- ggplot(data = pca_res$eigen_df, aes(x = Dimensions, y = PercentageExplained, fill = ChosenComponents)) +
+        geom_bar(stat = "identity", width = 0.7) +
+        geom_line(aes(x = Dimensions, y = CumulativePercentageExplained), color = "red") +  # Cumulative line
+        labs(
+          x = "Dimensions",
+          y = "Percentage Explained Variance",
+          title = "Scree Plot"
+        ) +
+        scale_fill_manual(values = c("Chosen" = "#1D4D68", "Not Chosen" = "lightgray")) +
+        ylim(0, max(pca_res$eigen_df$PercentageExplained)) +
+        geom_text_repel(aes(label = round(PercentageExplained, 2)), vjust = -0.5) +
+        theme_minimal() +
+        theme(
+          axis.text.x = element_text(angle = 45, hjust = 1),
+          legend.position = "none"
+        ) +
+        pca_theme +
+        coord_cartesian(clip = "off") 
+      return(eigen_plot)
+    }
+    
+    if(plot == "contrib")
+    {
+      Dim_1 = paste0("Dim.", as.character(PC1_axis))
+      Dim_2 = paste0("Dim.", as.character(PC2_axis))
+      min_axis <- min(PC1_axis, PC2_axis)
+      
+      contrib_df_filtered <- pca_res$contrib_df %>%
+        dplyr::filter(Dimension %in% paste0("Dim.", c(PC1_axis, PC2_axis))) %>%
+        dplyr::arrange(Variable, Dimension) %>%
+        tidyr::pivot_wider(names_from = Dimension, values_from = Contribution) %>%
+        dplyr::arrange(desc(!!sym(paste0("Dim.", min_axis)))) %>%
+        dplyr::slice(1:contribThreshold)
+      
+      
+      summed_contrib_df <- contrib_df_filtered %>%
+        dplyr::mutate(summed_dimensions = rowSums(contrib_df_filtered[, c(Dim_1, Dim_2)])) %>%
+        dplyr::select(Variable, summed_dimensions)
+      if(input$sumContrib)
+      {
+        melted_df <- reshape2::melt(summed_contrib_df, id.vars = "Variable")
+        
+        # Plot
+        contrib_plot <- ggplot(melted_df, aes(x = reorder(Variable, -value), y = value, fill = variable)) +
+          geom_bar(stat = "identity", position = "stack", alpha = 0.3) +
+          labs(title = "Sum of contributions",
+               # subtitle = paste0("total Dim.", as.character(PC1_axis), " : ", as.character(round(sum(contrib_df_filtered[[paste0("Dim.", as.character(PC1_axis))]])), 4), "%", 
+               #                   "\ntotal Dim.", as.character(PC2_axis), " : ", as.character(round(sum(contrib_df_filtered[[paste0("Dim.", as.character(PC2_axis))]])), 4), "%"),
+               y = "Total contribution (%)",
+               x = input$TaxoSelect) +
+          theme_minimal() +
+          pca_theme +
+          theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8),
+                legend.title = element_blank()) +
+          scale_fill_manual(values = "#9f1853") + 
+          guides(fill = FALSE)
+        
+      }
+      else{
+        contrib_plot <- ggplot(contrib_df_filtered, aes(x = reorder(Variable, -!!sym(Dim_1)), y = !!sym(Dim_1), fill = "Dimension 1")) +
+          geom_bar(stat = "identity", position = position_dodge(width = 0.8), alpha = 0.3) +
+          geom_bar(aes(y = !!sym(Dim_2), fill = "Dimension 2"),
+                   stat = "identity", position = position_dodge(width = 0.8), alpha = 0.3) +
+          labs(title = paste0("Contribution to Dimensions ", as.character(PC1_axis), " and ", as.character(PC2_axis)), x = input$TaxoSelect, y = "Contribution (%)",
+               subtitle = paste0("total Dim.", as.character(PC1_axis), " : ", as.character(round(sum(contrib_df_filtered[[paste0("Dim.", as.character(PC1_axis))]])), 4), "%", 
+                                 "\ntotal Dim.", as.character(PC2_axis), " : ", as.character(round(sum(contrib_df_filtered[[paste0("Dim.", as.character(PC2_axis))]])), 4), "%")) +
+          theme_minimal() +
+          pca_theme +
+          theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8),
+                legend.title = element_blank()) +
+          scale_fill_manual(values = c("Dimension 1" = "#1192e8", "Dimension 2" = "#198038"),
+                            name = "Dimension",
+                            breaks = c("Dimension 1", "Dimension 2"),
+                            labels = c(paste("Dimension", as.character(PC1_axis)), paste("Dimension", as.character(PC2_axis)))) +
+          guides(fill = guide_legend(title = NULL))
+      }
+      
+      
+    }
+  }
 }
+
 
 
 ##############################################################

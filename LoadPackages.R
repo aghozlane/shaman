@@ -1,5 +1,5 @@
 #options(download.file.method = 'wget', bitmapType='cairo')
-options(bitmapType='cairo')
+options(bitmapType='cairo', rlib_downstream_check = FALSE)
 
 if (!require("Rcpp")){
   #RcppArmadillo_0.9.800.3.0
@@ -230,5 +230,5 @@ libshaman=c("shiny", "rjson", "ape", "GUniFrac", "psych", "ggplot2", "vegan", "d
             "htmltools", "rAmCharts", "colourpicker", "data.table", "UpSetR", "ggrepel", "igraph", 
             "visNetwork", "shinytoastr", "scatterD3", "devtools", "shinydashboardshaman", "d3heatmap", 
             "biomformatshaman", "rNVD3shaman", "DESeq2shaman", "PhyloTreeMetaR", "treeWeightD3", "d3vennR",
-            "googleVis", "stringr", "FactoMineR", "factoextra")
+            "googleVis", "stringr", "FactoMineR", "factoextra", "ggnewscale", "ggforce")
 lapply(libshaman, require, character.only = TRUE)
