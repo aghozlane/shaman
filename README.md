@@ -23,7 +23,7 @@ Hereafter is the global workflow of the SHAMAN application:
 
 ## Installation
 
-SHAMAN is available for R 3.6.1. Here are different ways to install the application:
+SHAMAN is available for R 3.6.2. Here are different ways to install the application:
 
 ### Docker install
 
@@ -48,7 +48,7 @@ docker pull aghozlane/shaman
 
 ### R install with packrat (linux only)
 
-SHAMAN is available for R=3.6.1. Packrat framework allows an easy installation of all the dependencies. Of note, raw data submission is not possible with this version.
+SHAMAN is available for R=3.6.2. Packrat framework allows an easy installation of all the dependencies. Of note, raw data submission is not possible with this version.
 ```
 # Download packrat package
 wget https://zenodo.org/record/7418309/files/shaman_package_202204.tar.gz
@@ -56,10 +56,8 @@ mkdir packrat/
 ```
 Now you can run R:
 ```
-install.packages("devtools")
-devtools::install_github("rstudio/packrat")
-packrat::unbundle("shaman_package_202204.tar.gz", "packrat/")
-packrat::init("packrat/shaman")
+install.packages("renv")
+renv::restore(project="./")
 system("Rscript -e 'shiny::runGitHub("pierreLec/KronaRShy",port=5438)'",wait=FALSE),
 shiny::runGitHub('aghozlane/shaman')
 ```
@@ -123,6 +121,7 @@ The main contributors to SHAMAN:
 Amine Ghozlane (Maintainer, coding, testing, documentation, evaluation, packaging),
 Stevenn Volant (Initiator, coding, testing, documentation, evaluation),
 Perrine Woringer (Coding, testing, documentation, feature suggestions),
+Zakary Azmani (Coding, testing, documentation, feature suggestions),
 Pierre Lechat (Coding, testing, feature suggestions)  
 
 Thanks to the following people for patches and other suggestions for improvements:  
