@@ -49,8 +49,8 @@ function(request) {
                                              p("The bioinformatics treatment is based on Vsearch", a("[Rognes 2016]", href="http://www.ncbi.nlm.nih.gov/pubmed/27781170"), "which showed to be both accurate and fast", a("[Wescott 2015]", href="http://www.ncbi.nlm.nih.gov/pubmed/26664811"),". The statistical analysis is based on DESeq2 R package", a("[Anders and Huber 2010]", href="http://www.ncbi.nlm.nih.gov/pubmed/20979621"), 
                                                "which robustly identifies the differential abundant features as suggested in", a("[McMurdie and Holmes 2014,",href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3974642/"),a("Jonsson2016]",href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC4727335/"),
                                                ". SHAMAN robustly identifies the differential abundant genera with the Generalized Linear Model implemented in DESeq2", a("[Love 2014]", href="http://www.ncbi.nlm.nih.gov/pubmed/25516281"),".",
-                                                "SHAMAN is compatible with standard formats for metagenomic analysis (.csv, .tsv, .biom) and figures can be downloaded in several formats.",
-                                                "A presentation about SHAMAN is available", a("here",target="_blank",href="shaman_presentation.pdf")," and a poster", a("here.",target="_blank",href="shaman_poster.pdf"),style = "font-family: 'times'; font-si16pt"), br(),
+                                               "SHAMAN is compatible with standard formats for metagenomic analysis (.csv, .tsv, .biom) and figures can be downloaded in several formats.",
+                                               "A presentation about SHAMAN is available", a("here",target="_blank",href="shaman_presentation.pdf")," and a poster", a("here.",target="_blank",href="shaman_poster.pdf"),style = "font-family: 'times'; font-si16pt"), br(),
                                              p("This website is free and open to all users and there is no login requirement. Hereafter is the global workflow of the SHAMAN application:",style = "font-family: 'times'; font-si16pt"),
                                              div(img(src = "Workflow_sh.png",width = "100%",height = "100%",style="max-width: 800px;"),Align="center")
                                     ),
@@ -86,8 +86,6 @@ function(request) {
                          box(
                            title = "What's new in SHAMAN", width = NULL, status = "primary",
                            div(style = 'overflow-y: scroll; height: 550px',
-                               addNews("October 28th 2023", "New design of PCA/PCoA", "We redesigned the PCA/PCoA to address the question of contribution of features. Their design was also improved."),
-                               addNews("October 20th 2023", "Databases updates", "We updated greengenes to version 2 and unite to last available version."),
                                addNews("May 9th 2023", "Raw fastq submission is re-activated !", "Shaman submission process is up again. We updated in the mean time the unite database to version 9.0."),
                                addNews("April 12th 2022", "Improvement of the docker and web interface raw read submission", "Raw read submission is now improved for gzip fastq files. We now recommend to send gzip compressed fastq especially for docker instance."),
                                addNews("March 11th 2022","Server maintenance on march 22th", "Raw reads submission will be temporarly desactivated from March 22th. For now we keep improving our workflows, submissions from the docker machine should now be much more improved !"),
@@ -598,7 +596,7 @@ function(request) {
                                        column(width=6,
                                               numericInput("Epi2me_th",h6(strong("Minimum accuracy level:")),70,step=0.5,min=1,max=100)),
                                        column(width=12,
-                                       fileInput('fileEpi2me', h6(strong('Select your file')),width="100%",accept = c(".csv", ".tsv"))),
+                                              fileInput('fileEpi2me', h6(strong('Select your file')),width="100%",accept = c(".csv", ".tsv"))),
                                        tags$script('$( "#fileEpi2me" ).on( "click", function() { this.value = null; });')
                                    )
                   ),
@@ -851,7 +849,7 @@ function(request) {
                                                 column(width=2,br(),br(),p("VS")),
                                                 column(width=5,uiOutput("PC2_sel"))
                                               )
-                                  
+                                              
                              ),
                              conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='nmdsPlot' || input.DiagPlot=='SERE' || input.DiagPlot=='clustPlot'",
                                               uiOutput("DistList")
@@ -862,13 +860,14 @@ function(request) {
                                               )
                              ),
                              conditionalPanel(condition="input.DiagPlot=='pcaPlot'",
-                                              radioButtons("radioPCA", label = h5(strong("Visualizing principal component analysis")), choices = list("Samples" = 1, "Biplot" = 2, "Variables" = 3), selected = 1)
+                                              column(width = 6, radioButtons("radioPCA", label = h5(strong("Visualizing principal component analysis")), choices = list("Samples" = 1, "Biplot" = 2, "Variables" = 3), selected = 1)),
+                                              column(width = 6, checkboxInput("ellipsePCA", label = strong("Show clusters"), value = TRUE))
                              ),
                              
                              conditionalPanel(condition=" (input.DiagPlot=='pcoaPlot' && input.labelPCOA == input.TaxoSelect) || (input.DiagPlot=='pcaPlot' && (input.radioPCA == 2 || input.radioPCA == 3)) ",
-                                              sliderInput("varSlider", "Select the contribution threshold", min = 0, max = 1, value = 0.5, step = 0.1),
+                                              sliderInput("varSlider", "Select the contribution threshold", min = 0, max = 1, value = 0.5, step = 0.05),
                                               checkboxInput("sumContrib", "Display the sum of the contributions of each variable")
-                              )
+                             )
                              
                              
                              #                 conditionalPanel(condition="input.RadioPlotBi=='Nuage'",selectInput("ColorBiplot", "Couleur",choices=c("Bleue" = 'blue',"Rouge"='red',"Vert"='green', "Noir"='black'),width="50%")),
@@ -922,19 +921,20 @@ function(request) {
                                               column(width=6, sliderInput("cexScaleLabelDiag", h6("X-scale and Y-scale labels"),min=0,max=5,value=1,step=0.1)),
                                               column(width=6, sliderInput("cexTitlePlotDiag", h6("Title"),min=0,max=5,value=1,step=0.1))
                                               
-                            ),
-                            conditionalPanel(condition = " input.DiagPlot=='pcoaPlot' ",
-                                             column(width=6, sliderInput("cexSubtitleDiag", h6("Subtitle"),min=0,max=5,value=1,step=0.1))
-                            ),
-                            conditionalPanel(condition = "input.DiagPlot=='pcaPlot' || input.DiagPlot=='pcoaPlot' ",
-                              column(width=6, sliderInput("cexLegendDiag", h6("Legend"),min=0,max=5,value=1,step=0.1))
-                            ),
-                            
-                            conditionalPanel(
-                              condition = " (input.DiagPlot=='pcaPlot' && (input.checkLabelSamples == true || $('input[name=checkLabelBiplot]:checked').length > 0)) || input.DiagPlot=='pcoaPlot' ",
-                              column(width=6, sliderInput("cexPointsLabelDiag", h6("Data label"), min = 0, max = 5, value = 2, step = 0.5))
-                            )
-                            
+                             ),
+                             conditionalPanel(condition = " input.DiagPlot=='pcoaPlot' ",
+                                              column(width=6, sliderInput("cexSubtitleDiag", h6("Subtitle"),min=0,max=5,value=1,step=0.1))
+                             ),
+                             conditionalPanel(condition = "input.DiagPlot=='pcaPlot' || input.DiagPlot=='pcoaPlot' ",
+                                              column(width=6, sliderInput("cexLegendDiag", h6("Legend"),min=0,max=5,value=1,step=0.1))
+                             ),
+                             
+                             conditionalPanel(
+                               condition = " (input.DiagPlot=='pcaPlot' && (input.checkLabelSamples == true || $('input[name=checkLabelBiplot]:checked').length > 0)) || input.DiagPlot=='pcoaPlot' ",
+                               column(width=6, sliderInput("cexPointsLabelDiag", h6("Data label"), min = 0, max = 5, value = 2, step = 0.5))
+                               
+                             )
+                             
                            )
                            
                            #                   sliderInput("widthDiag", "width",min=100,max=1500,value = 1000,step =10)
@@ -942,7 +942,11 @@ function(request) {
                            
                          ),
                          box(title = "Export",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
-                             selectInput("Exp_format",h5(strong("Export format")),c("png"="png","pdf"="pdf","eps"="eps","svg"="svg"), multiple = FALSE),
+                             fluidRow(
+                               conditionalPanel(condition=" (input.DiagPlot == 'pcaPlot') || (input.DiagPlot == 'pcoaPlot') ",
+                                                column(width = 6,selectInput("Exp_plot", h5(strong("Select the plot to export")), choices= c("Main", "Contribution"), multiple = FALSE))), 
+                               column(width = 6, selectInput("Exp_format",h5(strong("Export format")),c("png"="png","pdf"="pdf","eps"="eps","svg"="svg"), multiple = FALSE)),
+                             ),
                              fluidRow(
                                column(width=6,numericInput("heightDiagExport", "Height (in px)",min=100,max=NA,value = 500,step =1)),
                                column(width=6,numericInput("widthDiagExport", "Width (in px)",min=100,max=NA,value = 500,step =1))
@@ -1115,12 +1119,12 @@ function(request) {
                          conditionalPanel(condition="input.PlotVisuSelect=='Network'",
                                           br(),
                                           box(title = "Community comparison",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
-                                          DT::dataTableOutput("CommunityComparison"),
-                                          fluidRow(
-                                            column(width=3,downloadButton('ExportCommunitytable', 'Export table')),
-                                            column(width=3,selectInput("sepcommunity", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
-                                          ),
-                                          tags$style(type='text/css', "#ExportDiversitytable { margin-top: 37px;}")
+                                              DT::dataTableOutput("CommunityComparison"),
+                                              fluidRow(
+                                                column(width=3,downloadButton('ExportCommunitytable', 'Export table')),
+                                                column(width=3,selectInput("sepcommunity", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
+                                              ),
+                                              tags$style(type='text/css', "#ExportDiversitytable { margin-top: 37px;}")
                                           )
                          )
                          

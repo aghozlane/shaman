@@ -77,7 +77,7 @@ shinyServer(function(input, output,session) {
     
     if(input$TypeTaxo=="Table" && !is.null(inFile)) 
     {
-      tryCatch(read.csv(inFile$datapath,sep=input$septaxo,header=TRUE, na.strings=c(""))->data,
+      tryCatch(read.csv(inFile$datapath,sep=input$septaxo,header=TRUE)->data,
                #messageId="ErrorTaxo",
                error=function(e) sendSweetAlert(session,
                                                 title = "Oops",
@@ -116,9 +116,9 @@ shinyServer(function(input, output,session) {
     }
     
     ## Add NA
-    # data=as.matrix(data)
-    # indNa = which(data=="")
-    # data[indNa]=NA
+    data=as.matrix(data)
+    indNa = which(data=="")
+    data[indNa]=NA
     #print(data)
     return(as.data.frame(data))
   })
@@ -186,7 +186,7 @@ shinyServer(function(input, output,session) {
     
     data = NULL
     {inFile <- input$fileTree
-    values$tree_masque}
+      values$tree_masque}
     
     if (!is.null(inFile) && is.null(values$tree_masque)) {
       try(read.tree(inFile$datapath)->data, silent=T)
@@ -215,20 +215,20 @@ shinyServer(function(input, output,session) {
   # Infobox Tree (Unifrac)
   output$InfoTreePhylo_box <- renderInfoBox({
     {input$fileTree
-     values$tree_masque}
+      values$tree_masque}
     tree_tmp = isolate(dataInputTree())
     tree = tree_tmp$data
-
+    
     res = infoBox(h6(strong("Phylogenetic tree")), subtitle = h6(strong("Load the phylogenetic tree (optional)")) ,color = "light-blue",width=NULL,fill=TRUE, icon = icon("upload"))
     if(!is.null(tree)){
       #if(!is.null(isolate(input$fileTree))){
-        res = infoBox(h6(strong("Phylogenetic tree")), subtitle = h6("The phylogenetic has been loaded") ,color = "green",width=NULL,fill=TRUE, icon = icon("thumbs-o-up"))
-        if(!is.null(tree_tmp$Warning)){      
-          res = infoBox(h6(strong("Phylogenetic tree")), subtitle = h6(tree_tmp$Warning) ,color = "orange",width=NULL,fill=TRUE, icon = icon("warning"))
-        }
-        if(!is.null(tree_tmp$Error)){      
-          res = infoBox(h6(strong("Phylogenetic tree")), subtitle = h6(tree_tmp$Error),color = "red",width=NULL,fill=TRUE, icon = icon("thumbs-o-down"))
-        }
+      res = infoBox(h6(strong("Phylogenetic tree")), subtitle = h6("The phylogenetic has been loaded") ,color = "green",width=NULL,fill=TRUE, icon = icon("thumbs-o-up"))
+      if(!is.null(tree_tmp$Warning)){      
+        res = infoBox(h6(strong("Phylogenetic tree")), subtitle = h6(tree_tmp$Warning) ,color = "orange",width=NULL,fill=TRUE, icon = icon("warning"))
+      }
+      if(!is.null(tree_tmp$Error)){      
+        res = infoBox(h6(strong("Phylogenetic tree")), subtitle = h6(tree_tmp$Error),color = "red",width=NULL,fill=TRUE, icon = icon("thumbs-o-down"))
+      }
       #}
     } 
     return(res)
@@ -308,7 +308,7 @@ shinyServer(function(input, output,session) {
     if(input$FileFormat=="fileEpi2me")
     {
       tmpEpi2me = dataInputEpi2me()
-
+      
       if(!is.null(tmpEpi2me) && is.null(data))
       {
         tmpEpi2me = tmpEpi2me[which(tmpEpi2me$accuracy >= as.numeric(input$Epi2me_th) & !is.na(tmpEpi2me$barcode) ),]
@@ -327,10 +327,10 @@ shinyServer(function(input, output,session) {
         colnames(Taxo) = c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Specie")
         rownames(Taxo) = Taxotmp$index
         names(Taxo) = c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Specie")
-         #rownames(Taxo) = Taxo$index
+        #rownames(Taxo) = Taxo$index
         #Taxo= Taxo[,c("genus","species")]
         #names(Taxo)=c("Genus","Specie")
-
+        
         if(!is.null(Counts) && !is.null(Taxo))
         { 
           tmp = GetDataFromCT(Counts,Taxo, FALSE)
@@ -343,8 +343,8 @@ shinyServer(function(input, output,session) {
           # print(check)
           percent = tmp$Percent
         }
-      ## Remove row with only O
-      # data[["counts"]] = data[["counts"]][rowSums(data[["counts"]])>1,]
+        ## Remove row with only O
+        # data[["counts"]] = data[["counts"]][rowSums(data[["counts"]])>1,]
       }
     }
     
@@ -360,12 +360,12 @@ shinyServer(function(input, output,session) {
           tmp_annot = PercentAnnot(tmp$counts,Taxo)
           check = list(CheckCounts=tmp_check$CheckCounts,CheckTaxo=tmp_check$CheckTaxo,Percent=tmp_annot$Percent,CheckPercent=tmp_annot$Error)
           percent = tmp_annot$Percent
-          }
+        }
         else{ 
           data = list(counts=tmp$counts,taxo=tmp$taxo, target=tmp$target, taxo_biom=tmp$taxo_biom)
-        ## Remove row with only O
-        # data[["counts"]] = data[["counts"]][rowSums(data[["counts"]])>1,]
-        
+          ## Remove row with only O
+          # data[["counts"]] = data[["counts"]][rowSums(data[["counts"]])>1,]
+          
           check = list(CheckCounts=tmp$CheckCounts,CheckTaxo=tmp$CheckTaxo,CheckPercent=tmp$CheckPercent)
           percent = tmp$Percent}
         #if(!is.null(data$target)) values$TargetWorking = data$target
@@ -520,7 +520,7 @@ shinyServer(function(input, output,session) {
   # Infobox Error counts
   output$valueErrorPercent <- renderInfoBox({
     {values$TaxoWorking
-    tmp = dataInput()}
+      tmp = dataInput()}
     data = tmp$data
     if(!is.null(values$TaxoWorking)) tmp = dataInput()
     check = tmp$check
@@ -651,9 +651,9 @@ shinyServer(function(input, output,session) {
     BaseContrast = read.table(namesfile,header=TRUE)
     datatable(Plot_UpSet(input,BaseContrast, resDiff, ContrastListDebounce)$table,
               options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE, processing=FALSE)
-              )
-    })
+                             pageLength = 10,scrollX=TRUE, processing=FALSE)
+    )
+  })
   
   ## Counts Table
   output$DataVenn<- DT::renderDataTable({
@@ -683,9 +683,9 @@ shinyServer(function(input, output,session) {
     dataInput()$data$taxo, 
     editable=T, 
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                                     pageLength = 10,scrollX=TRUE, processing=FALSE)
-)
-
+                   pageLength = 10,scrollX=TRUE, processing=FALSE)
+  )
+  
   observeEvent(input$DataTaxo_cell_edit, {
     info = input$DataTaxo_cell_edit
     str(info)
@@ -815,7 +815,7 @@ shinyServer(function(input, output,session) {
   observe({
     counts = dataInput()$data$counts
     data = dataInput()$data$target
-
+    
     if(!is.null(data) && !is.null(counts))
     {
       names = colnames(data)
@@ -844,7 +844,7 @@ shinyServer(function(input, output,session) {
   observe({ 
     inFile <- input$fileTarget
     #values$TargetWorking = NULL
-
+    
     counts = dataInput()$data$counts
     labeled = 0
     data = NULL
@@ -1029,9 +1029,9 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       if(file.exists(values$json_name)) values$num = 1
       #messageId="SuccessMasque",
       if(file.exists(galaxyAlertfile)){
-      suppressWarnings(try(readLines(galaxyAlertfile,warn=FALSE) ->galaxyAlert,silent=TRUE))
-      if(!is.null(galaxyAlert)){
-        sendSweetAlert(session, title = "Warning",text = HTML(paste(galaxyAlert,values$pass)), type = "warning",html=TRUE)
+        suppressWarnings(try(readLines(galaxyAlertfile,warn=FALSE) ->galaxyAlert,silent=TRUE))
+        if(!is.null(galaxyAlert)){
+          sendSweetAlert(session, title = "Warning",text = HTML(paste(galaxyAlert,values$pass)), type = "warning",html=TRUE)
         } 
       }
       else{
@@ -2035,7 +2035,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     res = NULL
     demodata = input$DemoDataset
     FileFormat = input$FileFormat
-
+    
     PS = Project_status(values$masque_key,values$curdir)
     if(PS$passOK){
       
@@ -2222,11 +2222,11 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   ## Vis button
   output$VisButton <- renderUI({
-
+    
     res = NULL
     target = values$TargetWorking
     VarInt = input$InterestVar
-
+    
     if(is.null(target) && length(VarInt) == 0) {
       res = actionButton("RunVis",strong("Setup visualization"),icon = icon("caret-right"))
     }
@@ -2316,7 +2316,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
                    pageLength = 10,scrollX=TRUE, processing=FALSE
     ))
   
-    
+  
   ## Box for merged counts
   output$BoxCountsMerge <- renderUI({
     # input$RunDESeq
@@ -2338,7 +2338,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     }
   })
   
- observeEvent(input$confirmTarget,{
+  observeEvent(input$confirmTarget,{
     target = NULL
     # Get the old biom
     if (!is.null(values$biom_masque) && file.exists(values$biom_masque)){ 
@@ -2350,7 +2350,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     if(!is.null(data)){
       if(is.null(sample_metadata(data))){
         tryCatch(write_biom(make_biom(dataMergeCounts()$CT_noNorm, sample_metadata=values$TargetWorking[,-1, drop=F],
-                    observation_metadata=dataInput()$data$taxo_biom), values$biom_masque),
+                                      observation_metadata=dataInput()$data$taxo_biom), values$biom_masque),
                  error=function(e) sendSweetAlert(session,
                                                   title = "Oops",
                                                   text=paste("The new experiment data cannot be saved in SHAMAN.\n \n",e),type ="error"),
@@ -2738,14 +2738,14 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     { 
       ## Check the R version
       #if(as.numeric(R.Version()$major)<=3 && as.numeric(R.Version()$minor) <=1.2){
-        box(title="Contrasts (New)",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = FALSE,
-            fluidRow(
-              column(width=3,selectInput("Select1_contrast","Compare","")),
-              column(width=3,selectInput("Select2_contrast","To","")),
-              if(length(int)>=1) column(width=3,selectInput("Select3_contrast",label=h6(strong("For")),"")),
-              column(width=3,br(),actionButton("AddContrastEasy","Add",icon = icon("plus")))
-            )
-        )
+      box(title="Contrasts (New)",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = FALSE,
+          fluidRow(
+            column(width=3,selectInput("Select1_contrast","Compare","")),
+            column(width=3,selectInput("Select2_contrast","To","")),
+            if(length(int)>=1) column(width=3,selectInput("Select3_contrast",label=h6(strong("For")),"")),
+            column(width=3,br(),actionButton("AddContrastEasy","Add",icon = icon("plus")))
+          )
+      )
       #}
     }
     
@@ -3179,10 +3179,10 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     time_set = 0
     # Set of shape
     shape=c(19,17,15,18)
-
+    
     ## Group
     group = as.character(apply(group_init,1,paste, collapse = "-"))
-
+    
     ## Keep only some sample
     val = c()
     for(i in 1:length(VarInt))
@@ -3195,13 +3195,13 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     if(length(VarInt)>1) Kval = apply(expand.grid(val,val),1,paste, collapse = "-")
     else Kval = val
     ind_kept = which(as.character(group)%in%Kval)
-
+    
     ## Get the group corresponding to the modalities
     group = group[ind_kept]
     nb = length(unique((group)))
     group = factor(group, levels = Kval)
-
-    if(nlevels(group)!=0)
+    
+    if(nlevels(group)!=0 && !is.null(input$DistClust))
     {
       ## Get the norm data
       counts.norm = as.data.frame(round(counts(dds)))
@@ -3222,7 +3222,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
                                     "UWU" = as.dist(tmp[, , "d_UW"]),
                                     "VAWU" = as.dist(tmp[, , "d_VAW"]))
         }
-
+        
       }
       else if(input$DistClust  %in% getDistMethods()){
         dist = as.dist(distance(t(sweep(counts.norm,2,colSums(counts.norm),`/`)), method=input$DistClust))
@@ -3235,18 +3235,18 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       {
         ## Do PCoA
         pco.counts.norm = dudi.pco(d = dist.counts.norm, scannf = FALSE,nf=ncol(counts.norm))
-
+        
         ## Get eigen values
         eigen=(pco.counts.norm$eig/sum(pco.counts.norm$eig))*100
-
+        
         ## xlim and ylim of the plot
         min = min(pco.counts.norm$li)
         max = max(pco.counts.norm$li)
-
+        
         ## get condition set
         condition_set=val[which(val %in% unique(group_init$condition))]
         time_set=val[which(val %in% unique(group_init$time))]
-
+        
         ## Colors
         if(length(col)<length(condition_set) * length(time_set))# && !input$colorgroup)
         {
@@ -3259,17 +3259,18 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
           cval = apply(expand.grid(condition_set,time_set),1,paste, collapse = "-")
           cval = sort(cval)
         }
-
+        
         # to reactivate
         pco.counts.norm$li = pco.counts.norm$li[ind_kept,]
-
+        
         pcoa_df_ape <- ape::pcoa(dist.counts.norm)
         results_pcoa <- compute_arrows(pcoa_df_ape, t(counts.norm))
         
         eigen_df <- data.frame(
-          Dimensions = 1:length(results_pcoa$values$Eigenvalues),
-          PercentageExplained = (results_pcoa$values$Eigenvalues/sum(results_pcoa$values$Eigenvalues))*100 #Percentage explained
+          Dimensions = 1:min(10, length(results_pcoa$values$Eigenvalues)),
+          PercentageExplained = (results_pcoa$values$Eigenvalues[1:min(10, length(results_pcoa$values$Eigenvalues))]/sum(results_pcoa$values$Eigenvalues[1:min(10, length(results_pcoa$values$Eigenvalues))]))*100 #Percentage explained
         )
+        
         
         to_plot <- as.data.frame(results_pcoa$vectors) %>% tibble::rownames_to_column("Sample.name")
         to_plot$group <- group
@@ -3277,7 +3278,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       }
       
     }
-
+    
   })
   pca_data <- reactive( {
     
@@ -3290,7 +3291,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     if(input$CountsType=="Normalized") counts = resDiff$countsNorm
     target = resDiff$target
     normFactors = resDiff$normFactors
-
+    
     
     group_init = as.data.frame(target[,VarInt])
     rownames(group_init) = rownames(target)
@@ -3340,7 +3341,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       #PCA data
       dat <- t(counts.trans[order(rv, decreasing = TRUE),][1:n, ]) %>% data.frame
       pca_res <- FactoMineR::PCA(dat, ncp = 10, scale.unit = TRUE, graph = FALSE)
-
+      
       pca_res$group <- group
       pca_res$eigen_df <- data.frame(
         Dimensions = 1:min(10, length(pca_res$eig[, 1])),
@@ -3348,18 +3349,19 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
         PercentageExplained = (pca_res$eig[1:min(10, length(pca_res$eig[, 1])), 1]/ sum(pca_res$eig[1:min(10, length(pca_res$eig[, 1])), 1])) *100
       )
       pca_res$eigen_df$CumulativePercentageExplained <- cumsum(pca_res$eigen_df$PercentageExplained)
-
-      contrib_df <- data.frame(
-        contrib = t((pca_res$var$contrib / colSums(pca_res$var$contrib)) * 100)
-      )
-      contrib_df <- t(contrib_df)
-
+      
+      
+      contrib_df <- tibble::as_tibble(pca_res$var$contrib)
+      contrib_df <- contrib_df %>%
+        dplyr::mutate(dplyr::across(-1, ~ . / sum(.)))
+      
       pca_res$contrib_df <- as.data.frame(contrib_df)
+      colnames(pca_res$contrib_df) <- colnames(pca_res$var$contrib)
+      rownames(pca_res$contrib_df) <- rownames(pca_res$var$contrib)
       pca_res$contrib_df$Variable <- rownames(pca_res$contrib_df)
       pca_res$contrib_df <- tidyr::gather(pca_res$contrib_df, Dimension, Contribution, -Variable)
       
       pca_res$contrib_df$Variable <- sub("^contrib\\.", "", pca_res$contrib_df$Variable)
-      pca_res$contrib_df$Variable <- substr(pca_res$contrib_df$Variable, 1, 20)
       return(pca_res = pca_res)
     }
   })
@@ -3381,7 +3383,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   output$labelBiplotButton <- renderUI({
     if ((input$DiagPlot=='pcaPlot') && (input$radioPCA ==1)) {
-      return(checkboxInput("checkLabelSamples", label = strong("Display label"), value = FALSE))   
+      return(checkboxGroupInput("checkLabelSamples",label = strong("Display label"), choices = list("Samples" = 1, "Groups" = 2), selected = 2))   
     }else if ((input$DiagPlot=='pcaPlot') && (input$radioPCA ==3)) {
       return(checkboxInput("checkLabelTaxo", label = strong("Display label"), value = TRUE))   
     }else if((input$DiagPlot=='pcaPlot') && (input$radioPCA == 2)){
@@ -3391,18 +3393,6 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     }
   })  
   
-  observe({
-    if ((input$DiagPlot == 'pcaPlot')&& (input$radioPCA == 2)) {
-        updateCheckboxGroupInput(
-          session = session,
-          "checkLabelBiplot",
-          label = NULL,
-          choiceNames = list("Samples", as.character(input$TaxoSelect)),
-          choiceValues = c(1, 2),
-          selected = 2
-        )
-    }
-  })
   
   observe({
     if(input$DiagPlot == 'pcoaPlot'){
@@ -3416,39 +3406,54 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     }
   })
   
-  
-  labelPCAConditions <- reactiveValues(
-    checkLabelIndiv = FALSE,
-    checkLabelBiplot = FALSE
-  )
-  
-  observeEvent(input$checkLabelIndiv, {
-    labelPCAConditions$checkLabelIndiv <- input$checkLabelIndiv
+  observe({
+    if((input$radioPCA == 1) && isFALSE(input$ellipsePCA)){
+      updateCheckboxGroupInput(session = session, 
+                               "checkLabelSamples",
+                               label = NULL,
+                               choiceNames = list("Samples"),
+                               choiceValues = 1)
+    }
+    if((input$radioPCA == 1) && isTRUE(input$ellipsePCA)){
+      updateCheckboxGroupInput(session = session, 
+                               "checkLabelSamples",
+                               label = NULL,
+                               choiceNames = list("Samples", "Groups"),
+                               choiceValues = c(1, 2))
+    }
   })
   
-  observeEvent(input$checkLabelBiplot, {
-    labelPCAConditions$checkLabelBiplot <- length(input$checkLabelBiplot) > 0
-  })
   
-  
-  labelPCAConditions <- reactiveValues(
-    checkLabelIndiv = FALSE,
-    checkLabelBiplot = FALSE
-  )
-
-  observeEvent(input$checkLabelIndiv, {
-    labelPCAConditions$checkLabelIndiv <- input$checkLabelIndiv
-  })
-  
-  observeEvent(input$checkLabelBiplot, {
-    labelPCAConditions$checkLabelBiplot <- length(input$checkLabelBiplot) > 0
+  observe({
+    if ((input$DiagPlot == 'pcaPlot')&& (input$radioPCA == 2)) {
+      if(isTRUE(input$ellipsePCA)){
+        updateCheckboxGroupInput(
+          session = session,
+          "checkLabelBiplot",
+          label = NULL,
+          choiceNames = list("Samples", as.character(input$TaxoSelect), "Groups"),
+          choiceValues = c(1, 2, 3)
+        )
+      }
+      else if(isFALSE(input$ellipsePCA)){
+        updateCheckboxGroupInput(
+          session = session,
+          "checkLabelBiplot",
+          label = NULL,
+          choiceNames = list("Samples", as.character(input$TaxoSelect)),
+          choiceValues = c(1, 2)
+        )
+      }
+    }
   })
   
   observe({
     if (input$radioPCA == 3) {
       shinyjs::hide(id = "cexLabelDiag", anim = TRUE, animType = "fade")
+      shinyjs::hide(id = "ellipsePCA", anim = TRUE, animType = "fade")
     } else {
       shinyjs::show(id = "cexLabelDiag", anim = TRUE, animType = "fade")
+      shinyjs::show(id = "ellipsePCA", anim = TRUE, animType = "fade")
     }
   })
   
@@ -3461,15 +3466,15 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   
   
-
+  
   
   
   
   output$PlotDiag <- renderPlot({
     input$RunDESeq
     
-  resDiff = isolate(ResDiffAnal())
-  ## Phylogenetic tree
+    resDiff = isolate(ResDiffAnal())
+    ## Phylogenetic tree
     tree = dataInputTree()$data
     if(input$DiagPlot == 'pcoaPlot')
       Plot_diag(input,resDiff,tree, calcul_df = pcoa_data())
@@ -3577,7 +3582,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       if(!is.null(Plot_diag_pcoaEigen(input,resDiff,tree, calcul_df = pcoa_data())$dataDiv))
         mat = as.matrix(Plot_diag_pcoaEigen(input,resDiff,tree, calcul_df = pcoa_data())$dataDiv)
     }, rownames= TRUE, options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')), scroller = TRUE,
-                                       pageLength = 10,scrollX=TRUE
+                                      pageLength = 10,scrollX=TRUE
     )) %>%
       DT::formatRound(c(1:length(colnames(mat))), digits = 3) %>%
       formatStyle(columns = c(1:length(colnames(mat))), 'text-align' = 'center')
@@ -3677,7 +3682,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       if(input$DiagPlot == 'pcaPlot')
         res$subtitle = paste("<center><em>","Analysis of variance using Euclidean distance from matrix coordinates","</em></center><br/>")
       else{  
-      res$subtitle = paste("<center><em>","Analysis of variance using distance matrices","</em></center><br/>")
+        res$subtitle = paste("<center><em>","Analysis of variance using distance matrices","</em></center><br/>")
       }
       ## Pvalue   
       res$ccl = paste("<center><b><font size='+1'>p-value :",round(resTest,5),"</font></b></center><br/>")
@@ -3709,7 +3714,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     }
     return(res)
   })
-
+  
   
   
   output$SizeFactTable <- DT::renderDataTable(
@@ -3757,7 +3762,14 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     
   })
   
-  
+  observe({
+    if((input$DiagPlot == "pcaPlot") || (input$DiagPlot == "pcoaPlot")){
+      shinyjs::show("Exp_plot", anim = TRUE, animType = "fade")
+    }
+    else{
+      shinyjs::hide("Exp_plot", anim=TRUE, animType = "fade")
+    }
+  })
   
   ###                                               ###
   ##
@@ -3775,10 +3787,18 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       else if(input$Exp_format=="svg") svg(file, width = input$widthDiagExport/96, height = input$heightDiagExport/96)
       resDiff = ResDiffAnal()
       tree = isolate(dataInputTree()$data)
-      if(input$DiagPlot == "pcoaPlot")
-        print(Plot_diag(input,resDiff,tree, calcul_df = pcoa_data()))
-      else
-        print(Plot_diag(input,resDiff,tree, calcul_df = pca_data()))
+      if(input$Exp_plot == "Contribution"){
+        if(input$DiagPlot=="pcoaPlot")
+          print(Plot_diag_Contrib(input, resDiff, calcul_df = pcoa_data()))
+        else
+          print(Plot_diag_Contrib(input,resDiff, calcul_df = pca_data()))
+      }
+      else{
+        if(input$DiagPlot == "pcoaPlot")
+          print(Plot_diag(input,resDiff,tree, calcul_df = pcoa_data()))
+        else
+          print(Plot_diag(input,resDiff,tree, calcul_df = pca_data()))
+      }
       dev.off()
     }
   )
@@ -3821,10 +3841,10 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
                       ), ceiling(nrow(target)/20)),
                       "basic palette (2)" = rep(c(
                         '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
-                                 '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
-                                 '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000',
-                                 '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080',
-                                 '#ffffff', '#000000'
+                        '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
+                        '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000',
+                        '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080',
+                        '#ffffff', '#000000'
                       ), ceiling(nrow(target)/20)),
                       "basic palette (3)" = rep(c(
                         '#C0362C', '#FF8642', '#F4DCB5', '#816C5B', '#B70AC3',
@@ -3837,6 +3857,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
                         "#009d9a", "#012749", "#8a3800", "#a56eff"
                       ), ceiling(nrow(target)/14))
       )
+      
       if(input$Exp_format_Visu=="png") png(file, width = input$widthVisuExport, height = input$heightVisuExport)
       else if(input$Exp_format_Visu=="pdf") pdf(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96)
       else if(input$Exp_format_Visu=="eps") postscript(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96,paper="special")
@@ -4127,7 +4148,6 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     return(res)
   })
   
-  
   #### Export Plot Tables
   output$exportPlotTables <- downloadHandler(
     filename <- function() { paste(input$WhichPlotTables,paste('SHAMAN',input$Exp_format_PlotTables,sep="."),sep="_") },
@@ -4396,45 +4416,46 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     dataDiff = dataDiff()
     target = resDiff$target
     colors = switch(input$colorsdiagVisuPlot,
-                      "retro palette" = rep(c(
-                        "#048789", "#503D2E", "#D44D27", "#E2A72E", "#EFEBC8",
-                        "#6B63BF", "#7A3D3D", "#AED427", "#F7D488", "#27AED4",
-                        "#B7BF63", "#4D314A", "#BF6389", "#FF8C42", "#FF3C38"
-                      ), ceiling(nrow(target)/15)),
-                      "easter palette" = rep(c(
-                        "#DED4FF", "#A6E7FF", "#D4FFDE", "#FFF7AD", "#8AEEDD",
-                        "#D1F2A5", "#B56BFF", "#FFC48C", "#DF80FF", "#FF6B6B",
-                        "#FFDED4", "#14FA00", "#80A0FF", "#0091FA", "#FA6900"
-                      ), ceiling(nrow(target)/15)),
-                      "warm palette" = rep(c(
-                        "#FFCC0D", "#FF7326", "#FF194D", "#BF2669", "#702A8C",
-                        "#0D40FF", "#0DFF53", "#0DB9FF", "#0DBFA4", "#FF1493",
-                        "#FF69B4", "#81BF0D", "#FF7F50", "#CD5C5C", "#8B0000"
-                      ), ceiling(nrow(target)/15)),
-                      "basic palette (1)" = rep(c(
-                        "#f44336", "#e81e63", "#9c27b0", "#673ab7", "#3f51b5",
-                        "#2196f3", "#F37E21", "#2DF321", "#009688", "#4caf50",
-                        "#8bc34a", "#cddc39", "#ffeb3b", "#4A044E", "#ff9800",
-                        "#084E04", "#795548", "#7C8B60", "#607d8b", "#000000"
-                      ), ceiling(nrow(target)/20)),
-                      "basic palette (2)" = rep(c(
-                        '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
-                                 '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
-                                 '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000',
-                                 '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080',
-                                 '#ffffff', '#000000'
-                      ), ceiling(nrow(target)/20)),
-                      "basic palette (3)" = rep(c(
-                        '#C0362C', '#FF8642', '#F4DCB5', '#816C5B', '#B70AC3',
-                        '#B5CDF4', '#668D3C', '#B1DDA1', '#F4B5CD', '#0097AC',
-                        '#C3B70A', '#0AC3B7', '#c30a25', '#06C2F4', '#0A25C3'
-                      ), ceiling(nrow(target)/15)),
-                      "basic palette (4)" = rep(c(
-                        "#6929c4", "#1192e8", "#005d5d", "#9f1853", "#05DDAD",
-                        "#570408", "#198038", "#002d9c", "#FC6693", "#b28600",
-                        "#009d9a", "#012749", "#8a3800", "#a56eff"
-                      ), ceiling(nrow(target)/14))
-      )
+                    "retro palette" = rep(c(
+                      "#048789", "#503D2E", "#D44D27", "#E2A72E", "#EFEBC8",
+                      "#6B63BF", "#7A3D3D", "#AED427", "#F7D488", "#27AED4",
+                      "#B7BF63", "#4D314A", "#BF6389", "#FF8C42", "#FF3C38"
+                    ), ceiling(nrow(target)/15)),
+                    "easter palette" = rep(c(
+                      "#DED4FF", "#A6E7FF", "#D4FFDE", "#FFF7AD", "#8AEEDD",
+                      "#D1F2A5", "#B56BFF", "#FFC48C", "#DF80FF", "#FF6B6B",
+                      "#FFDED4", "#14FA00", "#80A0FF", "#0091FA", "#FA6900"
+                    ), ceiling(nrow(target)/15)),
+                    "warm palette" = rep(c(
+                      "#FFCC0D", "#FF7326", "#FF194D", "#BF2669", "#702A8C",
+                      "#0D40FF", "#0DFF53", "#0DB9FF", "#0DBFA4", "#FF1493",
+                      "#FF69B4", "#81BF0D", "#FF7F50", "#CD5C5C", "#8B0000"
+                    ), ceiling(nrow(target)/15)),
+                    "basic palette (1)" = rep(c(
+                      "#f44336", "#e81e63", "#9c27b0", "#673ab7", "#3f51b5",
+                      "#2196f3", "#F37E21", "#2DF321", "#009688", "#4caf50",
+                      "#8bc34a", "#cddc39", "#ffeb3b", "#4A044E", "#ff9800",
+                      "#084E04", "#795548", "#7C8B60", "#607d8b", "#000000"
+                    ), ceiling(nrow(target)/20)),
+                    "basic palette (2)" = rep(c(
+                      '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
+                      '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
+                      '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000',
+                      '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080',
+                      '#ffffff', '#000000'
+                    ), ceiling(nrow(target)/20)),
+                    "basic palette (3)" = rep(c(
+                      '#C0362C', '#FF8642', '#F4DCB5', '#816C5B', '#B70AC3',
+                      '#B5CDF4', '#668D3C', '#B1DDA1', '#F4B5CD', '#0097AC',
+                      '#C3B70A', '#0AC3B7', '#c30a25', '#06C2F4', '#0A25C3'
+                    ), ceiling(nrow(target)/15)),
+                    "basic palette (4)" = rep(c(
+                      "#6929c4", "#1192e8", "#005d5d", "#9f1853", "#05DDAD",
+                      "#570408", "#198038", "#002d9c", "#FC6693", "#b28600",
+                      "#009d9a", "#012749", "#8a3800", "#a56eff"
+                    ), ceiling(nrow(target)/14))
+    )
+    
     if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Boxplot(input,resDiff, dataDiff = dataDiff, colors = colors))
   },height=reactive(input$heightVisu))
   
@@ -4751,7 +4772,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   output$Research <- renderUI(
     selectizeInput("searchNode", "Research", choices = c("...", SelectTaxoPlotNetworkDebounce()))
   )
- 
+  
   
   output$SelectSecVariable <- renderUI({
     target=isolate(values$TargetWorking)
