@@ -21,7 +21,7 @@ Plot_Visu_Barplot <- function(input,resDiff)
   else if(nbKept==1) namesTax = ind_taxo
   
   dataNull = data.frame(x=c(0,0),y=c(1,2))
-
+  
   plotd3 = nvd3Plot(x ~ y , data = dataNull, type = "multiBarChart", id = 'barplotTaxoNyll',height = input$heightVisu,width=if(input$modifwidthVisu){input$widthVisu})
   gg = NULL
   
@@ -65,14 +65,14 @@ Plot_Visu_Barplot <- function(input,resDiff)
     else Sens = "multiBarHorizontalChart"
     
     XRotate = input$rotateXLabel
-
+    
     plotd3 <- nvd3Plot(Proportions ~ AllVar | Taxonomy, data = dataBarPlot_mat, type = Sens, id = 'barplotTaxo', height = input$heightVisu, width=if(input$modifwidthVisu){input$widthVisu})
     plotd3$chart(stacked = TRUE)
     if(input$SensPlotVisu == "Vertical") {
       plotd3$chart(reduceXTicks = FALSE)
       plotd3$xAxis(rotateLabels = XRotate)
     }
-   
+    
     
     
     ##                                 ##
@@ -84,7 +84,7 @@ Plot_Visu_Barplot <- function(input,resDiff)
     
     dataBarPlot_mat$Taxonomy = factor(dataBarPlot_mat$Taxonomy,levels = namesTax)
     dataBarPlot_mat$AllVar = factor(dataBarPlot_mat$AllVar,levels = unique(dataBarPlot_mat$AllVar))
-
+    
     gg= ggplot(dataBarPlot_mat, aes(x=AllVar, y=Proportions, fill=Taxonomy)) 
     if(input$CountsOrProp=="counts" && input$positionBarPlot=="fill") gg= gg +geom_col()
     else gg= gg +geom_col(position=input$positionBarPlot)
@@ -129,9 +129,9 @@ Plot_Visu_Heatmap <- function(input,resDiff,export=FALSE){
     if(ncol(counts_tmp_combined) == 1) sortcol = "No"
     if(!export) {
       plot = d3heatmap(counts_tmp_combined, dendrogram = "none", Rowv = (sortrow == "Yes"), 
-                                  Colv = (sortcol == "Yes"), na.rm = TRUE, width=ifelse(input$modifwidthVisu,input$widthVisu, "100%"), 
-                                  height = input$heightVisu, show_grid = FALSE, colors = col, scale = input$scaleHeatmap, cexRow = as.numeric(input$LabelSizeHeatmap), 
-                                  margins=c(12,30), cexCol=as.numeric(input$LabelSizeHeatmap), offsetCol=input$LabelColOffsetHeatmap, offsetRow=input$LabelRowOffsetHeatmap)
+                       Colv = (sortcol == "Yes"), na.rm = TRUE, width=ifelse(input$modifwidthVisu,input$widthVisu, "100%"), 
+                       height = input$heightVisu, show_grid = FALSE, colors = col, scale = input$scaleHeatmap, cexRow = as.numeric(input$LabelSizeHeatmap), 
+                       margins=c(12,30), cexCol=as.numeric(input$LabelSizeHeatmap), offsetCol=input$LabelColOffsetHeatmap, offsetRow=input$LabelRowOffsetHeatmap)
       
     }
     if(export){ 
@@ -140,9 +140,9 @@ Plot_Visu_Heatmap <- function(input,resDiff,export=FALSE){
       else if(input$SortHeatColumn == "Yes") dendrogram ="column"
       else if(input$SortHeatRow == "Yes") dendrogram ="row"
       plot = heatmap.2(counts_tmp_combined, dendrogram = dendrogram, Rowv = (sortrow == "Yes"), 
-                                 Colv = (sortcol == "Yes"), na.rm = TRUE, density.info="none", margins=c(as.numeric(input$lowerMargin),as.numeric(input$rightMargin)),trace="none",
-                                 srtCol=45, col = col, scale = input$scaleHeatmap, cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, 
-                                 offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap,symm=FALSE,symkey=FALSE,symbreaks=FALSE)
+                       Colv = (sortcol == "Yes"), na.rm = TRUE, density.info="none", margins=c(as.numeric(input$lowerMargin),as.numeric(input$rightMargin)),trace="none",
+                       srtCol=45, col = col, scale = input$scaleHeatmap, cexRow = input$LabelSizeHeatmap,cexCol =input$LabelSizeHeatmap, 
+                       offsetCol=input$LabelColOffsetHeatmap,offsetRow=input$LabelRowOffsetHeatmap,symm=FALSE,symkey=FALSE,symbreaks=FALSE)
     }
     return(plot)
   }
@@ -154,11 +154,11 @@ Plot_Visu_Heatmap <- function(input,resDiff,export=FALSE){
 ##          BOXPLOTS ####
 ##                       ##
 Plot_Visu_Boxplot <- function(input,resDiff,alpha=0.7, dataDiff, colors = c("#048789", "#D44D27", "#E2A72E", "#EFEBC8",
-                                                                                     "#107E7D", "#7A3D3D", "#F15A22", "#F7D488", "#F4A259",
-                                                                                     "#005F6B", "#4D314A", "#BF6B63", "#FF8C42", "#FF3C38")){
+                                                                            "#107E7D", "#7A3D3D", "#F15A22", "#F7D488", "#F4A259",
+                                                                            "#005F6B", "#4D314A", "#BF6B63", "#FF8C42", "#FF3C38")){
   
   gg = NULL
-
+  
   ## Get Input for BoxPlot
   VarInt = input$VisuVarInt
   ind_taxo = input$selectTaxoPlot
@@ -207,7 +207,7 @@ Plot_Visu_Boxplot <- function(input,resDiff,alpha=0.7, dataDiff, colors = c("#04
       dataDiff$complete$pvalue_adjusted[is.na(dataDiff$complete$pvalue_adjusted)] = 0
     }
     labels <- sprintf("%s\np-value: %.5f", dataDiff$complete$Id, dataDiff$complete$pvalue_adjusted)
-
+    
     if(is.null(input$BoxColorBy) || length(VarInt)<=1){ dataBarPlot_mat$Colors = dataBarPlot_mat$Samples}
     if(!is.null(input$BoxColorBy) && length(VarInt)>1)
     { 
@@ -220,14 +220,21 @@ Plot_Visu_Boxplot <- function(input,resDiff,alpha=0.7, dataDiff, colors = c("#04
     #column that is used to print the p-value under the title of each graph
     dataBarPlot_mat$TaxonomyPvalue = factor(dataBarPlot_mat$Taxonomy, levels = as.vector(dataDiff$complete$Id), labels = labels)
     gg = ggplot(dataBarPlot_mat,aes(x=Samples,y=Value,fill=Colors))  + geom_boxplot(alpha=alpha) +theme_bw()
-    gg = gg  +theme(axis.text=element_text(size=18,face="bold"),axis.title=element_text(size=15,face="bold"),panel.background = element_blank(),
-                    panel.grid.major = element_blank(),panel.grid.minor = element_blank(), axis.title.x=element_blank(), axis.text.x = element_text(angle = 90, hjust = 1,vjust=0.5),
-                    strip.text = element_text(size = 20)) 
+    gg = gg + theme(
+      axis.text = element_text(size = 18, face = "bold"),
+      axis.title = element_text(size = 10, face = "bold"),
+      panel.background = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      axis.title.x = element_blank(),
+      axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+      strip.text = element_text(size = 20, hjust = 0.5)  # Adjust hjust to control title position
+    ) 
     gg = gg + ylab(paste(input$typeDataBox, "abundance")) +scale_fill_manual(values = colors) + guides(fill=FALSE)
     if(input$CheckAddPointsBox) gg = gg + geom_point(position=position_jitterdodge(dodge.width=0.9))
     if(input$SensPlotVisu=="Horizontal") gg = gg + coord_flip()
     if(nbKept>1) gg = gg + facet_wrap(~ Taxonomy,scales = input$ScaleBoxplot)
-    if (!is.null(dataDiff) && !is.null(input$SelectSpecifTaxo) && !is.null(input$ContrastList_table_Visu) && input$SelectSpecifTaxo == "Diff") gg = gg + facet_wrap(~ TaxonomyPvalue, scales = input$ScaleBoxplot) 
+    if (!is.null(dataDiff) && !is.null(input$SelectSpecifTaxo) && (length(input$ContrastList_table_Visu) == 1) && input$SelectSpecifTaxo == "Diff") gg = gg + facet_wrap(~ TaxonomyPvalue, scales = input$ScaleBoxplot, strip.placement = "inside") 
   }
   
   return(gg)
@@ -306,7 +313,7 @@ Plot_Visu_Phylotree = function(input, resDiff, CT_OTU, taxo_table, treeseq){
   #print(counts)
   return(res)
 }
-  
+
 
 ##                       ##
 ##      SCATTER PLOT ####
@@ -325,9 +332,9 @@ Plot_Visu_Scatterplot<- function(input,resDiff,export=FALSE,lmEst = FALSE,CorEst
   {counts = as.data.frame(round(counts(dds, normalized = TRUE)))}
   else
   {counts = as.data.frame(round(counts(dds, normalized = FALSE)))}
-
+  
   target = as.data.frame(resDiff$target)
-
+  
   ## Get the diversity values
   tmp_div = Plot_Visu_Diversity(input,resDiff,ForScatter=TRUE)$dataDiv
   
@@ -340,7 +347,7 @@ Plot_Visu_Scatterplot<- function(input,resDiff,export=FALSE,lmEst = FALSE,CorEst
   }
   if(input$TransDataScatter =="log2") data = cbind(target,log2(t(counts)+1),div)
   else if(input$TransDataScatter =="none") data = cbind(target,t(counts),div)
-
+  
   ## Get Input for ScatterPlot
   Xvar = input$Xscatter
   Yvar = input$Yscatter
@@ -454,7 +461,7 @@ Plot_Visu_Diversity <- function(input,resDiff,ForScatter=FALSE, alpha_transparen
     cond = table(targetInt$AllVar)
     cond=cond[cond!=0]
     sqrt.nb = sqrt(cond)
-
+    
     #save(counts_tmp_combined,targetInt,file = "testDiv.RData")
     alpha <- tapply(TaxoNumber(counts_tmp_combined), targetInt$AllVar, mean)
     alpha_selected = !is.na(alpha)
@@ -463,7 +470,7 @@ Plot_Visu_Diversity <- function(input,resDiff,ForScatter=FALSE, alpha_transparen
     alpha_sd=alpha_sd[alpha_selected]
     ci.alpha.down = pmax(alpha - 1.96*alpha_sd/sqrt.nb,0)
     ci.alpha.up = alpha + 1.96*alpha_sd/sqrt.nb
-
+    
     shan <- tapply(vegan::diversity(counts_tmp_combined, index = "shannon"), targetInt$AllVar, mean)
     shan_selected = !is.na(shan)
     shan = shan[shan_selected]
@@ -635,7 +642,7 @@ GetDataToPlot <- function(input,resDiff,VarInt,ind_taxo,sec_variable = NULL, agg
 {
   sec_variable_added_to_VarInt <- FALSE
   if(!is.null(sec_variable)){if(!is.element(sec_variable,VarInt)){VarInt <- c(VarInt,sec_variable)
-                                                                  sec_variable_added_to_VarInt <- TRUE}}
+  sec_variable_added_to_VarInt <- TRUE}}
   
   dds = resDiff$dds
   val = c()
@@ -671,8 +678,8 @@ GetDataToPlot <- function(input,resDiff,VarInt,ind_taxo,sec_variable = NULL, agg
       ## All the modalities for all the var of interest
       val = c(val,eval(expr))
       if(sec_variable_added_to_VarInt){mod <- eval(expr)
-                                      if(is.null(mod)){mod <- as.character(unique(as.factor(target[,VarInt[i]])))}
-                                      list.val[[i]] = mod}
+      if(is.null(mod)){mod <- as.character(unique(as.factor(target[,VarInt[i]])))}
+      list.val[[i]] = mod}
       else{list.val[[i]] = eval(expr)}
     }
     if (!is.null(val) && !is.null(list.val))
@@ -803,16 +810,16 @@ CreateTableTree <- function(input,resDiff,CT_Norm_OTU,taxo_table,VarInt,ind_taxo
         
         counts_tmp_combined = as.matrix(counts_tmp_combined[,-1])
       }
-
+      
       
       ## Ordering the counts
-#       if(!is.null(counts_tmp_combined))
-#       {
-#         MeanCounts = apply(counts_tmp_combined,2,mean)
-#         ord = order(MeanCounts,decreasing=TRUE)
-#         counts_tmp_combined = as.matrix(counts_tmp_combined[,ord])
-#         
-#       }
+      #       if(!is.null(counts_tmp_combined))
+      #       {
+      #         MeanCounts = apply(counts_tmp_combined,2,mean)
+      #         ord = order(MeanCounts,decreasing=TRUE)
+      #         counts_tmp_combined = as.matrix(counts_tmp_combined[,ord])
+      #         
+      #       }
       
     }
   }
@@ -846,7 +853,7 @@ Plot_Visu_Tree <- function(input,resDiff,CT_Norm_OTU,taxo_table)
   if(nrow(CT_Norm_OTU)>0 && !is.null(CT_Norm_OTU) && nrow(taxo_table)>0 && !is.null(taxo_table))
   { 
     tmp = CreateTableTree(input,resDiff,CT_Norm_OTU,taxo_table,VarInt)
-  
+    
     if(nrow(tmp$counts)>0 && !is.null(tmp$counts))
     {
       #save(tmp,taxo_table,nodeFind,file="testTree.RData")
@@ -881,63 +888,63 @@ Plot_network <- function(input,resDiff,availableTaxo, ind_taxo, qualiVariable, e
   
   data <- GetDataToPlot(input,resDiff,VarInt,availableTaxo, sec_variable = sec_variable, aggregate = FALSE)
   if(!is.null(data) && !is.null(data$targetInt)){
-  counts_tmp_combined <- data$counts
-  dataVariables <- as.matrix(data$targetInt)
-  if(isolate(input$colorCorr && qualiVariable()) && !is.null(dataVariables)){dataVariables[,sec_variable] <- sapply(dataVariables[,sec_variable], function(x) if(is.element(x,isolate(input$values1))){1}else{0})}
-  
-  if(!is.null(counts_tmp_combined)){
-    countsMatrix <- as.matrix(counts_tmp_combined)
+    counts_tmp_combined <- data$counts
+    dataVariables <- as.matrix(data$targetInt)
+    if(isolate(input$colorCorr && qualiVariable()) && !is.null(dataVariables)){dataVariables[,sec_variable] <- sapply(dataVariables[,sec_variable], function(x) if(is.element(x,isolate(input$values1))){1}else{0})}
     
-    n <- ncol(countsMatrix)
-    resCorrTest <- corr.test(countsMatrix, ci = FALSE)
-    cor <- resCorrTest$r
-    pval <- resCorrTest$p
-    pval_bool <- t(apply(pval, 1, function(v) {sapply(v, function(x){x < 0.05})}))
-    cor_sgn <- t(apply(cor, 1, function(v) {sapply(v, sign)}))
-    adjacency <- matrix(mapply(function(a,b) {mapply(function(x,y){x*y}, x=a, y=b)}, a=pval_bool, b=cor_sgn), nrow = n)
-    rownames(adjacency) <- colnames(countsMatrix)
-    colnames(adjacency) <- colnames(countsMatrix)
-    # ### Remove rows and columns with only NA        # this way, elements with the same count in all sample (often 0 in this case) will not appear
-    # adjacency <- adjacency[apply(adjacency, 1, function(y) !all(is.na(y))),]
-    # adjacency <- t(adjacency)
-    # adjacency <- adjacency[apply(adjacency, 1, function(y) !all(is.na(y))),]
-    # adjacency <- t(adjacency)
-    
-    ### Replace NA by zeros (ie "no correlation")     # this way, those elements will appear as single nodes
-    adjacency[is.na(adjacency)] <- 0
-    
-    adjacency <- adjacency[,ind_taxo]
-    adjacency <- adjacency[ind_taxo,]
-    
-    igraphGraph <- graph_from_adjacency_matrix(adjacency, diag = FALSE, mode = "upper" , weighted = TRUE) # mode = "upper" for adjusted p-value, mode = "lower" for p-value not adjusted
-    
-    list_to_label <- isolate(input$ToLabelNetwork)
-    dataVN <- toVisNetworkData(igraphGraph)
-    dataVN$nodes$title <- paste0("<b>", dataVN$nodes$id,"</b>")
-    dataVN$nodes$label <- sapply(dataVN$nodes$id, function(x)if(is.element(x, list_to_label)){x}else{""})
-    dataVN$edges$color <- sapply(dataVN$edges$weight, function(x)if(x==1){isolate(input$edgeColorPositive)}else{isolate(input$edgeColorNegative)})
-    
-    if(!is.null(sec_variable)){
+    if(!is.null(counts_tmp_combined)){
+      countsMatrix <- as.matrix(counts_tmp_combined)
+      
+      n <- ncol(countsMatrix)
+      resCorrTest <- corr.test(countsMatrix, ci = FALSE)
+      cor <- resCorrTest$r
+      pval <- resCorrTest$p
+      pval_bool <- t(apply(pval, 1, function(v) {sapply(v, function(x){x < 0.05})}))
+      cor_sgn <- t(apply(cor, 1, function(v) {sapply(v, sign)}))
+      adjacency <- matrix(mapply(function(a,b) {mapply(function(x,y){x*y}, x=a, y=b)}, a=pval_bool, b=cor_sgn), nrow = n)
+      rownames(adjacency) <- colnames(countsMatrix)
+      colnames(adjacency) <- colnames(countsMatrix)
+      # ### Remove rows and columns with only NA        # this way, elements with the same count in all sample (often 0 in this case) will not appear
+      # adjacency <- adjacency[apply(adjacency, 1, function(y) !all(is.na(y))),]
+      # adjacency <- t(adjacency)
+      # adjacency <- adjacency[apply(adjacency, 1, function(y) !all(is.na(y))),]
+      # adjacency <- t(adjacency)
+      
+      ### Replace NA by zeros (ie "no correlation")     # this way, those elements will appear as single nodes
+      adjacency[is.na(adjacency)] <- 0
+      
+      adjacency <- adjacency[,ind_taxo]
+      adjacency <- adjacency[ind_taxo,]
+      
+      igraphGraph <- graph_from_adjacency_matrix(adjacency, diag = FALSE, mode = "upper" , weighted = TRUE) # mode = "upper" for adjusted p-value, mode = "lower" for p-value not adjusted
+      
+      list_to_label <- isolate(input$ToLabelNetwork)
+      dataVN <- toVisNetworkData(igraphGraph)
+      dataVN$nodes$title <- paste0("<b>", dataVN$nodes$id,"</b>")
+      dataVN$nodes$label <- sapply(dataVN$nodes$id, function(x)if(is.element(x, list_to_label)){x}else{""})
+      dataVN$edges$color <- sapply(dataVN$edges$weight, function(x)if(x==1){isolate(input$edgeColorPositive)}else{isolate(input$edgeColorNegative)})
+      
+      if(!is.null(sec_variable)){
         cor <- sapply(dataVN$nodes$id, function(x)cor(as.numeric(dataVariables[,sec_variable]), countsMatrix[,x]))
         dataVN$nodes$cor <- round(cor, digits = 5)
         scale <- if(isolate(input$scaleFree)){max(c(max(dataVN$nodes$cor),-min(dataVN$nodes$cor)))}else{1}
         dataVN$nodes$color.background <- sapply(dataVN$nodes$cor, function(x) colorRampPalette(rev(brewer.pal(9, isolate(input$colorPalette))))(200)[round(x, digits = 2)*100/scale+100])
         dataVN$nodes$color.highlight.background <- dataVN$nodes$color.background
+      }
+      else{dataVN$nodes$color.background <- isolate(input$colorBackground)
+      dataVN$nodes$color.highlight.background <- isolate(input$colorHighlightBackground)}
+      dataVN$nodes$color.border <- isolate(input$colorBorder)
+      dataVN$nodes$color.highlight.border <- isolate(input$colorHighlightBorder)
+      
+      plot <- visNetwork (nodes = dataVN$nodes, edges = dataVN$edges)
+      plot <- visIgraphLayout(plot, layout = "layout_nicely", physics = FALSE, smooth = FALSE)
+      plot <- visNodes(plot, size = 20)
+      plot <- visEdges(plot, width = 1)
+      plot <- visOptions(plot, width = if(isolate(input$modifwidthVisu)){isolate(input$widthVisu)}, height = isolate(input$heightVisu), autoResize = FALSE, highlightNearest = list(enabled = TRUE, degree = 1, hover = FALSE))
+      #plot <- visLegend(plot, addEdges = data.frame(color = c("red", "blue"), label = c("Positive correlation","Negative correlation")))
+      print(dataVN)
+      #plot <- visExport(plot, type = "pdf", name = "network_SHAMAN.pdf", float="bottom")
     }
-    else{dataVN$nodes$color.background <- isolate(input$colorBackground)
-         dataVN$nodes$color.highlight.background <- isolate(input$colorHighlightBackground)}
-    dataVN$nodes$color.border <- isolate(input$colorBorder)
-    dataVN$nodes$color.highlight.border <- isolate(input$colorHighlightBorder)
-    
-    plot <- visNetwork (nodes = dataVN$nodes, edges = dataVN$edges)
-    plot <- visIgraphLayout(plot, layout = "layout_nicely", physics = FALSE, smooth = FALSE)
-    plot <- visNodes(plot, size = 20)
-    plot <- visEdges(plot, width = 1)
-    plot <- visOptions(plot, width = if(isolate(input$modifwidthVisu)){isolate(input$widthVisu)}, height = isolate(input$heightVisu), autoResize = FALSE, highlightNearest = list(enabled = TRUE, degree = 1, hover = FALSE))
-    #plot <- visLegend(plot, addEdges = data.frame(color = c("red", "blue"), label = c("Positive correlation","Negative correlation")))
-    print(dataVN)
-    #plot <- visExport(plot, type = "pdf", name = "network_SHAMAN.pdf", float="bottom")
-  }
   }
   return(list(plot = plot, data = dataVN))
 }
