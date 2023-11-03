@@ -3160,7 +3160,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     
     ## Var of interest
     VarInt  = input$VarInt
-    
+    tree = dataInputTree()$data
     dds = resDiff$dds
     counts = resDiff$raw_counts
     if(input$CountsType=="Normalized") counts = resDiff$countsNorm
@@ -3283,6 +3283,90 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   pca_data <- reactive( {
     
     resDiff = ResDiffAnal()
+    #print(resDiff)
+    umap_data()
+    #Variable of interest
+    VarInt = input$VarInt
+    dds = resDiff$dds
+    counts = resDiff$raw_counts
+    if(input$CountsType=="Normalized") counts = resDiff$countsNorm
+    target = resDiff$target
+    normFactors = resDiff$normFactors
+    
+    
+    group_init = as.data.frame(target[,VarInt])
+    rownames(group_init) = rownames(target)
+    n = min(500, nrow(counts(dds)))
+    type.trans = c("VST", "rlog")
+    
+    group = as.character(apply(group_init,1,paste, collapse = "-"))
+    group_init = group
+    
+    ## Keep only some sample 
+    val = c()
+    for(i in 1:length(VarInt))
+    { 
+      Tinput = paste("input$","Mod",VarInt[i],sep="") 
+      expr=parse(text=Tinput)
+      ## All the modalities for all the var of interest
+      val = c(val,eval(expr))
+    }
+    if(length(VarInt)>1) Kval = apply(expand.grid(val,val),1,paste, collapse = "-")
+    else Kval = val
+    ind_kept = which(as.character(group)%in%Kval)
+    
+    # save(val,Kval,dds,group_init,type.trans,VarInt,ind_kept,file="testLDA")
+    ## Get the group corresponding to the modalities
+    group = group[ind_kept]
+    nb = length(unique((group)))
+    
+    group = as.factor(group)
+    
+    ## To select the colors
+    indgrp =as.integer(as.factor(group_init))[ind_kept]
+    
+    
+    if(nlevels(group)!=0)
+    { 
+      type.trans <- type.trans[1]
+      
+      if (type.trans == "VST") counts.trans <- SummarizedExperiment::assay(varianceStabilizingTransformation(dds))
+      else counts.trans <- SummarizedExperiment::assay(rlogTransformation(dds))
+      counts.trans = counts.trans[,ind_kept]
+      
+      rv = apply(counts.trans, 1, var, na.rm = TRUE)
+      #Méthodes avec l'opérateur de résolution de portée
+      
+      #PCA data
+      dat <- t(counts.trans[order(rv, decreasing = TRUE),][1:n, ]) %>% data.frame
+      pca_res <- FactoMineR::PCA(dat, ncp = 10, scale.unit = TRUE, graph = FALSE)
+      
+      pca_res$group <- group
+      pca_res$eigen_df <- data.frame(
+        Dimensions = 1:min(10, length(pca_res$eig[, 1])),
+        Eigenvalues = pca_res$eig[1:min(10, length(pca_res$eig[, 1])), 1],
+        PercentageExplained = (pca_res$eig[1:min(10, length(pca_res$eig[, 1])), 1]/ sum(pca_res$eig[1:min(10, length(pca_res$eig[, 1])), 1])) *100
+      )
+      pca_res$eigen_df$CumulativePercentageExplained <- cumsum(pca_res$eigen_df$PercentageExplained)
+      
+      contrib_df <- tibble::as_tibble(pca_res$var$contrib)
+      contrib_df <- contrib_df %>%
+        dplyr::mutate(dplyr::across(-1, ~ . / sum(.)))
+      
+      pca_res$contrib_df <- as.data.frame(contrib_df)
+      colnames(pca_res$contrib_df) <- colnames(pca_res$var$contrib)
+      rownames(pca_res$contrib_df) <- rownames(pca_res$var$contrib)
+      pca_res$contrib_df$Variable <- rownames(pca_res$contrib_df)
+      pca_res$contrib_df <- tidyr::gather(pca_res$contrib_df, Dimension, Contribution, -Variable)
+      
+      pca_res$contrib_df$Variable <- sub("^contrib\\.", "", pca_res$contrib_df$Variable)
+      return(pca_res = pca_res)
+    }
+  })
+  
+  
+  umap_data <-  reactive({
+    resDiff = ResDiffAnal()
     
     #Variable of interest
     VarInt = input$VarInt
@@ -3319,8 +3403,6 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     group = group[ind_kept]
     nb = length(unique((group)))
     
-    #Get the order of apperance of each variable in the group
-    order_of_appearance <- ave(group, group, FUN = seq_along)
     group = as.factor(group)
     
     ## To select the colors
@@ -3335,37 +3417,16 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       else counts.trans <- SummarizedExperiment::assay(rlogTransformation(dds))
       counts.trans = counts.trans[,ind_kept]
       
-      rv = apply(counts.trans, 1, var, na.rm = TRUE)
-      #Méthodes avec l'opérateur de résolution de portée
-      
-      #PCA data
-      dat <- t(counts.trans[order(rv, decreasing = TRUE),][1:n, ]) %>% data.frame
-      pca_res <- FactoMineR::PCA(dat, ncp = 10, scale.unit = TRUE, graph = FALSE)
-      
-      pca_res$group <- group
-      pca_res$eigen_df <- data.frame(
-        Dimensions = 1:min(10, length(pca_res$eig[, 1])),
-        Eigenvalues = pca_res$eig[1:min(10, length(pca_res$eig[, 1])), 1],
-        PercentageExplained = (pca_res$eig[1:min(10, length(pca_res$eig[, 1])), 1]/ sum(pca_res$eig[1:min(10, length(pca_res$eig[, 1])), 1])) *100
-      )
-      pca_res$eigen_df$CumulativePercentageExplained <- cumsum(pca_res$eigen_df$PercentageExplained)
-      
-      
-      contrib_df <- tibble::as_tibble(pca_res$var$contrib)
-      contrib_df <- contrib_df %>%
-        dplyr::mutate(dplyr::across(-1, ~ . / sum(.)))
-      
-      pca_res$contrib_df <- as.data.frame(contrib_df)
-      colnames(pca_res$contrib_df) <- colnames(pca_res$var$contrib)
-      rownames(pca_res$contrib_df) <- rownames(pca_res$var$contrib)
-      pca_res$contrib_df$Variable <- rownames(pca_res$contrib_df)
-      pca_res$contrib_df <- tidyr::gather(pca_res$contrib_df, Dimension, Contribution, -Variable)
-      
-      pca_res$contrib_df$Variable <- sub("^contrib\\.", "", pca_res$contrib_df$Variable)
-      return(pca_res = pca_res)
+      #UMAP
+      diversity = Plot_Visu_Diversity(input, resDiff)$dataDiv
+      counts.umap = umap::umap(t(counts.trans), n_components =2, random_state = 15)
+      counts.samples = rownames(t(counts.trans))
+      annotation = target[which(target$SampleID %in% counts.samples), ]
+      layout_dat <- counts.umap$layout
+      final <- cbind(data.frame(layout_dat), annotation)
+      print(final)
     }
   })
-  
   output$centeringButton <- renderUI({
     if ((input$radioPCA == 3) && (input$DiagPlot=='pcaPlot')) {
       return(NULL)  # Hide the button when the third radio button is selected
@@ -3764,6 +3825,9 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   observe({
     if((input$DiagPlot == "pcaPlot") || (input$DiagPlot == "pcoaPlot")){
+      DiagPlot_keys <- c("PCA"="pcaPlot", "PCoA"="pcoaPlot")
+      DiagPlot <- names(DiagPlot_keys[DiagPlot_keys == input$DiagPlot])
+      updateSelectInput(session = session, "Exp_plot", choices = c(DiagPlot, "Contributions"))
       shinyjs::show("Exp_plot", anim = TRUE, animType = "fade")
     }
     else{
