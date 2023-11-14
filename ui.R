@@ -831,7 +831,7 @@ function(request) {
                          box(title = "Select your plot",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = FALSE,collapsed= FALSE,
                              selectInput("DiagPlot","",c("Total barplot"="barplotTot","Nul barplot"="barplotNul",
                                                          "Maj. taxonomy"="MajTax","Boxplots" = "boxplotNorm", "Density"="densityPlot", "Dispersion" = "DispPlot",
-                                                         "Size factors VS total"="SfactorsVStot", "PCA"="pcaPlot", "PCoA"="pcoaPlot","NMDS"="nmdsPlot","Clustering" = "clustPlot"))
+                                                         "Size factors VS total"="SfactorsVStot", "PCA"="pcaPlot", "PCoA"="pcoaPlot", "UMAP"= "umapPlot", "NMDS"="nmdsPlot","Clustering" = "clustPlot"))
                          ),
                          box(title = "Options",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
                              conditionalPanel(condition="input.DiagPlot!='clustPlot' && input.DiagPlot!='pcaPlot' && input.DiagPlot!='SfactorsVStot' && input.DiagPlot!='DispPlot'",
@@ -841,7 +841,7 @@ function(request) {
                                               checkboxInput("RemoveNullValue","Remove 0",value = TRUE)
                              ),
                              conditionalPanel(condition="input.DiagPlot!='Sfactors' && input.DiagPlot!='SfactorsVStot' ",uiOutput("VarIntDiag")),
-                             conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='pcaPlot' || input.DiagPlot=='nmdsPlot'",
+                             conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='pcaPlot' || input.DiagPlot=='nmdsPlot' || input.DiagPlot== 'umapPlot'",
                                               h5(strong("Select the modalities")),
                                               uiOutput("ModMat"),
                                               fluidRow(
@@ -898,7 +898,7 @@ function(request) {
                            conditionalPanel(condition="input.DiagPlot=='SfactorsVStot'",
                                             checkboxInput("addLabelSFact","Add label",FALSE)
                            ),
-                           conditionalPanel(condition="input.DiagPlot=='pcaPlot' || input.DiagPlot=='pcoaPlot' ",
+                           conditionalPanel(condition="input.DiagPlot=='pcaPlot' || input.DiagPlot=='pcoaPlot' || input.diagPlot== 'umapPlot'",
                                             uiOutput("centeringButton")
                            ),
                            conditionalPanel(condition="input.DiagPlot=='pcoaPlot'",  selectInput("labelPCOA","Label type",c("Group", "Sample"),selected="Group"),

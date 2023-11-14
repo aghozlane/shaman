@@ -79,6 +79,7 @@ Plot_diag <- function(input,resDiff,tree = NULL,getTable=FALSE, calcul_df = NULL
     if(input$DiagPlot=="SfactorsVStot") res = diagSFactors(input,normFactors,resDiff$raw_counts) 
     if(input$DiagPlot=="pcaPlot") res = PCAPlot_meta(input,dds, group,  type.trans = input$TransType, col = colors, pca_res = calcul_df)
     if(input$DiagPlot=="pcoaPlot") res = PCoAPlot_meta(input,dds, group,CT,tree, col = colors, resDiff = resDiff, pcoa_df = calcul_df)$plot 
+    if(input$DiagPlot =="umapPlot") res = UmapPlot_meta(input, dds, group, umap_df = calcul_df)
     if(input$DiagPlot=="nmdsPlot") res = NMDSPlot(input, dds, group,CT,tree, col = colors) 
     if(input$DiagPlot=="clustPlot") res = HCPlot(input,dds,group,type.trans=input$TransType,counts,CT,tree,col=colors)
   }
@@ -1074,7 +1075,9 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
   }
 }
 
-
+UmapPlot_meta <- function(input, dds, group_init, n = min(500, nrow(counts(dds))), type.trans = c("VST", "rlog"), umap_df, umap_theme = diagplot_themes()){
+  
+}
 
 ##############################################################
 ##
