@@ -3156,11 +3156,12 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     
   })
   pcoa_data <- reactive({
+    dist.counts.norm = NULL
     resDiff = ResDiffAnal()
     
     ## Var of interest
     VarInt  = input$VarInt
-    tree = dataInputTree()$data
+    tree = dataInput()$data
     dds = resDiff$dds
     counts = resDiff$raw_counts
     if(input$CountsType=="Normalized") counts = resDiff$countsNorm
@@ -3173,8 +3174,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     
     group_init = as.data.frame(target[,VarInt])
     rownames(group_init) = rownames(target)
-    
-    dist.counts.norm = NULL
+
     cval=c()
     time_set = 0
     # Set of shape
@@ -3213,6 +3213,8 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts.norm))
       else if(input$DistClust=="Unifrac"){
         #tmp = UniFracDist(CT,tree)
+        data_to_save <- list(counts.norm = counts.norm, tree = tree)
+        save(data_to_save, file = "dataUnifrac.RData")
         tmp = UniFracDist(counts.norm,tree)
         if(is.null(tree) || is.null(tmp)) dist.counts.norm = NULL
         else
@@ -3231,38 +3233,10 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       }
       else  dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
       #"additive_symm"
+      req(dist.counts.norm)
       if(!is.null(dist.counts.norm))
       {
-        ## Do PCoA
-        pco.counts.norm = dudi.pco(d = dist.counts.norm, scannf = FALSE,nf=ncol(counts.norm))
-        
-        ## Get eigen values
-        eigen=(pco.counts.norm$eig/sum(pco.counts.norm$eig))*100
-        
-        ## xlim and ylim of the plot
-        min = min(pco.counts.norm$li)
-        max = max(pco.counts.norm$li)
-        
-        ## get condition set
-        condition_set=val[which(val %in% unique(group_init$condition))]
-        time_set=val[which(val %in% unique(group_init$time))]
-        
-        ## Colors
-        if(length(col)<length(condition_set) * length(time_set))# && !input$colorgroup)
-        {
-          col = rainbow(length(condition_set) * length(time_set))
-        }
-        #else if(length(col)<length(condition_set) * length(time_set) && input$colorgroup){
-        #  col = rep(col[1:length(condition_set)], length(time_set))
-        #}
-        if (length(time_set) == 1 && length(condition_set) <= 4){
-          cval = apply(expand.grid(condition_set,time_set),1,paste, collapse = "-")
-          cval = sort(cval)
-        }
-        
-        # to reactivate
-        pco.counts.norm$li = pco.counts.norm$li[ind_kept,]
-        
+       
         pcoa_df_ape <- ape::pcoa(dist.counts.norm)
         results_pcoa <- compute_arrows(pcoa_df_ape, t(counts.norm))
         
@@ -3271,6 +3245,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
           PercentageExplained = (results_pcoa$values$Eigenvalues[1:min(10, length(results_pcoa$values$Eigenvalues))]/sum(results_pcoa$values$Eigenvalues[1:min(10, length(results_pcoa$values$Eigenvalues))]))*100 #Percentage explained
         )
         
+        eigen_df$CumulativePercentageExplained = cumsum(eigen_df$PercentageExplained)
         
         to_plot <- as.data.frame(results_pcoa$vectors) %>% tibble::rownames_to_column("Sample.name")
         to_plot$group <- group
@@ -3283,8 +3258,6 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   pca_data <- reactive( {
     
     resDiff = ResDiffAnal()
-    #print(resDiff)
-    umap_data()
     #Variable of interest
     VarInt = input$VarInt
     dds = resDiff$dds
@@ -3336,7 +3309,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       
       rv = apply(counts.trans, 1, var, na.rm = TRUE)
       #Méthodes avec l'opérateur de résolution de portée
-      
+      req(counts.trans)
       #PCA data
       dat <- t(counts.trans[order(rv, decreasing = TRUE),][1:n, ]) %>% data.frame
       pca_res <- FactoMineR::PCA(dat, ncp = 10, scale.unit = TRUE, graph = FALSE)
@@ -3408,7 +3381,6 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     ## To select the colors
     indgrp =as.integer(as.factor(group_init))[ind_kept]
     
-    
     if(nlevels(group)!=0)
     { 
       type.trans <- type.trans[1]
@@ -3416,17 +3388,19 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       if (type.trans == "VST") counts.trans <- SummarizedExperiment::assay(varianceStabilizingTransformation(dds))
       else counts.trans <- SummarizedExperiment::assay(rlogTransformation(dds))
       counts.trans = counts.trans[,ind_kept]
-      
+      final <-  NULL
       #UMAP
-      diversity = Plot_Visu_Diversity(input, resDiff)$dataDiv
-      counts.umap = umap::umap(t(counts.trans), n_components =2, random_state = 15)
+      updateSliderInput(session = session, "neighborsKNN", max = ncol(counts.trans) -1)
+      counts.umap <- umap::umap(t(counts.trans), n_components = 2, random_state = 15, n_neighbors = input$neighborsKNN, metric = input$distanceUMAP)
       counts.samples = rownames(t(counts.trans))
-      annotation = target[which(target$SampleID %in% counts.samples), ]
       layout_dat <- counts.umap$layout
-      final <- cbind(data.frame(layout_dat), annotation)
-      print(final)
+      final <- (data.frame(layout_dat))
+      final$group <- group
+      return(final)
     }
   })
+  
+  
   output$centeringButton <- renderUI({
     if ((input$radioPCA == 3) && (input$DiagPlot=='pcaPlot')) {
       return(NULL)  # Hide the button when the third radio button is selected
@@ -3525,7 +3499,12 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       shinyjs::show(id = "cexLabelDiag", anim = TRUE, animType = 'fade')
   })
   
-  
+  observe({
+    if(input$labelSamplesUMAP)
+      shinyjs::show(id = "cexPointsLabelDiag", anim = TRUE, animType = 'fade')
+    else if(!input$labelSamplesUMAP)
+      shinyjs::hide(id = "cexPointsLabelDiag", anim = TRUE, animType = 'fade')
+  })
   
   
   
@@ -3539,6 +3518,8 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     tree = dataInputTree()$data
     if(input$DiagPlot == 'pcoaPlot')
       Plot_diag(input,resDiff,tree, calcul_df = pcoa_data())
+    else if(input$DiagPlot == 'umapPlot')
+      Plot_diag(input,resDiff,tree, calcul_df = umap_data())
     else
       Plot_diag(input,resDiff,tree, calcul_df = pca_data())
   },height = reactive(input$heightDiag), width = reactive(ifelse(input$modifwidthDiag,input$widthDiag,"auto")))
@@ -3827,7 +3808,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     if((input$DiagPlot == "pcaPlot") || (input$DiagPlot == "pcoaPlot")){
       DiagPlot_keys <- c("PCA"="pcaPlot", "PCoA"="pcoaPlot")
       DiagPlot <- names(DiagPlot_keys[DiagPlot_keys == input$DiagPlot])
-      updateSelectInput(session = session, "Exp_plot", choices = c(DiagPlot, "Contributions"))
+      updateSelectInput(session = session, "Exp_plot", choices = c(DiagPlot, "Contribution"))
       shinyjs::show("Exp_plot", anim = TRUE, animType = "fade")
     }
     else{
@@ -3843,7 +3824,10 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   #### Export Diag
   output$exportdiag <- downloadHandler(
-    filename <- function() { paste(input$DiagPlot,paste('SHAMAN',input$Exp_format,sep="."),sep="_") },
+    filename = function() {
+    plotType <- if (input$Exp_plot == "Contribution") "Contribution" else ""
+    paste(input$DiagPlot, plotType, paste('SHAMAN', input$Exp_format, sep = "."), sep = "_")
+  },
     content <- function(file) {
       if(input$Exp_format=="png") png(file, width = input$widthDiagExport, height = input$heightDiagExport)
       else if(input$Exp_format=="pdf") pdf(file, width = input$widthDiagExport/96, height = input$heightDiagExport/96)
@@ -3860,6 +3844,8 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       else{
         if(input$DiagPlot == "pcoaPlot")
           print(Plot_diag(input,resDiff,tree, calcul_df = pcoa_data()))
+        else if(input$DiagPlot=="umapPlot")
+          print(Plot_diag_Contrib(input, resDiff, calcul_df = umap_data()))
         else
           print(Plot_diag(input,resDiff,tree, calcul_df = pca_data()))
       }
@@ -3919,21 +3905,75 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
                         "#6929c4", "#1192e8", "#005d5d", "#9f1853", "#05DDAD",
                         "#570408", "#198038", "#002d9c", "#FC6693", "#b28600",
                         "#009d9a", "#012749", "#8a3800", "#a56eff"
-                      ), ceiling(nrow(target)/14))
+                      ), ceiling(nrow(target)/14)),
+                      "basic palette (5)" = rep(c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c"
+                                               ,"#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5"
+                                               ,"#8c564b","#c49c94","#e377c2","#f7b6d2","#7f7f7f"
+                                               ,"#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"
+                                              ), ceiling(nrow(target) / 20))
       )
-      
+      req(colors)
       if(input$Exp_format_Visu=="png") png(file, width = input$widthVisuExport, height = input$heightVisuExport)
       else if(input$Exp_format_Visu=="pdf") pdf(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96)
       else if(input$Exp_format_Visu=="eps") postscript(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96,paper="special")
       else if(input$Exp_format_Visu=="svg") svg(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96)
       
-      if(input$PlotVisuSelect=="Barplot") print(Plot_Visu_Barplot(input,ResDiffAnal())$gg)
+      if(input$PlotVisuSelect=="Barplot") {
+        colors = switch(input$colorsdiagVisuPlot,
+                        "retro palette" = c(
+                          "#048789", "#503D2E", "#D44D27", "#E2A72E", "#EFEBC8",
+                          "#6B63BF", "#7A3D3D", "#AED427", "#F7D488", "#27AED4",
+                          "#B7BF63", "#4D314A", "#BF6389", "#FF8C42", "#FF3C38"
+                        ),
+                        "easter palette" = c(
+                          "#DED4FF", "#A6E7FF", "#D4FFDE", "#FFF7AD", "#8AEEDD",
+                          "#D1F2A5", "#B56BFF", "#FFC48C", "#DF80FF", "#FF6B6B",
+                          "#FFDED4", "#14FA00", "#80A0FF", "#0091FA", "#FA6900"
+                        ),
+                        "warm palette" = c(
+                          "#FFCC0D", "#FF7326", "#FF194D", "#BF2669", "#702A8C",
+                          "#0D40FF", "#0DFF53", "#0DB9FF", "#0DBFA4", "#FF1493",
+                          "#FF69B4", "#81BF0D", "#FF7F50", "#CD5C5C", "#8B0000"
+                        ),
+                        "basic palette (1)" = c(
+                          "#f44336", "#e81e63", "#9c27b0", "#673ab7", "#3f51b5",
+                          "#2196f3", "#F37E21", "#2DF321", "#009688", "#4caf50",
+                          "#8bc34a", "#cddc39", "#ffeb3b", "#4A044E", "#ff9800",
+                          "#084E04", "#795548", "#7C8B60", "#607d8b", "#000000"
+                        ),
+                        "basic palette (2)" = c(
+                          '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
+                          '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
+                          '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000',
+                          '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080',
+                          '#ffffff', '#000000'
+                        ),
+                        "basic palette (3)" = c(
+                          '#C0362C', '#FF8642', '#F4DCB5', '#816C5B', '#B70AC3',
+                          '#B5CDF4', '#668D3C', '#B1DDA1', '#F4B5CD', '#0097AC',
+                          '#C3B70A', '#0AC3B7', '#c30a25', '#06C2F4', '#0A25C3'
+                        ),
+                        "basic palette (4)" = c(
+                          "#6929c4", "#1192e8", "#005d5d", "#9f1853", "#05DDAD",
+                          "#570408", "#198038", "#002d9c", "#FC6693", "#b28600",
+                          "#009d9a", "#012749", "#8a3800", "#a56eff"
+                        ),
+                        "basic palette (5)" = c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c"
+                                                 ,"#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5"
+                                                 ,"#8c564b","#c49c94","#e377c2","#f7b6d2","#7f7f7f"
+                                                 ,"#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"
+        ))
+        others = get_others()$others
+        req(colors)
+        req(others)
+        print(Plot_Visu_Barplot(input,ResDiffAnal(), colors, others)$gg)
+      }
       else if(input$PlotVisuSelect=="Heatmap") Plot_Visu_Heatmap(input,ResDiffAnal(),export=TRUE)
       else if(input$PlotVisuSelect=="Boxplot") print(Plot_Visu_Boxplot(input,ResDiffAnal(),alpha=ifelse(input$Exp_format_Visu=="eps",1,0.7), dataDiff(), colors = colors))
       else if(input$PlotVisuSelect=="Scatterplot") print(Plot_Visu_Scatterplot(input,ResDiffAnal(),export=TRUE,lmEst = FALSE))
       else if(input$PlotVisuSelect=="Diversity"){
-        if(input$Exp_format_Visu == "eps") print(Plot_Visu_Diversity(input, ResDiffAnal(), FALSE, 1)$plot)
-        else print(Plot_Visu_Diversity(input,ResDiffAnal())$plot)
+        if(input$Exp_format_Visu == "eps") print(Plot_Visu_Diversity(input, ResDiffAnal(), colors, FALSE, 1)$plot)
+        else print(Plot_Visu_Diversity(input,ResDiffAnal(), colors)$plot)
       }
       else if(input$PlotVisuSelect=="Rarefaction") print(Plot_Visu_Rarefaction(input,ResDiffAnal(),ranges$x,ranges$y,ylab=taxo))
       dev.off()
@@ -4282,9 +4322,55 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   output$PlotVisuBar <- renderChart({
     resDiff = ResDiffAnal()
+    colors = switch(input$colorsdiagVisuPlot,
+                    "retro palette" = c(
+                      "#048789", "#503D2E", "#D44D27", "#E2A72E", "#EFEBC8",
+                      "#6B63BF", "#7A3D3D", "#AED427", "#F7D488", "#27AED4",
+                      "#B7BF63", "#4D314A", "#BF6389", "#FF8C42", "#FF3C38"
+                    ),
+                    "easter palette" = c(
+                      "#DED4FF", "#A6E7FF", "#D4FFDE", "#FFF7AD", "#8AEEDD",
+                      "#D1F2A5", "#B56BFF", "#FFC48C", "#DF80FF", "#FF6B6B",
+                      "#FFDED4", "#14FA00", "#80A0FF", "#0091FA", "#FA6900"
+                    ),
+                    "warm palette" = c(
+                      "#FFCC0D", "#FF7326", "#FF194D", "#BF2669", "#702A8C",
+                      "#0D40FF", "#0DFF53", "#0DB9FF", "#0DBFA4", "#FF1493",
+                      "#FF69B4", "#81BF0D", "#FF7F50", "#CD5C5C", "#8B0000"
+                    ),
+                    "basic palette (1)" = c(
+                      "#f44336", "#e81e63", "#9c27b0", "#673ab7", "#3f51b5",
+                      "#2196f3", "#F37E21", "#2DF321", "#009688", "#4caf50",
+                      "#8bc34a", "#cddc39", "#ffeb3b", "#4A044E", "#ff9800",
+                      "#084E04", "#795548", "#7C8B60", "#607d8b", "#000000"
+                    ),
+                    "basic palette (2)" = c(
+                      '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
+                      '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
+                      '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000',
+                      '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080',
+                      '#ffffff', '#000000'
+                    ),
+                    "basic palette (3)" = c(
+                      '#C0362C', '#FF8642', '#F4DCB5', '#816C5B', '#B70AC3',
+                      '#B5CDF4', '#668D3C', '#B1DDA1', '#F4B5CD', '#0097AC',
+                      '#C3B70A', '#0AC3B7', '#c30a25', '#06C2F4', '#0A25C3'
+                    ),
+                    "basic palette (4)" = c(
+                      "#6929c4", "#1192e8", "#005d5d", "#9f1853", "#05DDAD",
+                      "#570408", "#198038", "#002d9c", "#FC6693", "#b28600",
+                      "#009d9a", "#012749", "#8a3800", "#a56eff"
+                    ),
+                    "basic palette (5)" = c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c"
+                                             ,"#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5"
+                                             ,"#8c564b","#c49c94","#e377c2","#f7b6d2","#7f7f7f"
+                                             ,"#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"
+    ))
     res = NULL
     tmp = NULL
-    if(!is.null(resDiff$dds) && length(input$VisuVarInt)>=1) tmp = Plot_Visu_Barplot(input,resDiff)
+    others = get_others()$others
+    req(others)
+    if(!is.null(resDiff$dds) && length(input$VisuVarInt)>=1) tmp = Plot_Visu_Barplot(input,resDiff, colors, others)
     if(!is.null(tmp)) res = tmp$plotd3
     return(res)
   })
@@ -4524,11 +4610,72 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   },height=reactive(input$heightVisu))
   
   
-  output$DiversityPlot <- renderPlot({
-    resDiff = ResDiffAnal()
-    if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Diversity(input,resDiff)$plot)
+  output$WhichDivSelect <- renderUI({
+    if(input$DiversityPlots == 2)
+      return(selectizeInput("WhichDiv",h6(strong("Diversity")),c('Beta', 'Gamma'),selected  = 'Beta',multiple=TRUE))    
+    else if (input$DiversityPlots == 1)
+      return(selectizeInput("WhichDiv",h6(strong("Diversity")),c('Alpha','Bray-Curtis','Shannon','Simpson','Inv.Simpson'),selected  = 'Alpha',multiple=FALSE))    
   })
   
+  
+  output$DiversityPlot <- renderPlot({
+    resDiff = ResDiffAnal()
+    target = resDiff$target
+    colors = switch(input$colorsdiagVisuPlot,
+                    "retro palette" = rep(c(
+                      "#048789", "#503D2E", "#D44D27", "#E2A72E", "#EFEBC8",
+                      "#6B63BF", "#7A3D3D", "#AED427", "#F7D488", "#27AED4",
+                      "#B7BF63", "#4D314A", "#BF6389", "#FF8C42", "#FF3C38"
+                    ), ceiling(nrow(target)/15)),
+                    "easter palette" = rep(c(
+                      "#DED4FF", "#A6E7FF", "#D4FFDE", "#FFF7AD", "#8AEEDD",
+                      "#D1F2A5", "#B56BFF", "#FFC48C", "#DF80FF", "#FF6B6B",
+                      "#FFDED4", "#14FA00", "#80A0FF", "#0091FA", "#FA6900"
+                    ), ceiling(nrow(target)/15)),
+                    "warm palette" = rep(c(
+                      "#FFCC0D", "#FF7326", "#FF194D", "#BF2669", "#702A8C",
+                      "#0D40FF", "#0DFF53", "#0DB9FF", "#0DBFA4", "#FF1493",
+                      "#FF69B4", "#81BF0D", "#FF7F50", "#CD5C5C", "#8B0000"
+                    ), ceiling(nrow(target)/15)),
+                    "basic palette (1)" = rep(c(
+                      "#f44336", "#e81e63", "#9c27b0", "#673ab7", "#3f51b5",
+                      "#2196f3", "#F37E21", "#2DF321", "#009688", "#4caf50",
+                      "#8bc34a", "#cddc39", "#ffeb3b", "#4A044E", "#ff9800",
+                      "#084E04", "#795548", "#7C8B60", "#607d8b", "#000000"
+                    ), ceiling(nrow(target)/20)),
+                    "basic palette (2)" = rep(c(
+                      '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
+                      '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
+                      '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000',
+                      '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080',
+                      '#ffffff', '#000000'
+                    ), ceiling(nrow(target)/20)),
+                    "basic palette (3)" = rep(c(
+                      '#C0362C', '#FF8642', '#F4DCB5', '#816C5B', '#B70AC3',
+                      '#B5CDF4', '#668D3C', '#B1DDA1', '#F4B5CD', '#0097AC',
+                      '#C3B70A', '#0AC3B7', '#c30a25', '#06C2F4', '#0A25C3'
+                    ), ceiling(nrow(target)/15)),
+                    "basic palette (4)" = rep(c(
+                      "#6929c4", "#1192e8", "#005d5d", "#9f1853", "#05DDAD",
+                      "#570408", "#198038", "#002d9c", "#FC6693", "#b28600",
+                      "#009d9a", "#012749", "#8a3800", "#a56eff"
+                    ), ceiling(nrow(target)/14)),
+                    "basic palette (5)" = rep(c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c"
+                                                 ,"#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5"
+                                                 ,"#8c564b","#c49c94","#e377c2","#f7b6d2","#7f7f7f"
+                                                 ,"#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"
+                    ), ceiling(nrow(target) / 20))
+    )
+    req(colors)
+    if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Diversity(input,resDiff, colors)$plot)
+  })
+  
+  observe({
+    if(input$DiversityPlots == 2)
+      shinyjs::hide("DivScale", anim = TRUE, animType = "fade")
+    else if(input$DiversityPlots != 2)
+      shinyjs::show("DivScale", anim = TRUE, animType = "fade")
+  })
   
   output$Diversitytable <- DT::renderDataTable(
     datatable({
@@ -4728,8 +4875,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   #     if(!is.null(resDiff$dds)) Plot_Visu_Diversity(input,resDiff,type="box")
   #   })
   
-  output$TaxoToPlotVisu <- renderUI({
-    
+  get_others <- reactive({
     data = dataInput()$data 
     taxo = input$TaxoSelect
     resDiff = ResDiffAnal()
@@ -4800,7 +4946,13 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
         }    
       }
       if(input$SelectSpecifTaxo=="All") res = selectizeInput("selectTaxoPlot",h6(strong(paste("Select the",input$TaxoSelect, "to plot"))),Available_taxo, selected = Available_taxo,multiple = TRUE)
+      others = setdiff(Available_taxo, selTaxo)
     }
+    return(list(res = res, others = others))
+  })
+  
+  output$TaxoToPlotVisu <- renderUI({
+    res = get_others()$res
     return(res)
   })
   
