@@ -188,10 +188,8 @@
     "FactoMineR": {
       "Package": "FactoMineR",
       "Version": "2.4",
-      "Source": "URL",
+      "Source": "Repository",
       "Repository": "CRAN",
-      "RemoteType": "url",
-      "RemoteUrl": "https://cran.r-project.org/src/contrib/Archive/FactoMineR/FactoMineR_2.4.tar.gz",
       "Requirements": [
         "DT",
         "MASS",
@@ -396,10 +394,8 @@
     "MatrixModels": {
       "Package": "MatrixModels",
       "Version": "0.5-0",
-      "Source": "URL",
+      "Source": "Repository",
       "Repository": "CRAN",
-      "RemoteType": "url",
-      "RemoteUrl": "https://cran.r-project.org/src/contrib/Archive/MatrixModels/MatrixModels_0.5-0.tar.gz",
       "Requirements": [
         "Matrix",
         "R",
@@ -514,10 +510,8 @@
     "RcppEigen": {
       "Package": "RcppEigen",
       "Version": "0.3.3.9.1",
-      "Source": "URL",
+      "Source": "Repository",
       "Repository": "CRAN",
-      "RemoteType": "url",
-      "RemoteUrl": "https://cran.r-project.org/src/contrib/Archive/RcppEigen/RcppEigen_0.3.3.9.1.tar.gz",
       "Requirements": [
         "Matrix",
         "Rcpp",
@@ -1385,10 +1379,8 @@
     "emmeans": {
       "Package": "emmeans",
       "Version": "1.7.0",
-      "Source": "URL",
+      "Source": "Repository",
       "Repository": "CRAN",
-      "RemoteType": "url",
-      "RemoteUrl": "https://cran.r-project.org/src/contrib/Archive/emmeans/emmeans_1.7.0.tar.gz",
       "Requirements": [
         "R",
         "estimability",
@@ -2471,10 +2463,8 @@
     "pbkrtest": {
       "Package": "pbkrtest",
       "Version": "0.5.1",
-      "Source": "URL",
+      "Source": "Repository",
       "Repository": "CRAN",
-      "RemoteType": "url",
-      "RemoteUrl": "https://cran.r-project.org/src/contrib/Archive/pbkrtest/pbkrtest_0.5.1.tar.gz",
       "Requirements": [
         "MASS",
         "Matrix",
