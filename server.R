@@ -3482,30 +3482,6 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     }
   })
   
-  observe({
-    if (input$radioPCA == 3) {
-      shinyjs::hide(id = "cexLabelDiag", anim = TRUE, animType = "fade")
-      shinyjs::hide(id = "ellipsePCA", anim = TRUE, animType = "fade")
-    } else {
-      shinyjs::show(id = "cexLabelDiag", anim = TRUE, animType = "fade")
-      shinyjs::show(id = "ellipsePCA", anim = TRUE, animType = "fade")
-    }
-  })
-  
-  observe({
-    if(input$DiagPlot == 'pcoaPlot')
-      shinyjs::hide(id = "cexLabelDiag", anim = TRUE, animType = 'fade')
-    else
-      shinyjs::show(id = "cexLabelDiag", anim = TRUE, animType = 'fade')
-  })
-  
-  observe({
-    if(input$labelSamplesUMAP)
-      shinyjs::show(id = "cexPointsLabelDiag", anim = TRUE, animType = 'fade')
-    else if(!input$labelSamplesUMAP)
-      shinyjs::hide(id = "cexPointsLabelDiag", anim = TRUE, animType = 'fade')
-  })
-  
   
   
   
@@ -3798,6 +3774,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       for(i in 1:length(VisuVarInt)){
         value = as.character(unique(as.factor(target[,VisuVarInt[i]])))
         Mod[[i]] = selectizeInput(paste("ModVisu",VisuVarInt[i],sep=""),VisuVarInt[i],value,selected=value, multiple = TRUE)
+        #print(paste("ModVisu",VisuVarInt[i],sep=""))
       }
     }
     return(Mod)
@@ -3964,8 +3941,6 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
                                                  ,"#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"
         ))
         others = get_others()$others
-        req(colors)
-        req(others)
         print(Plot_Visu_Barplot(input,ResDiffAnal(), colors, others)$gg)
       }
       else if(input$PlotVisuSelect=="Heatmap") Plot_Visu_Heatmap(input,ResDiffAnal(),export=TRUE)
@@ -4369,9 +4344,9 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     res = NULL
     tmp = NULL
     others = get_others()$others
-    req(others)
     if(!is.null(resDiff$dds) && length(input$VisuVarInt)>=1) tmp = Plot_Visu_Barplot(input,resDiff, colors, others)
     if(!is.null(tmp)) res = tmp$plotd3
+    req(res)
     return(res)
   })
   
@@ -4682,7 +4657,17 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       resDiff = ResDiffAnal()
       tmp = Plot_Visu_Diversity(input,resDiff)$dataDiv
       tmp$VarX=NULL; tmp$VarCol=NULL
-      tmp[,c(4,5,1,2,3)]},rownames= FALSE),
+      tmp[,c(4,5,1)]},rownames= FALSE),
+    options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
+                   pageLength = 10,scrollX=TRUE, processing=FALSE
+    ))
+  
+  output$DiversityRichnesstable <- DT::renderDataTable(
+    datatable({
+      resDiff = ResDiffAnal()
+      tmp = Plot_Visu_Diversity(input,resDiff)$dataDiv
+      tmp$VarX=NULL; tmp$VarCol=NULL
+      tmp[,c(1:6)]},rownames= FALSE),
     options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
                    pageLength = 10,scrollX=TRUE, processing=FALSE
     ))
@@ -4702,14 +4687,26 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   output$ExportDiversitytable <- downloadHandler(
     filename = function() { 
       if(input$sepdiversity=="\t") 'SHAMAN_Diversity.tsv'
-      else 'SHAMAN_Diversity.csv'
+      else 'SHAMAN_Beta-Gamma.csv'
     },
     content = function(file){
       resDiff = ResDiffAnal()
       tmp = Plot_Visu_Diversity(input,resDiff)$dataDiv
       tmp$VarX=NULL; tmp$VarCol=NULL
-      #datatable(tmp[,c(4,5,1,2,3)],rownames= FALSE)
-      write.table(tmp, file,row.names = FALSE, sep=input$sepdiversity)
+      write.table(tmp[, c(4, 5, 1)], file,row.names = FALSE, sep=input$sepdiversity)
+    }
+  )
+  
+  output$ExportDiversityRichnesstable <- downloadHandler(
+    filename = function() { 
+      if(input$sepdiversityrichness=="\t") 'SHAMAN_Diversity.tsv'
+      else 'SHAMAN_Richness.csv'
+    },
+    content = function(file){
+      resDiff = ResDiffAnal()
+      tmp = Plot_Visu_Diversity(input,resDiff)$dataDiv
+      tmp$VarX=NULL; tmp$VarCol=NULL
+      write.table(tmp[, c(1:6)], file,row.names = FALSE, sep=input$sepdiversity)
     }
   )
   
@@ -4762,8 +4759,25 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   output$SelectVarBoxDiv <- renderUI({
     
     selectVar = input$VisuVarInt
-    selectInput("VarBoxDiv", h6(strong("Split by")),selectVar,selectVar[1],multiple = TRUE)
+    selectInput("VarBoxDiv", h6(strong("Color by")),selectVar,selectVar[1],multiple = TRUE)
     
+  })
+  
+  
+  output$SelectPairsBoxDiv <- renderUI({
+    VarInt = as.character(input$VisuVarInt)
+    input_names <- lapply(VarInt, function(var) paste("ModVisu", var, sep = ""))
+    
+    #Each pair will appear at most one 
+    at_most_one <- lapply(input_names, function(input_name) unique(input[[input_name]]))
+    at_most_one <- expand.grid(at_most_one)
+    at_most_one$combined <- apply(at_most_one, 1, function(row) paste(row, collapse = "-"))
+    #at_most_one data frame contains all the unique combined variables of interest 
+    combined_rows <- lapply(at_most_one$combined, as.character)
+    if(length(combined_rows) >= 2)
+      combined_rows <- combn(combined_rows, 2, FUN = function(x) paste(x, collapse = " VS "), simplify = FALSE)
+    else combined_rows <-  NULL
+    selectInput("SelectizePairs", "Select your comparison (Wilcoxon test, p-value adjusted)", combined_rows, multiple = TRUE)
   })
   
   

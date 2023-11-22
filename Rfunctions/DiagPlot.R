@@ -531,8 +531,8 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree, col = c("SpringGreen"
         geom_vline(xintercept = 0, linetype = 2) +
         labs(title = paste0(input$labelPCOA, " - PCoA"), 
              subtitle = paste0("using ", input$DistClust, " distance"),
-             x = paste0("Axis ", as.character(PC1_int_value)," (", round(results_pcoa$values$Relative_eig[1] * 100, 2), "%)"),
-             y = paste0("Axis ", as.character(PC2_int_value)," (", round(results_pcoa$values$Relative_eig[2] * 100, 2), "%)")) +
+             x = paste0("Axis ", as.character(PC1_int_value)," (", round(eigen_df$PercentageExplained[PC1_int_value], 2), "%)"),
+             y = paste0("Axis ", as.character(PC2_int_value)," (", round(eigen_df$PercentageExplained[PC2_int_value], 2), "%)")) +
         theme_minimal() +
         pcoa_theme 
       
@@ -563,7 +563,7 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree, col = c("SpringGreen"
         new_scale_color() + 
         scale_color_manual(values = col) +
         scale_fill_manual(values = col) +
-        geom_point(aes(fill = group, colour = group),alpha = 1, size = input$cexpoint) 
+        geom_point(aes(fill = group, colour = group),alpha = 1, size = input$cexLabelDiag) 
       
       if(input$labelPCOA == "Group")
         pp <- pp + ggforce::geom_mark_ellipse(data = to_plot[, -1], mapping = aes(fill = group, label = .data[["group"]]), label.fontsize = input$cexPointsLabelDiag *6)
@@ -721,7 +721,7 @@ diagplot_themes <-  function(input = NULL) {
 PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), type.trans = c("VST", "rlog"), 
                         col = c("lightblue", "orange", "MediumVioletRed", "SpringGreen"), plot="pca", pca_res, pca_theme = diagplot_themes()) 
 {
-  
+  req(pca_res)
   if(!is.null(input$PCaxe1) && !is.null(input$PCaxe2) && !is.null(input$radioPCA))
   {
     
@@ -990,7 +990,7 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
         }
       }
       #checking for center
-      if(input$centerPlot && (input$radioPCA!=3))
+      if(isTRUE(input$centerPlot) && (input$radioPCA!=3))
       {
         pca_plot <- pca_plot + coord_cartesian(xlim = c(-var_x_max * input$cexTitleDiag, var_x_max * input$cexTitleDiag), ylim=c(-var_y_max * input$cexTitleDiag, var_y_max * input$cexTitleDiag))
       }
