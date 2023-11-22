@@ -6,68 +6,124 @@
 ##        Barplot ####
 ##                       ##
 
-Plot_Visu_Barplot <- function(input,resDiff)
+Plot_Visu_Barplot <- function(input,resDiff, colors, others, plot = "classic")
 {
-  
+  req(colors)
+  req(others)
+  #Sort the palette for the barchart
+  rgb <- grDevices::col2rgb(colors)
+  tsp <- TSP::as.ATSP(dist(t(rgb)))
+  sol <- TSP::solve_TSP(tsp, control = list(repetitions = 1e3))
+  colors <- colors[sol]
   ## Get Input for BarPlot
   VarInt = input$VisuVarInt
   ind_taxo = input$selectTaxoPlot
-  
-  tmp_combined = GetDataToPlot(input,resDiff,VarInt,ind_taxo)
-  counts_tmp_combined = tmp_combined$counts
+  others <- others[!(others %in% ind_taxo)]
+  #tmp_combined = GetDataToPlot(input,resDiff,VarInt,ind_taxo)
+  #counts_tmp_combined = tmp_combined$counts
+  other_tmp_combined = GetDataToPlot(input,resDiff,VarInt,others)
+  others_counts_tmp_combined = other_tmp_combined$counts
   nbKept = length(ind_taxo)
-  SamplesNames = tmp_combined$namesCounts
-  if(nbKept>1) namesTax = colnames(counts_tmp_combined)
-  else if(nbKept==1) namesTax = ind_taxo
-  
+  #SamplesNames = tmp_combined$namesCounts
+  OthersSamplesNames = other_tmp_combined$namesCounts
+  #if(nbKept>1) namesTax = colnames(counts_tmp_combined)
+  #else if(nbKept==1) namesTax = ind_taxo
+  if(!is.null(OthersSamplesNames)) OthersnamesTax = colnames(others_counts_tmp_combined)
+  else if(!is.null(others)) OthersnamesTax = others
   dataNull = data.frame(x=c(0,0),y=c(1,2))
   
-  plotd3 = nvd3Plot(x ~ y , data = dataNull, type = "multiBarChart", id = 'barplotTaxoNyll',height = input$heightVisu,width=if(input$modifwidthVisu){input$widthVisu})
+  all_tmp_combined <- GetDataToPlot(input,resDiff,VarInt,c(ind_taxo, others))
+  all_counts_tmp_combined <- all_tmp_combined$counts
+  allSamplesNames <- all_tmp_combined$namesCounts
+  allnamesTax = c(ind_taxo, others)
+  plotd3 = nvd3Plot(x ~ y , data = dataNull, type = "multiBarChart", id = 'barplotTaxoNyll',height = if(input$heightVisu){input$heightVisu}, width=if(input$modifwidthVisu){input$widthVisu})
   gg = NULL
   
-  if(!is.null(counts_tmp_combined) && nrow(counts_tmp_combined)>0 && length(VarInt)>0)
+  if(length(VarInt)>0 && !is.null(all_counts_tmp_combined) && nrow(all_counts_tmp_combined)>0)
   { 
     
-    ## Create the data frame for the plot function
-    dataBarPlot_mat = c()
-    tmp_mat = matrix(0,ncol=3,nrow=nbKept)
-    tmp_counts = c()
+    # ## Create the data frame for the plot function
+    # dataBarPlot_mat = c()
+    # tmp_mat = matrix(0,ncol=3,nrow=nbKept)
+    # tmp_counts = c()
+    # 
+    # for(i in 1:(nrow(counts_tmp_combined)))
+    # {
+    #   ## Taxo
+    #   tmp_mat[1:nbKept,1] = namesTax
+    #   
+    #   ## Counts
+    #   
+    #   tmpProp = counts_tmp_combined[i,]
+    #   if(input$CountsOrProp=="prop")
+    #   { 
+    #     tmpProp = round(tmpProp/sum(tmpProp),3)
+    #     tmpProp = as.numeric(tmpProp/sum(tmpProp) * 100)
+    #   }
+    #   tmp_counts = c(tmp_counts,tmpProp)      
+    #   
+    #   ## Meta data
+    #   tmp_mat[1:nbKept,3] = as.character(rep(SamplesNames[i],nbKept))
+    #   
+    #   ## Conbined the sample
+    #   dataBarPlot_mat = rbind(dataBarPlot_mat,tmp_mat)
+    # }
     
-    for(i in 1:(nrow(counts_tmp_combined)))
-    {
+      ## Create the others data frame for the plot function
+      all_dataBarPlot_mat = c()
+      all_tmp_mat = matrix(0,ncol=3,nrow=length(allnamesTax))
+      all_tmp_counts = c()
+      
       ## Taxo
-      tmp_mat[1:nbKept,1] = namesTax
-      
-      ## Counts
-      
-      tmpProp = counts_tmp_combined[i,]
-      if(input$CountsOrProp=="prop")
-      { 
-        tmpProp = round(tmpProp/sum(tmpProp),3)
-        tmpProp = as.numeric(tmpProp/sum(tmpProp) * 100)
+      all_tmp_mat[1:length(allnamesTax),1] = allnamesTax
+      for(i in 1:(nrow(all_counts_tmp_combined)))
+      {
+
+        ## Counts
+
+        tmpProp =  all_counts_tmp_combined[i,]
+        if(input$CountsOrProp=="prop")
+        {
+          tmpProp = round(tmpProp/sum(tmpProp),3)
+          tmpProp = as.numeric(tmpProp/sum(tmpProp) * 100)
+        }
+        all_tmp_counts = c(all_tmp_counts,tmpProp)
+
+        ## Meta data
+        all_tmp_mat[1:length(allnamesTax),3] = as.character(rep(allSamplesNames[i],length(allnamesTax)))
+
+        ## Combined the sample
+        all_dataBarPlot_mat = rbind(all_dataBarPlot_mat,all_tmp_mat)
       }
-      tmp_counts = c(tmp_counts,tmpProp)      
+    
+    all_dataBarPlot_mat = as.data.frame(all_dataBarPlot_mat)
+    colnames(all_dataBarPlot_mat) = c("Taxonomy","Proportions","AllVar")
+    all_dataBarPlot_mat[,2] = all_tmp_counts
+    
+    main_dataBarPlot_mat <- all_dataBarPlot_mat %>%
+      dplyr::group_by(AllVar) %>%
+      dplyr::slice(1:nbKept)
+    
+      others_dataBarPlot_mat <-  all_dataBarPlot_mat %>%
+        dplyr::group_by(AllVar) %>%
+        dplyr::slice((nbKept + 1):ncol(all_counts_tmp_combined)) %>%
+        dplyr::summarise(Proportions = sum(Proportions, na.rm = TRUE)) %>%
+        dplyr::mutate(Taxonomy = 'Others')
       
-      ## Meta data
-      tmp_mat[1:nbKept,3] = as.character(rep(SamplesNames[i],nbKept))
+      others_dataBarPlot_mat <- as.data.frame(others_dataBarPlot_mat)
+      main_dataBarPlot_mat <- as.data.frame(main_dataBarPlot_mat)
       
-      ## Conbined the sample
-      dataBarPlot_mat = rbind(dataBarPlot_mat,tmp_mat)
-    }
+      main_dataBarPlot_mat <- rbind(main_dataBarPlot_mat, others_dataBarPlot_mat) %>% 
+        dplyr::arrange(AllVar)
+      # dplyr::arrange(AllVar, desc(Proportions)) instead
     
-    
-    ## Add numeric vector to the dataframe
-    dataBarPlot_mat = as.data.frame(dataBarPlot_mat)
-    
-    colnames(dataBarPlot_mat) = c("Taxonomy","Proportions","AllVar")
-    dataBarPlot_mat[,2] = tmp_counts
+    main_dataBarPlot_mat <- as.data.frame(main_dataBarPlot_mat)
     if(input$SensPlotVisu == "Vertical") Sens = "multiBarChart"
     else Sens = "multiBarHorizontalChart"
-    
     XRotate = input$rotateXLabel
-    
-    plotd3 <- nvd3Plot(Proportions ~ AllVar | Taxonomy, data = dataBarPlot_mat, type = Sens, id = 'barplotTaxo', height = input$heightVisu, width=if(input$modifwidthVisu){input$widthVisu})
-    plotd3$chart(stacked = TRUE)
+    colors = rev(rep(colors, ceiling(nbKept/length(colors))))
+    plotd3 <- nvd3Plot(Proportions ~ AllVar | Taxonomy, data = main_dataBarPlot_mat, type = Sens, id = 'barplotTaxo', height = if(input$heightVisu){input$heightVisu}, width=if(input$modifwidthVisu){input$widthVisu})
+    plotd3$chart(stacked = TRUE, color = colors)
     if(input$SensPlotVisu == "Vertical") {
       plotd3$chart(reduceXTicks = FALSE)
       plotd3$xAxis(rotateLabels = XRotate)
@@ -79,22 +135,25 @@ Plot_Visu_Barplot <- function(input,resDiff)
     ## Same plot in ggplot2 for export
     ##                                 ##
     
-    tax.colors=rep(c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c","#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5","#8c564b",
-                     "#c49c94","#e377c2","#f7b6d2","#7f7f7f", "#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"),ceiling(nbKept/20))
+    # tax.colors=rep(c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c","#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5"
+    #                  ,"#8c564b","#c49c94","#e377c2","#f7b6d2","#7f7f7f", "#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"),ceiling(nbKept/20))
     
-    dataBarPlot_mat$Taxonomy = factor(dataBarPlot_mat$Taxonomy,levels = namesTax)
-    dataBarPlot_mat$AllVar = factor(dataBarPlot_mat$AllVar,levels = unique(dataBarPlot_mat$AllVar))
-    
-    gg= ggplot(dataBarPlot_mat, aes(x=AllVar, y=Proportions, fill=Taxonomy)) 
+    main_dataBarPlot_mat$Taxonomy = factor(main_dataBarPlot_mat$Taxonomy, levels = c(allnamesTax[!(allnamesTax %in% others)], 'Others'))
+    main_dataBarPlot_mat$AllVar = factor(main_dataBarPlot_mat$AllVar,levels = rev(unique(main_dataBarPlot_mat$AllVar)))
+    # main_dataBarPlot_mat <- main_dataBarPlot_mat %>%
+    #   dplyr::arrange(AllVar) 
+    colors <- rev(colors[1:(length(ind_taxo)+1)])
+    gg= ggplot(main_dataBarPlot_mat, aes(x=AllVar, y=Proportions, fill=forcats::fct_rev(Taxonomy))) + guides(fill=guide_legend("Taxonomy"))
     if(input$CountsOrProp=="counts" && input$positionBarPlot=="fill") gg= gg +geom_col()
     else gg= gg +geom_col(position=input$positionBarPlot)
-    gg= gg + theme_bw()+ scale_fill_manual(values=tax.colors)
+    gg= gg + theme_bw()+ scale_fill_manual(values=colors)
     gg = gg +theme(panel.grid.minor.x=element_blank(),panel.grid.major.x=element_blank(), axis.text.x = element_text(angle = XRotate)) 
     if(input$CountsOrProp=="prop") gg = gg+labs(y="Relative abundance (%)",x="")
     if(input$CountsOrProp=="counts" && input$NormOrRaw=="norm") gg = gg+labs(y="Normalized counts",x="")
     else if(input$CountsOrProp=="counts" && input$NormOrRaw!="norm") gg = gg+labs(y="Raw counts",x="")
     if(input$SensPlotVisu == "Horizontal") gg = gg + coord_flip()
   } 
+  
   return(list(plotd3=plotd3,gg=gg))
 }
 
@@ -153,10 +212,8 @@ Plot_Visu_Heatmap <- function(input,resDiff,export=FALSE){
 ##                       ##
 ##          BOXPLOTS ####
 ##                       ##
-Plot_Visu_Boxplot <- function(input,resDiff,alpha=0.7, dataDiff, colors = c("#048789", "#D44D27", "#E2A72E", "#EFEBC8",
-                                                                            "#107E7D", "#7A3D3D", "#F15A22", "#F7D488", "#F4A259",
-                                                                            "#005F6B", "#4D314A", "#BF6B63", "#FF8C42", "#FF3C38")){
-  
+Plot_Visu_Boxplot <- function(input,resDiff,alpha=0.7, dataDiff, colors){
+  req(colors)
   gg = NULL
   
   ## Get Input for BoxPlot
@@ -205,9 +262,9 @@ Plot_Visu_Boxplot <- function(input,resDiff,alpha=0.7, dataDiff, colors = c("#04
     
     if(!is.null(dataDiff)){
       dataDiff$complete$pvalue_adjusted[is.na(dataDiff$complete$pvalue_adjusted)] = 0
+      labels <- sprintf("%s\np-value: %.3f", dataDiff$complete$Id, dataDiff$complete$pvalue_adjusted)
+      dataBarPlot_mat$TaxonomyPvalue = factor(dataBarPlot_mat$Taxonomy, levels = as.vector(dataDiff$complete$Id), labels = labels)
     }
-    labels <- sprintf("%s\np-value: %.5f", dataDiff$complete$Id, dataDiff$complete$pvalue_adjusted)
-    
     if(is.null(input$BoxColorBy) || length(VarInt)<=1){ dataBarPlot_mat$Colors = dataBarPlot_mat$Samples}
     if(!is.null(input$BoxColorBy) && length(VarInt)>1)
     { 
@@ -218,7 +275,6 @@ Plot_Visu_Boxplot <- function(input,resDiff,alpha=0.7, dataDiff, colors = c("#04
     dataBarPlot_mat$Samples = factor(dataBarPlot_mat$Samples,levels=levelsMod)
     dataBarPlot_mat$Colors = factor(dataBarPlot_mat$Colors,levels=levelsMod)
     #column that is used to print the p-value under the title of each graph
-    dataBarPlot_mat$TaxonomyPvalue = factor(dataBarPlot_mat$Taxonomy, levels = as.vector(dataDiff$complete$Id), labels = labels)
     gg = ggplot(dataBarPlot_mat,aes(x=Samples,y=Value,fill=Colors))  + geom_boxplot(alpha=alpha) +theme_bw()
     gg = gg + theme(
       axis.text = element_text(size = 18, face = "bold"),
@@ -228,13 +284,14 @@ Plot_Visu_Boxplot <- function(input,resDiff,alpha=0.7, dataDiff, colors = c("#04
       panel.grid.minor = element_blank(),
       axis.title.x = element_blank(),
       axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
-      strip.text = element_text(size = 20, hjust = 0.5)  # Adjust hjust to control title position
+      strip.text = element_text(size = 20, hjust = 0.5)  
     ) 
     gg = gg + ylab(paste(input$typeDataBox, "abundance")) +scale_fill_manual(values = colors) + guides(fill=FALSE)
     if(input$CheckAddPointsBox) gg = gg + geom_point(position=position_jitterdodge(dodge.width=0.9))
     if(input$SensPlotVisu=="Horizontal") gg = gg + coord_flip()
     if(nbKept>1) gg = gg + facet_wrap(~ Taxonomy,scales = input$ScaleBoxplot)
-    if (!is.null(dataDiff) && !is.null(input$SelectSpecifTaxo) && (length(input$ContrastList_table_Visu) == 1) && input$SelectSpecifTaxo == "Diff") gg = gg + facet_wrap(~ TaxonomyPvalue, scales = input$ScaleBoxplot, strip.placement = "inside") 
+    if ( !is.null(dataDiff) && !is.null(input$SelectSpecifTaxo) && (length(input$ContrastList_table_Visu) == 1) && input$SelectSpecifTaxo == "Diff") gg = gg + facet_wrap(~ TaxonomyPvalue, scales = input$ScaleBoxplot) 
+    req(gg)
   }
   
   return(gg)
@@ -430,9 +487,11 @@ Plot_Visu_Scatterplot<- function(input,resDiff,export=FALSE,lmEst = FALSE,CorEst
 ##                       ##
 ##      Diversity ####
 ##                       ##
-Plot_Visu_Diversity <- function(input,resDiff,ForScatter=FALSE, alpha_transparency=0.8){
+Plot_Visu_Diversity <- function(input,resDiff,colors = NULL,ForScatter=FALSE, alpha_transparency=0.8){
+  
   gg = NULL
   dataTmp = NULL
+  dataDiv= NULL
   dds = resDiff$dds
   counts = round(counts(dds, normalized = TRUE))
   
@@ -455,7 +514,6 @@ Plot_Visu_Diversity <- function(input,resDiff,ForScatter=FALSE, alpha_transparen
     targetInt$AllVar = targetInt[,1]
     levelsMod = NULL
   }
-  
   if(nrow(counts_tmp_combined)>0 && !is.null(counts_tmp_combined) && !is.null(targetInt))
   { 
     cond = table(targetInt$AllVar)
@@ -470,6 +528,9 @@ Plot_Visu_Diversity <- function(input,resDiff,ForScatter=FALSE, alpha_transparen
     alpha_sd=alpha_sd[alpha_selected]
     ci.alpha.down = pmax(alpha - 1.96*alpha_sd/sqrt.nb,0)
     ci.alpha.up = alpha + 1.96*alpha_sd/sqrt.nb
+    
+    #print(alpha)#mean per condition
+    #print(TaxoNumber(counts_tmp_combined)) #mean per species per condition
     
     shan <- tapply(vegan::diversity(counts_tmp_combined, index = "shannon"), targetInt$AllVar, mean)
     shan_selected = !is.na(shan)
@@ -495,40 +556,72 @@ Plot_Visu_Diversity <- function(input,resDiff,ForScatter=FALSE, alpha_transparen
     ci.invsimpson.down = pmax(invsimpson - 1.96*invsimpson_sd/sqrt.nb,0)
     ci.invsimpson.up = invsimpson + 1.96*invsimpson_sd/sqrt.nb
     
+    braycurtis = tapply(colSums(as.matrix(vegan::vegdist(counts_tmp_combined, method = "bray"))), targetInt$AllVar, mean)
+    braycurtis_selected <- !is.na(braycurtis)
+    braycurtis = braycurtis[braycurtis_selected]
+    braycurtis_sd = tapply(colSums(as.matrix(vegan::vegdist(counts_tmp_combined, method = "bray"))),  targetInt$AllVar, sd)
+    braycurtis_sd = braycurtis_sd[braycurtis_selected]
+    ci.braycurtis.down = pmax(braycurtis - 1.96*braycurtis_sd/sqrt.nb, 0)
+    ci.braycurtis.up = braycurtis + 1.96*braycurtis_sd/sqrt.nb
+    
     gamma <- TaxoNumber(counts_tmp_combined, targetInt$AllVar)
     gamma = gamma[!is.na(gamma)]
     beta = gamma/alpha - 1
     nb = length(alpha)
-    dataTmp = data.frame(value=c(alpha,beta,gamma,shan,simpson,invsimpson),
-                         ci.down=c(ci.alpha.down,beta,gamma,ci.shan.down,ci.simpson.down,ci.invsimpson.down),
-                         ci.up=c(ci.alpha.up,beta,gamma,ci.shan.up,ci.simpson.up,ci.invsimpson.up),
-                         diversity = c(rep("Alpha",nb),rep("Beta",nb),rep("Gamma",nb),rep("Shannon",nb),rep("Simpson",nb),rep("Inv.Simpson",nb)),
-                         Var = as.character(rep(names(alpha),6)))
+    dataTmp = data.frame(value=c(alpha,beta,
+                                 braycurtis,
+                                 gamma,shan,simpson,invsimpson),
+                         ci.down=c(ci.alpha.down,beta,
+                                   ci.braycurtis.down,
+                                   gamma,ci.shan.down,ci.simpson.down,ci.invsimpson.down),
+                         ci.up=c(ci.alpha.up,beta,
+                                 ci.braycurtis.up,
+                                 gamma,ci.shan.up,ci.simpson.up,ci.invsimpson.up),
+                         diversity = c(rep("Alpha",nb),rep("Beta",nb),
+                                       rep("Bray-Curtis",nb),
+                                       rep("Gamma",nb),rep("Shannon",nb),rep("Simpson",nb),rep("Inv.Simpson",nb)),
+                         Var = as.character(rep(names(alpha),7)))
+    richness <- data.frame(
+      Var = names(TaxoNumber(counts_tmp_combined)),
+      valAlpha = TaxoNumber(counts_tmp_combined),
+      valBray = colSums(as.matrix(vegan::vegdist(counts_tmp_combined, method = "bray"))),
+      valShannon = vegan::diversity(counts_tmp_combined, index = "shannon"),
+      valSimpson = vegan::diversity(counts_tmp_combined, index = "simpson"),
+      valInvSimpson = vegan::diversity(counts_tmp_combined, index = "invsimpson")
+    )
+    dataDiv = dataTmp
     if(!ForScatter)
     {                  
       dataTmp = dataTmp[dataTmp$diversity%in%input$WhichDiv,]
       
       ## Order of the modalities
       dataTmp$Var = factor(dataTmp$Var,levels = levelsMod)
-      
+      richness$Var = factor(richness$Var, levels = levelsMod)
+      req(dataTmp$Var)
       tmp.mat = matrix(unlist((lapply(as.matrix(as.character(dataTmp$Var)),strsplit,"-"))),ncol=length(VarInt),byrow = T)
       tmp.level = matrix(unlist((lapply(as.matrix(as.character(levelsMod)),strsplit,"-"))),ncol=length(VarInt),byrow = T)
+      richness.mat = matrix(unlist((lapply(as.matrix(as.character(richness$Var)),strsplit,"-"))),ncol=length(VarInt),byrow = T)
       
       indVar = VarInt%in%VarIntBoxDiv
       if(length(which(indVar))>=1){
+        richness$VarCol = paste0(sub("-.*", "", richness$Var))
         if(length(which(indVar))>=2){
           tmp.levelX = apply(tmp.level[,which(indVar)],1,paste,collapse = "-")
           dataTmp$VarX = factor(apply(tmp.mat[,which(indVar)],1,paste,collapse = "-"),levels = unique(tmp.levelX))
+          richness$VarCol = factor(apply(richness.mat[,which(indVar)],1,paste,collapse = "-"),levels = unique(tmp.levelX))
         }
         if(length(which(indVar))==1){
           tmp.levelX = tmp.level[,which(indVar)]
           dataTmp$VarX = factor(tmp.mat[,which(indVar)],levels = unique(tmp.levelX))
+          richness$VarCol = factor(richness.mat[,which(indVar)],levels = unique(tmp.levelX))
         }
       }
       
-      if(is.null(VarIntBoxDiv)) dataTmp$VarX = tmp.mat[,1]
+      if(is.null(VarIntBoxDiv)) {
+        dataTmp$VarX = tmp.mat[,1]
+        richness$VarCol = richness.mat[,1]
+      }
       dataTmp$VarCol = dataTmp$VarX
-      
       if(length(which(!indVar))>=1){
         if(length(which(!indVar))>=2){
           tmp.levelCol = apply(tmp.level[,which(!indVar)],1,paste,collapse = "-")
@@ -540,24 +633,59 @@ Plot_Visu_Diversity <- function(input,resDiff,ForScatter=FALSE, alpha_transparen
         }
       }
       
+      if(input$DiversityPlots == 2){
+        dataDiv <- dataTmp
+        gg = ggplot(dataTmp, aes(x=Var, y=value, fill=VarX)) 
+        gg = gg + theme_bw() + theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust=0.5), legend.title=element_blank())
+        gg = gg + geom_col(width=0.5,position = position_dodge(width=0.5),alpha=alpha_transparency) 
+        if(input$SensPlotVisu=="Horizontal") gg = gg + coord_flip() + facet_wrap(~ diversity,scales="fixed")
+        if(input$SensPlotVisu=="Vertical") gg = gg + facet_wrap(~ diversity,scales=input$DivScale)
+        gg = gg + xlab(paste(VarIntBoxDiv,collapse ="-"))+ ylab("Diversity")
+        gg = gg + scale_fill_manual(values = colors[1:length(unique(dataTmp[,6]))]) + scale_color_manual(values = colors[1:length(unique(dataTmp[,6]))])
+      }
+      else{
+      if(input$DiversityPlots == 1){
+        dataDiv <- richness
+        if(input$WhichDiv == 'Alpha'){
+          gg = ggpubr::ggboxplot(richness, x = "Var", y = "valAlpha", merge = TRUE, color = "VarCol", add = c("jitter"), width = 0.75)
+         y_range = c(min(richness$valAlpha), max(richness$valAlpha)) 
+        }
+        if(input$WhichDiv == 'Bray-Curtis'){
+          gg = ggpubr::ggboxplot(richness, x = "Var", y = "valBray", merge = TRUE, color = "VarCol", add = c("jitter"), width = 0.75)
+          y_range = c(min(richness$valBray), max(richness$valBray)) 
+        }
+        else if(input$WhichDiv == 'Shannon'){
+          gg = ggpubr::ggboxplot(richness, x = "Var", y = "valShannon", merge = TRUE, color = "VarCol", add = c("jitter"), width = 0.75)
+          y_range = c(min(richness$valShannon), max(richness$valShannon))  
+        }
+        else if(input$WhichDiv == 'Simpson'){
+          gg = ggpubr::ggboxplot(richness, x = "Var", y = "valSimpson", merge = TRUE, color = "VarCol", add = c("jitter"), width = 0.75)
+          y_range = c(min(richness$valSimpson), max(richness$valSimpson))  
+        }
+        else if(input$WhichDiv == 'Inv.Simpson'){
+          gg = ggpubr::ggboxplot(richness, x = "Var", y = "valInvSimpson", merge = TRUE, color = "VarCol", add = c("jitter"), width = 0.75)
+          y_range = c(min(richness$valInvSimpson), max(richness$valInvSimpson))  
+        }
+        gg = gg + stat_summary(fun.y = mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..),
+                               width = .75, linetype = "dashed") 
+      }
+        gg = gg + theme_bw() + theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust=0.5), legend.title=element_blank())
+        if(input$SensPlotVisu=="Horizontal") gg = gg + coord_flip() + geom_jitter(color = "black", size = 0.4, alpha = 0.9)
+        if(input$SensPlotVisu=="Vertical") gg = gg + geom_jitter(color = "black", size = 0.4, alpha = 0.9)
+        req(gg)
+        req(richness)
+        gg = gg + 
+          ggpubr::stat_compare_means(comparisons = lapply(input$SelectizePairs, function(element) strsplit(element, " VS ")[[1]]), method = "wilcox.test", paired = ifelse(input$PairedSamplesBoxDiv == "Paired", TRUE, FALSE), p.adjust.method ="BH") +
+          ggpubr::stat_compare_means(label.x.npc = "center", label.y= y_range[1]* 0.9) + coord_cartesian()
+        gg = gg + labs(x = paste(VarIntBoxDiv,collapse ="-"), y = paste0("Richness (", input$WhichDiv, ")")) + 
+          scale_fill_manual(values = colors[1:length(unique(richness[,7]))]) + scale_color_manual(values = colors[1:length(unique(richness[,7]))])
+      }
       
-      colors = rep(c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c","#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5","#8c564b",
-                     "#c49c94","#e377c2","#f7b6d2","#7f7f7f", "#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"),ceiling(nrow(targetInt)/20))
-      gg = ggplot(dataTmp, aes(x=VarX, y=value, fill=VarCol)) 
-      gg = gg + theme_bw() + theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust=0.5), legend.title=element_blank())
-      gg = gg + geom_bar(stat = "identity",width=0.4,position = position_dodge(width=0.5),alpha=alpha_transparency) 
-      if(input$DivAddError=="Add") gg = gg + geom_errorbar(aes(ymin=ci.down, ymax=ci.up,color=VarCol,width=.2),position = position_dodge(width=0.5))
-      if(input$SensPlotVisu=="Horizontal") gg = gg + coord_flip() + facet_wrap(~ diversity,scales="fixed")
-      if(input$SensPlotVisu=="Vertical") gg = gg + facet_wrap(~ diversity,scales=input$DivScale)
-      gg = gg + xlab(paste(VarIntBoxDiv,collapse ="-"))+ ylab("Diversity")
-      gg = gg + scale_fill_manual(values = colors[1:length(unique(dataTmp[,7]))]) + scale_color_manual(values = colors[1:length(unique(dataTmp[,7]))])
     }
-    
     ## Get interactivity
     #ff = ggplotly(gg)
   }
-  
-  return(list(plot=gg,dataDiv = dataTmp))
+  return(list(plot=gg,dataDiv = dataDiv))
   
 }
 
@@ -942,7 +1070,7 @@ Plot_network <- function(input,resDiff,availableTaxo, ind_taxo, qualiVariable, e
       plot <- visEdges(plot, width = 1)
       plot <- visOptions(plot, width = if(isolate(input$modifwidthVisu)){isolate(input$widthVisu)}, height = isolate(input$heightVisu), autoResize = FALSE, highlightNearest = list(enabled = TRUE, degree = 1, hover = FALSE))
       #plot <- visLegend(plot, addEdges = data.frame(color = c("red", "blue"), label = c("Positive correlation","Negative correlation")))
-      print(dataVN)
+      #print(dataVN)
       #plot <- visExport(plot, type = "pdf", name = "network_SHAMAN.pdf", float="bottom")
     }
   }
