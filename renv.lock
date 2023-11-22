@@ -2444,22 +2444,6 @@
       ],
       "Hash": "b3209c62052922b6c629544d94c8fa8a"
     },
-    "packrat": {
-      "Package": "packrat",
-      "Version": "0.5.0-29",
-      "Source": "GitHub",
-      "RemoteType": "github",
-      "RemoteRepo": "packrat",
-      "RemoteUsername": "rstudio",
-      "RemoteRef": "HEAD",
-      "RemoteSha": "5173a3faea677b7b7f5ad46f6bbcbeabaef3e688",
-      "Requirements": [
-        "R",
-        "tools",
-        "utils"
-      ],
-      "Hash": "38abbe20415189c41150b5ebe394a556"
-    },
     "pbkrtest": {
       "Package": "pbkrtest",
       "Version": "0.5.1",
