@@ -58,6 +58,7 @@ function(request) {
                                              p(a("Stevenn Volant", href="mailto:stevenn.volant@pasteur.fr"), "(Initiator, coding, testing, documentation, evaluation)"),
                                              p(a("Amine Ghozlane",href="mailto:amine.ghozlane@pasteur.fr"), "(Coding, testing, documentation, evaluation, packaging)"),
                                              p("Perrine Woringer", "(Coding, testing, documentation, feature suggestions)"),
+                                             p("Zakary Azmani", "(Coding, testing, documentation, feature suggestions)"),
                                              p("Pierre Lechat", "(Coding, testing, feature suggestions)"),
                                              h3("Acknowledgements"),
                                              p("Thanks to the following people for patches and other suggestions for improvements:"),
@@ -86,6 +87,8 @@ function(request) {
                          box(
                            title = "What's new in SHAMAN", width = NULL, status = "primary",
                            div(style = 'overflow-y: scroll; height: 550px',
+                               addNews("November 23th 2023", "New data visualization and Global View features", "UMAP has been added. We have also updated the Barplot to show other abundances for visualization of the 12 most abundant. For diversity, we have added a visualization of richness with comparison tests."),
+                               addNews("October 15th 2023", "Updates of PCA and PCoA", "These updates bring new data visualizations. We have added some useful features for cluster visualization."),
                                addNews("May 9th 2023", "Raw fastq submission is re-activated !", "Shaman submission process is up again. We updated in the mean time the unite database to version 9.0."),
                                addNews("April 12th 2022", "Improvement of the docker and web interface raw read submission", "Raw read submission is now improved for gzip fastq files. We now recommend to send gzip compressed fastq especially for docker instance."),
                                addNews("March 11th 2022","Server maintenance on march 22th", "Raw reads submission will be temporarly desactivated from March 22th. For now we keep improving our workflows, submissions from the docker machine should now be much more improved !"),
