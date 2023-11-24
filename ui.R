@@ -58,6 +58,7 @@ function(request) {
                                              p(a("Stevenn Volant", href="mailto:stevenn.volant@pasteur.fr"), "(Initiator, coding, testing, documentation, evaluation)"),
                                              p(a("Amine Ghozlane",href="mailto:amine.ghozlane@pasteur.fr"), "(Coding, testing, documentation, evaluation, packaging)"),
                                              p("Perrine Woringer", "(Coding, testing, documentation, feature suggestions)"),
+                                             p("Zakary Azmani", "(Coding, testing, documentation, feature suggestions)"),
                                              p("Pierre Lechat", "(Coding, testing, feature suggestions)"),
                                              h3("Acknowledgements"),
                                              p("Thanks to the following people for patches and other suggestions for improvements:"),
@@ -86,6 +87,8 @@ function(request) {
                          box(
                            title = "What's new in SHAMAN", width = NULL, status = "primary",
                            div(style = 'overflow-y: scroll; height: 550px',
+                               addNews("November 23th 2023", "New data visualization and Global View features", "UMAP has been added. We have also updated the Barplot to show other abundances for visualization of the 12 most abundant. For diversity, we have added a visualization of richness with comparison tests."),
+                               addNews("October 15th 2023", "Updates of PCA and PCoA", "These updates bring new data visualizations. We have added some useful features for cluster visualization."),
                                addNews("May 9th 2023", "Raw fastq submission is re-activated !", "Shaman submission process is up again. We updated in the mean time the unite database to version 9.0."),
                                addNews("April 12th 2022", "Improvement of the docker and web interface raw read submission", "Raw read submission is now improved for gzip fastq files. We now recommend to send gzip compressed fastq especially for docker instance."),
                                addNews("March 11th 2022","Server maintenance on march 22th", "Raw reads submission will be temporarly desactivated from March 22th. For now we keep improving our workflows, submissions from the docker machine should now be much more improved !"),
@@ -831,7 +834,7 @@ function(request) {
                          box(title = "Select your plot",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = FALSE,collapsed= FALSE,
                              selectInput("DiagPlot","",c("Total barplot"="barplotTot","Nul barplot"="barplotNul",
                                                          "Maj. taxonomy"="MajTax","Boxplots" = "boxplotNorm", "Density"="densityPlot", "Dispersion" = "DispPlot",
-                                                         "Size factors VS total"="SfactorsVStot", "PCA"="pcaPlot", "PCoA"="pcoaPlot", "UMAP"= "umapPlot", "NMDS"="nmdsPlot","Clustering" = "clustPlot"))
+                                                         "Size factors VS total"="SfactorsVStot", "PCA"="pcaPlot", "PCoA"="pcoaPlot", "NMDS"="nmdsPlot","Clustering" = "clustPlot", "UMAP"= "umapPlot"))
                          ),
                          box(title = "Options",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= FALSE,
                              conditionalPanel(condition="input.DiagPlot!='clustPlot' && input.DiagPlot!='pcaPlot' && input.DiagPlot!='SfactorsVStot' && input.DiagPlot!='DispPlot'",
@@ -841,15 +844,16 @@ function(request) {
                                               checkboxInput("RemoveNullValue","Remove 0",value = TRUE)
                              ),
                              conditionalPanel(condition="input.DiagPlot!='Sfactors' && input.DiagPlot!='SfactorsVStot' ",uiOutput("VarIntDiag")),
-                             conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='pcaPlot' || input.DiagPlot=='nmdsPlot' || input.DiagPlot== 'umapPlot'",
+                             conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='pcaPlot' || input.DiagPlot=='nmdsPlot' || input.DiagPlot == 'umapPlot'",
                                               h5(strong("Select the modalities")),
                                               uiOutput("ModMat"),
-                                              fluidRow(
-                                                column(width=5,uiOutput("PC1_sel")),
-                                                column(width=2,br(),br(),p("VS")),
-                                                column(width=5,uiOutput("PC2_sel"))
-                                              )
-                                              
+                             ),
+                             conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='pcaPlot' || input.DiagPlot=='nmdsPlot'",
+                               fluidRow(
+                                 column(width=5,uiOutput("PC1_sel")),
+                                 column(width=2,br(),br(),p("VS")),
+                                 column(width=5,uiOutput("PC2_sel"))
+                               )
                              ),
                              conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='nmdsPlot' || input.DiagPlot=='SERE' || input.DiagPlot=='clustPlot'",
                                               uiOutput("DistList")
@@ -860,14 +864,23 @@ function(request) {
                                               )
                              ),
                              conditionalPanel(condition="input.DiagPlot=='pcaPlot'",
-                                              column(width = 6, radioButtons("radioPCA", label = h5(strong("Visualizing principal component analysis")), choices = list("Samples" = 1, "Biplot" = 2, "Variables" = 3), selected = 1)),
-                                              column(width = 6, checkboxInput("ellipsePCA", label = strong("Show clusters"), value = TRUE))
+                                              column(width = 8, radioButtons("radioPCA", label = h5(strong("Visualizing principal component analysis")), choices = list("Samples" = 1, "Biplot" = 2, "Variables" = 3), selected = 1))
                              ),
                              
+                             conditionalPanel(condition="input.DiagPlot=='pcaPlot' && input.radioPCA != 3",
+                                              column(width = 4, checkboxInput("ellipsePCA", label = strong("Show groups"), value = TRUE))
+                             ),
+                             
+                             
                              conditionalPanel(condition=" (input.DiagPlot=='pcoaPlot' && input.labelPCOA == input.TaxoSelect) || (input.DiagPlot=='pcaPlot' && (input.radioPCA == 2 || input.radioPCA == 3)) ",
-                                              sliderInput("varSlider", "Select the contribution threshold", min = 0, max = 1, value = 0.5, step = 0.05),
-                                              checkboxInput("sumContrib", "Display the sum of the contributions of each variable")
+                                              fluidRow(column(12,sliderInput("varSlider", "Select the contribution threshold", min = 0, max = 1, value = 0.8, step = 0.05)),
+                                                       column(12,checkboxInput("sumContrib", "Display the sum of the contributions of each variable")))
+                             ),
+                             conditionalPanel(condition="input.DiagPlot=='umapPlot'",
+                                              selectInput("distanceUMAP", "Distance", c("Cosine" = "cosine", "Euclidean" = "euclidean", "Manhattan" = "manhattan", "Pearson" = "pearson", "Pearson2"= "pearson2"), selected = "euclidean"),
+                                              sliderInput("neighborsKNN", "Select the number of neighbors", min = 4, max = 15, value = 4, step = 1)
                              )
+                             
                              
                              
                              #                 conditionalPanel(condition="input.RadioPlotBi=='Nuage'",selectInput("ColorBiplot", "Couleur",choices=c("Bleue" = 'blue',"Rouge"='red',"Vert"='green', "Noir"='black'),width="50%")),
@@ -898,39 +911,40 @@ function(request) {
                            conditionalPanel(condition="input.DiagPlot=='SfactorsVStot'",
                                             checkboxInput("addLabelSFact","Add label",FALSE)
                            ),
-                           conditionalPanel(condition="input.DiagPlot=='pcaPlot' || input.DiagPlot=='pcoaPlot' || input.diagPlot== 'umapPlot'",
+                           conditionalPanel(condition="input.DiagPlot=='pcaPlot' || input.DiagPlot=='pcoaPlot' || input.DiagPlot== 'umapPlot'",
                                             uiOutput("centeringButton")
+                           ),
+                           conditionalPanel(condition="input.DiagPlot== 'umapPlot'",
+                                            checkboxInput("labelSamplesUMAP", label = strong("Display label"))
                            ),
                            conditionalPanel(condition="input.DiagPlot=='pcoaPlot'",  selectInput("labelPCOA","Label type",c("Group", "Sample"),selected="Group"),
                                             #checkboxInput("colorgroup","Same color for the group",value=FALSE),
                                             #sliderInput("cexcircle", "Circle size",min=0,max=1,value = 0.95,step =0.05),
-                                            sliderInput("cexpoint", "Point size",min=0,max=3,value = 1,step =0.1)
+                                            #sliderInput("cexpoint", "Point size",min=0,max=3,value = 1,step =0.1)
                                             # sliderInput("cexstar", "Star height",min=0,max=1,value = 0.95,step =0.1)
                            ),
                            #Display the label button only for individual or correlation plot
-                           conditionalPanel(condition="input.DiagPlot=='pcaPlot' ",
+                           conditionalPanel(condition="input.DiagPlot=='pcaPlot'",
                                             uiOutput("labelBiplotButton")
                            ),
                            fluidRow(
                              shinyjs::useShinyjs(),
                              column(width=12, p(strong("Size"))),
                              column(width=6,sliderInput("cexTitleDiag", h6("Axis"),min=0,max=5,value = 1,step =0.1)),
-                             conditionalPanel(condition="input.DiagPlot=='SfactorsVStot' || input.DiagPlot=='pcaPlot' || input.DiagPlot=='nmdsPlot' ",column(width=6,sliderInput("cexLabelDiag", h6("Points"),min=0,max=5,value = 1,step =0.1))),
-                             conditionalPanel(condition="input.DiagPlot=='pcaPlot' || input.DiagPlot=='pcoaPlot' ",
+                             conditionalPanel(condition="input.DiagPlot=='SfactorsVStot' || input.DiagPlot=='nmdsPlot' ||  input.DiagPlot=='umapPlot' || input.DiagPlot == 'pcoaPlot' || (input.DiagPlot=='pcaPlot' && input.radioPCA != 3)",column(width=6,sliderInput("cexLabelDiag", h6("Points"),min=0,max=5,value = 1,step =0.1))),
+                             conditionalPanel(condition="input.DiagPlot=='pcaPlot' || input.DiagPlot=='pcoaPlot' || input.DiagPlot=='umapPlot'",
                                               column(width=6, sliderInput("cexAxisLabelDiag", h6("Axis label"), min=0,max=5,value=1,step=0.1)),
                                               column(width=6, sliderInput("cexScaleLabelDiag", h6("X-scale and Y-scale labels"),min=0,max=5,value=1,step=0.1)),
                                               column(width=6, sliderInput("cexTitlePlotDiag", h6("Title"),min=0,max=5,value=1,step=0.1))
                                               
                              ),
-                             conditionalPanel(condition = " input.DiagPlot=='pcoaPlot' ",
-                                              column(width=6, sliderInput("cexSubtitleDiag", h6("Subtitle"),min=0,max=5,value=1,step=0.1))
-                             ),
-                             conditionalPanel(condition = "input.DiagPlot=='pcaPlot' || input.DiagPlot=='pcoaPlot' ",
+                             conditionalPanel(condition = " input.DiagPlot=='pcoaPlot' || input.DiagPlot=='pcaPlot' || input.DiagPlot=='umapPlot' ",
+                                              column(width=6, sliderInput("cexSubtitleDiag", h6("Subtitle"),min=0,max=5,value=1,step=0.1)),
                                               column(width=6, sliderInput("cexLegendDiag", h6("Legend"),min=0,max=5,value=1,step=0.1))
                              ),
                              
                              conditionalPanel(
-                               condition = " (input.DiagPlot=='pcaPlot' && (input.checkLabelSamples == true || $('input[name=checkLabelBiplot]:checked').length > 0)) || input.DiagPlot=='pcoaPlot' ",
+                               condition = " (input.DiagPlot=='pcaPlot' && (input.checkLabelSamples == true || $('input[name=checkLabelBiplot]:checked').length > 0)) || input.DiagPlot=='pcoaPlot' ||  (input.DiagPlot=='umapPlot' && input.labelSamplesUMAP == true)",
                                column(width=6, sliderInput("cexPointsLabelDiag", h6("Data label"), min = 0, max = 5, value = 2, step = 0.5))
                                
                              )
@@ -1105,9 +1119,9 @@ function(request) {
                          ),
                          
                          ## Values of the diversities
-                         conditionalPanel(condition="input.PlotVisuSelect=='Diversity'",
+                         conditionalPanel(condition="input.PlotVisuSelect=='Diversity' && input.DiversityPlots == 2",
                                           br(),
-                                          box(title = "Diversity values",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
+                                          box(title = "Beta-Gamma values",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
                                               DT::dataTableOutput("Diversitytable"),
                                               fluidRow(
                                                 column(width=3,downloadButton('ExportDiversitytable', 'Export table')),
@@ -1116,17 +1130,28 @@ function(request) {
                                               tags$style(type='text/css', "#ExportDiversitytable { margin-top: 37px;}")
                                           )
                          ),
-                         conditionalPanel(condition="input.PlotVisuSelect=='Network'",
+                         conditionalPanel(condition="input.PlotVisuSelect=='Diversity' && input.DiversityPlots == 1",
                                           br(),
-                                          box(title = "Community comparison",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
-                                              DT::dataTableOutput("CommunityComparison"),
+                                          box(title = "Richness values",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
+                                              DT::dataTableOutput("DiversityRichnesstable"),
                                               fluidRow(
-                                                column(width=3,downloadButton('ExportCommunitytable', 'Export table')),
-                                                column(width=3,selectInput("sepcommunity", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
+                                                column(width=3,downloadButton('ExportDiversityRichnesstable', 'Export table')),
+                                                column(width=3,selectInput("sepdiversityrichness", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
                                               ),
                                               tags$style(type='text/css', "#ExportDiversitytable { margin-top: 37px;}")
                                           )
                          )
+                         # conditionalPanel(condition="input.PlotVisuSelect=='Network'",
+                         #                  br(),
+                         #                  box(title = "Community comparison",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
+                         #                      DT::dataTableOutput("CommunityComparison"),
+                         #                      fluidRow(
+                         #                        column(width=3,downloadButton('ExportCommunitytable', 'Export table')),
+                         #                        column(width=3,selectInput("sepcommunity", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
+                         #                      ),
+                         #                      tags$style(type='text/css', "#ExportDiversitytable { margin-top: 37px;}")
+                         #                  )
+                         # )
                          
                   ),
                   column(width=3,
@@ -1217,7 +1242,12 @@ function(request) {
                              ## _______diversity ####
                              ###            ###
                              conditionalPanel(condition="input.PlotVisuSelect=='Diversity'",
-                                              selectizeInput("WhichDiv",h6(strong("Diversity")),c('Alpha','Beta','Gamma','Shannon','Simpson','Inv.Simpson'),selected  = c('Alpha','Shannon','Simpson','Inv.Simpson'),multiple=TRUE)
+                                              radioButtons("DiversityPlots", label = "Select your type of diversity plot", choices = c("Richness" =1, "Beta-Gamma" =2)),
+                                              uiOutput("WhichDivSelect")
+                             ),
+                             conditionalPanel(condition="input.PlotVisuSelect=='Diversity' && input.DiversityPlots == 1 ",
+                                              radioButtons("PairedSamplesBoxDiv", label = "Type of samples", c("Paired" = "Paired", "Unpaired" = "Unpaired"), selected = "Unpaired"),
+                                              uiOutput("SelectPairsBoxDiv")
                              ),
                              conditionalPanel(condition="input.PlotVisuSelect=='Diversity'",
                                               uiOutput("SelectVarBoxDiv")
@@ -1253,11 +1283,10 @@ function(request) {
                              ### _______diversity ####
                              ###            ###
                              conditionalPanel(condition="input.PlotVisuSelect=='Diversity'",
-                                              radioButtons("DivScale","Scales",c("Fixed"="fixed","Free"="free"),selected = "free",inline=TRUE),
-                                              radioButtons("DivAddError","Add Error bars",c("Add"="Add","Remove"="Remove"),selected = "Add",inline=TRUE)
-                             ),
-                             conditionalPanel(condition="input.PlotVisuSelect=='Boxplot'",
-                                              selectInput("colorsdiagVisuPlot", label=h6(strong("Gradient of colors")),choices = c("retro palette", "easter palette", "warm palette", "basic palette (1)", "basic palette (2)", "basic palette (3)", "basic palette (4)"),selected = "retro palette")
+                                              radioButtons("DivScale","Scales",c("Fixed"="fixed","Free"="free"),selected = "free",inline=TRUE)
+                                              ),
+                             conditionalPanel(condition="input.PlotVisuSelect=='Boxplot' || input.PlotVisuSelect=='Barplot' || input.PlotVisuSelect == 'Diversity'",
+                                              selectInput("colorsdiagVisuPlot", label=h6(strong("Gradient of colors")),choices = c("retro palette", "easter palette", "warm palette", "basic palette (1)", "basic palette (2)", "basic palette (3)", "basic palette (4)", "basic palette (5)"),selected = "retro palette")
                              ),
                              ###            ###
                              ### _______heatmap ####
