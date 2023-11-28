@@ -9,7 +9,6 @@
 Plot_Visu_Barplot <- function(input,resDiff, colors, others, plot = "classic")
 {
   req(colors)
-  req(others)
   #Sort the palette for the barchart
   rgb <- grDevices::col2rgb(colors)
   tsp <- TSP::as.ATSP(dist(t(rgb)))
