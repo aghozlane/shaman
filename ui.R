@@ -87,6 +87,7 @@ function(request) {
                          box(
                            title = "What's new in SHAMAN", width = NULL, status = "primary",
                            div(style = 'overflow-y: scroll; height: 550px',
+                               addNews("December 6th 2023", "Database update", "Greengenes2 and unite are up-to-date. New host genomes (mostly mosquitoes) are available."),
                                addNews("November 23th 2023", "New data visualization and Global View features", "UMAP has been added. We have also updated the Barplot to show other abundances for visualization of the 12 most abundant. For diversity, we have added a visualization of richness with comparison tests."),
                                addNews("October 15th 2023", "Updates of PCA and PCoA", "These updates bring new data visualizations. We have added some useful features for cluster visualization."),
                                addNews("May 9th 2023", "Raw fastq submission is re-activated !", "Shaman submission process is up again. We updated in the mean time the unite database to version 9.0."),
@@ -371,11 +372,12 @@ function(request) {
                                         tags$style(type='text/css', "#checkMail { width:100%; margin-top: 25px;}")
                                  ),
                                  column(width=6,  selectizeInput("HostName",label = "Select the host",
-                                                                 choices =   c("None"="", "a.stephensi (mosquito)" = "astephensi"," b.taurus (cow)" = "btaurus", "c.familiaris (dog)" = "cfamiliaris",
-                                                                               "chiroptera (bat)" = "chiroptera", "c.sabaeus (Apes)" = "csabaeus" , "d.melanogaster (fly)"="dmelanogaster", 
-                                                                               "e.caballus (Horse)" = "ecaballus", "f.catus (cat)" = "fcatus", "hg18 (human)"="hg18", "hg19 (human)"="hg19", 
+                                                                 choices =   c("None"="", "a.coluzzi (mosquito)" = "acoluzzi", "a.aegypti (mosquito)" = "aaegypti", "a.albopictus (mosquito)" = "aalbopictus",  
+                                                                               "a.stephensi (mosquito)" = "astephensi", "b.taurus (cow)" = "btaurus", "c.familiaris (dog)" = "cfamiliaris",
+                                                                               "chiroptera (bat)" = "chiroptera", "c.pipiens (mosquito)" = "cpipiens", "c.sabaeus (Apes)" = "csabaeus" , "d.melanogaster (fly)"="dmelanogaster", 
+                                                                               "d.rerio (fish)" = "drerio", "e.caballus (Horse)" = "ecaballus", "f.catus (cat)" = "fcatus", "hg18 (human)"="hg18", "hg19 (human)"="hg19", 
                                                                                "hg38 (human)" = "hg38", "m.lucifugus (bat)" = "mlucifugus", "mm8 (mouse)"= "mm8", "mm9 (mouse)" = "mm9", 
-                                                                               "mm10 (mouse)"="mm10", "p.vampyrus (bat)" = "pvampyrus", "s.scrofa (Boar)" = "sscrofa"))),
+                                                                               "mm10 (mouse)"="mm10", "p.vampyrus (bat)" = "pvampyrus", "s.scrofa (boar)" = "sscrofa"))),
                                  column(width=6,checkboxInput("primer", "Specify the primer"),
                                         bsTooltip("primer", "If no, default values are chosen","bottom", options = list(container = "body"))
                                  ),
