@@ -9,7 +9,6 @@
 Plot_Visu_Barplot <- function(input,resDiff, colors, others, plot = "classic")
 {
   req(colors)
-  req(others)
   #Sort the palette for the barchart
   rgb <- grDevices::col2rgb(colors)
   tsp <- TSP::as.ATSP(dist(t(rgb)))
@@ -36,7 +35,7 @@ Plot_Visu_Barplot <- function(input,resDiff, colors, others, plot = "classic")
   all_counts_tmp_combined <- all_tmp_combined$counts
   allSamplesNames <- all_tmp_combined$namesCounts
   allnamesTax = c(ind_taxo, others)
-  plotd3 = nvd3Plot(x ~ y , data = dataNull, type = "multiBarChart", id = 'barplotTaxoNyll',height = if(input$heightVisu){input$heightVisu}, width=if(input$modifwidthVisu){input$widthVisu})
+  plotd3 = nvd3Plot(x ~ y , data = dataNull, type = "multiBarChart", id = 'barplotTaxoNyll',height = ifelse(is.na(input$heightVisu), 800, as.character(input$heightVisu)), width=if(input$modifwidthVisu){as.character(input$widthVisu)})
   gg = NULL
   
   if(length(VarInt)>0 && !is.null(all_counts_tmp_combined) && nrow(all_counts_tmp_combined)>0)
@@ -69,32 +68,32 @@ Plot_Visu_Barplot <- function(input,resDiff, colors, others, plot = "classic")
     #   dataBarPlot_mat = rbind(dataBarPlot_mat,tmp_mat)
     # }
     
-      ## Create the others data frame for the plot function
-      all_dataBarPlot_mat = c()
-      all_tmp_mat = matrix(0,ncol=3,nrow=length(allnamesTax))
-      all_tmp_counts = c()
+    ## Create the others data frame for the plot function
+    all_dataBarPlot_mat = c()
+    all_tmp_mat = matrix(0,ncol=3,nrow=length(allnamesTax))
+    all_tmp_counts = c()
+    
+    ## Taxo
+    all_tmp_mat[1:length(allnamesTax),1] = allnamesTax
+    for(i in 1:(nrow(all_counts_tmp_combined)))
+    {
       
-      ## Taxo
-      all_tmp_mat[1:length(allnamesTax),1] = allnamesTax
-      for(i in 1:(nrow(all_counts_tmp_combined)))
+      ## Counts
+      
+      tmpProp =  all_counts_tmp_combined[i,]
+      if(input$CountsOrProp=="prop")
       {
-
-        ## Counts
-
-        tmpProp =  all_counts_tmp_combined[i,]
-        if(input$CountsOrProp=="prop")
-        {
-          tmpProp = round(tmpProp/sum(tmpProp),3)
-          tmpProp = as.numeric(tmpProp/sum(tmpProp) * 100)
-        }
-        all_tmp_counts = c(all_tmp_counts,tmpProp)
-
-        ## Meta data
-        all_tmp_mat[1:length(allnamesTax),3] = as.character(rep(allSamplesNames[i],length(allnamesTax)))
-
-        ## Combined the sample
-        all_dataBarPlot_mat = rbind(all_dataBarPlot_mat,all_tmp_mat)
+        tmpProp = round(tmpProp/sum(tmpProp),3)
+        tmpProp = as.numeric(tmpProp/sum(tmpProp) * 100)
       }
+      all_tmp_counts = c(all_tmp_counts,tmpProp)
+      
+      ## Meta data
+      all_tmp_mat[1:length(allnamesTax),3] = as.character(rep(allSamplesNames[i],length(allnamesTax)))
+      
+      ## Combined the sample
+      all_dataBarPlot_mat = rbind(all_dataBarPlot_mat,all_tmp_mat)
+    }
     
     all_dataBarPlot_mat = as.data.frame(all_dataBarPlot_mat)
     colnames(all_dataBarPlot_mat) = c("Taxonomy","Proportions","AllVar")
@@ -104,25 +103,25 @@ Plot_Visu_Barplot <- function(input,resDiff, colors, others, plot = "classic")
       dplyr::group_by(AllVar) %>%
       dplyr::slice(1:nbKept)
     
-      others_dataBarPlot_mat <-  all_dataBarPlot_mat %>%
-        dplyr::group_by(AllVar) %>%
-        dplyr::slice((nbKept + 1):ncol(all_counts_tmp_combined)) %>%
-        dplyr::summarise(Proportions = sum(Proportions, na.rm = TRUE)) %>%
-        dplyr::mutate(Taxonomy = 'Others')
-      
-      others_dataBarPlot_mat <- as.data.frame(others_dataBarPlot_mat)
-      main_dataBarPlot_mat <- as.data.frame(main_dataBarPlot_mat)
-      
-      main_dataBarPlot_mat <- rbind(main_dataBarPlot_mat, others_dataBarPlot_mat) %>% 
-        dplyr::arrange(AllVar)
-      # dplyr::arrange(AllVar, desc(Proportions)) instead
+    others_dataBarPlot_mat <-  all_dataBarPlot_mat %>%
+      dplyr::group_by(AllVar) %>%
+      dplyr::slice((nbKept + 1):ncol(all_counts_tmp_combined)) %>%
+      dplyr::summarise(Proportions = sum(Proportions, na.rm = TRUE)) %>%
+      dplyr::mutate(Taxonomy = 'Others')
+    
+    others_dataBarPlot_mat <- as.data.frame(others_dataBarPlot_mat)
+    main_dataBarPlot_mat <- as.data.frame(main_dataBarPlot_mat)
+    
+    main_dataBarPlot_mat <- rbind(main_dataBarPlot_mat, others_dataBarPlot_mat) %>% 
+      dplyr::arrange(AllVar)
+    # dplyr::arrange(AllVar, desc(Proportions)) instead
     
     main_dataBarPlot_mat <- as.data.frame(main_dataBarPlot_mat)
     if(input$SensPlotVisu == "Vertical") Sens = "multiBarChart"
     else Sens = "multiBarHorizontalChart"
     XRotate = input$rotateXLabel
     colors = rev(rep(colors, ceiling(nbKept/length(colors))))
-    plotd3 <- nvd3Plot(Proportions ~ AllVar | Taxonomy, data = main_dataBarPlot_mat, type = Sens, id = 'barplotTaxo', height = if(input$heightVisu){input$heightVisu}, width=if(input$modifwidthVisu){input$widthVisu})
+    plotd3 <- nvd3Plot(Proportions ~ AllVar | Taxonomy, data = main_dataBarPlot_mat, type = Sens, id = 'barplotTaxo',height = ifelse(is.na(input$heightVisu), 800, as.character(input$heightVisu)), width=if(input$modifwidthVisu){as.character(input$widthVisu)})
     plotd3$chart(stacked = TRUE, color = colors)
     if(input$SensPlotVisu == "Vertical") {
       plotd3$chart(reduceXTicks = FALSE)
@@ -156,6 +155,7 @@ Plot_Visu_Barplot <- function(input,resDiff, colors, others, plot = "classic")
   
   return(list(plotd3=plotd3,gg=gg))
 }
+
 
 
 
@@ -644,39 +644,39 @@ Plot_Visu_Diversity <- function(input,resDiff,colors = NULL,ForScatter=FALSE, al
         gg = gg + scale_fill_manual(values = colors[1:length(unique(dataTmp[,6]))]) + scale_color_manual(values = colors[1:length(unique(dataTmp[,6]))])
       }
       else{
-      if(input$DiversityPlots == 1){
-        dataDiv <- richness
-        if(input$WhichDiv == 'Alpha'){
-          gg = ggpubr::ggboxplot(richness, x = "Var", y = "valAlpha", merge = TRUE, color = "VarCol", add = c("jitter"), width = 0.75)
-         y_range = c(min(richness$valAlpha), max(richness$valAlpha)) 
+        if(input$DiversityPlots == 1){
+          dataDiv <- richness
+          if(input$WhichDiv == 'Alpha'){
+            gg = ggpubr::ggboxplot(richness, x = "Var", y = "valAlpha", merge = TRUE, color = "VarCol", add = c("jitter"), width = 0.75)
+            y_range = c(min(richness$valAlpha), max(richness$valAlpha)) 
+          }
+          if(input$WhichDiv == 'Bray-Curtis'){
+            gg = ggpubr::ggboxplot(richness, x = "Var", y = "valBray", merge = TRUE, color = "VarCol", add = c("jitter"), width = 0.75)
+            y_range = c(min(richness$valBray), max(richness$valBray)) 
+          }
+          else if(input$WhichDiv == 'Shannon'){
+            gg = ggpubr::ggboxplot(richness, x = "Var", y = "valShannon", merge = TRUE, color = "VarCol", add = c("jitter"), width = 0.75)
+            y_range = c(min(richness$valShannon), max(richness$valShannon))  
+          }
+          else if(input$WhichDiv == 'Simpson'){
+            gg = ggpubr::ggboxplot(richness, x = "Var", y = "valSimpson", merge = TRUE, color = "VarCol", add = c("jitter"), width = 0.75)
+            y_range = c(min(richness$valSimpson), max(richness$valSimpson))  
+          }
+          else if(input$WhichDiv == 'Inv.Simpson'){
+            gg = ggpubr::ggboxplot(richness, x = "Var", y = "valInvSimpson", merge = TRUE, color = "VarCol", add = c("jitter"), width = 0.75)
+            y_range = c(min(richness$valInvSimpson), max(richness$valInvSimpson))  
+          }
+          gg = gg + stat_summary(fun.y = mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..),
+                                 width = .75, linetype = "dashed") 
         }
-        if(input$WhichDiv == 'Bray-Curtis'){
-          gg = ggpubr::ggboxplot(richness, x = "Var", y = "valBray", merge = TRUE, color = "VarCol", add = c("jitter"), width = 0.75)
-          y_range = c(min(richness$valBray), max(richness$valBray)) 
-        }
-        else if(input$WhichDiv == 'Shannon'){
-          gg = ggpubr::ggboxplot(richness, x = "Var", y = "valShannon", merge = TRUE, color = "VarCol", add = c("jitter"), width = 0.75)
-          y_range = c(min(richness$valShannon), max(richness$valShannon))  
-        }
-        else if(input$WhichDiv == 'Simpson'){
-          gg = ggpubr::ggboxplot(richness, x = "Var", y = "valSimpson", merge = TRUE, color = "VarCol", add = c("jitter"), width = 0.75)
-          y_range = c(min(richness$valSimpson), max(richness$valSimpson))  
-        }
-        else if(input$WhichDiv == 'Inv.Simpson'){
-          gg = ggpubr::ggboxplot(richness, x = "Var", y = "valInvSimpson", merge = TRUE, color = "VarCol", add = c("jitter"), width = 0.75)
-          y_range = c(min(richness$valInvSimpson), max(richness$valInvSimpson))  
-        }
-        gg = gg + stat_summary(fun.y = mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..),
-                               width = .75, linetype = "dashed") 
-      }
         gg = gg + theme_bw() + theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust=0.5), legend.title=element_blank())
         if(input$SensPlotVisu=="Horizontal") gg = gg + coord_flip() + geom_jitter(color = "black", size = 0.4, alpha = 0.9)
         if(input$SensPlotVisu=="Vertical") gg = gg + geom_jitter(color = "black", size = 0.4, alpha = 0.9)
         req(gg)
         req(richness)
         gg = gg + 
-          ggpubr::stat_compare_means(comparisons = lapply(input$SelectizePairs, function(element) strsplit(element, " VS ")[[1]]), method = "wilcox.test", paired = ifelse(input$PairedSamplesBoxDiv == "Paired", TRUE, FALSE), p.adjust.method ="BH") +
-          ggpubr::stat_compare_means(label.x.npc = "center", label.y= y_range[1]* 0.9) + coord_cartesian()
+          ggpubr::stat_compare_means(comparisons = lapply(input$SelectizePairs, function(element) strsplit(element, " VS ")[[1]]), method = "wilcox.test", paired = ifelse(input$PairedSamplesBoxDiv == "Paired", TRUE, FALSE), p.adjust.method = input$AdjMeth) +
+          ggpubr::stat_compare_means(label.x.npc = "center", label.y= y_range[1]* 0.9, paired = ifelse(input$PairedSamplesBoxDiv == "Paired", TRUE, FALSE)) + coord_cartesian()
         gg = gg + labs(x = paste(VarIntBoxDiv,collapse ="-"), y = paste0("Richness (", input$WhichDiv, ")")) + 
           scale_fill_manual(values = colors[1:length(unique(richness[,7]))]) + scale_color_manual(values = colors[1:length(unique(richness[,7]))])
       }
@@ -777,6 +777,9 @@ GetDataToPlot <- function(input,resDiff,VarInt,ind_taxo,sec_variable = NULL, agg
   list.val = list()
   if(input$NormOrRaw=="norm")
   {counts = as.data.frame(round(counts(dds, normalized = TRUE)))}
+  if(input$NormOrRaw == "vst"){
+    counts = as.data.frame(SummarizedExperiment::assay(varianceStabilizingTransformation(dds)))
+  }
   else
   {counts = as.data.frame(round(counts(dds, normalized = FALSE)))}
   if(rarefy) {set.seed(1234); counts = t(rrarefy(t(counts), min(colSums(counts))))}
@@ -1001,28 +1004,40 @@ Plot_Visu_Tree <- function(input,resDiff,CT_Norm_OTU,taxo_table)
   return(res)
 }
 
+
 ##                       ##
 ##      NETWORK
 ##                       ##
 
-Plot_network <- function(input,resDiff,availableTaxo, ind_taxo, qualiVariable, export = FALSE){
+Plot_network <- function(input,resDiff,availableTaxo, ind_taxo, qualiVariable, export = FALSE, colors = NULL){
   plot = NULL
   dataVN = NULL
-  
+  cluster = NULL
+  cluster_df = NULL
+  voronoi = NULL
   VarInt = input$VisuVarInt
   
-  if(isolate(input$colorCorr)){sec_variable = isolate(input$sec_variable)}
+  if(isolate(input$colorCorr == 'corr')){sec_variable = isolate(input$sec_variable)}
   else{sec_variable = NULL}
   
   data <- GetDataToPlot(input,resDiff,VarInt,availableTaxo, sec_variable = sec_variable, aggregate = FALSE)
   if(!is.null(data) && !is.null(data$targetInt)){
     counts_tmp_combined <- data$counts
     dataVariables <- as.matrix(data$targetInt)
-    if(isolate(input$colorCorr && qualiVariable()) && !is.null(dataVariables)){dataVariables[,sec_variable] <- sapply(dataVariables[,sec_variable], function(x) if(is.element(x,isolate(input$values1))){1}else{0})}
+    if(isolate(input$colorCorr == 'corr') && isolate(qualiVariable()) && !is.null(dataVariables)){dataVariables[,sec_variable] <- sapply(dataVariables[,sec_variable], function(x) if(is.element(x,isolate(input$values1))){1}else{0})}
     
     if(!is.null(counts_tmp_combined)){
       countsMatrix <- as.matrix(counts_tmp_combined)
-      
+      print(dim(countsMatrix))
+      #check if the matrix is squared
+      # if(dim(countsMatrix)[1] == dim(countsMatrix)[2]){
+      #   if(!is.null(det(countsMatrix))){
+          ppcor <- ppcor::pcor(countsMatrix, method = input$pcorrMethod)
+          pcor <- ppcor$estimate
+          rownames(pcor) <- colnames(countsMatrix)
+          colnames(pcor) <- colnames(countsMatrix)
+      #   }
+      # }
       n <- ncol(countsMatrix)
       resCorrTest <- corr.test(countsMatrix, ci = FALSE)
       cor <- resCorrTest$r
@@ -1032,6 +1047,7 @@ Plot_network <- function(input,resDiff,availableTaxo, ind_taxo, qualiVariable, e
       adjacency <- matrix(mapply(function(a,b) {mapply(function(x,y){x*y}, x=a, y=b)}, a=pval_bool, b=cor_sgn), nrow = n)
       rownames(adjacency) <- colnames(countsMatrix)
       colnames(adjacency) <- colnames(countsMatrix)
+      
       # ### Remove rows and columns with only NA        # this way, elements with the same count in all sample (often 0 in this case) will not appear
       # adjacency <- adjacency[apply(adjacency, 1, function(y) !all(is.na(y))),]
       # adjacency <- t(adjacency)
@@ -1040,39 +1056,141 @@ Plot_network <- function(input,resDiff,availableTaxo, ind_taxo, qualiVariable, e
       
       ### Replace NA by zeros (ie "no correlation")     # this way, those elements will appear as single nodes
       adjacency[is.na(adjacency)] <- 0
-      
+      req(adjacency)
       adjacency <- adjacency[,ind_taxo]
       adjacency <- adjacency[ind_taxo,]
       
-      igraphGraph <- graph_from_adjacency_matrix(adjacency, diag = FALSE, mode = "upper" , weighted = TRUE) # mode = "upper" for adjusted p-value, mode = "lower" for p-value not adjusted
+      igraphGraph <- graph_from_adjacency_matrix(adjacency, diag = FALSE, mode = "upper", weighted = TRUE) # mode = "upper" for adjusted p-value, mode = "lower" for p-value not adjusted
       
       list_to_label <- isolate(input$ToLabelNetwork)
+      req(igraphGraph)
       dataVN <- toVisNetworkData(igraphGraph)
       dataVN$nodes$title <- paste0("<b>", dataVN$nodes$id,"</b>")
-      dataVN$nodes$label <- sapply(dataVN$nodes$id, function(x)if(is.element(x, list_to_label)){x}else{""})
-      dataVN$edges$color <- sapply(dataVN$edges$weight, function(x)if(x==1){isolate(input$edgeColorPositive)}else{isolate(input$edgeColorNegative)})
+      dataVN$nodes$label <- dataVN$nodes$id
+      # dataVN$nodes$label <- sapply(dataVN$nodes$id, function(x)if(is.element(x, list_to_label)){x}else{""})
+      dataVN$nodes$cor <- 0
+      dataVN$edges$pcor <- 0
+      dataVN$edges$weight <- 1
+      # if(dim(countsMatrix)[1] == dim(countsMatrix)[2]){
+      #   if(!is.null(det(countsMatrix))){
+          if(input$colorCorr == 'pcorr'){
+            #Create initial variables
+            nodesPcor <- unique(c(dataVN$edges$from, dataVN$edges$to))
+            node_mapping <- setNames(1:length(nodesPcor), nodesPcor)
+            pcor_values <- numeric(length = nrow(dataVN$edges))
+            #Let's loop the edges and get the exisiting partial correlation values 
+            for(i in 1:nrow(dataVN$edges)){
+              from = dataVN$edges$from[i]
+              to = dataVN$edges$to[i]
+              
+              from_index <- node_mapping[from]
+              to_index <- node_mapping[to]
+              
+              pcor_values[i] <- ifelse(pcor[from_index, to_index]< -input$pcorrThreshold, -1, 
+                                       ifelse(pcor[from_index, to_index] > input$pcorrThreshold, 1, 0))
+            }
+            
+            #Store back into weight column
+            dataVN$edges$pcor <- pcor_values
+            dataVN$edges$color <- ifelse(dataVN$edges$pcor > 0, '#FF0000', ifelse(dataVN$edges$pcor < 0, '#0000FF', '#000000'))
+            #dataVN$edges$weight <- abs(as.numeric(dataVN$edges$weight))
+          }
+      #   }
+      # }
+      else
+        dataVN$edges$color <- '#000000'
       
-      if(!is.null(sec_variable)){
+      if(!is.null(sec_variable) && (isolate(input$colorCorr) == "corr")){
         cor <- sapply(dataVN$nodes$id, function(x)cor(as.numeric(dataVariables[,sec_variable]), countsMatrix[,x]))
         dataVN$nodes$cor <- round(cor, digits = 5)
         scale <- if(isolate(input$scaleFree)){max(c(max(dataVN$nodes$cor),-min(dataVN$nodes$cor)))}else{1}
         dataVN$nodes$color.background <- sapply(dataVN$nodes$cor, function(x) colorRampPalette(rev(brewer.pal(9, isolate(input$colorPalette))))(200)[round(x, digits = 2)*100/scale+100])
         dataVN$nodes$color.highlight.background <- dataVN$nodes$color.background
       }
-      else{dataVN$nodes$color.background <- isolate(input$colorBackground)
-      dataVN$nodes$color.highlight.background <- isolate(input$colorHighlightBackground)}
+      palette <- isolate(input$colorsdiagVisuPlot)
+      
+      #Normalize edge weights to avoid errors when choosing cluster parameters when VST is chosen
+      # if(input$clusterWeightsParam == "Yes" && input$NormOrRaw == 'vst'){
+      #   dataVN$edges$weight <- dataVN$edges$weight / sum(dataVN$edges$weight)
+      #   E(igraphGraph)$weight <- E(igraphGraph)$weight / sum(E(igraphGraph)$weight)
+      # }
+      
+      if(input$pcorrClustAlgo == "louvain"){
+        if(input$clusterWeightsParam == "Yes" && input$NormOrRaw != 'vst')
+          cluster <- igraph::cluster_louvain(igraphGraph, weights = NULL)
+        else
+          cluster <- igraph::cluster_louvain(igraphGraph, weights = NA)
+      }
+      
+      
+      else if(input$pcorrClustAlgo == "leiden"){
+        if(input$clusterWeightsParam == "Yes" && input$NormOrRaw != 'vst')
+          cluster <- igraph::cluster_leiden(igraphGraph, weights = NULL, objective_function = "modularity", n_iterations = -1)
+        else
+          cluster <- igraph::cluster_leiden(igraphGraph, weights = NA, objective_function = "modularity", n_iterations =-1)
+      }
+      
+      
+      else if(input$pcorrClustAlgo == "walktrap"){
+        if(input$clusterWeightsParam == "Yes" && input$NormOrRaw != 'vst')
+          cluster <- igraph::cluster_walktrap(igraphGraph, weights = NULL)
+        else
+          cluster <- igraph::cluster_walktrap(igraphGraph, weights = NA)
+      }
+      
+      #Let's compute the output to shape the nodes and edges 
+      cluster_df <- data.frame(as.list(membership(cluster)), check.names = FALSE)
+      cluster_df <- as.data.frame(t(cluster_df))
+      rownames(cluster_df) <- rownames(dataVN$nodes)
+      cluster_df$id <- rownames(cluster_df)
+      
+      dataVN$nodes <- dplyr::left_join(dataVN$nodes, cluster_df, by = "id")
+      
+      names(dataVN$nodes)[names(dataVN$nodes) == "V1"] <- "community"
+      
+      if(isolate(input$SelectTaxoNetwork) != "Linked" && length(dataVN$nodes$id[!(dataVN$nodes$id %in% c(dataVN$edges$from, dataVN$edges$to))]) >0){
+        dataVN$nodes[!(dataVN$nodes$id %in% c(dataVN$edges$from, dataVN$edges$to)), ]$community <- 0
+        dataVN$nodes$community <- as.integer(factor(dataVN$nodes$community))
+      }
+      if(input$colorCorr != 'corr')
+      {
+        dataVN$nodes$color.background <- colors[1 + (dataVN$nodes$community -1) %% length(colors)]
+        dataVN$nodes$color.highlight.background <- dataVN$nodes$color.background
+      }
+      
+      
       dataVN$nodes$color.border <- isolate(input$colorBorder)
       dataVN$nodes$color.highlight.border <- isolate(input$colorHighlightBorder)
       
-      plot <- visNetwork (nodes = dataVN$nodes, edges = dataVN$edges)
+      dataVN$nodes <- dataVN$nodes[order(dataVN$nodes$community), ]
+      dataVN$edges[which(!dataVN$edges$from %in% dataVN$nodes), ]
+      dataVN$edges[which(!dataVN$edges$to %in% dataVN$nodes), ]
+      
+      plot <- visNetwork(nodes = dataVN$nodes, edges = dataVN$edges)
       plot <- visIgraphLayout(plot, layout = "layout_nicely", physics = FALSE, smooth = FALSE)
       plot <- visNodes(plot, size = 20)
       plot <- visEdges(plot, width = 1)
+      plot <- visGroups(plot, groupname = "community")
+      
       plot <- visOptions(plot, width = if(isolate(input$modifwidthVisu)){isolate(input$widthVisu)}, height = isolate(input$heightVisu), autoResize = FALSE, highlightNearest = list(enabled = TRUE, degree = 1, hover = FALSE))
-      #plot <- visLegend(plot, addEdges = data.frame(color = c("red", "blue"), label = c("Positive correlation","Negative correlation")))
-      #print(dataVN)
-      #plot <- visExport(plot, type = "pdf", name = "network_SHAMAN.pdf", float="bottom")
+      if(isolate(input$colorCorr) != 'corr')
+        plot <- visOptions(plot, selectedBy = list(variable = "community", style = 'width: 200px; height: 26px; background: #f8f8f8; color: black; font: caption; border:none; outline:none;', values = c(min(dataVN$nodes$community):max(dataVN$nodes$community))))
+      plot <- visLayout(plot, randomSeed = 22)
+      
+      #Get a new graph from computed nodes and edges
+      graph_igraph <- graph_from_data_frame(dataVN$edges, directed = FALSE, vertices = dataVN$nodes)
+      V(graph_igraph)$label.cex = 0.75
+      membership <- cluster$membership
+      
+      #Find only lonely nodes in the membership list (they have a unique integer) then set it to 0
+      membership[!(membership %in% membership[duplicated(membership)])] <- 0
+      cluster$membership <- as_membership(as.integer(factor(membership)))
+      
+      if(isFALSE(input$showLabelNetwork))
+        voronoi <- igraph::plot(graph_igraph, mark.border = "black", vertex.color = dataVN$nodes$color.background, edge.color = dataVN$edges$color, vertex.size=input$nodeSizeNetwork /2, edge.arrow.size=input$linkWidth/10, vertex.label = NA, main = paste0("Community detection using ", input$pcorrClustAlgo, " algorithm for ", input$TaxoSelect), layout = igraph::layout_nicely(graph_igraph))
+      else
+        voronoi <- igraph::plot(graph_igraph, mark.border = "black", vertex.color = dataVN$nodes$color.background, edge.color = dataVN$edges$color, vertex.label.color= "black", vertex.label.dist= 1.5, vertex.size=input$nodeSizeNetwork /2, edge.arrow.size=input$linkWidth/10, vertex.label = V(graph_igraph)$label, main = paste0("Community detection using Louvain algorithm for ", input$TaxoSelect), layout = igraph::layout_nicely(graph_igraph))
     }
   }
-  return(list(plot = plot, data = dataVN))
+  return(list(plot = plot, data = dataVN, voronoi = voronoi))
 }
