@@ -889,7 +889,7 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
               theme_minimal() +
               pca_theme
           }
-          if(all(c(1, 2) %in% input$checkLabelBiplot)) #if both of label buttons are pressed, the input vector has a length of 2
+          if(all(c(1, 2) %in% input$checkLabelBiplot)) #if both of label buttons are pressed, the output vector has a length of 2
           {
             pca_plot <- NULL
             pca_plot <- fviz_pca_biplot(

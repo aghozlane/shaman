@@ -1028,7 +1028,6 @@ Plot_network <- function(input,resDiff,availableTaxo, ind_taxo, qualiVariable, e
     
     if(!is.null(counts_tmp_combined)){
       countsMatrix <- as.matrix(counts_tmp_combined)
-      print(dim(countsMatrix))
       #check if the matrix is squared
       # if(dim(countsMatrix)[1] == dim(countsMatrix)[2]){
       #   if(!is.null(det(countsMatrix))){
