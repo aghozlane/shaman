@@ -1080,11 +1080,23 @@ function(request) {
                              conditionalPanel(condition="input.PlotVisuSelect=='Boxplot' || input.PlotVisuSelect=='Diversity' || input.PlotVisuSelect=='Rarefaction'",   
                                               tags$img(src = "gears.gif",id ="loading-spinner")
                              ),
+                             # conditionalPanel(condition="input.PlotVisuSelect=='Network'",
+                             #                  uiOutput("Research")
+                             #                  # , conditionalPanel(condition = "input.colorCorr", plotOutput("legendNetworkCorr", height = "50px"))
+                             # ),
                              conditionalPanel(condition="input.PlotVisuSelect=='Network'",
-                                              uiOutput("Research")
-                                              # , conditionalPanel(condition = "input.colorCorr", plotOutput("legendNetworkCorr", height = "50px"))
+                                              div(
+                                                tabBox(id = "tabBoxNetwork",
+                                                       width = NULL,
+                                                       height = 1000,
+                                                       selected = "Network",
+                                                       tabPanel("Network", uiOutput("Research"), div(visNetworkOutput("NetworkPlot", height = "400px"))),
+                                                       tabPanel("Panels", plotOutput("Panels"))),
+                                                style = "background-color: #edf1f4;")
                              ),
-                             uiOutput("plotVisu"),
+                             conditionalPanel(condition="input.PlotVisuSelect!='Network'",
+                                              uiOutput("plotVisu")
+                             ),
                              #conditionalPanel(condition="input.PlotVisuSelect!='Krona'",),
                              #conditionalPanel(condition="input.PlotVisuSelect=='Krona'",tags$script(uiOutput("plotVisu"))),
                              conditionalPanel(condition="input.PlotVisuSelect=='Scatterplot' && !input.AddRegScatter",
@@ -1111,8 +1123,8 @@ function(request) {
                                           box(title = "Correlation table",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
                                               DT::dataTableOutput("CorTable"),
                                               fluidRow(
-                                                column(width=3,downloadButton('ExportCorTable', 'Export table')),
-                                                column(width=3,selectInput("sepcortable", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
+                                                column(width=3, style = "margin-top: 55px", downloadButton('ExportCorTable', 'Export table')),
+                                                column(width=3, style = "margin-top: 30px", selectInput("sepcortable", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
                                               ),
                                               tags$style(type='text/css', "#ExportCortable { margin-top: 37px;}")
                                           )
@@ -1124,8 +1136,8 @@ function(request) {
                                           box(title = "Beta-Gamma values",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
                                               DT::dataTableOutput("Diversitytable"),
                                               fluidRow(
-                                                column(width=3,downloadButton('ExportDiversitytable', 'Export table')),
-                                                column(width=3,selectInput("sepdiversity", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
+                                                column(width=3, style = "margin-top: 17px", downloadButton('ExportDiversitytable', 'Export table')),
+                                                column(width=3, style = "margin-top: 30px", selectInput("sepdiversity", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
                                               ),
                                               tags$style(type='text/css', "#ExportDiversitytable { margin-top: 37px;}")
                                           )
@@ -1135,23 +1147,23 @@ function(request) {
                                           box(title = "Richness values",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
                                               DT::dataTableOutput("DiversityRichnesstable"),
                                               fluidRow(
-                                                column(width=3,downloadButton('ExportDiversityRichnesstable', 'Export table')),
-                                                column(width=3,selectInput("sepdiversityrichness", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
+                                                column(width=3, style = "margin-top: 55px", downloadButton('ExportDiversityRichnesstable', 'Export table')),
+                                                column(width=3, style = "margin-top: 30px", selectInput("sepdiversityrichness", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
                                               ),
                                               tags$style(type='text/css', "#ExportDiversitytable { margin-top: 37px;}")
                                           )
+                         ),
+                         conditionalPanel(condition="input.PlotVisuSelect=='Network'",
+                                          br(),
+                                          box(title = "Community table",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
+                                              DT::dataTableOutput("CommunityComparison"),
+                                              fluidRow(
+                                                column(width=3, style = "margin-top: 17px", downloadButton('ExportCommunitytable', 'Export table')),
+                                                column(width=3, style = "margin-top: 30px", selectInput("sepcommunity", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
+                                              ),
+                                              tags$style(type='text/css', "#ExportCommunitytable { margin-top: 37px;}")
+                                          )
                          )
-                         # conditionalPanel(condition="input.PlotVisuSelect=='Network'",
-                         #                  br(),
-                         #                  box(title = "Community comparison",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
-                         #                      DT::dataTableOutput("CommunityComparison"),
-                         #                      fluidRow(
-                         #                        column(width=3,downloadButton('ExportCommunitytable', 'Export table')),
-                         #                        column(width=3,selectInput("sepcommunity", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
-                         #                      ),
-                         #                      tags$style(type='text/css', "#ExportDiversitytable { margin-top: 37px;}")
-                         #                  )
-                         # )
                          
                   ),
                   column(width=3,
@@ -1166,6 +1178,9 @@ function(request) {
                              conditionalPanel(condition="input.PlotVisuSelect",
                                               radioButtons("NormOrRaw",label = h5(strong("Type of counts")), c("Normalized" = "norm", "Raw" = "raw"),inline=TRUE)
                              ),
+                             # conditionalPanel(condition="input.PlotVisuSelect == 'Network'",
+                             #                  radioButtons("NormOrRawOrVST",label = h5(strong("Type of counts")), c("Normalized" = "norm", "Raw" = "raw", "VST" = "vst"),inline=TRUE)
+                             # ),
                              conditionalPanel(condition="input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Scatterplot'",
                                               uiOutput("VarIntVisu"),
                                               h5(strong("Select the modalities")),
@@ -1197,19 +1212,27 @@ function(request) {
                              ## _______network ####
                              ###          ###
                              conditionalPanel(condition="input.PlotVisuSelect=='Network'",
-                                              checkboxInput("colorCorr", "Color nodes according to correlation with a variable"),
-                                              conditionalPanel(condition = "input.colorCorr", uiOutput("SelectSecVariable"),
+                                              radioButtons("colorCorr", label = "", choices = c("Color nodes according to correlation with a variable" = "corr", "Color edges according to partial correlation" = "pcorr"), selected = "pcorr"),
+                                              conditionalPanel(condition = "input.colorCorr == 'corr'", uiOutput("SelectSecVariable"),
                                                                div(id = "ValueOfQualitativeVaribale", uiOutput("SelectValueQualiVar")))
                              ),
-                             conditionalPanel(condition="input.PlotVisuSelect=='Network'",
-                                              uiOutput("SelectTaxoToPlotNetwork")
+                             conditionalPanel(condition="input.colorCorr=='pcorr' && input.PlotVisuSelect=='Network'",
+                                              radioButtons("pcorrClustAlgo", label = "Select the clustering algorithm", choices = c("Louvain" = "louvain", "Leiden" = "leiden", "Walktrap" = "walktrap"), selected = "louvain")
+                             ),
+                             conditionalPanel(condition="input.NormOrRaw != 'vst' && input.PlotVisuSelect == 'Network'",
+                                              radioButtons("clusterWeightsParam", label = "Add weights as a clustering parameter", choices = c("Yes" = "Yes", "No" = "No"), selected = "No")
+                             ),
+                             conditionalPanel(condition="input.colorCorr=='pcorr' && input.PlotVisuSelect=='Network'",
+                                              radioButtons("pcorrMethod", label = "Select the partial correlation coefficient", choices = c("Pearson" = "pearson", "Kendall" = "kendall", "Spearman" = "spearman"), selected = "pearson"),
+                                              sliderInput("pcorrThreshold", label = "Select the partial correlation threshold", min = 0, max= 1, value = 0.5, step = 0.01)
                              ),
                              conditionalPanel(condition="input.PlotVisuSelect=='Network'",
+                                              uiOutput("SelectTaxoToPlotNetwork"),
                                               uiOutput("TaxoToPlotNetwork")
                              ),
-                             conditionalPanel(condition="input.PlotVisuSelect=='Network'",
-                                              uiOutput("SelectToLabelNetwork")
-                             ),
+                             # conditionalPanel(condition="input.PlotVisuSelect=='Network'",
+                             #                  uiOutput("SelectToLabelNetwork")
+                             # ),
                              
                              ###            ###
                              ## _______barplot ####
@@ -1218,6 +1241,7 @@ function(request) {
                                               hr(),
                                               selectizeInput(inputId = "CountsOrProp",label = h6(strong("Type of data")),choices = c("Proportions" = "prop", "Counts" = "counts"),selected = "prop")
                              ),
+                             
                              
                              
                              ###            ###
@@ -1285,7 +1309,7 @@ function(request) {
                              conditionalPanel(condition="input.PlotVisuSelect=='Diversity'",
                                               radioButtons("DivScale","Scales",c("Fixed"="fixed","Free"="free"),selected = "free",inline=TRUE)
                                               ),
-                             conditionalPanel(condition="input.PlotVisuSelect=='Boxplot' || input.PlotVisuSelect=='Barplot' || input.PlotVisuSelect == 'Diversity'",
+                             conditionalPanel(condition="input.PlotVisuSelect=='Boxplot' || input.PlotVisuSelect=='Barplot' || input.PlotVisuSelect == 'Diversity' || input.PlotVisuSelect == 'Network'",
                                               selectInput("colorsdiagVisuPlot", label=h6(strong("Gradient of colors")),choices = c("retro palette", "easter palette", "warm palette", "basic palette (1)", "basic palette (2)", "basic palette (3)", "basic palette (4)", "basic palette (5)"),selected = "retro palette")
                              ),
                              ###            ###
@@ -1327,19 +1351,26 @@ function(request) {
                              ###              ###
                              ### _______network ####
                              ###              ###
+                             conditionalPanel(condition="input.PlotVisuSelect == 'Network'",
+                                              checkboxInput("showLabelNetwork", "show labels", value = FALSE)
+                             ),
                              conditionalPanel(condition="input.PlotVisuSelect=='Network'",
                                               fluidRow(
                                                 column(width=6,sliderInput("nodeSizeNetwork", h6("Node size"),min=0,max=100,value = 20,step = 1)),
                                                 column(width=6,sliderInput("linkWidth", h6("Link width"),min=0,max=10,value = 1,step = 0.5))
                                               ),
-                                              fluidRow(
-                                                column(width=6,colourpicker::colourInput("edgeColorPositive", "Positive correlation", value = "red", showColour = "both")),
-                                                column(width=6,colourpicker::colourInput("edgeColorNegative",  "Negative correlation", value = "blue", showColour = "both"))
+                                              conditionalPanel(condition="input.colorCorr == 'pcorr'",
+                                                fluidRow(
+                                                  column(width=4,colourpicker::colourInput("edgeColorPositive", "Positive correlation", value = "red", showColour = "both")),
+                                                  column(width=4,colourpicker::colourInput("edgeColorNegative",  "Negative correlation", value = "blue", showColour = "both")),
+                                                  column(width=4,colourpicker::colourInput("edgeColorNull",  "Null correlation", value = "black", showColour = "both"))
+                                                )
                                               ),
-                                              conditionalPanel(condition="!input.colorCorr",
+                                              conditionalPanel(condition="input.colorCorr != 'corr'",
                                                                fluidRow(column(width=7,colourpicker::colourInput("colorBackground", "Node color", value = "#BBBBBB", showColour = "both")),
-                                                                        column(width=5,colourpicker::colourInput("colorHighlightBackground", "if selected", value = "#BBBBBB", showColour = "both")))),
-                                              conditionalPanel(condition="input.colorCorr",
+                                                                        column(width=5,colourpicker::colourInput("colorHighlightBackground", "if selected", value = "#BBBBBB", showColour = "both")))
+                                              ),
+                                              conditionalPanel(condition="input.colorCorr != 'pcorr'",
                                                                selectInput("colorPalette", label=h6(strong("Gradient of colors")),choices = c("green-blue"="GnBu", "blue-white-red"="RdBu", "purple-white-orange"="PuOr", "red-yellow-green"="RdYlGn"),selected = "RdBu"),
                                                                checkboxInput("scaleFree", "Free scale")
                                               ),
@@ -1362,14 +1393,15 @@ function(request) {
                                               conditionalPanel(condition="input.PlotVisuSelect=='Barplot'",
                                                                radioButtons("positionBarPlot","Position",c("Grouped"="dodge","Stacked"="fill"), selected = "fill",inline=TRUE)
                                               ),
-                                              conditionalPanel(condition = "input.PlotVisuSelect!='Network'",
-                                                               selectInput("Exp_format_Visu",h5(strong("Export format")),c("png"="png","pdf"="pdf","eps"="eps","svg"="svg"), multiple = FALSE),
-                                                               fluidRow(
-                                                                 column(width=6,numericInput("heightVisuExport", "Height (in px)",min=100,max=NA,value = 500,step =1)),
-                                                                 column(width=6,numericInput("widthVisuExport", "Width (in px)",min=100,max=NA,value = 500,step =1))
-                                                               ),
-                                                               downloadButton("exportVisu", "Export")),
-                                              conditionalPanel(condition = "input.PlotVisuSelect=='Network'", downloadButton("downloadNetwork", "Export as .html"))
+                                              conditionalPanel(condition = "input.PlotVisuSelect",
+                                               selectInput("Exp_format_Visu",h5(strong("Export format")),c("png"="png","pdf"="pdf","eps"="eps","svg"="svg"), multiple = FALSE),
+                                               fluidRow(
+                                                 column(width=6,numericInput("heightVisuExport", "Height (in px)",min=100,max=NA,value = 500,step =1)),
+                                                 column(width=6,numericInput("widthVisuExport", "Width (in px)",min=100,max=NA,value = 500,step =1)),
+                                              ),
+                                              column(width = 6, downloadButton("exportVisu", "Export"))
+                                              ),
+                                              conditionalPanel(condition = "input.PlotVisuSelect=='Network'", column(width = 6, downloadButton("downloadNetwork", "Export as .html")))
                                           )
                          )
                   )

@@ -188,8 +188,10 @@
     "FactoMineR": {
       "Package": "FactoMineR",
       "Version": "2.4",
-      "Source": "Repository",
+      "Source": "URL",
       "Repository": "CRAN",
+      "RemoteType": "url",
+      "RemoteUrl": "https://cran.r-project.org/src/contrib/Archive/FactoMineR/FactoMineR_2.4.tar.gz",
       "Requirements": [
         "DT",
         "MASS",
@@ -394,8 +396,10 @@
     "MatrixModels": {
       "Package": "MatrixModels",
       "Version": "0.5-0",
-      "Source": "Repository",
+      "Source": "URL",
       "Repository": "CRAN",
+      "RemoteType": "url",
+      "RemoteUrl": "https://cran.r-project.org/src/contrib/Archive/MatrixModels/MatrixModels_0.5-0.tar.gz",
       "Requirements": [
         "Matrix",
         "R",
@@ -510,8 +514,10 @@
     "RcppEigen": {
       "Package": "RcppEigen",
       "Version": "0.3.3.9.1",
-      "Source": "Repository",
+      "Source": "URL",
       "Repository": "CRAN",
+      "RemoteType": "url",
+      "RemoteUrl": "https://cran.r-project.org/src/contrib/Archive/RcppEigen/RcppEigen_0.3.3.9.1.tar.gz",
       "Requirements": [
         "Matrix",
         "Rcpp",
@@ -1254,6 +1260,17 @@
       ],
       "Hash": "1706690277f29a2ee69d59483e21c5c6"
     },
+    "debugme": {
+      "Package": "debugme",
+      "Version": "1.1.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "crayon",
+        "grDevices"
+      ],
+      "Hash": "2d8a9e4f08f3dd669cb8ddd1eb575959"
+    },
     "dendextend": {
       "Package": "dendextend",
       "Version": "1.13.4",
@@ -1379,8 +1396,10 @@
     "emmeans": {
       "Package": "emmeans",
       "Version": "1.7.0",
-      "Source": "Repository",
+      "Source": "URL",
       "Repository": "CRAN",
+      "RemoteType": "url",
+      "RemoteUrl": "https://cran.r-project.org/src/contrib/Archive/emmeans/emmeans_1.7.0.tar.gz",
       "Requirements": [
         "R",
         "estimability",
@@ -1995,7 +2014,7 @@
     },
     "igraph": {
       "Package": "igraph",
-      "Version": "1.2.5",
+      "Version": "1.3.5",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -2005,10 +2024,11 @@
         "magrittr",
         "methods",
         "pkgconfig",
+        "rlang",
         "stats",
         "utils"
       ],
-      "Hash": "3878c30ce67cdb7f2d7f72554e37f476"
+      "Hash": "132b06d7060f11ba8b4c7e7f385e9b7a"
     },
     "ini": {
       "Package": "ini",
@@ -2444,11 +2464,36 @@
       ],
       "Hash": "b3209c62052922b6c629544d94c8fa8a"
     },
+    "packrat": {
+      "Package": "packrat",
+      "Version": "0.5.0-29",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteRepo": "packrat",
+      "RemoteUsername": "rstudio",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "5173a3faea677b7b7f5ad46f6bbcbeabaef3e688",
+      "Requirements": [
+        "R",
+        "tools",
+        "utils"
+      ],
+      "Hash": "38abbe20415189c41150b5ebe394a556"
+    },
+    "parsedate": {
+      "Package": "parsedate",
+      "Version": "1.3.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "7f5024cc7af45eeecef657fa62beb568"
+    },
     "pbkrtest": {
       "Package": "pbkrtest",
       "Version": "0.5.1",
-      "Source": "Repository",
+      "Source": "URL",
       "Repository": "CRAN",
+      "RemoteType": "url",
+      "RemoteUrl": "https://cran.r-project.org/src/contrib/Archive/pbkrtest/pbkrtest_0.5.1.tar.gz",
       "Requirements": [
         "MASS",
         "Matrix",
@@ -2557,6 +2602,17 @@
         "vctrs"
       ],
       "Hash": "15da5a8412f317beeee6175fbc76f4bb"
+    },
+    "pingr": {
+      "Package": "pingr",
+      "Version": "2.0.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "processx",
+        "utils"
+      ],
+      "Hash": "b762f8f7d305f7eb0bab96eb1a3c782a"
     },
     "pipeR": {
       "Package": "pipeR",
@@ -2687,6 +2743,17 @@
         "stats"
       ],
       "Hash": "ceb5c2a59ba33d42d051285a3e8a5118"
+    },
+    "ppcor": {
+      "Package": "ppcor",
+      "Version": "1.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "MASS",
+        "R"
+      ],
+      "Hash": "0b26c0c84f22515249dd7915f4214d32"
     },
     "praise": {
       "Package": "praise",
@@ -2886,6 +2953,13 @@
         "tibble"
       ],
       "Hash": "af8ab99cd936773a148963905736907b"
+    },
+    "rematch": {
+      "Package": "rematch",
+      "Version": "2.0.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "cbff1b666c6fa6d21202f07e2318d4f1"
     },
     "rematch2": {
       "Package": "rematch2",
@@ -3289,6 +3363,35 @@
       ],
       "Hash": "7b54dd72674b2a3793cb364c20cba41e"
     },
+    "shinytest": {
+      "Package": "shinytest",
+      "Version": "1.5.3",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R6",
+        "assertthat",
+        "callr",
+        "crayon",
+        "debugme",
+        "digest",
+        "htmlwidgets",
+        "httpuv",
+        "httr",
+        "jsonlite",
+        "parsedate",
+        "pingr",
+        "rematch",
+        "rlang",
+        "rstudioapi",
+        "shiny",
+        "testthat",
+        "utils",
+        "webdriver",
+        "withr"
+      ],
+      "Hash": "981229915650258e38ae95947210082d"
+    },
     "shinytoastr": {
       "Package": "shinytoastr",
       "Version": "2.1.1",
@@ -3298,6 +3401,17 @@
         "shiny"
       ],
       "Hash": "9e2768fd640e803d18ee95530939029e"
+    },
+    "showimage": {
+      "Package": "showimage",
+      "Version": "1.0.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "png",
+        "tools"
+      ],
+      "Hash": "841927b226db842d24d9c288c99ed27b"
     },
     "sjlabelled": {
       "Package": "sjlabelled",
@@ -3690,6 +3804,25 @@
         "utils"
       ],
       "Hash": "12545f2acf49d1d346d075580122d89c"
+    },
+    "webdriver": {
+      "Package": "webdriver",
+      "Version": "1.0.6",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R6",
+        "base64enc",
+        "callr",
+        "curl",
+        "debugme",
+        "httr",
+        "jsonlite",
+        "showimage",
+        "utils",
+        "withr"
+      ],
+      "Hash": "adc1e0db3ac0d75dcdb4b8179e7ca796"
     },
     "whisker": {
       "Package": "whisker",
