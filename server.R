@@ -3130,8 +3130,100 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     }
   })
   
+  colorsBarplot <- function() {
+    return(switch(input$colorsdiagVisuPlot,
+                           "retro palette" = c(
+                             "#048789", "#503D2E", "#D44D27", "#E2A72E", "#EFEBC8",
+                             "#6B63BF", "#7A3D3D", "#AED427", "#F7D488", "#27AED4",
+                             "#B7BF63", "#4D314A", "#BF6389", "#FF8C42", "#FF3C38"
+                           ),
+                           "easter palette" = c(
+                             "#DED4FF", "#A6E7FF", "#D4FFDE", "#FFF7AD", "#8AEEDD",
+                             "#D1F2A5", "#B56BFF", "#FFC48C", "#DF80FF", "#FF6B6B",
+                             "#FFDED4", "#14FA00", "#80A0FF", "#0091FA", "#FA6900"
+                           ),
+                           "warm palette" = c(
+                             "#FFCC0D", "#FF7326", "#FF194D", "#BF2669", "#702A8C",
+                             "#0D40FF", "#0DFF53", "#0DB9FF", "#0DBFA4", "#FF1493",
+                             "#FF69B4", "#81BF0D", "#FF7F50", "#CD5C5C", "#8B0000"
+                           ),
+                           "basic palette (1)" = c(
+                             "#f44336", "#e81e63", "#9c27b0", "#673ab7", "#3f51b5",
+                             "#2196f3", "#F37E21", "#2DF321", "#009688", "#4caf50",
+                             "#8bc34a", "#cddc39", "#ffeb3b", "#4A044E", "#ff9800",
+                             "#084E04", "#795548", "#7C8B60", "#607d8b", "#000000"
+                           ),
+                           "basic palette (2)" = c(
+                             '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
+                             '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
+                             '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000',
+                             '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080',
+                             '#ffffff', '#000000'
+                           ),
+                           "basic palette (3)" = c(
+                             '#C0362C', '#FF8642', '#F4DCB5', '#816C5B', '#B70AC3',
+                             '#B5CDF4', '#668D3C', '#B1DDA1', '#F4B5CD', '#0097AC',
+                             '#C3B70A', '#0AC3B7', '#c30a25', '#06C2F4', '#0A25C3'
+                           ),
+                           "basic palette (4)" = c(
+                             "#6929c4", "#1192e8", "#005d5d", "#9f1853", "#05DDAD",
+                             "#570408", "#198038", "#002d9c", "#FC6693", "#b28600",
+                             "#009d9a", "#012749", "#8a3800", "#a56eff"
+                           ),
+                           "basic palette (5)" = c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c"
+                                                   ,"#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5"
+                                                   ,"#8c564b","#c49c94","#e377c2","#f7b6d2","#7f7f7f"
+                                                   ,"#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"
+                           )))
+  }
   
-  
+  colorsVisuPlot <- function(){
+    target = ResDiffAnal()$target 
+    return(switch(input$colorsdiagVisuPlot,
+                                                      "retro palette" = rep(c(
+                                                        "#048789", "#503D2E", "#D44D27", "#E2A72E", "#EFEBC8",
+                                                        "#6B63BF", "#7A3D3D", "#AED427", "#F7D488", "#27AED4",
+                                                        "#B7BF63", "#4D314A", "#BF6389", "#FF8C42", "#FF3C38"
+                                                      ), ceiling(nrow(target)/15)),
+                                                      "easter palette" = rep(c(
+                                                        "#DED4FF", "#A6E7FF", "#D4FFDE", "#FFF7AD", "#8AEEDD",
+                                                        "#D1F2A5", "#B56BFF", "#FFC48C", "#DF80FF", "#FF6B6B",
+                                                        "#FFDED4", "#14FA00", "#80A0FF", "#0091FA", "#FA6900"
+                                                      ), ceiling(nrow(target)/15)),
+                                                      "warm palette" = rep(c(
+                                                        "#FFCC0D", "#FF7326", "#FF194D", "#BF2669", "#702A8C",
+                                                        "#0D40FF", "#0DFF53", "#0DB9FF", "#0DBFA4", "#FF1493",
+                                                        "#FF69B4", "#81BF0D", "#FF7F50", "#CD5C5C", "#8B0000"
+                                                      ), ceiling(nrow(target)/15)),
+                                                      "basic palette (1)" = rep(c(
+                                                        "#f44336", "#e81e63", "#9c27b0", "#673ab7", "#3f51b5",
+                                                        "#2196f3", "#F37E21", "#2DF321", "#009688", "#4caf50",
+                                                        "#8bc34a", "#cddc39", "#ffeb3b", "#4A044E", "#ff9800",
+                                                        "#084E04", "#795548", "#7C8B60", "#607d8b", "#000000"
+                                                      ), ceiling(nrow(target)/20)),
+                                                      "basic palette (2)" = rep(c(
+                                                        '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
+                                                        '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
+                                                        '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000',
+                                                        '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080',
+                                                        '#ffffff', '#000000'
+                                                      ), ceiling(nrow(target)/20)),
+                                                      "basic palette (3)" = rep(c(
+                                                        '#C0362C', '#FF8642', '#F4DCB5', '#816C5B', '#B70AC3',
+                                                        '#B5CDF4', '#668D3C', '#B1DDA1', '#F4B5CD', '#0097AC',
+                                                        '#C3B70A', '#0AC3B7', '#c30a25', '#06C2F4', '#0A25C3'
+                                                      ), ceiling(nrow(target)/15)),
+                                                      "basic palette (4)" = rep(c(
+                                                        "#6929c4", "#1192e8", "#005d5d", "#9f1853", "#05DDAD",
+                                                        "#570408", "#198038", "#002d9c", "#FC6693", "#b28600",
+                                                        "#009d9a", "#012749", "#8a3800", "#a56eff"
+                                                      ), ceiling(nrow(target)/14)),
+                                                      "basic palette (5)" = rep(c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c"
+                                                                                  ,"#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5"
+                                                                                  ,"#8c564b","#c49c94","#e377c2","#f7b6d2","#7f7f7f"
+                                                                                  ,"#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"
+                                                      ), ceiling(nrow(target) / 20))
+  ))}
   
   
   
@@ -3255,7 +3347,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     }
     
   })
-  pca_data <- reactive( {
+  pca_data <- reactive({
     
     resDiff = ResDiffAnal()
     #Variable of interest
@@ -3844,51 +3936,11 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       
       taxo = input$TaxoSelect
       target = ResDiffAnal()$target
-      colors = switch(input$colorsdiagVisuPlot,
-                      "retro palette" = rep(c(
-                        "#048789", "#503D2E", "#D44D27", "#E2A72E", "#EFEBC8",
-                        "#6B63BF", "#7A3D3D", "#AED427", "#F7D488", "#27AED4",
-                        "#B7BF63", "#4D314A", "#BF6389", "#FF8C42", "#FF3C38"
-                      ), ceiling(nrow(target)/15)),
-                      "easter palette" = rep(c(
-                        "#DED4FF", "#A6E7FF", "#D4FFDE", "#FFF7AD", "#8AEEDD",
-                        "#D1F2A5", "#B56BFF", "#FFC48C", "#DF80FF", "#FF6B6B",
-                        "#FFDED4", "#14FA00", "#80A0FF", "#0091FA", "#FA6900"
-                      ), ceiling(nrow(target)/15)),
-                      "warm palette" = rep(c(
-                        "#FFCC0D", "#FF7326", "#FF194D", "#BF2669", "#702A8C",
-                        "#0D40FF", "#0DFF53", "#0DB9FF", "#0DBFA4", "#FF1493",
-                        "#FF69B4", "#81BF0D", "#FF7F50", "#CD5C5C", "#8B0000"
-                      ), ceiling(nrow(target)/15)),
-                      "basic palette (1)" = rep(c(
-                        "#f44336", "#e81e63", "#9c27b0", "#673ab7", "#3f51b5",
-                        "#2196f3", "#F37E21", "#2DF321", "#009688", "#4caf50",
-                        "#8bc34a", "#cddc39", "#ffeb3b", "#4A044E", "#ff9800",
-                        "#084E04", "#795548", "#7C8B60", "#607d8b", "#000000"
-                      ), ceiling(nrow(target)/20)),
-                      "basic palette (2)" = rep(c(
-                        '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
-                        '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
-                        '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000',
-                        '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080',
-                        '#ffffff', '#000000'
-                      ), ceiling(nrow(target)/20)),
-                      "basic palette (3)" = rep(c(
-                        '#C0362C', '#FF8642', '#F4DCB5', '#816C5B', '#B70AC3',
-                        '#B5CDF4', '#668D3C', '#B1DDA1', '#F4B5CD', '#0097AC',
-                        '#C3B70A', '#0AC3B7', '#c30a25', '#06C2F4', '#0A25C3'
-                      ), ceiling(nrow(target)/15)),
-                      "basic palette (4)" = rep(c(
-                        "#6929c4", "#1192e8", "#005d5d", "#9f1853", "#05DDAD",
-                        "#570408", "#198038", "#002d9c", "#FC6693", "#b28600",
-                        "#009d9a", "#012749", "#8a3800", "#a56eff"
-                      ), ceiling(nrow(target)/14)),
-                      "basic palette (5)" = rep(c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c"
-                                               ,"#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5"
-                                               ,"#8c564b","#c49c94","#e377c2","#f7b6d2","#7f7f7f"
-                                               ,"#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"
-                                              ), ceiling(nrow(target) / 20))
-      )
+      colors = colorsVisuPlot()
+      counts = dataMergeCounts()$counts
+      sumTot = rowSums(counts)
+      ord = order(sumTot,decreasing=TRUE)
+      Available_taxo = rownames(counts)[ord]
       req(colors)
       if(input$Exp_format_Visu=="png") png(file, width = input$widthVisuExport, height = input$heightVisuExport)
       else if(input$Exp_format_Visu=="pdf") pdf(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96)
@@ -3896,56 +3948,13 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       else if(input$Exp_format_Visu=="svg") svg(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96)
       
       if(input$PlotVisuSelect=="Barplot") {
-        colors = switch(input$colorsdiagVisuPlot,
-                        "retro palette" = c(
-                          "#048789", "#503D2E", "#D44D27", "#E2A72E", "#EFEBC8",
-                          "#6B63BF", "#7A3D3D", "#AED427", "#F7D488", "#27AED4",
-                          "#B7BF63", "#4D314A", "#BF6389", "#FF8C42", "#FF3C38"
-                        ),
-                        "easter palette" = c(
-                          "#DED4FF", "#A6E7FF", "#D4FFDE", "#FFF7AD", "#8AEEDD",
-                          "#D1F2A5", "#B56BFF", "#FFC48C", "#DF80FF", "#FF6B6B",
-                          "#FFDED4", "#14FA00", "#80A0FF", "#0091FA", "#FA6900"
-                        ),
-                        "warm palette" = c(
-                          "#FFCC0D", "#FF7326", "#FF194D", "#BF2669", "#702A8C",
-                          "#0D40FF", "#0DFF53", "#0DB9FF", "#0DBFA4", "#FF1493",
-                          "#FF69B4", "#81BF0D", "#FF7F50", "#CD5C5C", "#8B0000"
-                        ),
-                        "basic palette (1)" = c(
-                          "#f44336", "#e81e63", "#9c27b0", "#673ab7", "#3f51b5",
-                          "#2196f3", "#F37E21", "#2DF321", "#009688", "#4caf50",
-                          "#8bc34a", "#cddc39", "#ffeb3b", "#4A044E", "#ff9800",
-                          "#084E04", "#795548", "#7C8B60", "#607d8b", "#000000"
-                        ),
-                        "basic palette (2)" = c(
-                          '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
-                          '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
-                          '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000',
-                          '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080',
-                          '#ffffff', '#000000'
-                        ),
-                        "basic palette (3)" = c(
-                          '#C0362C', '#FF8642', '#F4DCB5', '#816C5B', '#B70AC3',
-                          '#B5CDF4', '#668D3C', '#B1DDA1', '#F4B5CD', '#0097AC',
-                          '#C3B70A', '#0AC3B7', '#c30a25', '#06C2F4', '#0A25C3'
-                        ),
-                        "basic palette (4)" = c(
-                          "#6929c4", "#1192e8", "#005d5d", "#9f1853", "#05DDAD",
-                          "#570408", "#198038", "#002d9c", "#FC6693", "#b28600",
-                          "#009d9a", "#012749", "#8a3800", "#a56eff"
-                        ),
-                        "basic palette (5)" = c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c"
-                                                 ,"#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5"
-                                                 ,"#8c564b","#c49c94","#e377c2","#f7b6d2","#7f7f7f"
-                                                 ,"#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"
-        ))
         others = get_others()$others
         print(Plot_Visu_Barplot(input,ResDiffAnal(), colors, others)$gg)
       }
       else if(input$PlotVisuSelect=="Heatmap") Plot_Visu_Heatmap(input,ResDiffAnal(),export=TRUE)
       else if(input$PlotVisuSelect=="Boxplot") print(Plot_Visu_Boxplot(input,ResDiffAnal(),alpha=ifelse(input$Exp_format_Visu=="eps",1,0.7), dataDiff(), colors = colors))
       else if(input$PlotVisuSelect=="Scatterplot") print(Plot_Visu_Scatterplot(input,ResDiffAnal(),export=TRUE,lmEst = FALSE))
+      else if(input$PlotVisuSelect=="Network") print(Plot_network(input,ResDiffAnal(), Available_taxo, SelectTaxoPlotNetworkDebounce(), qualiVariable, colors = colorsVisuPlot())$voronoi)
       else if(input$PlotVisuSelect=="Diversity"){
         if(input$Exp_format_Visu == "eps") print(Plot_Visu_Diversity(input, ResDiffAnal(), colors, FALSE, 1)$plot)
         else print(Plot_Visu_Diversity(input,ResDiffAnal(), colors)$plot)
@@ -4295,61 +4304,16 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     return(temp)
   }
   
-  output$PlotVisuBar <- renderChart({
+  output$PlotVisuBar <- rNVD3shaman::renderChart({
     resDiff = ResDiffAnal()
-    colors = switch(input$colorsdiagVisuPlot,
-                    "retro palette" = c(
-                      "#048789", "#503D2E", "#D44D27", "#E2A72E", "#EFEBC8",
-                      "#6B63BF", "#7A3D3D", "#AED427", "#F7D488", "#27AED4",
-                      "#B7BF63", "#4D314A", "#BF6389", "#FF8C42", "#FF3C38"
-                    ),
-                    "easter palette" = c(
-                      "#DED4FF", "#A6E7FF", "#D4FFDE", "#FFF7AD", "#8AEEDD",
-                      "#D1F2A5", "#B56BFF", "#FFC48C", "#DF80FF", "#FF6B6B",
-                      "#FFDED4", "#14FA00", "#80A0FF", "#0091FA", "#FA6900"
-                    ),
-                    "warm palette" = c(
-                      "#FFCC0D", "#FF7326", "#FF194D", "#BF2669", "#702A8C",
-                      "#0D40FF", "#0DFF53", "#0DB9FF", "#0DBFA4", "#FF1493",
-                      "#FF69B4", "#81BF0D", "#FF7F50", "#CD5C5C", "#8B0000"
-                    ),
-                    "basic palette (1)" = c(
-                      "#f44336", "#e81e63", "#9c27b0", "#673ab7", "#3f51b5",
-                      "#2196f3", "#F37E21", "#2DF321", "#009688", "#4caf50",
-                      "#8bc34a", "#cddc39", "#ffeb3b", "#4A044E", "#ff9800",
-                      "#084E04", "#795548", "#7C8B60", "#607d8b", "#000000"
-                    ),
-                    "basic palette (2)" = c(
-                      '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
-                      '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
-                      '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000',
-                      '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080',
-                      '#ffffff', '#000000'
-                    ),
-                    "basic palette (3)" = c(
-                      '#C0362C', '#FF8642', '#F4DCB5', '#816C5B', '#B70AC3',
-                      '#B5CDF4', '#668D3C', '#B1DDA1', '#F4B5CD', '#0097AC',
-                      '#C3B70A', '#0AC3B7', '#c30a25', '#06C2F4', '#0A25C3'
-                    ),
-                    "basic palette (4)" = c(
-                      "#6929c4", "#1192e8", "#005d5d", "#9f1853", "#05DDAD",
-                      "#570408", "#198038", "#002d9c", "#FC6693", "#b28600",
-                      "#009d9a", "#012749", "#8a3800", "#a56eff"
-                    ),
-                    "basic palette (5)" = c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c"
-                                             ,"#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5"
-                                             ,"#8c564b","#c49c94","#e377c2","#f7b6d2","#7f7f7f"
-                                             ,"#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"
-    ))
+    colors = colorsBarplot()
     res = NULL
     tmp = NULL
     others = get_others()$others
     if(!is.null(resDiff$dds) && length(input$VisuVarInt)>=1) tmp = Plot_Visu_Barplot(input,resDiff, colors, others)
     if(!is.null(tmp)) res = tmp$plotd3
-    req(res)
     return(res)
   })
-  
   
   output$heatmap <- renderD3heatmap({
     resDiff = ResDiffAnal()
@@ -4540,46 +4504,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     resDiff = ResDiffAnal()
     dataDiff = dataDiff()
     target = resDiff$target
-    colors = switch(input$colorsdiagVisuPlot,
-                    "retro palette" = rep(c(
-                      "#048789", "#503D2E", "#D44D27", "#E2A72E", "#EFEBC8",
-                      "#6B63BF", "#7A3D3D", "#AED427", "#F7D488", "#27AED4",
-                      "#B7BF63", "#4D314A", "#BF6389", "#FF8C42", "#FF3C38"
-                    ), ceiling(nrow(target)/15)),
-                    "easter palette" = rep(c(
-                      "#DED4FF", "#A6E7FF", "#D4FFDE", "#FFF7AD", "#8AEEDD",
-                      "#D1F2A5", "#B56BFF", "#FFC48C", "#DF80FF", "#FF6B6B",
-                      "#FFDED4", "#14FA00", "#80A0FF", "#0091FA", "#FA6900"
-                    ), ceiling(nrow(target)/15)),
-                    "warm palette" = rep(c(
-                      "#FFCC0D", "#FF7326", "#FF194D", "#BF2669", "#702A8C",
-                      "#0D40FF", "#0DFF53", "#0DB9FF", "#0DBFA4", "#FF1493",
-                      "#FF69B4", "#81BF0D", "#FF7F50", "#CD5C5C", "#8B0000"
-                    ), ceiling(nrow(target)/15)),
-                    "basic palette (1)" = rep(c(
-                      "#f44336", "#e81e63", "#9c27b0", "#673ab7", "#3f51b5",
-                      "#2196f3", "#F37E21", "#2DF321", "#009688", "#4caf50",
-                      "#8bc34a", "#cddc39", "#ffeb3b", "#4A044E", "#ff9800",
-                      "#084E04", "#795548", "#7C8B60", "#607d8b", "#000000"
-                    ), ceiling(nrow(target)/20)),
-                    "basic palette (2)" = rep(c(
-                      '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
-                      '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
-                      '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000',
-                      '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080',
-                      '#ffffff', '#000000'
-                    ), ceiling(nrow(target)/20)),
-                    "basic palette (3)" = rep(c(
-                      '#C0362C', '#FF8642', '#F4DCB5', '#816C5B', '#B70AC3',
-                      '#B5CDF4', '#668D3C', '#B1DDA1', '#F4B5CD', '#0097AC',
-                      '#C3B70A', '#0AC3B7', '#c30a25', '#06C2F4', '#0A25C3'
-                    ), ceiling(nrow(target)/15)),
-                    "basic palette (4)" = rep(c(
-                      "#6929c4", "#1192e8", "#005d5d", "#9f1853", "#05DDAD",
-                      "#570408", "#198038", "#002d9c", "#FC6693", "#b28600",
-                      "#009d9a", "#012749", "#8a3800", "#a56eff"
-                    ), ceiling(nrow(target)/14))
-    )
+    colors = colorsVisuPlot()
     
     if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Boxplot(input,resDiff, dataDiff = dataDiff, colors = colors))
   },height=reactive(input$heightVisu))
@@ -4596,51 +4521,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   output$DiversityPlot <- renderPlot({
     resDiff = ResDiffAnal()
     target = resDiff$target
-    colors = switch(input$colorsdiagVisuPlot,
-                    "retro palette" = rep(c(
-                      "#048789", "#503D2E", "#D44D27", "#E2A72E", "#EFEBC8",
-                      "#6B63BF", "#7A3D3D", "#AED427", "#F7D488", "#27AED4",
-                      "#B7BF63", "#4D314A", "#BF6389", "#FF8C42", "#FF3C38"
-                    ), ceiling(nrow(target)/15)),
-                    "easter palette" = rep(c(
-                      "#DED4FF", "#A6E7FF", "#D4FFDE", "#FFF7AD", "#8AEEDD",
-                      "#D1F2A5", "#B56BFF", "#FFC48C", "#DF80FF", "#FF6B6B",
-                      "#FFDED4", "#14FA00", "#80A0FF", "#0091FA", "#FA6900"
-                    ), ceiling(nrow(target)/15)),
-                    "warm palette" = rep(c(
-                      "#FFCC0D", "#FF7326", "#FF194D", "#BF2669", "#702A8C",
-                      "#0D40FF", "#0DFF53", "#0DB9FF", "#0DBFA4", "#FF1493",
-                      "#FF69B4", "#81BF0D", "#FF7F50", "#CD5C5C", "#8B0000"
-                    ), ceiling(nrow(target)/15)),
-                    "basic palette (1)" = rep(c(
-                      "#f44336", "#e81e63", "#9c27b0", "#673ab7", "#3f51b5",
-                      "#2196f3", "#F37E21", "#2DF321", "#009688", "#4caf50",
-                      "#8bc34a", "#cddc39", "#ffeb3b", "#4A044E", "#ff9800",
-                      "#084E04", "#795548", "#7C8B60", "#607d8b", "#000000"
-                    ), ceiling(nrow(target)/20)),
-                    "basic palette (2)" = rep(c(
-                      '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
-                      '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
-                      '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000',
-                      '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080',
-                      '#ffffff', '#000000'
-                    ), ceiling(nrow(target)/20)),
-                    "basic palette (3)" = rep(c(
-                      '#C0362C', '#FF8642', '#F4DCB5', '#816C5B', '#B70AC3',
-                      '#B5CDF4', '#668D3C', '#B1DDA1', '#F4B5CD', '#0097AC',
-                      '#C3B70A', '#0AC3B7', '#c30a25', '#06C2F4', '#0A25C3'
-                    ), ceiling(nrow(target)/15)),
-                    "basic palette (4)" = rep(c(
-                      "#6929c4", "#1192e8", "#005d5d", "#9f1853", "#05DDAD",
-                      "#570408", "#198038", "#002d9c", "#FC6693", "#b28600",
-                      "#009d9a", "#012749", "#8a3800", "#a56eff"
-                    ), ceiling(nrow(target)/14)),
-                    "basic palette (5)" = rep(c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c"
-                                                 ,"#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5"
-                                                 ,"#8c564b","#c49c94","#e377c2","#f7b6d2","#7f7f7f"
-                                                 ,"#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"
-                    ), ceiling(nrow(target) / 20))
-    )
+    colors = colorsVisuPlot()
     req(colors)
     if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Diversity(input,resDiff, colors)$plot)
   })
@@ -4679,9 +4560,12 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       sumTot = rowSums(counts)
       ord = order(sumTot,decreasing=TRUE)
       Available_taxo = rownames(counts)[ord]
-      tmp = Plot_network(input, resDiff, Available_taxo, SelectTaxoPlotNetworkDebounce(), qualiVariable)$data
-    })
-  )
+      tmp = Plot_network(input, resDiff, Available_taxo, SelectTaxoPlotNetworkDebounce(), qualiVariable, colors = colorsVisuPlot())$data$nodes
+      names(tmp)[names(tmp) == 'id'] <- as.character(input$TaxoSelect)
+      tmp[, c(as.character(input$TaxoSelect), 'community')]}, rownames = FALSE),
+    options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
+                   pageLength = 10,scrollX=TRUE, processing=FALSE
+  ))
   
   ## Export Diversitytable in .csv
   output$ExportDiversitytable <- downloadHandler(
@@ -4710,6 +4594,22 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     }
   )
   
+  output$ExportCommunitytable <- downloadHandler(
+    filename = function() {
+      if(input$sepcommunity=='\t') 'SHAMAN_Community.tsv'
+      else 'SHAMAN_Richness.csv'
+    },
+    content = function(file){
+      resDiff = ResDiffAnal()
+      counts = dataMergeCounts()$counts
+      sumTot = rowSums(counts)
+      ord = order(sumTot,decreasing=TRUE)
+      Available_taxo = rownames(counts)[ord]
+      tmp = isolate(Plot_network(input, resDiff, Available_taxo, SelectTaxoPlotNetworkDebounce(), qualiVariable, colors = colorsVisuPlot())$data$nodes)
+      names(tmp)[names(tmp) == 'id'] <- as.character(input$TaxoSelect)
+      write.table(tmp[, c(as.character(input$TaxoSelect), 'community')], file, row.names = FALSE, sep = input$sepcommunity)
+    }
+  )
   
   ranges <- reactiveValues(x = NULL, y = NULL)
   
@@ -4742,8 +4642,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     Available_taxo = rownames(counts)[ord]
     
     InputColorCorrDebounce() # For reactivity
-    
-    if(!is.null(resDiff) && !is.null(ind_taxo)) withProgress(message="Loading...",Plot_network(input,resDiff,Available_taxo, ind_taxo, qualiVariable)$plot)
+    if(!is.null(resDiff) && !is.null(ind_taxo)) withProgress(message="Loading...",Plot_network(input,resDiff,Available_taxo, ind_taxo, qualiVariable, colors = colorsVisuPlot())$plot)
   })
   
   # React only once to change in one or several of the inputs
@@ -4815,10 +4714,9 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     else if(input$PlotVisuSelect=="Diversity") res =  plotOutput("DiversityPlot", height = input$heightVisu+10, width=if(input$modifwidthVisu){input$widthVisu})
     else if(input$PlotVisuSelect=="Rarefaction") res = plotOutput("RarefactionPlot",dblclick = "RarefactionPlot_dblclick",brush = brushOpts(id = "RarefactionPlot_brush",resetOnNew = TRUE), height = input$heightVisu+10, width=if(input$modifwidthVisu){input$widthVisu})
     else if(input$PlotVisuSelect=="Phylogeny") res = PhyloTreeMetaROutput('PhyloTreeMetaR2')
-    else if(input$PlotVisuSelect=="Network") res = visNetworkOutput("NetworkPlot")
-    
     return(res)
   })
+  
   
   ## Comparison plots
   output$plotVisuComp <- renderUI({
@@ -5023,27 +4921,36 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   output$SelectValueQualiVar <- renderUI({
     target=isolate(values$TargetWorking)
     if(!is.null(target)) {
-      conditionalPanel(condition = "input.colorCorr",
+      conditionalPanel(condition = "input.colorCorr == 'corr'",
                        selectInput("values1", 'Values to consider as "1"', choices = as.character(unique(as.factor(target[,input$sec_variable]))), selected = min(as.character(unique(as.factor(target[,input$sec_variable])))), multiple = TRUE),
                        h6('Other values will be considered as "0"', align = "center"))
     }
   })
   
-  output$SelectToLabelNetwork <- renderUI({
-    data = dataInput()$data 
-    taxo = input$TaxoSelect
-    resDiff = ResDiffAnal()
-    res = NULL
-    
-    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="...") 
-    {
-      counts = dataMergeCounts()$counts
-      sumTot = rowSums(counts)
-      ord = order(sumTot,decreasing=TRUE)
-      Available_taxo = rownames(counts)[ord]
-      res = selectizeInput("ToLabelNetwork", "Nodes to label", Available_taxo, selected = NULL, multiple = TRUE)}
-    return(res)
-  })
+  # output$SelectToLabelNetwork <- renderUI({
+  #   data = dataInput()$data 
+  #   taxo = input$TaxoSelect
+  #   resDiff = ResDiffAnal()
+  #   res = NULL
+  #   
+  #   if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(input$SelectTaxoNetwork)) 
+  #   {
+  #     counts = dataMergeCounts()$counts
+  #     sumTot = rowSums(counts)
+  #     ord = order(sumTot,decreasing=TRUE)
+  #     Available_taxo = rownames(counts)[ord]
+  #     if(input$SelectTaxoNetwork=="Linked"){
+  #       edges <- Plot_network(input,ResDiffAnal(),Available_taxo, Available_taxo, qualiVariable)$data$edges
+  #       edgesFrom <- unique(edges$from)
+  #       edgesTo <- unique(edges$to)
+  #       linked <- unique(c(edgesFrom, edgesTo))
+  #       res = selectizeInput("ToLabelNetwork", "Nodes to label", linked, selected = linked, multiple = TRUE)
+  #     }
+  #     if(input$SelectTaxoNetwork == "All")
+  #       res = selectizeInput("ToLabelNetwork", "Nodes to label", Available_taxo, selected = NULL, multiple = TRUE)
+  #     }
+  #   return(res)
+  # })
   
   ## For comp plot
   output$TaxoToPlotVisuComp <- renderUI({
@@ -5474,8 +5381,8 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   observe({
     visNetworkProxy("NetworkPlot") %>%
       visGetNodes(input = "NetworkPlot_nodes") %>%
-      visGetEdges(input = "NetworkPlot_edges")
-    
+      visGetEdges(input = "NetworkPlot_edges")  
+    colors <- colorsVisuPlot() 
     data <- list()
     # Get the current "nodes" as a data.frame
     if(!is.null(input$NetworkPlot_nodes)){
@@ -5500,27 +5407,47 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     input$ToLabelNetwork
     input$edgeColorPositive
     input$edgeColorNegative
+    input$colorsdiagVisuPlot
     
     if(!is.null(data$nodes)){
-      if(isolate(input$colorCorr)){scale <- if(input$scaleFree){max(c(max(as.numeric(data$nodes$cor)),-min(as.numeric(data$nodes$cor))))}else{1}
-      data$nodes$color.background <- sapply(as.numeric(data$nodes$cor), function(x) colorRampPalette(rev(brewer.pal(9, input$colorPalette)))(200)[round(x, digits = 2)*100/scale+100])
-      data$nodes$color.highlight.background <- data$nodes$color.background}
-      else{data$nodes$color.background <- input$colorBackground
-      data$nodes$color.highlight.background <- input$colorHighlightBackground}
+      if(isolate(input$colorCorr == 'corr')){
+        scale <- if(input$scaleFree){max(c(max(as.numeric(data$nodes$cor)),-min(as.numeric(data$nodes$cor))))}else{1}
+        data$nodes$color.background <- sapply(as.numeric(data$nodes$cor), function(x) colorRampPalette(rev(brewer.pal(9, input$colorPalette)))(200)[round(x, digits = 2)*100/scale+100])
+        data$nodes$color.highlight.background <- data$nodes$color.background
+      }
+      
+      else
+      {
+        data$nodes$color.background <- colors[1 + (as.integer(data$nodes$community) -1) %% length(colors)]
+        data$nodes$color.highlight.background <- data$nodes$color.background
+      }
+      # else{data$nodes$color.background <- input$colorBackground
+      # data$nodes$color.highlight.background <- input$colorHighlightBackground}
+      
       data$nodes$color.border <- input$colorBorder
       data$nodes$color.highlight.border <- input$colorHighlightBorder
       
       
       list_to_label <- input$ToLabelNetwork
-      data$nodes$label <- sapply(data$nodes$id, function(x)if(is.element(x, list_to_label)){x}else{""})}
+      data$nodes$label <- data$nodes$id
+    }
+      #data$nodes$label <- sapply(data$nodes$id, function(x)if(is.element(x, list_to_label)){x}else{""})}
     
     if(!is.null(data$edges)){
-      data$edges$color <- sapply(data$edges$weight, function(x)if(x==1){input$edgeColorPositive}else{input$edgeColorNegative})}
+      if(input$colorCorr == 'pcorr'){
+        data$edges$color <- ifelse(data$edges$pcor > 0, '#FF0000', ifelse(data$edges$pcor < 0, '#0000FF', '#000000'))
+        #data$edges$weight <- abs(as.numeric(data$edges$weight))
+      }
+      else
+        data$edges$color <- '#000000'
+      }
     
     visNetworkProxy("NetworkPlot") %>%
       visUpdateNodes(nodes = data$nodes) %>%
       visUpdateEdges(edges = data$edges)
+   
   })
+  
   
   # output$legendNetworkCorr <- renderPlot({
   #   par(mar=c(1,0,0,0))
@@ -5533,6 +5460,27 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   SelectTaxoPlotNetworkDebounce <- debounce(ListSelectTaxoToPlotNetwork, 1000)
   
+  observe({
+    if(input$PlotVisuSelect == "Network")
+      updateRadioButtons(session = session, "NormOrRaw", choiceNames = c("Norm", "Raw", "VST"), choiceValues = c("norm", "raw", "vst"), inline = TRUE)
+    else
+      updateRadioButtons(session = session, "NormOrRaw", choiceNames = c("Norm", "Raw"), choiceValues = c("norm", "raw"), inline = TRUE)
+    
+  })
+  
+  # observe({
+  #   shinyjs::runjs("console.log(document.getElementById('selectedByNetworkPlot').value);")
+  # })
+  output$Panels <- renderPlot({
+    counts = dataMergeCounts()$counts
+    sumTot = rowSums(counts)
+    ord = order(sumTot,decreasing=TRUE)
+    Available_taxo = rownames(counts)[ord]
+    res = Plot_network(input,ResDiffAnal(), Available_taxo, SelectTaxoPlotNetworkDebounce(), qualiVariable, colors = colorsVisuPlot())$voronoi
+    return(res)
+  },height = reactive(input$heightVisu), width = reactive(ifelse(input$modifwidthVisu,input$widthVisu,"auto")))
+  
+  
   output$downloadNetwork <- downloadHandler(
     filename = function() {"network_SHAMAN.html"},
     content = function(con) {
@@ -5540,7 +5488,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       sumTot = rowSums(counts)
       ord = order(sumTot,decreasing=TRUE)
       Available_taxo = rownames(counts)[ord]
-      Plot_network(input,ResDiffAnal(), Available_taxo, SelectTaxoPlotNetworkDebounce(), qualiVariable)$plot %>% visSave(con)
+      Plot_network(input,ResDiffAnal(), Available_taxo, SelectTaxoPlotNetworkDebounce(), qualiVariable, colors = colorsVisuPlot())$plot %>% visSave(con)
     }
   )
 })
