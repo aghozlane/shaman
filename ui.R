@@ -1093,7 +1093,8 @@ function(request) {
                                                        height = 1000,
                                                        selected = "Network",
                                                        tabPanel("Network", uiOutput("Research"), div(visNetworkOutput("NetworkPlot", height = "400px"))),
-                                                       tabPanel("Panels", plotOutput("Panels"))),
+                                                       tabPanel("Panels", plotOutput("Panels")),
+                                                       tabPanel("Community barplot", plotOutput("CommunityBarplot"))),
                                                 style = "background-color: #edf1f4;")
                              ),
                              conditionalPanel(condition="input.PlotVisuSelect!='Network'",
@@ -1358,27 +1359,30 @@ function(request) {
                              ),
                              conditionalPanel(condition="input.PlotVisuSelect=='Network'",
                                               fluidRow(
-                                                column(width=6,sliderInput("nodeSizeNetwork", h6("Node size"),min=0,max=100,value = 20,step = 1)),
-                                                column(width=6,sliderInput("linkWidth", h6("Link width"),min=0,max=10,value = 1,step = 0.5))
+                                                column(width=5,sliderInput("nodeSizeNetwork", h6("Node size"),min=0,max=100,value = 20,step = 1)),
+                                                column(width=5,sliderInput("linkWidth", h6("Link width"),min=0,max=10,value = 1,step = 0.5)),
+                                                column(width = 1)
                                               ),
                                               conditionalPanel(condition="input.colorCorr == 'pcorr'",
                                                 fluidRow(
-                                                  column(width=4,colourpicker::colourInput("edgeColorPositive", "Positive correlation", value = "red", showColour = "both")),
-                                                  column(width=4,colourpicker::colourInput("edgeColorNegative",  "Negative correlation", value = "blue", showColour = "both")),
-                                                  column(width=4,colourpicker::colourInput("edgeColorNull",  "Null correlation", value = "black", showColour = "both"))
+                                                  column(width=5,colourpicker::colourInput("edgeColorPositive", "Positive correlation", value = "red", showColour = "both")),
+                                                  column(width=5,colourpicker::colourInput("edgeColorNegative",  "Negative correlation", value = "blue", showColour = "both")),
+                                                  column(width = 1)
                                                 )
                                               ),
                                               conditionalPanel(condition="input.colorCorr != 'corr'",
-                                                               fluidRow(column(width=7,colourpicker::colourInput("colorBackground", "Node color", value = "#BBBBBB", showColour = "both")),
-                                                                        column(width=5,colourpicker::colourInput("colorHighlightBackground", "if selected", value = "#BBBBBB", showColour = "both")))
+                                                               fluidRow(column(width=5,colourpicker::colourInput("colorBackground", "Node color", value = "#BBBBBB", showColour = "both")),
+                                                                        column(width=5,colourpicker::colourInput("colorHighlightBackground", "if selected", value = "#BBBBBB", showColour = "both"))),
+                                                               column(width = 1)
                                               ),
                                               conditionalPanel(condition="input.colorCorr != 'pcorr'",
                                                                selectInput("colorPalette", label=h6(strong("Gradient of colors")),choices = c("green-blue"="GnBu", "blue-white-red"="RdBu", "purple-white-orange"="PuOr", "red-yellow-green"="RdYlGn"),selected = "RdBu"),
                                                                checkboxInput("scaleFree", "Free scale")
                                               ),
                                               fluidRow(
-                                                column(width=7,colourpicker::colourInput("colorBorder", "Node border", value = "#AAAAAA", showColour = "both")),
-                                                column(width=5,colourpicker::colourInput("colorHighlightBorder",  "if selected", value = "#000000", showColour = "both"))
+                                                column(width=5,colourpicker::colourInput("colorBorder", "Node border", value = "#AAAAAA", showColour = "both")),
+                                                column(width=5,colourpicker::colourInput("colorHighlightBorder",  "if selected", value = "#000000", showColour = "both")),
+                                                column(width=1)
                                               )
                              ),
                              
