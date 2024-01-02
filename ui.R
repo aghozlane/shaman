@@ -372,7 +372,7 @@ function(request) {
                                         tags$style(type='text/css', "#checkMail { width:100%; margin-top: 25px;}")
                                  ),
                                  column(width=6,  selectizeInput("HostName",label = "Select the host",
-                                                                 choices =   c("None"="", "a.coluzzi (mosquito)" = "acoluzzi", "a.aegypti (mosquito)" = "aaegypti", "a.albopictus (mosquito)" = "aalbopictus",  
+                                                                 choices =   c("None"="", "a.coluzzi (mosquito)" = "acoluzzi", "a.funestus (mosquito)" = "afunestus", "a.aegypti (mosquito)" = "aaegypti", "a.albopictus (mosquito)" = "aalbopictus",  
                                                                                "a.stephensi (mosquito)" = "astephensi", "b.taurus (cow)" = "btaurus", "c.familiaris (dog)" = "cfamiliaris",
                                                                                "chiroptera (bat)" = "chiroptera", "c.pipiens (mosquito)" = "cpipiens", "c.sabaeus (Apes)" = "csabaeus" , "d.melanogaster (fly)"="dmelanogaster", 
                                                                                "d.rerio (fish)" = "drerio", "e.caballus (Horse)" = "ecaballus", "f.catus (cat)" = "fcatus", "hg18 (human)"="hg18", "hg19 (human)"="hg19", 
