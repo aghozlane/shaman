@@ -1932,8 +1932,10 @@ Plot_network <-
         taxo <- dplyr::inner_join(taxo, cluster_df, by = as.character(input$TaxoSelect)) %>%
           dplyr::mutate(across(where(is.factor), as.character)) %>% # Convert factors to characters
           tidyr::replace_na(setNames(lapply(taxo, function(x) "Unknown"), names(taxo))) %>%
+          dplyr::arrange(Community) %>%
           as.data.frame()
         
+        print(taxo)
       }
       pcor_mat = pcor
     }

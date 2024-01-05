@@ -5695,8 +5695,6 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       Plot_diag_Contrib(input, resDiff, pca_data())
     if (input$DiagPlot == 'pcoaPlot')
       Plot_diag_Contrib(input, resDiff, pcoa_data())
-    else
-      Plot_diag_Contrib(input, resDiff, pca_data())
   }, height = 400)
   
   
@@ -6078,7 +6076,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
         if (input$DiagPlot == "pcoaPlot")
           print(Plot_diag(input, resDiff, tree, calcul_df = pcoa_data()))
         else if (input$DiagPlot == "umapPlot")
-          print(Plot_diag_Contrib(input, resDiff, calcul_df = umap_data()))
+          print(Plot_diag(input, resDiff, calcul_df = umap_data()))
         else
           print(Plot_diag(input, resDiff, tree, calcul_df = pca_data()))
       }
