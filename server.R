@@ -1,7 +1,16 @@
-shinyServer(function(input, output,session) {
-  
-  hide(id = "loading-content", anim = TRUE, animType = "fade",time=1.5)
-  hide(id = "loading-content-bar", anim = TRUE, animType = "fade",time=1.5)
+shinyServer(function(input, output, session) {
+  hide(
+    id = "loading-content",
+    anim = TRUE,
+    animType = "fade",
+    time = 1.5
+  )
+  hide(
+    id = "loading-content-bar",
+    anim = TRUE,
+    animType = "fade",
+    time = 1.5
+  )
   ###                                               ###
   ####                    LOAD FILES ####
   ###                                               ###
@@ -9,58 +18,111 @@ shinyServer(function(input, output,session) {
   
   
   ## Create base for contrast
-  rand = floor(runif(1,0,1e9))
-  namesfile = tempfile(pattern = "BaseContrast", tmpdir = tempdir(), fileext = "")
-  file.create(namesfile,showWarnings=FALSE)
+  rand = floor(runif(1, 0, 1e9))
+  namesfile = tempfile(pattern = "BaseContrast",
+                       tmpdir = tempdir(),
+                       fileext = "")
+  file.create(namesfile, showWarnings = FALSE)
   target = NULL
   taxo = NULL
   proxy = dataTableProxy('DataTaxo')
   
   ## JSON name for masque
   curdir  = getwd()
-  json_name = tempfile(pattern = "file", tmpdir = paste(curdir,"www","masque","todo",sep= .Platform$file.sep),  fileext = ".json")
+  json_name = tempfile(
+    pattern = "file",
+    tmpdir = paste(curdir, "www", "masque", "todo", sep = .Platform$file.sep),
+    fileext = ".json"
+  )
   
   ## Pass for MASQUE
-  pass = gsub("file","",basename(file_path_sans_ext(json_name)))
+  pass = gsub("file", "", basename(file_path_sans_ext(json_name)))
   
   ## Popup messages
-  observe(if(input$AddRegScatter) info("By adding the regression line, you will lose interactivity."))
+  observe(if (input$AddRegScatter)
+    info("By adding the regression line, you will lose interactivity."))
   
   ## Reactive target
-  values <- reactiveValues(TargetWorking = target, TaxoWorking = taxo, labeled=NULL,fastq_names_only=NULL,R1fastQ=NULL,R2fastQ=NULL,
-                           json_name=json_name,num=0,pass=pass,login_email = NULL,is.valid =NULL,
-                           biom_masque = NULL,tree_masque=NULL, masque_key = NULL, count_table_masque = NULL, 
-                           rdp_annot_masque = NULL, rdp_thres_masque = NULL,
-                           paths_fastq_tmp=NULL,curdir=curdir, error_progress=FALSE, visTarget=FALSE, colors_diag=NULL)
+  values <-
+    reactiveValues(
+      TargetWorking = target,
+      TaxoWorking = taxo,
+      labeled = NULL,
+      fastq_names_only = NULL,
+      R1fastQ = NULL,
+      R2fastQ = NULL,
+      json_name = json_name,
+      num = 0,
+      pass = pass,
+      login_email = NULL,
+      is.valid = NULL,
+      biom_masque = NULL,
+      tree_masque = NULL,
+      masque_key = NULL,
+      count_table_masque = NULL,
+      rdp_annot_masque = NULL,
+      rdp_thres_masque = NULL,
+      paths_fastq_tmp = NULL,
+      curdir = curdir,
+      error_progress = FALSE,
+      visTarget = FALSE,
+      colors_diag = NULL
+    )
   
   ## Counts file
-  dataInputCounts <-reactive({ 
-    
+  dataInputCounts <- reactive({
     data = NULL
     inFile <- input$fileCounts
-    if (is.null(inFile) && is.null(values$count_table_masque)) return(NULL)
+    if (is.null(inFile) &&
+        is.null(values$count_table_masque))
+      return(NULL)
     #if (is.null(inFile)) return(NULL)
     
-    if (!is.null(values$count_table_masque) && file.exists(values$count_table_masque)){
-      tryCatch(read.csv(values$count_table_masque,sep="\t",header=TRUE,check.names=FALSE)->data,
-               #messageId="ErrorCounts",
-               error=function(e) sendSweetAlert(session,
-                                                title = "Oops",
-                                                text=paste("The count file can not be read in SHAMAN.\n \n",e),type ="error"))
+    if (!is.null(values$count_table_masque) &&
+        file.exists(values$count_table_masque)) {
+      tryCatch(
+        read.csv(
+          values$count_table_masque,
+          sep = "\t",
+          header = TRUE,
+          check.names = FALSE
+        ) -> data,
+        #messageId="ErrorCounts",
+        error = function(e)
+          sendSweetAlert(
+            session,
+            title = "Oops",
+            text = paste("The count file can not be read in SHAMAN.\n \n", e),
+            type = "error"
+          )
+      )
     }
     else{
-      tryCatch(read.csv(inFile$datapath,sep=input$sepcount,header=TRUE,check.names=FALSE)->data,
-               #messageId="ErrorCounts",
-               error=function(e) sendSweetAlert(session,
-                                                title = "Oops",
-                                                text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
+      tryCatch(
+        read.csv(
+          inFile$datapath,
+          sep = input$sepcount,
+          header = TRUE,
+          check.names = FALSE
+        ) -> data,
+        #messageId="ErrorCounts",
+        error = function(e)
+          sendSweetAlert(
+            session,
+            title = "Oops",
+            text = paste("Your file can not be read in SHAMAN.\n \n", e),
+            type = "error"
+          )
+      )
     }
     #print(data)
-    if(!is.null(data)){
-      colnames(data) = gsub("-",".",colnames(data))
+    if (!is.null(data)) {
+      colnames(data) = gsub("-", ".", colnames(data))
       ## Rownames
-      if(!TRUE%in%duplicated(data[,1])) rownames(data)=data[,1];data=data[,-1]
-      try(round(data, 0)->data, silent=T)
+      if (!TRUE %in% duplicated(data[, 1]))
+        rownames(data) = data[, 1]
+      data = data[, -1]
+      try(round(data, 0) -> data, silent = T)
     }
     #print(data)
     return(as.data.frame(data))
@@ -69,168 +131,270 @@ shinyServer(function(input, output,session) {
   
   
   ## Taxo File
-  dataInputTaxo <-reactive({ 
+  dataInputTaxo <- reactive({
     inFile <- input$fileTaxo
     values$TaxoWorking = NULL
-    if (is.null(inFile) && is.null(values$rdp_annot_masque)) return(NULL)
+    if (is.null(inFile) &&
+        is.null(values$rdp_annot_masque))
+      return(NULL)
     #if (is.null(inFile)) return(NULL)
     
-    if(input$TypeTaxo=="Table" && !is.null(inFile)) 
+    if (input$TypeTaxo == "Table" && !is.null(inFile))
     {
-      tryCatch(read.csv(inFile$datapath,sep=input$septaxo,header=TRUE)->data,
-               #messageId="ErrorTaxo",
-               error=function(e) sendSweetAlert(session,
-                                                title = "Oops",
-                                                text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
+      tryCatch(
+        read.csv(
+          inFile$datapath,
+          sep = input$septaxo,
+          header = TRUE
+        ) -> data,
+        #messageId="ErrorTaxo",
+        error = function(e)
+          sendSweetAlert(
+            session,
+            title = "Oops",
+            text = paste("Your file can not be read in SHAMAN.\n \n", e),
+            type = "error"
+          )
+      )
       
       ## Rownames
-      if(!is.null(data))
+      if (!is.null(data))
       {
-        if(!TRUE%in%duplicated(data[,1])){ 
-          DataNames=data[,1]
-          colNames=colnames(data)[-1]
-          data=as.matrix(data[,-1])
-          rownames(data)=DataNames
+        if (!TRUE %in% duplicated(data[, 1])) {
+          DataNames = data[, 1]
+          colNames = colnames(data)[-1]
+          data = as.matrix(data[, -1])
+          rownames(data) = DataNames
           colnames(data) = colNames
         }
       }
     }
     
-    if(input$TypeTaxo=="RDP" && !is.null(inFile) || !is.null(values$rdp_annot_masque)) 
+    if (input$TypeTaxo == "RDP" &&
+        !is.null(inFile) || !is.null(values$rdp_annot_masque))
     {
-      if (!is.null(values$rdp_annot_masque) && file.exists(values$rdp_annot_masque)){
-        tryCatch(read_rdp(values$rdp_annot_masque,values$rdp_thres_masque)->data,
-                 #messageId="ErrorRDP",
-                 error=function(e) sendSweetAlert(session,
-                                                  title = "Oops",
-                                                  text=paste("The annotation file can not be read in SHAMAN.\n \n",e),type ="error"))
+      if (!is.null(values$rdp_annot_masque) &&
+          file.exists(values$rdp_annot_masque)) {
+        tryCatch(
+          read_rdp(values$rdp_annot_masque, values$rdp_thres_masque) -> data,
+          #messageId="ErrorRDP",
+          error = function(e)
+            sendSweetAlert(
+              session,
+              title = "Oops",
+              text = paste("The annotation file can not be read in SHAMAN.\n \n", e),
+              type = "error"
+            )
+        )
       }
       else{
-        tryCatch(read_rdp(inFile$datapath,input$RDP_th)->data,
-                 #messageId="ErrorRDP",
-                 error=function(e) sendSweetAlert(session,
-                                                  title = "Oops",
-                                                  text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
+        tryCatch(
+          read_rdp(inFile$datapath, input$RDP_th) -> data,
+          #messageId="ErrorRDP",
+          error = function(e)
+            sendSweetAlert(
+              session,
+              title = "Oops",
+              text = paste("Your file can not be read in SHAMAN.\n \n", e),
+              type = "error"
+            )
+        )
       }
       
     }
     
     ## Add NA
-    data=as.matrix(data)
-    indNa = which(data=="")
-    data[indNa]=NA
+    data = as.matrix(data)
+    indNa = which(data == "")
+    data[indNa] = NA
     #print(data)
     return(as.data.frame(data))
   })
   
   
   ## BIOM File
-  dataInputEpi2me <-reactive({
-    
+  dataInputEpi2me <- reactive({
     data = NULL
     inFile <- input$fileEpi2me
     
-    if (!is.null(inFile) && is.null(values$biom_masque)){
-      tryCatch(read.csv(inFile$datapath,sep=input$sepepi2me,header=TRUE)->data,
-               #messageId="ErrorBiom1",
-               error=function(e) sendSweetAlert(session,
-                                                title = "Oops",
-                                                text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
-      if(FALSE %in% c(c("accuracy", "barcode", "lineage") %in% colnames(data))){
+    if (!is.null(inFile) && is.null(values$biom_masque)) {
+      tryCatch(
+        read.csv(
+          inFile$datapath,
+          sep = input$sepepi2me,
+          header = TRUE
+        ) -> data,
+        #messageId="ErrorBiom1",
+        error = function(e)
+          sendSweetAlert(
+            session,
+            title = "Oops",
+            text = paste("Your file can not be read in SHAMAN.\n \n", e),
+            type = "error"
+          )
+      )
+      if (FALSE %in% c(c("accuracy", "barcode", "lineage") %in% colnames(data))) {
         data = NULL
-        sendSweetAlert(session, title = "Missing data",
-                       text="Shaman looks for accuracy, barcode and lineage colnames in Epi2me files\n \n",type ="error")
+        sendSweetAlert(session,
+                       title = "Missing data",
+                       text = "Shaman looks for accuracy, barcode and lineage colnames in Epi2me files\n \n",
+                       type = "error")
       }
     }
     return(data)
   })
   
   ## BIOM File
-  dataInputBiom <-reactive({ 
-    
+  dataInputBiom <- reactive({
     data = NULL
     inFile <- input$fileBiom
     
-    if (!is.null(inFile) && is.null(values$biom_masque)){
-      tryCatch(read_biom(inFile$datapath)->data,
-               #messageId="ErrorBiom1",
-               error=function(e) sendSweetAlert(session,
-                                                title = "Oops",
-                                                text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
+    if (!is.null(inFile) && is.null(values$biom_masque)) {
+      tryCatch(
+        read_biom(inFile$datapath) -> data,
+        #messageId="ErrorBiom1",
+        error = function(e)
+          sendSweetAlert(
+            session,
+            title = "Oops",
+            text = paste("Your file can not be read in SHAMAN.\n \n", e),
+            type = "error"
+          )
+      )
       
     }
-    if (!is.null(values$biom_masque) && file.exists(values$biom_masque)){ 
-      tryCatch(read_biom(values$biom_masque)->data,
-               #messageId="ErrorBiom2",
-               error=function(e) sendSweetAlert(session,
-                                                title = "Oops",
-                                                text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
+    if (!is.null(values$biom_masque) &&
+        file.exists(values$biom_masque)) {
+      tryCatch(
+        read_biom(values$biom_masque) -> data,
+        #messageId="ErrorBiom2",
+        error = function(e)
+          sendSweetAlert(
+            session,
+            title = "Oops",
+            text = paste("Your file can not be read in SHAMAN.\n \n", e),
+            type = "error"
+          )
+      )
     }
     return(data)
   })
   
-  observeEvent(input$fileCounts,{
-    values$count_table_masque=NULL;
+  observeEvent(input$fileCounts, {
+    values$count_table_masque = NULL
+    
   })
-  observeEvent(input$fileTaxo,{
-    values$rdp_annot_masque=NULL;
-    values$rdp_thres_masque=NULL;
+  observeEvent(input$fileTaxo, {
+    values$rdp_annot_masque = NULL
+    
+    values$rdp_thres_masque = NULL
+    
   })
-  observeEvent(input$fileBiom,{
-    values$biom_masque=NULL;
+  observeEvent(input$fileBiom, {
+    values$biom_masque = NULL
+    
   })
   
   
   ## Unifrac File (tree)
-  dataInputTree <-reactive({ 
-    
+  dataInputTree <- reactive({
     data = NULL
-    {inFile <- input$fileTree
-      values$tree_masque}
-    
-    if (!is.null(inFile) && is.null(values$tree_masque)) {
-      try(read.tree(inFile$datapath)->data, silent=T)
-      CheckTree = CheckTreeFile(data)
-      data = CheckTree$tree
-      try(readLines(inFile$datapath)->treeseq, silent=T)
-      return(list(data=data, Error=CheckTree$Error, Warning=CheckTree$Warning, treeseq=treeseq))
+    {
+      inFile <- input$fileTree
+      values$tree_masque
     }
     
-    if (!is.null(values$tree_masque) && file.exists(values$tree_masque)) {
-      try(read.tree(values$tree_masque)->data, silent=T)
+    if (!is.null(inFile) && is.null(values$tree_masque)) {
+      try(read.tree(inFile$datapath) -> data, silent = T)
       CheckTree = CheckTreeFile(data)
       data = CheckTree$tree
-      try(readLines(values$tree_masque)->treeseq, silent=T)
-      return(list(data=data, Error=CheckTree$Error, Warning=CheckTree$Warning, treeseq=treeseq))
+      try(readLines(inFile$datapath) -> treeseq, silent = T)
+      return(
+        list(
+          data = data,
+          Error = CheckTree$Error,
+          Warning = CheckTree$Warning,
+          treeseq = treeseq
+        )
+      )
+    }
+    
+    if (!is.null(values$tree_masque) &&
+        file.exists(values$tree_masque)) {
+      try(read.tree(values$tree_masque) -> data, silent = T)
+      CheckTree = CheckTreeFile(data)
+      data = CheckTree$tree
+      try(readLines(values$tree_masque) -> treeseq, silent = T)
+      return(
+        list(
+          data = data,
+          Error = CheckTree$Error,
+          Warning = CheckTree$Warning,
+          treeseq = treeseq
+        )
+      )
     }
     
   })
   
   
-  observeEvent(input$fileTree,{
-    values$tree_masque=NULL;
+  observeEvent(input$fileTree, {
+    values$tree_masque = NULL
+    
   })
   
   
   # Infobox Tree (Unifrac)
   output$InfoTreePhylo_box <- renderInfoBox({
-    {input$fileTree
-      values$tree_masque}
+    {
+      input$fileTree
+      values$tree_masque
+    }
     tree_tmp = isolate(dataInputTree())
     tree = tree_tmp$data
     
-    res = infoBox(h6(strong("Phylogenetic tree")), subtitle = h6(strong("Load the phylogenetic tree (optional)")) ,color = "light-blue",width=NULL,fill=TRUE, icon = icon("upload"))
-    if(!is.null(tree)){
+    res = infoBox(
+      h6(strong("Phylogenetic tree")),
+      subtitle = h6(strong(
+        "Load the phylogenetic tree (optional)"
+      )) ,
+      color = "light-blue",
+      width = NULL,
+      fill = TRUE,
+      icon = icon("upload")
+    )
+    if (!is.null(tree)) {
       #if(!is.null(isolate(input$fileTree))){
-      res = infoBox(h6(strong("Phylogenetic tree")), subtitle = h6("The phylogenetic has been loaded") ,color = "green",width=NULL,fill=TRUE, icon = icon("thumbs-o-up"))
-      if(!is.null(tree_tmp$Warning)){      
-        res = infoBox(h6(strong("Phylogenetic tree")), subtitle = h6(tree_tmp$Warning) ,color = "orange",width=NULL,fill=TRUE, icon = icon("warning"))
+      res = infoBox(
+        h6(strong("Phylogenetic tree")),
+        subtitle = h6("The phylogenetic has been loaded") ,
+        color = "green",
+        width = NULL,
+        fill = TRUE,
+        icon = icon("thumbs-o-up")
+      )
+      if (!is.null(tree_tmp$Warning)) {
+        res = infoBox(
+          h6(strong("Phylogenetic tree")),
+          subtitle = h6(tree_tmp$Warning) ,
+          color = "orange",
+          width = NULL,
+          fill = TRUE,
+          icon = icon("warning")
+        )
       }
-      if(!is.null(tree_tmp$Error)){      
-        res = infoBox(h6(strong("Phylogenetic tree")), subtitle = h6(tree_tmp$Error),color = "red",width=NULL,fill=TRUE, icon = icon("thumbs-o-down"))
+      if (!is.null(tree_tmp$Error)) {
+        res = infoBox(
+          h6(strong("Phylogenetic tree")),
+          subtitle = h6(tree_tmp$Error),
+          color = "red",
+          width = NULL,
+          fill = TRUE,
+          icon = icon("thumbs-o-down")
+        )
       }
       #}
-    } 
+    }
     return(res)
   })
   
@@ -238,47 +402,82 @@ shinyServer(function(input, output,session) {
     val <- input$annotationKingdomthreshold
     # Control the value, min, max, and step.
     # Step size is 2 when input value is even; 1 when value is odd.
-    updateSliderInput(session, "annotationPhylumthreshold", value = input$annotationPhylumthreshold,
-                      min = val, max = 1, step = 0.005)
+    updateSliderInput(
+      session,
+      "annotationPhylumthreshold",
+      value = input$annotationPhylumthreshold,
+      min = val,
+      max = 1,
+      step = 0.005
+    )
   })
   observe({
     val <- input$annotationPhylumthreshold[2]
     # Control the value, min, max, and step.
     # Step size is 2 when input value is even; 1 when value is odd.
-    updateSliderInput(session, "annotationClassthreshold", value = input$annotationClassthreshold,
-                      min = val, max = 1, step = 0.005)
+    updateSliderInput(
+      session,
+      "annotationClassthreshold",
+      value = input$annotationClassthreshold,
+      min = val,
+      max = 1,
+      step = 0.005
+    )
   })
   observe({
     val <- input$annotationClassthreshold[2]
     # Control the value, min, max, and step.
     # Step size is 2 when input value is even; 1 when value is odd.
-    updateSliderInput(session, "annotationOrderthreshold", value = input$annotationOrderthreshold,
-                      min = val, max = 1, step = 0.005)
+    updateSliderInput(
+      session,
+      "annotationOrderthreshold",
+      value = input$annotationOrderthreshold,
+      min = val,
+      max = 1,
+      step = 0.005
+    )
   })
   observe({
     val <- input$annotationOrderthreshold[2]
     # Control the value, min, max, and step.
     # Step size is 2 when input value is even; 1 when value is odd.
-    updateSliderInput(session, "annotationFamilythreshold", value = input$annotationFamilythreshold,
-                      min = val, max = 1, step = 0.005)
+    updateSliderInput(
+      session,
+      "annotationFamilythreshold",
+      value = input$annotationFamilythreshold,
+      min = val,
+      max = 1,
+      step = 0.005
+    )
   })
   observe({
     val <- input$annotationFamilythreshold[2]
     # Control the value, min, max, and step.
     # Step size is 2 when input value is even; 1 when value is odd.
-    updateSliderInput(session, "annotationGenusthreshold", value = input$annotationGenusthreshold,
-                      min = val, max = 1, step = 0.005)
+    updateSliderInput(
+      session,
+      "annotationGenusthreshold",
+      value = input$annotationGenusthreshold,
+      min = val,
+      max = 1,
+      step = 0.005
+    )
   })
   observe({
     val <- input$annotationGenusthreshold[2]
     # Control the value, min, max, and step.
     # Step size is 2 when input value is even; 1 when value is odd.
-    updateSliderInput(session, "annotationSpeciethreshold", value = input$annotationSpeciethreshold,
-                      min = val, max = 1, step = 0.005)
+    updateSliderInput(
+      session,
+      "annotationSpeciethreshold",
+      value = input$annotationSpeciethreshold,
+      min = val,
+      max = 1,
+      step = 0.005
+    )
   })
   ## Input data
-  dataInput <-reactive({ 
-    
+  dataInput <- reactive({
     data = NULL
     check = NULL
     percent = NULL
@@ -287,59 +486,104 @@ shinyServer(function(input, output,session) {
     inputData = NULL
     target = NULL
     
-    if(input$FileFormat=="fileCounts")
+    if (input$FileFormat == "fileCounts")
     {
       Counts = dataInputCounts()
-      if(!input$NoTaxoFile && is.null(Taxo)) Taxo = dataInputTaxo()
-      if(!is.null(Counts) && input$NoTaxoFile) {Taxo = data.frame(rownames(Counts),row.names = rownames(Counts));names(Taxo)=NA}
+      if (!input$NoTaxoFile && is.null(Taxo))
+        Taxo = dataInputTaxo()
+      if (!is.null(Counts) &&
+          input$NoTaxoFile) {
+        Taxo = data.frame(rownames(Counts), row.names = rownames(Counts))
+        names(Taxo) = NA
+      }
       
-      if(!is.null(Counts) && !is.null(Taxo))
-      { 
-        tmp = GetDataFromCT(Counts,Taxo, ifelse(input$TypeTable=="MGS" && input$FileFormat!="fileBiom", TRUE, FALSE))
-        data = list(counts=tmp$counts,taxo=tmp$taxo, taxo_biom=tmp$taxo_biom)
+      if (!is.null(Counts) && !is.null(Taxo))
+      {
+        tmp = GetDataFromCT(
+          Counts,
+          Taxo,
+          ifelse(
+            input$TypeTable == "MGS" &&
+              input$FileFormat != "fileBiom",
+            TRUE,
+            FALSE
+          )
+        )
+        data = list(
+          counts = tmp$counts,
+          taxo = tmp$taxo,
+          taxo_biom = tmp$taxo_biom
+        )
         ## Remove row with only O
         # data[["counts"]] = data[["counts"]][rowSums(data[["counts"]])>1,]
         
-        check = list(CheckCounts=tmp$CheckCounts,CheckTaxo=tmp$CheckTaxo,CheckPercent=tmp$CheckPercent)
+        check = list(
+          CheckCounts = tmp$CheckCounts,
+          CheckTaxo = tmp$CheckTaxo,
+          CheckPercent = tmp$CheckPercent
+        )
         percent = tmp$Percent
       }
     }
     
-    if(input$FileFormat=="fileEpi2me")
+    if (input$FileFormat == "fileEpi2me")
     {
       tmpEpi2me = dataInputEpi2me()
       
-      if(!is.null(tmpEpi2me) && is.null(data))
+      if (!is.null(tmpEpi2me) && is.null(data))
       {
-        tmpEpi2me = tmpEpi2me[which(tmpEpi2me$accuracy >= as.numeric(input$Epi2me_th) & !is.na(tmpEpi2me$barcode) ),]
+        tmpEpi2me = tmpEpi2me[which(
+          tmpEpi2me$accuracy >= as.numeric(input$Epi2me_th) &
+            !is.na(tmpEpi2me$barcode)
+        ), ]
         # remove missing levels
         tmpEpi2me = droplevels(tmpEpi2me)
         #tmp = plyr::count(tmpEpi2me,c("barcode", "phylum",	"class",	"order",	"family", "genus", "species"))
-        tmp = plyr::count(tmpEpi2me,c("barcode", "lineage"))
+        tmp = plyr::count(tmpEpi2me, c("barcode", "lineage"))
         #tmp$ids = paste(tmp$genus, tmp$species, sep="|")
         #tmp$index = paste0("Seq_",match(tmp$ids, unique(tmp$ids)))
-        tmp$index = paste0("Seq_",match(tmp$lineage, unique(tmp$lineage)))
-        Counts = as.data.frame.matrix(t(xtabs(freq~.,tmp[,c("freq", "barcode","index")])))
+        tmp$index = paste0("Seq_", match(tmp$lineage, unique(tmp$lineage)))
+        Counts = as.data.frame.matrix(t(xtabs(freq ~ ., tmp[, c("freq", "barcode", "index")])))
         #Taxo = unique(tmp[,c("index", "phylum",	"class",	"order",	"family", "genus", "species")])
-        Taxotmp = unique(tmp[,c("index", "lineage")])
+        Taxotmp = unique(tmp[, c("index", "lineage")])
         Taxo = stringr::str_split_fixed(Taxotmp$lineage, ";", 7)
-        Taxo[Taxo == ""] =NA
-        colnames(Taxo) = c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Specie")
+        Taxo[Taxo == ""] = NA
+        colnames(Taxo) = c("Kingdom",
+                           "Phylum",
+                           "Class",
+                           "Order",
+                           "Family",
+                           "Genus",
+                           "Specie")
         rownames(Taxo) = Taxotmp$index
-        names(Taxo) = c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Specie")
+        names(Taxo) = c("Kingdom",
+                        "Phylum",
+                        "Class",
+                        "Order",
+                        "Family",
+                        "Genus",
+                        "Specie")
         #rownames(Taxo) = Taxo$index
         #Taxo= Taxo[,c("genus","species")]
         #names(Taxo)=c("Genus","Specie")
         
-        if(!is.null(Counts) && !is.null(Taxo))
-        { 
-          tmp = GetDataFromCT(Counts,Taxo, FALSE)
+        if (!is.null(Counts) && !is.null(Taxo))
+        {
+          tmp = GetDataFromCT(Counts, Taxo, FALSE)
           # print(tmp)
-          data = list(counts=tmp$counts,taxo=tmp$taxo, taxo_biom=tmp$taxo_biom)
+          data = list(
+            counts = tmp$counts,
+            taxo = tmp$taxo,
+            taxo_biom = tmp$taxo_biom
+          )
           ## Remove row with only O
           # data[["counts"]] = data[["counts"]][rowSums(data[["counts"]])>1,]
           
-          check = list(CheckCounts=tmp$CheckCounts,CheckTaxo=tmp$CheckTaxo,CheckPercent=tmp$CheckPercent)
+          check = list(
+            CheckCounts = tmp$CheckCounts,
+            CheckTaxo = tmp$CheckTaxo,
+            CheckPercent = tmp$CheckPercent
+          )
           # print(check)
           percent = tmp$Percent
         }
@@ -348,26 +592,46 @@ shinyServer(function(input, output,session) {
       }
     }
     
-    if(input$FileFormat=="fileBiom")
+    if (input$FileFormat == "fileBiom")
     {
       tmpBIOM = dataInputBiom()
-      if(!is.null(tmpBIOM) && is.null(data))
+      if (!is.null(tmpBIOM) && is.null(data))
       {
         tmp = GetDataFromBIOM(tmpBIOM)
-        if(!is.null(Taxo)){ 
-          data = list(counts=tmp$counts,taxo=Taxo, target=tmp$target, taxo_biom=tmp$taxo_biom)
-          tmp_check = CheckTaxoTable(Taxo,tmp$counts)
-          tmp_annot = PercentAnnot(tmp$counts,Taxo)
-          check = list(CheckCounts=tmp_check$CheckCounts,CheckTaxo=tmp_check$CheckTaxo,Percent=tmp_annot$Percent,CheckPercent=tmp_annot$Error)
+        if (!is.null(Taxo)) {
+          data = list(
+            counts = tmp$counts,
+            taxo = Taxo,
+            target = tmp$target,
+            taxo_biom = tmp$taxo_biom
+          )
+          tmp_check = CheckTaxoTable(Taxo, tmp$counts)
+          tmp_annot = PercentAnnot(tmp$counts, Taxo)
+          check = list(
+            CheckCounts = tmp_check$CheckCounts,
+            CheckTaxo = tmp_check$CheckTaxo,
+            Percent = tmp_annot$Percent,
+            CheckPercent = tmp_annot$Error
+          )
           percent = tmp_annot$Percent
         }
-        else{ 
-          data = list(counts=tmp$counts,taxo=tmp$taxo, target=tmp$target, taxo_biom=tmp$taxo_biom)
+        else{
+          data = list(
+            counts = tmp$counts,
+            taxo = tmp$taxo,
+            target = tmp$target,
+            taxo_biom = tmp$taxo_biom
+          )
           ## Remove row with only O
           # data[["counts"]] = data[["counts"]][rowSums(data[["counts"]])>1,]
           
-          check = list(CheckCounts=tmp$CheckCounts,CheckTaxo=tmp$CheckTaxo,CheckPercent=tmp$CheckPercent)
-          percent = tmp$Percent}
+          check = list(
+            CheckCounts = tmp$CheckCounts,
+            CheckTaxo = tmp$CheckTaxo,
+            CheckPercent = tmp$CheckPercent
+          )
+          percent = tmp$Percent
+        }
         #if(!is.null(data$target)) values$TargetWorking = data$target
       }
     }
@@ -384,52 +648,76 @@ shinyServer(function(input, output,session) {
     #         percent = inputData$percent
     #       }
     #     }
-    return(list(data=data,check=check,percent=percent))
+    return(list(
+      data = data,
+      check = check,
+      percent = percent
+    ))
   })
   
   
   ## Size factor file (optional)
-  dataSizeFactors <-reactive({ 
-    
+  dataSizeFactors <- reactive({
     inFile <- input$fileSizeFactors
     
-    if (is.null(inFile)) return(NULL)
+    if (is.null(inFile))
+      return(NULL)
     
-    tryCatch(read.csv(inFile$datapath,sep=input$sepsize,header=TRUE)->data,
-             #messageId="ErrorSizeFactor",
-             error=function(e) sendSweetAlert(session,
-                                              title = "Oops",
-                                              text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
+    tryCatch(
+      read.csv(
+        inFile$datapath,
+        sep = input$sepsize,
+        header = TRUE
+      ) -> data,
+      #messageId="ErrorSizeFactor",
+      error = function(e)
+        sendSweetAlert(
+          session,
+          title = "Oops",
+          text = paste("Your file can not be read in SHAMAN.\n \n", e),
+          type = "error"
+        )
+    )
     return(as.data.frame(data))
   })
   
   
   ## Size factor file (optional)
-  SizeFactors_fromFile <-reactive({ 
-    
+  SizeFactors_fromFile <- reactive({
     Error = NULL
     Check = TRUE
     
     data = dataSizeFactors()
     normFactors = dataMergeCounts()$normFactors
     
-    if(!is.null(data)){
+    if (!is.null(data)) {
       ## Check the format
       
       tmp = as.numeric(data)
       names(tmp) = colnames(data)
       
-      if(length(tmp)!=length(normFactors)){Error = "The number of samples is not the same than in the target file, size factors will be estimated"; Check = FALSE}
-      if(!identical(names(tmp),names(normFactors))){Error = "The names are not the same or in the same order than in the target file, size factors will be estimated"; Check = FALSE}
+      if (length(tmp) != length(normFactors)) {
+        Error = "The number of samples is not the same than in the target file, size factors will be estimated"
+        Check = FALSE
+      }
+      if (!identical(names(tmp), names(normFactors))) {
+        Error = "The names are not the same or in the same order than in the target file, size factors will be estimated"
+        Check = FALSE
+      }
       
-      if(Check) normFactors = tmp
+      if (Check)
+        normFactors = tmp
     }
     
-    return(list(Check = Check,Error = Error,normFactors=normFactors))
+    return(list(
+      Check = Check,
+      Error = Error,
+      normFactors = normFactors
+    ))
   })
   
   ## Merge counts data
-  dataMergeCounts <-reactive({
+  dataMergeCounts <- reactive({
     input$RunDESeq
     
     counts = NULL
@@ -441,56 +729,105 @@ shinyServer(function(input, output,session) {
     ChMC = NULL
     data = isolate(dataInput()$data)
     target = isolate(values$TargetWorking)
-    labeled= isolate(values$labeled)
+    labeled = isolate(values$labeled)
     taxo = isolate(input$TaxoSelect)
-    withProgress(
-      if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target)) 
+    withProgress(if (!is.null(data$counts) &&
+                     !is.null(data$taxo) &&
+                     nrow(data$counts) > 0 &&
+                     nrow(data$taxo) > 0 &&
+                     !is.null(taxo) && taxo != "..." && !is.null(target))
+    {
+      design = GetDesign(isolate(input), target)
+      ChTM = CheckTargetModel(input, target, labeled, data$counts)$Error
+      if (!is.null(design) && is.null(ChTM))
       {
-        design = GetDesign(isolate(input),target)
-        ChTM = CheckTargetModel(input,target,labeled,data$counts)$Error
-        if(!is.null(design) && is.null(ChTM))
+        tmp = isolate(GetCountsMerge(input, data, taxo, target, design))
+        #ChMC = tmp$Error
+        #if (!is.null(ChMC))
+        #{
+        counts = tmp$counts
+        ## Filtering the counts
+        if (isolate(input$AddFilter) &&
+            !is.null(isolate(input$SliderThSamp)) &&
+            !is.null(isolate(input$SliderThAb)))
         {
-          tmp = isolate(GetCountsMerge(input,data,taxo,target,design))
-          #ChMC = tmp$Error
-          #if (!is.null(ChMC))
-          #{
-          counts = tmp$counts
-          ## Filtering the counts
-          if(isolate(input$AddFilter) && !is.null(isolate(input$SliderThSamp)) && !is.null(isolate(input$SliderThAb)))
-          {
-            ind.filter =Filtered_feature(counts,isolate(input$SliderThSamp),isolate(input$SliderThAb))$ind
-            counts = counts[-ind.filter,]
-          }
-          CheckTarget = tmp$CheckTarget
-          #target = tmp$target
-          #labeled = tmp$labeled
-          normFactors = tmp$normFactors
-          ## OTU table, norm and no norm
-          CT_noNorm = tmp$CT_noNorm
-          CT_Norm = tmp$CT_Norm
-          #}
+          ind.filter = Filtered_feature(counts,
+                                        isolate(input$SliderThSamp),
+                                        isolate(input$SliderThAb))$ind
+          counts = counts[-ind.filter, ]
         }
+        CheckTarget = tmp$CheckTarget
+        #target = tmp$target
+        #labeled = tmp$labeled
+        normFactors = tmp$normFactors
+        ## OTU table, norm and no norm
+        CT_noNorm = tmp$CT_noNorm
+        CT_Norm = tmp$CT_Norm
+        #}
       }
-      ,message="Merging the counts ...")
-    return(list(counts=counts,CheckTarget=CheckTarget,normFactors=normFactors,CT_noNorm=CT_noNorm, CT_Norm=CT_Norm, Error = ChMC))
+    }
+    , message = "Merging the counts ...")
+    return(
+      list(
+        counts = counts,
+        CheckTarget = CheckTarget,
+        normFactors = normFactors,
+        CT_noNorm = CT_noNorm,
+        CT_Norm = CT_Norm,
+        Error = ChMC
+      )
+    )
     #return(list(counts=counts,target=target,labeled=labeled,normFactors=normFactors,CT_noNorm=CT_noNorm))
   })
   
   
   # Infobox Error counts
   output$InfoErrorCounts <- renderInfoBox({
-    
     tmp = dataInput()
     data = tmp$data
     check = tmp$check
-    cond = (!is.null(data$counts) && nrow(data$counts)>0)
-    res =infoBox(h6(strong("Count table")), subtitle = h6("Load the count table") ,color = "light-blue",width=NULL,fill=TRUE, icon = icon("upload"))
+    cond = (!is.null(data$counts) && nrow(data$counts) > 0)
+    res = infoBox(
+      h6(strong("Count table")),
+      subtitle = h6("Load the count table") ,
+      color = "light-blue",
+      width = NULL,
+      fill = TRUE,
+      icon = icon("upload")
+    )
     
-    if(cond)
+    if (cond)
     {
-      if(!is.null(check$CheckCounts$Warning)) res = infoBox(h6(strong("Count table")), subtitle = h6(check$CheckCounts$Warning), icon = icon("warning"),color = "orange",width=NULL,fill=TRUE)
-      if(!is.null(check$CheckCounts$Error)) res = infoBox(h6(strong("Count table")), subtitle = h6(check$CheckCounts$Error), icon = icon("thumbs-o-down"),color = "red",width=NULL,fill=TRUE)
-      if(is.null(check$CheckCounts$Error) && is.null(check$CheckCounts$Warning)) res = infoBox(h6(strong("Count table")), subtitle = h6(paste("Format of the count table seems to be OK")), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
+      if (!is.null(check$CheckCounts$Warning))
+        res = infoBox(
+          h6(strong("Count table")),
+          subtitle = h6(check$CheckCounts$Warning),
+          icon = icon("warning"),
+          color = "orange",
+          width = NULL,
+          fill = TRUE
+        )
+      if (!is.null(check$CheckCounts$Error))
+        res = infoBox(
+          h6(strong("Count table")),
+          subtitle = h6(check$CheckCounts$Error),
+          icon = icon("thumbs-o-down"),
+          color = "red",
+          width = NULL,
+          fill = TRUE
+        )
+      if (is.null(check$CheckCounts$Error) &&
+          is.null(check$CheckCounts$Warning))
+        res = infoBox(
+          h6(strong("Count table")),
+          subtitle = h6(paste(
+            "Format of the count table seems to be OK"
+          )),
+          icon = icon("thumbs-o-up"),
+          color = "green",
+          width = NULL,
+          fill = TRUE
+        )
     }
     
     return(res)
@@ -498,40 +835,110 @@ shinyServer(function(input, output,session) {
   
   # Infobox Error counts
   output$InfoErrorTaxo <- renderInfoBox({
-    
     tmp = dataInput()
     data = tmp$data
     check = tmp$check
-    cond = (!is.null(data$taxo) && nrow(data$taxo)>0)
-    res = infoBox(h6(strong("Taxonomy table")), subtitle = h6("Load the taxonomy table") ,color = "light-blue",width=NULL,fill=TRUE, icon = icon("upload"))
+    cond = (!is.null(data$taxo) && nrow(data$taxo) > 0)
+    res = infoBox(
+      h6(strong("Taxonomy table")),
+      subtitle = h6("Load the taxonomy table") ,
+      color = "light-blue",
+      width = NULL,
+      fill = TRUE,
+      icon = icon("upload")
+    )
     
-    if(cond)
+    if (cond)
     {
-      if(!is.null(check$CheckTaxo$Warning)) res = infoBox(h6(strong("Taxonomy table")), subtitle = h6(check$CheckTaxo$Warning), icon = icon("warning"),color = "orange",width=NULL,fill=TRUE)
-      if(!is.null(check$CheckTaxo$Error)) res = infoBox(h6(strong("Taxonomy table")), subtitle = h6(check$CheckTaxo$Error), icon = icon("thumbs-o-down"),color = "red",width=NULL,fill=TRUE)
-      if(is.null(check$CheckTaxo$Error) && is.null(check$CheckTaxo$Warning)) res = infoBox(h6(strong("Taxonomy table")), subtitle = h6(paste("Format of the taxonomy table seems to be OK")), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
+      if (!is.null(check$CheckTaxo$Warning))
+        res = infoBox(
+          h6(strong("Taxonomy table")),
+          subtitle = h6(check$CheckTaxo$Warning),
+          icon = icon("warning"),
+          color = "orange",
+          width = NULL,
+          fill = TRUE
+        )
+      if (!is.null(check$CheckTaxo$Error))
+        res = infoBox(
+          h6(strong("Taxonomy table")),
+          subtitle = h6(check$CheckTaxo$Error),
+          icon = icon("thumbs-o-down"),
+          color = "red",
+          width = NULL,
+          fill = TRUE
+        )
+      if (is.null(check$CheckTaxo$Error) &&
+          is.null(check$CheckTaxo$Warning))
+        res = infoBox(
+          h6(strong("Taxonomy table")),
+          subtitle = h6(paste(
+            "Format of the taxonomy table seems to be OK"
+          )),
+          icon = icon("thumbs-o-up"),
+          color = "green",
+          width = NULL,
+          fill = TRUE
+        )
     }
     
-    if(input$NoTaxoFile && input$FileFormat=="fileCounts") res = infoBox(h6(strong("Taxonomy table")), subtitle = h6("No taxonomy table has been uploaded, the analysis can only be done at the OTU/gene level"), icon = icon("warning"),color = "orange",width=NULL,fill=TRUE)
+    if (input$NoTaxoFile &&
+        input$FileFormat == "fileCounts")
+      res = infoBox(
+        h6(strong("Taxonomy table")),
+        subtitle = h6(
+          "No taxonomy table has been uploaded, the analysis can only be done at the OTU/gene level"
+        ),
+        icon = icon("warning"),
+        color = "orange",
+        width = NULL,
+        fill = TRUE
+      )
     return(res)
   })
   
   
   # Infobox Error counts
   output$valueErrorPercent <- renderInfoBox({
-    {values$TaxoWorking
-      tmp = dataInput()}
-    data = tmp$data
-    if(!is.null(values$TaxoWorking)) tmp = dataInput()
-    check = tmp$check
-    cond = (!is.null(data$counts) && nrow(data$counts)>0 && !is.null(data$taxo) && nrow(data$taxo)>0)
-    res = shinydashboardshaman::valueBox(paste0(0, "%"),h6(strong("Annotated features")), color = "light-blue",width=NULL,icon = icon("list"))
-    
-    if(cond)
     {
-      percent = round(100*tmp$percent,2)
-      if(percent==0) res = shinydashboardshaman::valueBox(paste0(percent, "%"),h6(strong("Annotated features")), color = "red",width=NULL,icon = icon("list"))  
-      if(percent!=0) res = shinydashboardshaman::valueBox(paste0(percent, "%"),h6(strong("Annotated features")), color = "green",width=NULL,icon = icon("list"))  
+      values$TaxoWorking
+      tmp = dataInput()
+    }
+    data = tmp$data
+    if (!is.null(values$TaxoWorking))
+      tmp = dataInput()
+    check = tmp$check
+    cond = (
+      !is.null(data$counts) &&
+        nrow(data$counts) > 0 && !is.null(data$taxo) && nrow(data$taxo) > 0
+    )
+    res = shinydashboardshaman::valueBox(
+      paste0(0, "%"),
+      h6(strong("Annotated features")),
+      color = "light-blue",
+      width = NULL,
+      icon = icon("list")
+    )
+    
+    if (cond)
+    {
+      percent = round(100 * tmp$percent, 2)
+      if (percent == 0)
+        res = shinydashboardshaman::valueBox(
+          paste0(percent, "%"),
+          h6(strong("Annotated features")),
+          color = "red",
+          width = NULL,
+          icon = icon("list")
+        )
+      if (percent != 0)
+        res = shinydashboardshaman::valueBox(
+          paste0(percent, "%"),
+          h6(strong("Annotated features")),
+          color = "green",
+          width = NULL,
+          icon = icon("list")
+        )
       
     }
     
@@ -548,9 +955,19 @@ shinyServer(function(input, output,session) {
     counts = isolate(dataMergeCounts()$counts)
     tot = rowSums(counts)
     #save(counts,tot,file="testFilter.RData")
-    withProgress({tmp = SelectThreshAb(counts,lambda=max(round(sum(counts)/nrow(counts)*0.05),min(tot)+1),graph=FALSE)},message="Loading...")
+    withProgress({
+      tmp = SelectThreshAb(counts,
+                           lambda = max(round(sum(counts) / nrow(counts) * 0.05), min(tot) + 1),
+                           graph = FALSE)
+    }, message = "Loading...")
     
-    res = sliderInput("SliderThAb","Threshold on the total abundance (in log)",min=0,max=round(max(log(tot+1)),1),value = log(tmp+1))
+    res = sliderInput(
+      "SliderThAb",
+      "Threshold on the total abundance (in log)",
+      min = 0,
+      max = round(max(log(tot + 1)), 1),
+      value = log(tmp + 1)
+    )
     return(res)
   })
   
@@ -561,13 +978,19 @@ shinyServer(function(input, output,session) {
     res = NULL
     counts = isolate(dataMergeCounts()$counts)
     counts.bin = as.matrix(counts)
-    counts.bin[which(counts>0)] = 1
+    counts.bin[which(counts > 0)] = 1
     nbSampByFeat = rowSums(counts.bin)
     
     ## Default value
-    val = round(max(nbSampByFeat)*0.2)
+    val = round(max(nbSampByFeat) * 0.2)
     
-    res = sliderInput("SliderThSamp","Threshold on the minimal number of samples",min=0,max=max(nbSampByFeat),value = val)
+    res = sliderInput(
+      "SliderThSamp",
+      "Threshold on the minimal number of samples",
+      min = 0,
+      max = max(nbSampByFeat),
+      value = val
+    )
     return(res)
   })
   
@@ -579,20 +1002,20 @@ shinyServer(function(input, output,session) {
   output$Plot_ThAb <- renderPlot({
     counts = dataMergeCounts()$counts
     ## output of plot_filter is ggplot class
-    plot_filter(counts,input$SliderThSamp,input$SliderThAb,type="Abundance")
+    plot_filter(counts, input$SliderThSamp, input$SliderThAb, type = "Abundance")
     
   })
   
   output$Plot_ThSamp <- renderPlot({
     counts = dataMergeCounts()$counts
     ## output of plot_filter is ggplot class
-    plot_filter(counts,input$SliderThSamp,input$SliderThAb,type="Samples")
+    plot_filter(counts, input$SliderThSamp, input$SliderThAb, type = "Samples")
   })
   
   output$Plot_Scatter_Filter <- renderScatterD3({
     counts = dataMergeCounts()$counts
     ## output of plot_filter is ggplot class
-    plot_filter(counts,input$SliderThSamp,input$SliderThAb,type="Scatter")
+    plot_filter(counts, input$SliderThSamp, input$SliderThAb, type = "Scatter")
   })
   ###                                               ###
   ##
@@ -603,30 +1026,42 @@ shinyServer(function(input, output,session) {
   
   
   output$dymMenu <- renderMenu({
-    
     tmp = dataInput()
     data = tmp$data
     check = tmp$check
     
-    ## Check error in the counts and taxonomy table 
-    CheckOK = (is.null(check$CheckCounts$Error) && is.null(check$CheckTaxo$Error)  && is.null(check$CheckPercent))
-    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && CheckOK)
+    ## Check error in the counts and taxonomy table
+    CheckOK = (
+      is.null(check$CheckCounts$Error) &&
+        is.null(check$CheckTaxo$Error)  && is.null(check$CheckPercent)
+    )
+    if (!is.null(data$counts) &&
+        !is.null(data$taxo) &&
+        nrow(data$counts) > 0 && nrow(data$taxo) > 0 && CheckOK)
     {
-      
-      sidebarMenu(id = "side",
-                  menuItem("Statistical analysis",
-                           menuSubItem("Run differential analysis",tabName="RunDiff"),
-                           menuSubItem("Diagnostic plots",tabName="DiagPlotTab"),
-                           menuSubItem("Tables",tabName="TableDiff"),
-                           icon = icon("bar-chart-o"), tabName = "AnaStat"
-                  ),
-                  menuItem("Visualization",icon = icon("area-chart"),
-                           menuSubItem("Global views",tabName="GlobVisu"),
-                           menuSubItem("Comparison plots",tabName="CompPlot"),
-                           tabName = "Visu")
-                  #menuItem("Perspective plots", icon = icon("pie-chart"), tabName = "Krona")
+      sidebarMenu(
+        id = "side",
+        menuItem(
+          "Statistical analysis",
+          menuSubItem("Run differential analysis", tabName =
+                        "RunDiff"),
+          menuSubItem("Diagnostic plots", tabName = "DiagPlotTab"),
+          menuSubItem("Tables", tabName = "TableDiff"),
+          icon = icon("bar-chart-o"),
+          tabName = "AnaStat"
+        ),
+        menuItem(
+          "Visualization",
+          icon = icon("area-chart"),
+          menuSubItem("Global views", tabName = "GlobVisu"),
+          menuSubItem("Comparison plots", tabName = "CompPlot"),
+          tabName = "Visu"
+        )
+        #menuItem("Perspective plots", icon = icon("pie-chart"), tabName = "Krona")
       )
-    } else{ sidebarMenu(id = "side",NULL)}
+    } else{
+      sidebarMenu(id = "side", NULL)
+    }
     
   })
   
@@ -640,30 +1075,49 @@ shinyServer(function(input, output,session) {
   
   ## Counts Table
   output$DataCounts <- DT::renderDataTable(
-    dataInput()$data$counts, 
-    options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE, processing=FALSE
-    ))
+    dataInput()$data$counts,
+    options = list(
+      lengthMenu = list(c(10, 50,-1), c('10', '50', 'All')),
+      pageLength = 10,
+      scrollX = TRUE,
+      processing = FALSE
+    )
+  )
   
   ## Counts Table
-  output$DataUpSet<- DT::renderDataTable({
+  output$DataUpSet <- DT::renderDataTable({
     resDiff = ResDiffAnal()
-    BaseContrast = read.table(namesfile,header=TRUE)
-    datatable(Plot_UpSet(input,BaseContrast, resDiff, ContrastListDebounce)$table,
-              options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                             pageLength = 10,scrollX=TRUE, processing=FALSE)
+    BaseContrast = read.table(namesfile, header = TRUE)
+    datatable(
+      Plot_UpSet(input, BaseContrast, resDiff, ContrastListDebounce)$table,
+      options = list(
+        lengthMenu = list(c(10, 50,-1), c('10', '50', 'All')),
+        pageLength = 10,
+        scrollX = TRUE,
+        processing = FALSE
+      )
     )
   })
   
   ## Counts Table
-  output$DataVenn<- DT::renderDataTable({
+  output$DataVenn <- DT::renderDataTable({
     SelContrast = ContrastListVennDebounce()
     #SelContrast = input$ContrastList_table_FC
     resDiff = ResDiffAnal()
     #BaseContrast = read.table(namesfile,header=TRUE)
-    datatable(GetData_venn(input,SelContrast,read.table(namesfile,header=TRUE),resDiff)$df.tot,
-              options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                             pageLength = 10,scrollX=TRUE, processing=FALSE)
+    datatable(
+      GetData_venn(
+        input,
+        SelContrast,
+        read.table(namesfile, header = TRUE),
+        resDiff
+      )$df.tot,
+      options = list(
+        lengthMenu = list(c(10, 50,-1), c('10', '50', 'All')),
+        pageLength = 10,
+        scrollX = TRUE,
+        processing = FALSE
+      )
     )
   })
   
@@ -680,10 +1134,14 @@ shinyServer(function(input, output,session) {
   
   ## Taxonomy table
   output$DataTaxo <- DT::renderDataTable(
-    dataInput()$data$taxo, 
-    editable=T, 
-    options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE, processing=FALSE)
+    dataInput()$data$taxo,
+    editable = T,
+    options = list(
+      lengthMenu = list(c(10, 50,-1), c('10', '50', 'All')),
+      pageLength = 10,
+      scrollX = TRUE,
+      processing = FALSE
+    )
   )
   
   observeEvent(input$DataTaxo_cell_edit, {
@@ -692,57 +1150,98 @@ shinyServer(function(input, output,session) {
     i = info$row
     j = info$col
     v = info$value
-    tmp=as.matrix(dataInput()$data$taxo)
-    tmp[i,j] = v
+    tmp = as.matrix(dataInput()$data$taxo)
+    tmp[i, j] = v
     values$TaxoWorking = as.data.frame(tmp)
     replaceData(proxy, values$TaxoWorking, resetPaging = FALSE)
   })
   ## Tab box for data visualisation
   output$TabBoxData <- renderUI({
     tree = dataInputTree()$data
-    data=dataInput()$data
-    res=NULL
-    if(!is.null(tree))
+    data = dataInput()$data
+    res = NULL
+    if (!is.null(tree))
     {
-      res = tabBox(width = NULL, selected = "Count table",
-                   tabPanel("Count table",DT::dataTableOutput("DataCounts"),
-                            downloadButton('ExportRawCounts', 'Export count table file')),
-                   tabPanel("Taxonomy",DT::dataTableOutput("DataTaxo"), 
-                            actionButton("deleteTaxo", "Delete annotation"),
-                            downloadButton('ExportTaxo', 'Export taxonomy file')),
-                   tabPanel("Summary",h5(strong("Percentage of annotation")),htmlOutput("SummaryView"),
-                            br(),h5(strong("Number of features by level:")),plotOutput("SummaryViewBarplot",width = 1200,height=500)),
-                   tabPanel("Phylogeny", PhyloTreeMetaROutput('PhyloTreeMetaR'),
-                            downloadButton('ExportPhylo', 'Export phylogeny file'))
+      res = tabBox(
+        width = NULL,
+        selected = "Count table",
+        tabPanel(
+          "Count table",
+          DT::dataTableOutput("DataCounts"),
+          downloadButton('ExportRawCounts', 'Export count table file')
+        ),
+        tabPanel(
+          "Taxonomy",
+          DT::dataTableOutput("DataTaxo"),
+          actionButton("deleteTaxo", "Delete annotation"),
+          downloadButton('ExportTaxo', 'Export taxonomy file')
+        ),
+        tabPanel(
+          "Summary",
+          h5(strong("Percentage of annotation")),
+          htmlOutput("SummaryView"),
+          br(),
+          h5(strong("Number of features by level:")),
+          plotOutput(
+            "SummaryViewBarplot",
+            width = 1200,
+            height = 500
+          )
+        ),
+        tabPanel(
+          "Phylogeny",
+          PhyloTreeMetaROutput('PhyloTreeMetaR'),
+          downloadButton('ExportPhylo', 'Export phylogeny file')
+        )
       )
       
     }
     else
     {
-      res = tabBox(width = NULL,selected = "Count table",
-                   tabPanel("Count table",DT::dataTableOutput("DataCounts"),
-                            downloadButton('ExportRawCounts', 'Export count table file')),
-                   tabPanel("Taxonomy",DT::dataTableOutput("DataTaxo"),
-                            actionButton("deleteTaxo", "Delete annotation"),
-                            downloadButton('ExportTaxo', 'Export taxonomy file')),
-                   tabPanel("Summary",h5(strong("Percentage of annotation")),htmlOutput("SummaryView"),
-                            br(),h5(strong("Number of features by level:")),plotOutput("SummaryViewBarplot",width = 1200,height=500))
+      res = tabBox(
+        width = NULL,
+        selected = "Count table",
+        tabPanel(
+          "Count table",
+          DT::dataTableOutput("DataCounts"),
+          downloadButton('ExportRawCounts', 'Export count table file')
+        ),
+        tabPanel(
+          "Taxonomy",
+          DT::dataTableOutput("DataTaxo"),
+          actionButton("deleteTaxo", "Delete annotation"),
+          downloadButton('ExportTaxo', 'Export taxonomy file')
+        ),
+        tabPanel(
+          "Summary",
+          h5(strong("Percentage of annotation")),
+          htmlOutput("SummaryView"),
+          br(),
+          h5(strong("Number of features by level:")),
+          plotOutput(
+            "SummaryViewBarplot",
+            width = 1200,
+            height = 500
+          )
+        )
       )
     }
     return(res)
   })
   
   observe({
-    data=dataInput()$data
-    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0)
+    data = dataInput()$data
+    if (!is.null(data$counts) &&
+        !is.null(data$taxo) && nrow(data$counts) > 0 && nrow(data$taxo) > 0)
     {
-      showElement("tabboxdata_col",anim=TRUE)
-    } else hideElement("tabboxdata_col",anim=TRUE)
+      showElement("tabboxdata_col", anim = TRUE)
+    } else
+      hideElement("tabboxdata_col", anim = TRUE)
     
   })
   
   output$PhyloTreeMetaR <- renderPhyloTreeMetaR({
-    PhyloTreeMetaR(dataInputTree()$treeseq,NULL)
+    PhyloTreeMetaR(dataInputTree()$treeseq, NULL)
   })
   
   output$SummaryView <- renderGvis({
@@ -751,35 +1250,58 @@ shinyServer(function(input, output,session) {
     taxo = data$taxo
     counts = data$counts
     check = tmp$check
-    cond = (!is.null(data$counts) && nrow(data$counts)>0 && !is.null(data$taxo) && nrow(data$taxo)>0 && is.null(check$CheckTaxo$Error) && is.null(check$CheckCounts$Error))
+    cond = (
+      !is.null(data$counts) &&
+        nrow(data$counts) > 0 &&
+        !is.null(data$taxo) &&
+        nrow(data$taxo) > 0 &&
+        is.null(check$CheckTaxo$Error) && is.null(check$CheckCounts$Error)
+    )
     
     res = NULL
-    if(cond)
+    if (cond)
     {
-      taxo = rbind(taxo,rep(NA,ncol(taxo)))
+      taxo = rbind(taxo, rep(NA, ncol(taxo)))
       #tmpPercent = round(apply(is.na(taxo),2,table)["FALSE",]/(nrow(taxo)-1)*100,2)
       
-      tmp = apply(is.na(taxo),2,table)
+      tmp = apply(is.na(taxo), 2, table)
       
       if (class(tmp) == "list") {
-        tmp2 = sapply(tmp, function (x) {if (! "FALSE" %in% names(x)) {x["FALSE"] = 0} ; return(x["FALSE"])})
+        tmp2 = sapply(tmp, function (x) {
+          if (!"FALSE" %in% names(x)) {
+            x["FALSE"] = 0
+          }
+          return(x["FALSE"])
+        })
       }
       else
       {
-        tmp2 = tmp["FALSE",]
+        tmp2 = tmp["FALSE", ]
       }
       
-      tmpPercent = round(tmp2/(nrow(taxo)-1)*100,2)
+      tmpPercent = round(tmp2 / (nrow(taxo) - 1) * 100, 2)
       
       
-      df <- data.frame(Label = colnames(taxo),Value = tmpPercent)
+      df <- data.frame(Label = colnames(taxo), Value = tmpPercent)
       
       # res = gvisGauge(df,options=list(min=0, max=100, greenFrom=80,
       #                                 greenTo=100, yellowFrom=60, yellowTo=80,
       #                                 redFrom=0, redTo=60, width=1200, height=300))
-      res = gvisGauge(df,options=list(min=0, max=100, greenFrom=80,
-                                      greenTo=100, yellowFrom=60, yellowTo=80,
-                                      redFrom=0, redTo=60, width=800, height=200))
+      res = gvisGauge(
+        df,
+        options = list(
+          min = 0,
+          max = 100,
+          greenFrom = 80,
+          greenTo = 100,
+          yellowFrom = 60,
+          yellowTo = 80,
+          redFrom = 0,
+          redTo = 60,
+          width = 800,
+          height = 200
+        )
+      )
     }
     return(res)
   })
@@ -791,19 +1313,50 @@ shinyServer(function(input, output,session) {
     taxo = data$taxo
     counts = data$counts
     check = tmp$check
-    cond = (!is.null(data$counts) && nrow(data$counts)>0 && !is.null(data$taxo) && nrow(data$taxo)>0 && is.null(check$CheckTaxo$Error) && is.null(check$CheckCounts$Error))
+    cond = (
+      !is.null(data$counts) &&
+        nrow(data$counts) > 0 &&
+        !is.null(data$taxo) &&
+        nrow(data$taxo) > 0 &&
+        is.null(check$CheckTaxo$Error) && is.null(check$CheckCounts$Error)
+    )
     
     res = NULL
-    if(cond)
+    if (cond)
     {
-      colors=rep(c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c","#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5","#8c564b",
-                   "#c49c94","#e377c2","#f7b6d2","#7f7f7f", "#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"),ceiling(ncol(taxo)/20))
-      tmp = apply(taxo,2,unique)
-      nbfeatures = as.numeric(lapply(tmp,length)) -as.numeric(lapply(lapply(tmp,is.na),any))
-      df <- data.frame(Label = colnames(taxo),Count = nbfeatures)
-      df$Label = factor(df$Label,levels =colnames(taxo) )
-      res = ggplot(df,aes(x=Label,y=Count,fill=Label))+geom_bar(stat="identity")
-      res = res + theme_bw() + xlab("Taxonomy") + scale_fill_manual(values=colors) + guides(fill=FALSE)
+      colors = rep(
+        c(
+          "#1f77b4",
+          "#aec7e8",
+          "#ff7f0e",
+          "#ffbb78",
+          "#2ca02c",
+          "#98df8a",
+          "#d62728",
+          "#ff9896",
+          "#9467bd",
+          "#c5b0d5",
+          "#8c564b",
+          "#c49c94",
+          "#e377c2",
+          "#f7b6d2",
+          "#7f7f7f",
+          "#c7c7c7",
+          "#bcbd22",
+          "#dbdb8d",
+          "#17becf",
+          "#9edae5"
+        ),
+        ceiling(ncol(taxo) / 20)
+      )
+      tmp = apply(taxo, 2, unique)
+      nbfeatures = as.numeric(lapply(tmp, length)) - as.numeric(lapply(lapply(tmp, is.na), any))
+      df <- data.frame(Label = colnames(taxo), Count = nbfeatures)
+      df$Label = factor(df$Label, levels = colnames(taxo))
+      res = ggplot(df, aes(x = Label, y = Count, fill = Label)) + geom_bar(stat =
+                                                                             "identity")
+      res = res + theme_bw() + xlab("Taxonomy") + scale_fill_manual(values =
+                                                                      colors) + guides(fill = FALSE)
     }
     return(res)
   })
@@ -816,32 +1369,48 @@ shinyServer(function(input, output,session) {
     counts = dataInput()$data$counts
     data = dataInput()$data$target
     
-    if(!is.null(data) && !is.null(counts))
+    if (!is.null(data) && !is.null(counts))
     {
       names = colnames(data)
       ## Keep only the row which are in the count table
-      ind = which(rownames(data)%in%colnames(counts))
-      data = as.data.frame(data[ind,])
+      ind = which(rownames(data) %in% colnames(counts))
+      data = as.data.frame(data[ind, ])
       colnames(data) = names
       
       ## Replace "-" by "."
-      if(ncol(data)>1 && nrow(data)>1){
-        ind_num = which(sapply(as.data.frame(data[,-1]),is.numeric)) + 1
-        if(length(ind_num)>0){
-          data_tmp =cbind( as.data.frame(apply(as.data.frame(data[,-ind_num]),2,gsub,pattern = "-",replacement = ".")),data[,ind_num])
+      if (ncol(data) > 1 && nrow(data) > 1) {
+        ind_num = which(sapply(as.data.frame(data[, -1]), is.numeric)) + 1
+        if (length(ind_num) > 0) {
+          data_tmp = cbind(as.data.frame(
+            apply(
+              as.data.frame(data[, -ind_num]),
+              2,
+              gsub,
+              pattern = "-",
+              replacement = "."
+            )
+          ), data[, ind_num])
           #data_tmp =cbind( as.data.frame(as.data.frame(data[,-ind_num])),data[,ind_num])
-          colnames(data_tmp) = c(colnames(data)[-ind_num],colnames(data)[ind_num])
+          colnames(data_tmp) = c(colnames(data)[-ind_num], colnames(data)[ind_num])
           data = data_tmp
         }
-        if(length(ind_num)==0){data = as.data.frame(apply(data,2,gsub,pattern = "-",replacement = "."))}
+        if (length(ind_num) == 0) {
+          data = as.data.frame(apply(
+            data,
+            2,
+            gsub,
+            pattern = "-",
+            replacement = "."
+          ))
+        }
       }
       values$TargetWorking = data
-      values$labeled = length(ind)/length(colnames(counts))*100.0
+      values$labeled = length(ind) / length(colnames(counts)) * 100.0
     }
   })
   
   ## Load target file
-  observe({ 
+  observe({
     inFile <- input$fileTarget
     #values$TargetWorking = NULL
     
@@ -849,35 +1418,58 @@ shinyServer(function(input, output,session) {
     labeled = 0
     data = NULL
     
-    if (is.null(inFile)) return(NULL)
+    if (is.null(inFile))
+      return(NULL)
     
     ## Read the data
-    try(read.csv(inFile$datapath,sep=input$septarget,header=TRUE)->data,silent=TRUE)
+    try(read.csv(inFile$datapath,
+                 sep = input$septarget,
+                 header = TRUE) -> data,
+        silent = TRUE)
     
-    if(!is.null(data))
+    if (!is.null(data))
     {
       data = as.data.frame(data)
       names = colnames(data)
       
       ## Change the rownames
-      if(!TRUE%in%duplicated(data[,1])) rownames(data)=gsub(pattern = "-",replacement = ".",as.character(data[,1]))
+      if (!TRUE %in% duplicated(data[, 1]))
+        rownames(data) = gsub(pattern = "-",
+                              replacement = ".",
+                              as.character(data[, 1]))
       
       ## Keep only the row which are in the count table
-      ind = which(rownames(data)%in%colnames(counts))
-      data = as.data.frame(data[ind,])
+      ind = which(rownames(data) %in% colnames(counts))
+      data = as.data.frame(data[ind, ])
       colnames(data) = names
       
       
       ## Replace "-" by "."
-      if(ncol(data)>1 && nrow(data)>1){
-        ind_num = which(sapply(as.data.frame(data[,-1]),is.numeric)) + 1
-        if(length(ind_num)>0){
-          data_tmp =cbind( as.data.frame(apply(as.data.frame(data[,-ind_num]),2,gsub,pattern = "-",replacement = ".")),data[,ind_num])
+      if (ncol(data) > 1 && nrow(data) > 1) {
+        ind_num = which(sapply(as.data.frame(data[, -1]), is.numeric)) + 1
+        if (length(ind_num) > 0) {
+          data_tmp = cbind(as.data.frame(
+            apply(
+              as.data.frame(data[, -ind_num]),
+              2,
+              gsub,
+              pattern = "-",
+              replacement = "."
+            )
+          ), data[, ind_num])
           #data_tmp =cbind( as.data.frame(as.data.frame(data[,-ind_num])),data[,ind_num])
-          colnames(data_tmp) = c(colnames(data)[-ind_num],colnames(data)[ind_num])
+          colnames(data_tmp) = c(colnames(data)[-ind_num], colnames(data)[ind_num])
           data = data_tmp
         }
-        if(length(ind_num)==0){data = as.data.frame(apply(data,2,gsub,pattern = "-",replacement = "."))}
+        if (length(ind_num) == 0) {
+          data = as.data.frame(apply(
+            data,
+            2,
+            gsub,
+            pattern = "-",
+            replacement = "."
+          ))
+        }
       }
       values$TargetWorking = as.data.frame(data)
       values$visTarget = FALSE
@@ -887,14 +1479,14 @@ shinyServer(function(input, output,session) {
       
       #ord = order(rownames(data))
       #data = data[ord,]
-      ### A SUqPPRIMER 
+      ### A SUqPPRIMER
       #rownamQes(data) <- colnames(counts)
       
       # Percent annotated
       #     print(ind)
       #     print(colnames(counts))
       #     print(rownames(data))
-      values$labeled = length(ind)/length(colnames(counts))*100.0
+      values$labeled = length(ind) / length(colnames(counts)) * 100.0
     }
     
     # return(list(target = target, labeled=labeled))
@@ -911,14 +1503,13 @@ shinyServer(function(input, output,session) {
   
   
   
-  observeEvent(input$dir,{
-    
+  observeEvent(input$dir, {
     inFiles <- input$dir
     
-    if (!is.null(inFiles)){
+    if (!is.null(inFiles)) {
       # values$fastq_names_only = unique(paste(values$fastq_names_only,inFiles$name))
-      values$paths_fastq_tmp = rbind(isolate(values$paths_fastq_tmp),inFiles)
-      values$fastq_names_only = isolate(unique(values$paths_fastq_tmp[,"name"]))
+      values$paths_fastq_tmp = rbind(isolate(values$paths_fastq_tmp), inFiles)
+      values$fastq_names_only = isolate(unique(values$paths_fastq_tmp[, "name"]))
     }
   })
   
@@ -928,13 +1519,29 @@ shinyServer(function(input, output,session) {
   CreateFasta <- reactive({
     seq = NULL
     tmp = tempdir()
-    fastaName = paste(tmp,paste(basename(file_path_sans_ext(json_name)),"_contaminant.fasta",sep=""),sep = .Platform$file.sep)
+    fastaName = paste(tmp,
+                      paste(
+                        basename(file_path_sans_ext(json_name)),
+                        "_contaminant.fasta",
+                        sep = ""
+                      ),
+                      sep = .Platform$file.sep)
     
-    if(!file.exists(fastaName)) file.create(fastaName,showWarnings=FALSE)
-    if(input$PairedOrNot=="y"){seq =paste("\n>Seq1\n",input$R1primer,"\n \n",">Seq2\n",input$R2primer,sep="")}
-    if(input$PairedOrNot=="n"){seq =paste("\n>Seq1\n",input$primerSingle, sep="")}
-    if(!is.null(seq)){
-      known_adaptators=">poly-A
+    if (!file.exists(fastaName))
+      file.create(fastaName, showWarnings = FALSE)
+    if (input$PairedOrNot == "y") {
+      seq = paste("\n>Seq1\n",
+                  input$R1primer,
+                  "\n \n",
+                  ">Seq2\n",
+                  input$R2primer,
+                  sep = "")
+    }
+    if (input$PairedOrNot == "n") {
+      seq = paste("\n>Seq1\n", input$primerSingle, sep = "")
+    }
+    if (!is.null(seq)) {
+      known_adaptators = ">poly-A
 AAAAAAAAAAAAAAAAAAAA
 >poly-C
 CCCCCCCCCCCCCCCCCCCC
@@ -956,23 +1563,35 @@ ACACTCTTTCCCTACACGACGCTCTTCCGATCT
 AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCT
 >PCR Primer 2
 CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
-      seq = paste(known_adaptators, seq, sep="")
-      write(seq, file=fastaName)
+      seq = paste(known_adaptators, seq, sep = "")
+      write(seq, file = fastaName)
     }
   })
   
   
   ## Action with submit button
-  MasqueSubmit <- eventReactive(input$submit,{
-    galaxyAlertfile=paste(values$curdir,"www","galaxy_pasteur_alert.txt",sep= .Platform$file.sep)
+  MasqueSubmit <- eventReactive(input$submit, {
+    galaxyAlertfile = paste(values$curdir,
+                            "www",
+                            "galaxy_pasteur_alert.txt",
+                            sep = .Platform$file.sep)
     galaxyAlert = NULL
     #activate check_mail
-    CMP = CheckMasque(input, values,check_mail = TRUE)
+    CMP = CheckMasque(input, values, check_mail = TRUE)
     Error = CMP$Error
     
-    isJSONalreadyExist = file.exists(paste(values$curdir,"www","masque","doing",basename(json_name),sep= .Platform$file.sep))
+    isJSONalreadyExist = file.exists(
+      paste(
+        values$curdir,
+        "www",
+        "masque",
+        "doing",
+        basename(json_name),
+        sep = .Platform$file.sep
+      )
+    )
     
-    if(is.null(Error) && !isJSONalreadyExist)
+    if (is.null(Error) && !isJSONalreadyExist)
     {
       CreateFasta()
       values$num = 1
@@ -983,67 +1602,103 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       
       
       ## Paired-end
-      if(input$PairedOrNot=="y"){
+      if (input$PairedOrNot == "y") {
         cmp = 0
-        nfiles = length(values$R1fastQ)+length(values$R2fastQ)
+        nfiles = length(values$R1fastQ) + length(values$R2fastQ)
         
         withProgress(message = 'Uploading files...', value = 0, {
-          pathToR1 = paste(tmp,"Masque_files_R1",sep=.Platform$file.sep)
-          pathToR2 = paste(tmp,"Masque_files_R2",sep=.Platform$file.sep)
+          pathToR1 = paste(tmp, "Masque_files_R1", sep = .Platform$file.sep)
+          pathToR2 = paste(tmp, "Masque_files_R2", sep = .Platform$file.sep)
           
-          if(dir.exists(pathToR1)){file.remove(list.files(pathToR1,full.names =TRUE))} else dir.create(pathToR1)
-          if(dir.exists(pathToR2)){file.remove(list.files(pathToR2,full.names =TRUE))} else dir.create(pathToR2)
-          for(i in values$R1fastQ){
-            ind=which(i==values$paths_fastq_tmp[,"name"])[1]
-            file.rename(from=values$paths_fastq_tmp[,"datapath"][ind], to=paste(tmp,"Masque_files_R1",i,sep= .Platform$file.sep))
-            cmp = cmp +1
-            incProgress(cmp/nfiles, detail = "Forward fastq files...")
+          if (dir.exists(pathToR1)) {
+            file.remove(list.files(pathToR1, full.names = TRUE))
+          } else
+            dir.create(pathToR1)
+          if (dir.exists(pathToR2)) {
+            file.remove(list.files(pathToR2, full.names = TRUE))
+          } else
+            dir.create(pathToR2)
+          for (i in values$R1fastQ) {
+            ind = which(i == values$paths_fastq_tmp[, "name"])[1]
+            file.rename(
+              from = values$paths_fastq_tmp[, "datapath"][ind],
+              to = paste(tmp, "Masque_files_R1", i, sep = .Platform$file.sep)
+            )
+            cmp = cmp + 1
+            incProgress(cmp / nfiles, detail = "Forward fastq files...")
           }
-          for(i in values$R2fastQ){
-            ind=which(i==values$paths_fastq_tmp[,"name"])[1]
-            file.rename(from=values$paths_fastq_tmp[,"datapath"][ind], to=paste(tmp,"Masque_files_R2",i,sep= .Platform$file.sep))
-            cmp = cmp +1
-            incProgress(cmp/nfiles, detail = "Reverse fastq files...")
+          for (i in values$R2fastQ) {
+            ind = which(i == values$paths_fastq_tmp[, "name"])[1]
+            file.rename(
+              from = values$paths_fastq_tmp[, "datapath"][ind],
+              to = paste(tmp, "Masque_files_R2", i, sep = .Platform$file.sep)
+            )
+            cmp = cmp + 1
+            incProgress(cmp / nfiles, detail = "Reverse fastq files...")
           }
         })
         
       } else{
-        
         cmp = 0
         nfiles = length(values$fastq_names_only)
         
         withProgress(message = 'Uploading files...', value = 0, {
+          pathTo = paste(tmp, "Masque_files", sep = .Platform$file.sep)
           
-          pathTo = paste(tmp,"Masque_files",sep=.Platform$file.sep)
+          if (dir.exists(pathTo)) {
+            file.remove(list.files(pathTo, full.names = TRUE))
+          } else
+            dir.create(pathTo)
           
-          if(dir.exists(pathTo)){file.remove(list.files(pathTo,full.names =TRUE))} else dir.create(pathTo)
-          
-          for(i in values$fastq_names_only){
-            ind=which(i==values$paths_fastq_tmp[,"name"])[1]
-            file.rename(from=values$paths_fastq_tmp[,"datapath"][ind], to=paste(tmp,"Masque_files",i,sep= .Platform$file.sep));cmp = cmp +1;incProgress(cmp/nfiles)}
+          for (i in values$fastq_names_only) {
+            ind = which(i == values$paths_fastq_tmp[, "name"])[1]
+            file.rename(
+              from = values$paths_fastq_tmp[, "datapath"][ind],
+              to = paste(tmp, "Masque_files", i, sep = .Platform$file.sep)
+            )
+            cmp = cmp + 1
+            incProgress(cmp / nfiles)
+          }
         })
       }
       
       ## Create JSON file
-      withProgress(message = 'Creating JSON file...',{CreateJSON(input,values)})
-      if(file.exists(values$json_name)) values$num = 1
+      withProgress(message = 'Creating JSON file...', {
+        CreateJSON(input, values)
+      })
+      if (file.exists(values$json_name))
+        values$num = 1
       #messageId="SuccessMasque",
-      if(file.exists(galaxyAlertfile)){
-        suppressWarnings(try(readLines(galaxyAlertfile,warn=FALSE) ->galaxyAlert,silent=TRUE))
-        if(!is.null(galaxyAlert)){
-          sendSweetAlert(session, title = "Warning",text = HTML(paste(galaxyAlert,values$pass)), type = "warning",html=TRUE)
-        } 
+      if (file.exists(galaxyAlertfile)) {
+        suppressWarnings(try(readLines(galaxyAlertfile, warn = FALSE) -> galaxyAlert,
+                             silent = TRUE)
+        )
+        if (!is.null(galaxyAlert)) {
+          sendSweetAlert(
+            session,
+            title = "Warning",
+            text = HTML(paste(galaxyAlert, values$pass)),
+            type = "warning",
+            html  =  TRUE
+          )
+        }
       }
       else{
-        sendSweetAlert(session,
-                       title = "Success",
-                       text = HTML(paste("Your data have been submitted. You will receive an e-mail once the computation over. <br /> This can take few hours.
-                                    <br /> 
-                                    <br /> 
-                                    <br /> 
-                                    <em> Remind: You can close SHAMAN and use your key to check the progression and get your results: </em>",values$pass)),
-                       type = "success",
-                       html=TRUE
+        sendSweetAlert(
+          session,
+          title = "Success",
+          text = HTML(
+            paste(
+              "Your data have been submitted. You will receive an e-mail once the computation over. <br /> This can take few hours.
+                                    <br />
+                                    <br />
+                                    <br />
+                                    <em> Remind: You can close SHAMAN and use your key to check the progression and get your results: </em>",
+              values$pass
+            )
+          ),
+          type = "success",
+          html = TRUE
         )
       }
     }
@@ -1051,30 +1706,46 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   })
   
   
-  observeEvent(input$submit,{  
+  observeEvent(input$submit, {
+    tryCatch(
+      MasqueSubmit(),
+      #messageId="ErrorMasque",
+      error = function(e)
+        sendSweetAlert(
+          session,
+          title = "Oops",
+          text = paste("Something wrong when submitting.\n \n", e),
+          type = "error"
+        )
+    )
     
-    tryCatch(MasqueSubmit(),
-             #messageId="ErrorMasque",
-             error=function(e) sendSweetAlert(session,
-                                              title = "Oops",
-                                              text=paste("Something wrong when submitting.\n \n",e),type ="error"))
     
-    
-  },priority = 1)
+  }, priority = 1)
   
   
   ## FastQ list
   output$FastQList_out <- renderUI({
     res = NULL
-    if(!is.null(input$dir)){
-      NullBox = h3(strong("0 FastQ file detected"),style="color:red;  text-align: center")
+    if (!is.null(input$dir)) {
+      NullBox = h3(strong("0 FastQ file detected"), style = "color:red;  text-align: center")
       res = NullBox
       
-      if(length(values$fastq_names_only)>0)
+      if (length(values$fastq_names_only) > 0)
       {
-        res =list(selectInput("FastQList",label = "List of the fastq files in the selected directory",isolate(values$fastq_names_only),multiple =TRUE,selectize=FALSE,size = 6),
-                  actionButton("RemoveFastQbut",'Remove file(s)',icon=icon("remove")))
-      } else res = NullBox
+        res = list(
+          selectInput(
+            "FastQList",
+            label = "List of the fastq files in the selected directory",
+            isolate(values$fastq_names_only),
+            multiple = TRUE,
+            selectize = FALSE,
+            size = 6
+          ),
+          actionButton("RemoveFastQbut", 'Remove file(s)', icon =
+                         icon("remove"))
+        )
+      } else
+        res = NullBox
     }
     return(res)
   })
@@ -1083,14 +1754,18 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   
   ## Remove FastQ function
-  RemoveFastQ <-eventReactive(input$RemoveFastQbut,{
-    
-    if(length(input$FastQList)>0)
+  RemoveFastQ <- eventReactive(input$RemoveFastQbut, {
+    if (length(input$FastQList) > 0)
     {
-      ind = which(values$fastq_names_only%in% input$FastQList)
+      ind = which(values$fastq_names_only %in% input$FastQList)
       values$fastq_names_only = values$fastq_names_only[-ind]
-      values$paths_fastq_tmp = values$paths_fastq_tmp[-ind,]
-      updateSelectInput(session, "FastQList","List of the fastq files in the selected directory",values$fastq_names_only)
+      values$paths_fastq_tmp = values$paths_fastq_tmp[-ind, ]
+      updateSelectInput(
+        session,
+        "FastQList",
+        "List of the fastq files in the selected directory",
+        values$fastq_names_only
+      )
     }
   })
   
@@ -1099,67 +1774,75 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   
   ## Remove FastQ
-  observeEvent(input$RemoveFastQbut,{  
-    
+  observeEvent(input$RemoveFastQbut, {
     RemoveFastQ()
-    if(input$MatchFiles_button>=1) MatchFiles()
+    if (input$MatchFiles_button >= 1)
+      MatchFiles()
     
-  },priority=1)
+  }, priority = 1)
   
   
   
   ## Update R1 and R2 lists
-  MatchFiles <-reactive({
-    
-    if(length(values$fastq_names_only)>0 && input$PairedOrNot=='y')
+  MatchFiles <- reactive({
+    if (length(values$fastq_names_only) > 0 && input$PairedOrNot == 'y')
     {
-      indR1 = grep(input$R1files,values$fastq_names_only)
-      indR2 = grep(input$R2files,values$fastq_names_only)
+      indR1 = grep(input$R1files, values$fastq_names_only)
+      indR2 = grep(input$R2files, values$fastq_names_only)
       
       ## If some are R1 and R2, removed from both list
-      b12 = intersect(indR1,indR2)
-      if(length(b12)>0) {indR1 = indR1[-which(indR1%in%b12)]; indR2 = indR2[-which(indR2%in%b12)]}
+      b12 = intersect(indR1, indR2)
+      if (length(b12) > 0) {
+        indR1 = indR1[-which(indR1 %in% b12)]
+        indR2 = indR2[-which(indR2 %in% b12)]
+      }
       
       
-      if(length(indR1)>0 && length(indR2)>0){
-        
+      if (length(indR1) > 0 && length(indR2) > 0) {
         values$R1fastQ = values$fastq_names_only[indR1]
         values$R2fastQ = values$fastq_names_only[indR2]
         
         ## If some are only R1 or R2
-        tmpR1 = gsub(input$R1files,x=values$R1fastQ,""); tmpR2 = gsub(input$R2files,x=values$R2fastQ,"")
-        values$R1fastQ = values$R1fastQ[tmpR1%in%tmpR2];values$R2fastQ = values$R2fastQ[tmpR2%in%tmpR1]
+        tmpR1 = gsub(input$R1files, x = values$R1fastQ, "")
+        tmpR2 = gsub(input$R2files, x = values$R2fastQ, "")
+        values$R1fastQ = values$R1fastQ[tmpR1 %in% tmpR2]
+        values$R2fastQ = values$R2fastQ[tmpR2 %in% tmpR1]
         
         ## Update the files lists
-        updateSelectInput(session, "R1filesList","",values$R1fastQ); updateSelectInput(session, "R2filesList","",values$R2fastQ)
-      } else{updateSelectInput(session, "R1filesList","","");updateSelectInput(session, "R2filesList","","")}
-    } else{updateSelectInput(session, "R1filesList","","");updateSelectInput(session, "R2filesList","","")}
+        updateSelectInput(session, "R1filesList", "", values$R1fastQ)
+        updateSelectInput(session, "R2filesList", "", values$R2fastQ)
+      } else{
+        updateSelectInput(session, "R1filesList", "", "")
+        updateSelectInput(session, "R2filesList", "", "")
+      }
+    } else{
+      updateSelectInput(session, "R1filesList", "", "")
+      updateSelectInput(session, "R2filesList", "", "")
+    }
   })
   
   
-  observeEvent(input$MatchFiles_button,{  
-    
+  observeEvent(input$MatchFiles_button, {
     MatchFiles()
     
-  },priority=1)
+  }, priority = 1)
   
   
   
   ## Remove FastQ function directly from R1, R2
-  RemoveFastQ_R1R2 <-eventReactive(input$RemoveFastQbut_R1R2,{
-    
-    if(length(input$R1filesList)>0)
+  RemoveFastQ_R1R2 <- eventReactive(input$RemoveFastQbut_R1R2, {
+    if (length(input$R1filesList) > 0)
     {
-      ind = which(values$R1fastQ%in% input$R1filesList)
+      ind = which(values$R1fastQ %in% input$R1filesList)
       values$R1fastQ = values$R1fastQ[-ind]
-      updateSelectInput(session, "R1filesList","",values$R1fastQ)
+      updateSelectInput(session, "R1filesList", "", values$R1fastQ)
     }
     
-    if(length(input$R2filesList)>0)
+    if (length(input$R2filesList) > 0)
     {
-      ind = which(values$R2fastQ%in% input$R2filesList)
+      ind = which(values$R2fastQ %in% input$R2filesList)
       values$R2fastQ = values$R2fastQ[-ind]
-      updateSelectInput(session, "R2filesList","",values$R2fastQ)
+      updateSelectInput(session, "R2filesList", "", values$R2fastQ)
     }
     
     
@@ -1167,29 +1850,26 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   
   
-  RemoveFastQ_R1R2_all <-eventReactive(input$LoadFiles,{
-    
+  RemoveFastQ_R1R2_all <- eventReactive(input$LoadFiles, {
     values$R1fastQ = NULL
-    updateSelectInput(session, "R1filesList","","")
+    updateSelectInput(session, "R1filesList", "", "")
     values$R2fastQ = NULL
-    updateSelectInput(session, "R2filesList","","")
+    updateSelectInput(session, "R2filesList", "", "")
     
   })
   
   ## Remove FastQ from R1, R2
-  observeEvent(input$RemoveFastQbut_R1R2,{  
-    
+  observeEvent(input$RemoveFastQbut_R1R2, {
     RemoveFastQ_R1R2()
     
-  },priority=1)
+  }, priority = 1)
   
   
   ## Remove FastQ from R1, R2 (load button)
-  observeEvent(input$LoadFiles,{  
-    
+  observeEvent(input$LoadFiles, {
     RemoveFastQ_R1R2_all()
     
-  },priority=1)
+  }, priority = 1)
   
   
   
@@ -1199,31 +1879,51 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   # })
   
   observe({
-    toggleState("box-match",condition = (input$PairedOrNot=="y"))
+    toggleState("box-match", condition = (input$PairedOrNot == "y"))
   })
   
   
-  output$InfoMasque<- renderUI({
+  output$InfoMasque <- renderUI({
     input$submit
     
     CMP = isolate(CheckMasque(input, values, check_mail = FALSE))
     
-    if(!is.null(CMP$Error) && input$submit>0) {
-      toastr_error(title="Error",message=HTML(CMP$Error),closeButton = TRUE,position ="bottom-right",preventDuplicates = TRUE,newestOnTop = TRUE,
-                   progressBar = FALSE,showDuration = 300,showMethod="show",timeOut = 10000)
+    if (!is.null(CMP$Error) && input$submit > 0) {
+      toastr_error(
+        title = "Error",
+        message = HTML(CMP$Error),
+        closeButton = TRUE,
+        position = "bottom-right",
+        preventDuplicates = TRUE,
+        newestOnTop = TRUE,
+        progressBar = FALSE,
+        showDuration = 300,
+        showMethod = "show",
+        timeOut = 10000
+      )
     }
     
   })
   
   
-  output$InfoMasqueHowTo<- renderUI({
+  output$InfoMasqueHowTo <- renderUI({
     input$submit
     
     CMP = isolate(CheckMasque(input, values, check_mail = FALSE))
     
-    if(!is.null(CMP$HowTo) && input$submit>0) {
-      toastr_success(title="How to",message=HTML(CMP$HowTo),closeButton = TRUE,position ="bottom-right",preventDuplicates = TRUE,newestOnTop = TRUE,
-                     progressBar = FALSE,showDuration = 300,showMethod="show",timeOut = 10000)
+    if (!is.null(CMP$HowTo) && input$submit > 0) {
+      toastr_success(
+        title = "How to",
+        message = HTML(CMP$HowTo),
+        closeButton = TRUE,
+        position = "bottom-right",
+        preventDuplicates = TRUE,
+        newestOnTop = TRUE,
+        progressBar = FALSE,
+        showDuration = 300,
+        showMethod = "show",
+        timeOut = 10000
+      )
     }
     
   })
@@ -1231,88 +1931,122 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   
   # observeEvent(input$submit,{
-  #   
+  #
   #   CMP = isolate(CheckMasque(input, values))
-  #   if(!is.null(CMP$HowTo)) { 
+  #   if(!is.null(CMP$HowTo)) {
   #     toastr_success(title="How to",message=HTML(CMP$HowTo),closeButton = TRUE,position ="bottom-right",preventDuplicates = TRUE,newestOnTop = TRUE,
   #                  progressBar = FALSE,showDuration = 300,showMethod="show",timeOut = 10000)
   #   }
-  #   
+  #
   # })
-  # 
-  # 
+  #
+  #
   # observeEvent(input$submit,{
-  #   
+  #
   #   CMP = isolate(CheckMasque(input, values))
-  #   if(!is.null(CMP$Error)) { 
+  #   if(!is.null(CMP$Error)) {
   #     toastr_error(title="Error",message=HTML(CMP$Error),closeButton = TRUE,position ="bottom-right",preventDuplicates = TRUE,newestOnTop = TRUE,
   #                  progressBar = FALSE,showDuration = 300,showMethod="show",timeOut = 10000)
   #   }
-  #   
+  #
   # })
   
-  #########    ICONS   ################ 
+  #########    ICONS   ################
   
   
   output$spinner_anim <- renderUI(
-    htmltools::HTML('<i class="fa fa-spinner fa-pulse fa-fw" style="color:white" ></i><span class="sr-only">Loading...</span>')
+    htmltools::HTML(
+      '<i class="fa fa-spinner fa-pulse fa-fw" style="color:white" ></i><span class="sr-only">Loading...</span>'
+    )
   )
   
   
   output$spinner_icon <- renderUI(
-    htmltools::HTML('<i class="fa fa-spinner" aria-hidden="true" style="color:white" ></i><span class="sr-only">Loading...</span>')
+    htmltools::HTML(
+      '<i class="fa fa-spinner" aria-hidden="true" style="color:white" ></i><span class="sr-only">Loading...</span>'
+    )
   )
   
   output$pause_icon <- renderUI(
-    htmltools::HTML('<i class="fa fa-pause" aria-hidden="true" style="color:white" ></i><span class="sr-only">Loading...</span>')
+    htmltools::HTML(
+      '<i class="fa fa-pause" aria-hidden="true" style="color:white" ></i><span class="sr-only">Loading...</span>'
+    )
   )
   
   output$check_icon <- renderUI(
-    htmltools::HTML('<i class="fa fa-check" style="color:white" ></i><span class="sr-only">Loading...</span>')
+    htmltools::HTML(
+      '<i class="fa fa-check" style="color:white" ></i><span class="sr-only">Loading...</span>'
+    )
   )
   
   
   output$key_icon <- renderUI(
-    htmltools::HTML('<i class="fa fa-key" style="color:white" ></i><span class="sr-only">Loading...</span>')
+    htmltools::HTML(
+      '<i class="fa fa-key" style="color:white" ></i><span class="sr-only">Loading...</span>'
+    )
   )
   
   output$test_icon <- renderUI(
-    htmltools::HTML('<img src="icon.png" alt="dna" style="width:80px;height:80px;">')
+    htmltools::HTML(
+      '<img src="icon.png" alt="dna" style="width:80px;height:80px;">'
+    )
   )
   
   output$amplicon_icon <- renderUI(
-    htmltools::HTML('<img src="icons/amplicon.png" alt="dna" style="width:80px;height:80px;">')
+    htmltools::HTML(
+      '<img src="icons/amplicon.png" alt="dna" style="width:80px;height:80px;">'
+    )
   )
   output$dereplication_icon <- renderUI(
-    htmltools::HTML('<img src="icons/dereplication.png" alt="dna" style="width:80px;height:80px;">')
+    htmltools::HTML(
+      '<img src="icons/dereplication.png" alt="dna" style="width:80px;height:80px;">'
+    )
   )
   
   output$singleton_icon <- renderUI(
-    htmltools::HTML('<img src="icons/singleton.png" alt="dna" style="width:80px;height:80px;">')
+    htmltools::HTML(
+      '<img src="icons/singleton.png" alt="dna" style="width:80px;height:80px;">'
+    )
   )
   output$chimera_icon <- renderUI(
-    htmltools::HTML('<img src="icons/chimera.png" alt="dna" style="width:80px;height:80px;">')
+    htmltools::HTML(
+      '<img src="icons/chimera.png" alt="dna" style="width:80px;height:80px;">'
+    )
   )
   output$otu_icon <- renderUI(
-    htmltools::HTML('<img src="icons/otu.png" alt="dna" style="width:80px;height:80px;">')
+    htmltools::HTML(
+      '<img src="icons/otu.png" alt="dna" style="width:80px;height:80px;">'
+    )
   )
   output$silva_icon <- renderUI(
-    htmltools::HTML('<img src="icons/silva.png" alt="dna" style="width:199px;height:80px;">')
+    htmltools::HTML(
+      '<img src="icons/silva.png" alt="dna" style="width:199px;height:80px;">'
+    )
   )
   output$greengenes_icon <- renderUI(
-    htmltools::HTML('<img src="icons/greengenes.png" alt="dna" style="width:143px;height:80px;">')
+    htmltools::HTML(
+      '<img src="icons/greengenes.png" alt="dna" style="width:143px;height:80px;">'
+    )
   )
   output$rdp_icon <- renderUI(
-    htmltools::HTML('<img src="icons/rdp.png" alt="dna" style="width:107px;height:80px;">')
+    htmltools::HTML(
+      '<img src="icons/rdp.png" alt="dna" style="width:107px;height:80px;">'
+    )
   )
   output$findley_icon <- renderUI(
-    htmltools::HTML('<img src="icons/findley.png" alt="dna" style="width:131px;height:80px;">')
+    htmltools::HTML(
+      '<img src="icons/findley.png" alt="dna" style="width:131px;height:80px;">'
+    )
   )
   output$unite_icon <- renderUI(
-    htmltools::HTML('<img src="icons/unite.png" alt="dna" style="width:163px;height:80px;">')
+    htmltools::HTML(
+      '<img src="icons/unite.png" alt="dna" style="width:163px;height:80px;">'
+    )
   )
   output$underhill_icon <- renderUI(
-    htmltools::HTML('<img src="icons/underhill.png" alt="dna" style="width:80px;height:80px;">')
+    htmltools::HTML(
+      '<img src="icons/underhill.png" alt="dna" style="width:80px;height:80px;">'
+    )
   )
   
   ###                                               ###
@@ -1322,25 +2056,57 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   output$progressBoxMasque <- renderValueBox({
     res = NULL
     error_progress = values$error_progress
-    num = round(as.numeric(values$num),1)
-    res = shinydashboardshaman::valueBox("0 %",h6(strong("Waiting for the data...")), color = "light-blue",width=NULL,icon = uiOutput("spinner_icon"))  
-    CMP = isolate(CheckMasque(input, values, check_mail=FALSE))
+    num = round(as.numeric(values$num), 1)
+    res = shinydashboardshaman::valueBox(
+      "0 %",
+      h6(strong("Waiting for the data...")),
+      color = "light-blue",
+      width = NULL,
+      icon = uiOutput("spinner_icon")
+    )
+    CMP = isolate(CheckMasque(input, values, check_mail = FALSE))
     Error = CMP$Error
-    if(num>=100) res = shinydashboardshaman::valueBox(paste("100 %"),h6(strong("Analysis completed ! Check your mail.")), color = "green",width=NULL,icon =  uiOutput("check_icon"))
-    else if(is.null(Error) || num>=1) res = shinydashboardshaman::valueBox(paste(values$num,"%"),h6(strong("Analysis in progress...")), color = "green",width=NULL,icon = uiOutput("spinner_anim"))  
-    else if(!is.null(Error) && num>=1 || error_progress) res = shinydashboardshaman::valueBox(paste(values$num,"%"),h6(strong("Workflow failed during progression...")), color = "red",width=NULL,icon = uiOutput("spinner_anim"))  
+    if (num >= 100)
+      res = shinydashboardshaman::valueBox(
+        paste("100 %"),
+        h6(strong("Analysis completed ! Check your mail.")),
+        color = "green",
+        width = NULL,
+        icon =  uiOutput("check_icon")
+      )
+    else if (is.null(Error) ||
+             num >= 1)
+      res = shinydashboardshaman::valueBox(
+        paste(values$num, "%"),
+        h6(strong("Analysis in progress...")),
+        color = "green",
+        width = NULL,
+        icon = uiOutput("spinner_anim")
+      )
+    else if (!is.null(Error) &&
+             num >= 1 ||
+             error_progress)
+      res = shinydashboardshaman::valueBox(
+        paste(values$num, "%"),
+        h6(strong(
+          "Workflow failed during progression..."
+        )),
+        color = "red",
+        width = NULL,
+        icon = uiOutput("spinner_anim")
+      )
     return(res)
   })
   
   
   # output$infoBoxPass <- renderInfoBox({
-  #   
+  #
   #   res = NULL
   #   # pass = toupper(gsub(" ","",input$password))
   #   # passOK = identical(pass,toupper(values$pass))
-  #   # 
+  #   #
   #   if(input$password =="") res = infoBox("Get a key","Require a valid email address", color = "light-blue",width=NULL,icon = uiOutput("key_icon"),fill = TRUE)
-  #   
+  #
   #   if(passOK)  res = infoBox("Key created !",paste("Your key is ",values$pass), color = "green",width=NULL,icon = uiOutput("key_icon"),fill = TRUE)
   #   if(!passOK && input$password !="")  res = infoBox("Invalid key","Use the key that you have received by mail", color = "red",width=NULL,icon = uiOutput("key_icon"),fill = TRUE)
   #   return(res)
@@ -1349,15 +2115,39 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   
   output$infoBoxPass <- renderInfoBox({
-    
     res = NULL
     # pass = toupper(gsub(" ","",input$password))
     # passOK = identical(pass,toupper(values$pass))
-    # 
-    res = infoBox("Get a key","Require a valid email address", color = "light-blue",width=NULL,icon = uiOutput("key_icon"),fill = TRUE)
+    #
+    res = infoBox(
+      "Get a key",
+      "Require a valid email address",
+      color = "light-blue",
+      width = NULL,
+      icon = uiOutput("key_icon"),
+      fill = TRUE
+    )
     
-    if(input$checkMail>=1 && isValidEmail(input$to))  res = infoBox("Key created !",paste("Your key is ",values$pass), color = "green",width=NULL,icon = uiOutput("key_icon"),fill = TRUE)
-    if(input$checkMail>=1 && !isValidEmail(input$to))  res = infoBox("Invalid email","Enter a valid email address to get your key", color = "red",width=NULL,icon = uiOutput("key_icon"),fill = TRUE)
+    if (input$checkMail >= 1 &&
+        isValidEmail(input$to))
+      res = infoBox(
+        "Key created !",
+        paste("Your key is ", values$pass),
+        color = "green",
+        width = NULL,
+        icon = uiOutput("key_icon"),
+        fill = TRUE
+      )
+    if (input$checkMail >= 1 &&
+        !isValidEmail(input$to))
+      res = infoBox(
+        "Invalid email",
+        "Enter a valid email address to get your key",
+        color = "red",
+        width = NULL,
+        icon = uiOutput("key_icon"),
+        fill = TRUE
+      )
     return(res)
   })
   
@@ -1366,26 +2156,87 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   output$infoBoxFastQ <- renderInfoBox({
     # FastqLoad()
     res = NULL
-    res = infoBox("Fastq files","Load the fastq files ", color = "light-blue",width=NULL,icon = icon("play"),fill = TRUE)
+    res = infoBox(
+      "Fastq files",
+      "Load the fastq files ",
+      color = "light-blue",
+      width = NULL,
+      icon = icon("play"),
+      fill = TRUE
+    )
     
-    if(!is.null(input$dir)){
-      if(length(unique(values$fastq_names_only))==0) res = infoBox("Fastq files","Select at least one fastq file", color = "red",width=NULL,icon = icon("play"),fill = TRUE)
-      if(length(unique(values$fastq_names_only))>0) res = infoBox("Fastq files",paste(length(unique(values$fastq_names_only)), "files are loaded"), color = "green",width=NULL,icon = icon("play"),fill = TRUE)
+    if (!is.null(input$dir)) {
+      if (length(unique(values$fastq_names_only)) == 0)
+        res = infoBox(
+          "Fastq files",
+          "Select at least one fastq file",
+          color = "red",
+          width = NULL,
+          icon = icon("play"),
+          fill = TRUE
+        )
+      if (length(unique(values$fastq_names_only)) > 0)
+        res = infoBox(
+          "Fastq files",
+          paste(length(unique(
+            values$fastq_names_only
+          )), "files are loaded"),
+          color = "green",
+          width = NULL,
+          icon = icon("play"),
+          fill = TRUE
+        )
     }
     return(res)
   })
   
   
   output$infoBoxFastQ_match <- renderInfoBox({
-    
     res = NULL
-    SM = SamplesMasque(input,values)
-    if(input$PairedOrNot=="n"){  res = infoBox("Match the pairs","Only for paired-end sequencing", color = "black",width=NULL,icon = icon("exchange"),fill = TRUE)}
+    SM = SamplesMasque(input, values)
+    if (input$PairedOrNot == "n") {
+      res = infoBox(
+        "Match the pairs",
+        "Only for paired-end sequencing",
+        color = "black",
+        width = NULL,
+        icon = icon("exchange"),
+        fill = TRUE
+      )
+    }
     
-    if(input$PairedOrNot=='y'){
-      if(input$MatchFiles_button==0) res = infoBox("Match the pairs","Identify forward and reverse files and then click the match button", color = "light-blue",width=NULL,icon = icon("exchange"),fill = TRUE)
-      if(input$MatchFiles_button>0 && length(SM$samples)>=1){res = infoBox("Pairs are matched",paste(length(SM$samples), "samples are detected"), color = "green",width=NULL,icon = icon("exchange"),fill = TRUE)}
-      if(input$MatchFiles_button>0 && length(SM$samples)<1){res = infoBox("Match the pairs","Failed. 0 samples detected", color = "red",width=NULL,icon = icon("exchange"),fill = TRUE)}
+    if (input$PairedOrNot == 'y') {
+      if (input$MatchFiles_button == 0)
+        res = infoBox(
+          "Match the pairs",
+          "Identify forward and reverse files and then click the match button",
+          color = "light-blue",
+          width = NULL,
+          icon = icon("exchange"),
+          fill = TRUE
+        )
+      if (input$MatchFiles_button > 0 &&
+          length(SM$samples) >= 1) {
+        res = infoBox(
+          "Pairs are matched",
+          paste(length(SM$samples), "samples are detected"),
+          color = "green",
+          width = NULL,
+          icon = icon("exchange"),
+          fill = TRUE
+        )
+      }
+      if (input$MatchFiles_button > 0 &&
+          length(SM$samples) < 1) {
+        res = infoBox(
+          "Match the pairs",
+          "Failed. 0 samples detected",
+          color = "red",
+          width = NULL,
+          icon = icon("exchange"),
+          fill = TRUE
+        )
+      }
     }
     
     return(res)
@@ -1397,67 +2248,82 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   ## plot gauge
   # output$gaugeMasque <-renderGauge({
   #   input$submit
-  #   
+  #
   #   res = NULL;
   #   num = round(as.numeric(values$num),1)
-  #   
+  #
   #   CMP = isolate(CheckMasque(input, values))
   #   Error = CMP$Error
   #   if(is.null(Error) || num>1) res = gauge(min(num,100), 0,100,symbol = '%',label= "Progress...")
-  # 
+  #
   #   return(res)
   # })
-  # 
+  #
   
   ## Timer for the gauge
   Timer <- reactiveTimer(10000)
   
   ## Check masque progress
   observe({
-    
     Timer()
-    CMP = isolate(CheckMasque(input, values, check_mail=FALSE))
+    CMP = isolate(CheckMasque(input, values, check_mail = FALSE))
     Error = CMP$Error
     
-    if(is.null(Error) && isolate(values$num)<100){
-      
-      progress_file = paste(values$curdir,"www","masque","doing",paste(basename(file_path_sans_ext(json_name)),"_progress",".txt",sep=""),sep= .Platform$file.sep)
-      if(file.exists(progress_file))
+    if (is.null(Error) && isolate(values$num) < 100) {
+      progress_file = paste(
+        values$curdir,
+        "www",
+        "masque",
+        "doing",
+        paste(
+          basename(file_path_sans_ext(json_name)),
+          "_progress",
+          ".txt",
+          sep = ""
+        ),
+        sep = .Platform$file.sep
+      )
+      if (file.exists(progress_file))
       {
         pf = read_lines(progress_file)
-        if(!is.null(pf)){
+        if (!is.null(pf)) {
           pf = as.numeric(pf)
-          if(!is.na(pf)){
-            pf = min(pf,100); pf = max(pf,0)
-            if(isolate(values$num)<pf) {values$num = round(pf,1)}
+          if (!is.na(pf)) {
+            pf = min(pf, 100)
+            pf = max(pf, 0)
+            if (isolate(values$num) < pf) {
+              values$num = round(pf, 1)
+            }
           }
         }
       }
     }
     #CHANGEMENT DE COULEUR
-    else if(!is.null(Error) && isolate(values$num)>=1) values$error_progress = TRUE
+    else if (!is.null(Error) &&
+             isolate(values$num) >= 1)
+      values$error_progress = TRUE
   })
   
   
   observe({
-    toggleState("checkMail",condition = isValidEmail(input$to))
+    toggleState("checkMail", condition = isValidEmail(input$to))
   })
   
   
   
   
-  # 
+  #
   # Project_status <-reactive({
   #   input$Check_project_over
   #   input$Check_project
-  #   
+  #
   #   passOK = FALSE;status = NULL;file = NULL
   #  print("OK")
   #   json_files = list.files(paste(values$curdir,"www","masque",sep= .Platform$file.sep),pattern = "json",recursive = TRUE)
   #   allpass = gsub(gsub(json_files,pattern = ".*file",replacement = ""),pattern = ".json",replacement = "")
-  #   
+  #
   #   print(allpass)
-  #   
+  #
   #   if(length(allpass)>0){
   #     passOK = any(isolate(input$password)==allpass)
   #     if(passOK){
@@ -1466,22 +2332,22 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   #       status = gsub(json_files[ind],pattern = "/.*",replacement = "")
   #     }
   #   }
-  #   
+  #
   #   return(list(status=status,file=file,passOK=passOK))
   # })
   
   
-  # 
-  # Project_current <-reactive({ 
+  #
+  # Project_current <-reactive({
   #   input$Check_project_over
-  #   
+  #
   #   passOK = FALSE;status = NULL;file = NULL
-  #   
+  #
   #   json_files = list.files(paste(values$curdir,"www","masque",sep= .Platform$file.sep),pattern = "json",recursive = TRUE)
   #   allpass = gsub(gsub(json_files,pattern = ".*file",replacement = ""),pattern = ".json",replacement = "")
-  #   
+  #
   #   print(allpass)
-  #   
+  #
   #   if(length(allpass)>0){
   #     passOK = any(isolate(values$pass)==allpass)
   #     if(passOK){
@@ -1490,69 +2356,97 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   #       status = gsub(json_files[ind],pattern = "/.*",replacement = "")
   #     }
   #   }
-  #   
+  #
   #   return(list(status=status,file=file,passOK=passOK))
   # })
-  # 
+  #
   
   
-  observeEvent(input$Check_project,{
+  observeEvent(input$Check_project, {
     values$masque_key = input$password
-    PS = Project_status(values$masque_key,values$curdir)
+    PS = Project_status(values$masque_key, values$curdir)
     #resbox = Project_box_result(values$masque_key,values$curdir)
     #PS = resbox$PS
     #passOK = PS$passOK
     #if(!is.null(input$password) && input$password!="" && !passOK){
-    if(!is.null(input$password) && input$password!="" && !PS$passOK){ 
+    if (!is.null(input$password) &&
+        input$password != "" && !PS$passOK) {
       removeCssClass(class = 'pwdGREEN', selector = '#password')
       addCssClass(class = 'pwdRED', selector = '#password')
     }
     
-    #if(!is.null(input$password) && input$password!="" && passOK){  
-    if(!is.null(input$password) && input$password!="" && PS$passOK){
+    #if(!is.null(input$password) && input$password!="" && passOK){
+    if (!is.null(input$password) &&
+        input$password != "" && PS$passOK) {
       removeCssClass(class = 'pwdRED', selector = '#password')
       addCssClass(class = 'pwdGREEN', selector = '#password')
-      hideElement("masque-form",anim=TRUE)
-      hideElement("masque-infobox",anim=TRUE)
-      hideElement("boxsum",anim=TRUE)
-      showElement("reload-project",anim=TRUE)
-      hideElement("project_over",anim=TRUE)
-      hideElement("pass",anim=TRUE)
+      hideElement("masque-form", anim = TRUE)
+      hideElement("masque-infobox", anim = TRUE)
+      hideElement("boxsum", anim = TRUE)
+      showElement("reload-project", anim = TRUE)
+      hideElement("project_over", anim = TRUE)
+      hideElement("pass", anim = TRUE)
       #showElement("MasqueToShaman",anim=TRUE)
     }
-    if(is.null(input$password) || input$password==""){    
+    if (is.null(input$password) || input$password == "") {
       removeCssClass(class = 'pwdRED', selector = '#password')
       removeCssClass(class = 'pwdGREEN', selector = '#password')
     }
   })
   # Run demo
   observeEvent(input$DemoDataset, {
-    if(input$DemoDataset != "..."){ 
-      DemoDataset = strsplit(input$DemoDataset,"|", fixed=T)
+    if (input$DemoDataset != "...") {
+      DemoDataset = strsplit(input$DemoDataset, "|", fixed = T)
       values$masque_key = DemoDataset[[1]][1]
-      updateSelectInput(session, "FileFormat","",selected = "fileBiom")
+      updateSelectInput(session, "FileFormat", "", selected = "fileBiom")
       reset("fileBiom")
       reset("fileTree")
       #PS = Project_status(values$masque_key,values$curdir)
-      values$biom_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_",DemoDataset[[1]][2],".biom",sep=""),sep= .Platform$file.sep)
-      values$tree_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_",DemoDataset[[1]][2],"_tree.nhx",sep=""),sep= .Platform$file.sep)
+      values$biom_masque = paste(
+        values$curdir,
+        "www",
+        "masque",
+        "done",
+        paste("file", values$masque_key, sep = ""),
+        paste("shaman_", DemoDataset[[1]][2], ".biom", sep = ""),
+        sep = .Platform$file.sep
+      )
+      values$tree_masque = paste(
+        values$curdir,
+        "www",
+        "masque",
+        "done",
+        paste("file", values$masque_key, sep = ""),
+        paste("shaman_", DemoDataset[[1]][2], "_tree.nhx", sep = ""),
+        sep = .Platform$file.sep
+      )
       #sendSweetAlert(messageId="DemoDataset", title = "Success", text = paste("Data of", DemoDataset[[1]][2], "were successfully loaded. You can go to statistical analysis section."), type = "success", html=TRUE)
-      sendSweetAlert(session, title = "Success", text = paste("Data of", DemoDataset[[1]][3], "were successfully loaded. You can go to statistical analysis section."), type = "success", html=TRUE)
+      sendSweetAlert(
+        session,
+        title = "Success",
+        text = paste(
+          "Data of",
+          DemoDataset[[1]][3],
+          "were successfully loaded. You can go to statistical analysis section."
+        ),
+        type = "success",
+        html = TRUE
+      )
       removeCssClass(class = 'pwdRED', selector = '#password_home')
       addCssClass(class = 'pwdGREEN', selector = '#password_home')
-      hideElement("masque-form",anim=TRUE)
-      hideElement("masque-infobox",anim=TRUE)
-      hideElement("boxsum",anim=TRUE)
-      showElement("reload-project",anim=TRUE)
-      hideElement("project_over",anim=TRUE)
-      hideElement("pass",anim=TRUE)
+      hideElement("masque-form", anim = TRUE)
+      hideElement("masque-infobox", anim = TRUE)
+      hideElement("boxsum", anim = TRUE)
+      showElement("reload-project", anim = TRUE)
+      hideElement("project_over", anim = TRUE)
+      hideElement("pass", anim = TRUE)
       #showElement("MasqueToShaman",anim=TRUE)
     }
     else{
       values$tree_masque = NULL
       values$biom_masque = NULL
       values$masque_key = NULL
-      PS =NULL
+      PS = NULL
       reset("fileBiom")
       reset("fileTree")
     }
@@ -1562,25 +2456,28 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   observeEvent(input$Check_project_home, {
     values$masque_key = input$password_home
     
-    PS = Project_status(values$masque_key,values$curdir)
+    PS = Project_status(values$masque_key, values$curdir)
     
-    if(!is.null(input$password_home) && input$password_home!="" && !PS$passOK){ 
+    if (!is.null(input$password_home) &&
+        input$password_home != "" && !PS$passOK) {
       removeCssClass(class = 'pwdGREEN', selector = '#password_home')
       addCssClass(class = 'pwdRED', selector = '#password_home')
     }
     
-    if(!is.null(input$password_home) && input$password_home!="" && PS$passOK){
+    if (!is.null(input$password_home) &&
+        input$password_home != "" && PS$passOK) {
       removeCssClass(class = 'pwdRED', selector = '#password_home')
       addCssClass(class = 'pwdGREEN', selector = '#password_home')
-      hideElement("masque-form",anim=TRUE)
-      hideElement("masque-infobox",anim=TRUE)
-      hideElement("boxsum",anim=TRUE)
-      showElement("reload-project",anim=TRUE)
-      hideElement("project_over",anim=TRUE)
-      hideElement("pass",anim=TRUE)
+      hideElement("masque-form", anim = TRUE)
+      hideElement("masque-infobox", anim = TRUE)
+      hideElement("boxsum", anim = TRUE)
+      showElement("reload-project", anim = TRUE)
+      hideElement("project_over", anim = TRUE)
+      hideElement("pass", anim = TRUE)
       #showElement("MasqueToShaman",anim=TRUE)
     }
-    if(is.null(input$password_home) || input$password_home==""){    
+    if (is.null(input$password_home) ||
+        input$password_home == "") {
       removeCssClass(class = 'pwdRED', selector = '#password_home')
       removeCssClass(class = 'pwdGREEN', selector = '#password_home')
     }
@@ -1590,7 +2487,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   # observeEvent(input$DemoDataset,{
   #   if(input$DemoDataset != "...")
   #   values$masque_key = input$DemoDataset
-  #   
+  #
   #   PS = Project_status(values$masque_key,values$curdir)
   # })
   
@@ -1605,22 +2502,22 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   #showElement("reload-project")
   #})
   
-  observeEvent(input$Check_project_over,{
+  observeEvent(input$Check_project_over, {
     values$masque_key = values$pass
-    PS = Project_status(values$masque_key,values$curdir)
+    PS = Project_status(values$masque_key, values$curdir)
     #resbox = Project_box_result(values$masque_key,values$curdir)
     #PS = resbox$PS
     #passOK = PS$passOK
     
-    if(PS$passOK){  
-      hideElement("masque-form",anim=TRUE)
-      hideElement("masque-infobox",anim=TRUE)
-      hideElement("boxsum",anim=TRUE)
-      showElement("reload-project",anim=TRUE)
-      hideElement("project_over",anim=TRUE)
+    if (PS$passOK) {
+      hideElement("masque-form", anim = TRUE)
+      hideElement("masque-infobox", anim = TRUE)
+      hideElement("boxsum", anim = TRUE)
+      showElement("reload-project", anim = TRUE)
+      hideElement("project_over", anim = TRUE)
       #showElement("MasqueToShaman",anim=TRUE)
       ##TODO test
-      hideElement("pass",anim=TRUE)
+      hideElement("pass", anim = TRUE)
     }
   })
   
@@ -1630,22 +2527,22 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   ### Check button once computation are over
   observe({
-    if(values$num>=100){
-      hideElement("masque-form",anim=TRUE)
-      hideElement("boxsum",anim=TRUE)
-      hideElement("reload-project",anim=TRUE)
-      showElement("project_over",anim=TRUE)
-      showElement("current-project",anim=TRUE)
+    if (values$num >= 100) {
+      hideElement("masque-form", anim = TRUE)
+      hideElement("boxsum", anim = TRUE)
+      hideElement("reload-project", anim = TRUE)
+      showElement("project_over", anim = TRUE)
+      showElement("current-project", anim = TRUE)
     }
     
   })
   
   
   # output$masque_results<- renderUI({
-  #   
+  #
   #   res=NULL
   #   PS = Project_current()
-  #   
+  #
   #   if(PS$status=="done")
   #   {
   #     hideElement("project_over",anim=TRUE)
@@ -1655,7 +2552,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   #     print(folder_name)
   #     ### Paste file name as folder
   #     annot_process = paste(values$curdir,"www","masque","done",folder_name,"shaman_annotation_process.tsv",sep= .Platform$file.sep)
-  #     
+  #
   #     if(file.exists(annot_process))
   #     {
   #       ap = read.csv(annot_process,sep="\t")
@@ -1671,7 +2568,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   #       )
   #     } else{res =HTML('<center><h1><strong>Your project is done !</strong></h1> <br/> <em><h4> Hereafter is a summary of the building and annotation processes</h4> </em> </center>')}
   #   }
-  #   
+  #
   #   if(PS$status=="doing"){
   #     hideElement("project_over",anim=TRUE)
   #     res = fluidRow(
@@ -1680,18 +2577,18 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   #       gaugeOutput("gaugeMasque_progress", width = "100%", height = "100%")
   #     )
   #   }
-  #   
+  #
   #   if(PS$status=="error"){
   #     hideElement("project_over",anim=TRUE)
-  #     
+  #
   #     json_file = PS$file
   #     error_file = paste(values$curdir,"www","masque","error",paste(basename(file_path_sans_ext(json_file)),"_error",".txt",sep=""),sep= .Platform$file.sep)
   #     print(error_file)
   #     if(file.exists(error_file)){error_message = read_lines(error_file)}
-  #     
+  #
   #     res = fluidRow(
   #       HTML('<center><h1><strong>Sorry, the workflow failed during progression</strong></h1> <br/> <em><h4> Hereafter is the message error.</h4> </em> <br/> </center>'),
-  #       
+  #
   #       column(width = 12,
   #              div(style = "background-color: white; margin: 0 auto;width: 50%; text-align:center;border:1px solid red",
   #                  h4(strong("Error message")),
@@ -1702,21 +2599,21 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   #       )
   #     )
   #   }
-  #   
+  #
   #   return(res)
   # })
-  # 
-  # 
+  #
+  #
   
   ## Action of the comeback button
-  observeEvent(input$comeback,{
-    showElement("masque-infobox",anim=TRUE)
-    showElement("masque-form",anim=TRUE)
-    showElement("boxsum",anim=TRUE)
-    showElement("pass",anim=TRUE)
-    hideElement("reload-project",anim=TRUE)
-    hideElement("project-over-wait",anim=TRUE)
-    hideElement("project_over",anim=TRUE)
+  observeEvent(input$comeback, {
+    showElement("masque-infobox", anim = TRUE)
+    showElement("masque-form", anim = TRUE)
+    showElement("boxsum", anim = TRUE)
+    showElement("pass", anim = TRUE)
+    hideElement("reload-project", anim = TRUE)
+    hideElement("project-over-wait", anim = TRUE)
+    hideElement("project_over", anim = TRUE)
   })
   
   
@@ -1725,17 +2622,17 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   #   print(values$masque_key)
   #   # hideElement("project_over",anim=TRUE)
   # })
-  # 
+  #
   # observeEvent(input$Check_project,{
   #   values$masque_key = isolate(input$password)
   #   print(values$masque_key)
   #   # hideElement("project_over",anim=TRUE)
   # })
-  # 
-  output$masque_status_key <-renderUI({
+  #
+  output$masque_status_key <- renderUI({
     input$refresh
     res = NULL
-    resbox = Project_box_result(values$masque_key,values$curdir)
+    resbox = Project_box_result(values$masque_key, values$curdir)
     
     # if(resbox$PS$status=='done') showElement("MasqueToShaman",anim=TRUE)
     # if(resbox$PS$status!='done') hideElement("MasqueToShaman",anim=TRUE)
@@ -1752,7 +2649,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     #   print(folder_name)
     #   ### Paste file name as folder
     #   annot_process = paste(values$curdir,"www","masque","done",folder_name,"shaman_annotation_process.tsv",sep= .Platform$file.sep)
-    #   
+    #
     #   if(file.exists(annot_process))
     #   {
     #     ap = read.csv(annot_process,sep="\t")
@@ -1768,7 +2665,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     #       )
     #   } else{res =HTML('<center><h1><strong>Your project is done !</strong></h1> <br/> <em><h4> Hereafter is a summary of the building and annotation processes</h4> </em> </center>')}
     # }
-    # 
+    #
     # if(PS$status=="doing"){
     #       res = fluidRow(
     #             HTML('<center><h1><strong>Your project is currently running !</strong></h1> <br/> <br/> </center>'),
@@ -1776,17 +2673,17 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     #             gaugeOutput("gaugeMasque_progress", width = "100%", height = "100%")
     #       )
     # }
-    # 
+    #
     # if(PS$status=="error"){
-    #   
+    #
     #   json_file = PS$file
     #   error_file = paste(values$curdir,"www","masque","error",paste(basename(file_path_sans_ext(json_file)),"_error",".txt",sep=""),sep= .Platform$file.sep)
     #   print(error_file)
     #   if(file.exists(error_file)){error_message = read_lines(error_file)}
-    #     
+    #
     #   res = fluidRow(
     #     HTML('<center><h1><strong>Sorry, the workflow failed during progression</strong></h1> <br/> <em><h4> Hereafter is the message error.</h4> </em> <br/> </center>'),
-    #     
+    #
     #     column(width = 12,
     #            div(style = "background-color: white; margin: 0 auto;width: 50%; text-align:center;border:1px solid red",
     #                h4(strong("Error message")),
@@ -1797,7 +2694,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     #     )
     #   )
     # }
-    # 
+    #
     # return(res)
     
   })
@@ -1805,20 +2702,36 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   output$gaugeMasque_progress <- renderGauge({
     res = NULL
-    PS = Project_status(values$masque_key,values$curdir)
-    if(PS$passOK){
-      
-      if(PS$status=="doing"){
+    PS = Project_status(values$masque_key, values$curdir)
+    if (PS$passOK) {
+      if (PS$status == "doing") {
         json_file = PS$file
-        progress_file = paste(values$curdir,"www","masque","doing",paste(basename(file_path_sans_ext(json_file)),"_progress",".txt",sep=""),sep= .Platform$file.sep)
-        if(file.exists(progress_file))
+        progress_file = paste(
+          values$curdir,
+          "www",
+          "masque",
+          "doing",
+          paste(
+            basename(file_path_sans_ext(json_file)),
+            "_progress",
+            ".txt",
+            sep = ""
+          ),
+          sep = .Platform$file.sep
+        )
+        if (file.exists(progress_file))
         {
           pf = read_lines(progress_file)
-          pf = round(as.numeric(pf),1)
-          if(!is.na(pf)){
-            pf = min(pf,100); pf = max(pf,0)
+          pf = round(as.numeric(pf), 1)
+          if (!is.na(pf)) {
+            pf = min(pf, 100)
+            pf = max(pf, 0)
           }
-          res = gauge(min(pf,100), 0,100,symbol = '%',label= "Progress...")
+          res = gauge(min(pf, 100),
+                      0,
+                      100,
+                      symbol = '%',
+                      label = "Progress...")
         }
       }
     }
@@ -1829,99 +2742,160 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   
   output$build_process_table <- DT::renderDataTable({
-    folder_name = paste('file',values$masque_key,sep="")
-    build_process = paste(values$curdir,"www","masque","done",folder_name,"shaman_process_build.tsv",sep= .Platform$file.sep)
-    if(file.exists(build_process))
+    folder_name = paste('file', values$masque_key, sep = "")
+    build_process = paste(
+      values$curdir,
+      "www",
+      "masque",
+      "done",
+      folder_name,
+      "shaman_process_build.tsv",
+      sep = .Platform$file.sep
+    )
+    if (file.exists(build_process))
     {
-      bp = read.csv(build_process,sep="\t",header=TRUE)
+      bp = read.csv(build_process, sep = "\t", header = TRUE)
     }
-    return(bp)},
-    options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE, processing=FALSE,server=TRUE))
+    return(bp)
+  },
+  options = list(
+    lengthMenu = list(c(10, 50,-1), c('10', '50', 'All')),
+    pageLength = 10,
+    scrollX = TRUE,
+    processing = FALSE,
+    server = TRUE
+  ))
   # ## plot gauge
   # output$gaugeMasque_progress <-renderGauge({
-  # 
+  #
   #   res = NULL;
   #   num = round(as.numeric(values$num),1)
-  # 
+  #
   #   CMP = isolate(CheckMasque(input, values))
   #   Error = CMP$Error
   #   if(is.null(Error) || num>1) res = gauge(min(num,100), 0,100,symbol = '%',label= "Progress...")
-  # 
+  #
   #   return(res)
   # })
-  # 
-  # 
+  #
+  #
   textMASQUE <- reactive({
+    samp = SamplesMasque(input, values)
     
-    samp = SamplesMasque(input,values)
+    text = paste(
+      "<b>Type of data:</b>",
+      input$DataTypeMasque,
+      "<br /> <br /> ",
+      "<b>Paired-end sequencing:</b>",
+      input$PairedOrNot
+    )
+    text = paste(text,
+                 "<br /> <br /> ",
+                 "<b>Number of samples:</b>",
+                 length(samp$samples))
+    text = paste(text,
+                 "<br /> <br /> ",
+                 "<b>Removed samples:</b>",
+                 length(samp$samples_removed))
     
-    text = paste("<b>Type of data:</b>",input$DataTypeMasque,"<br /> <br /> ",
-                 "<b>Paired-end sequencing:</b>",input$PairedOrNot)
-    text = paste(text,"<br /> <br /> ","<b>Number of samples:</b>",length(samp$samples))
-    text = paste(text,"<br /> <br /> ","<b>Removed samples:</b>",length(samp$samples_removed))
+    if (isValidEmail(input$to))
+      text = paste(text, "<br /> <br /> ", "<b>Email:</b>", input$to)
     
-    if(isValidEmail(input$to)) text = paste(text,"<br /> <br /> ","<b>Email:</b>",input$to)
-    
-    if(input$HostName!="") text = paste(text,"<br /> <br /> ","<b>Host:</b>",input$HostName)
-    if(input$primer && input$PairedOrNot=="n") {text = paste(text,"<br /> <br /> ","<b>Primer:</b>",input$primerSingle)}
-    if(input$primer && input$PairedOrNot=="y") {text = paste(text,"<br /> <br /> ","<b>Primer forward:</b>",input$R1primer,
-                                                             "<br /> <br /> ","<b>Primer reverse:</b>",input$R2primer)}
+    if (input$HostName != "")
+      text = paste(text, "<br /> <br /> ", "<b>Host:</b>", input$HostName)
+    if (input$primer &&
+        input$PairedOrNot == "n") {
+      text = paste(text,
+                   "<br /> <br /> ",
+                   "<b>Primer:</b>",
+                   input$primerSingle)
+    }
+    if (input$primer &&
+        input$PairedOrNot == "y") {
+      text = paste(
+        text,
+        "<br /> <br /> ",
+        "<b>Primer forward:</b>",
+        input$R1primer,
+        "<br /> <br /> ",
+        "<b>Primer reverse:</b>",
+        input$R2primer
+      )
+    }
     
     return(text)
   })
   
   
   output$summary_box_masque <- renderUI({
-    
     text = textMASQUE()
     
-    res = div(id="boxsum",style = "word-wrap: break-word;",box(id="boxsum",
-                                                               title = strong("Summary of your analysis"), width = NULL, background = "light-blue",
-                                                               # HTML("<h4><b>Enter the key:</b></h4>",'<hr color="white"> <br /> <br /> '),
-                                                               
-                                                               HTML(text),
-                                                               div(style = "text-align:right;",
-                                                                   downloadButton("printMasque_summary", "Save"),
-                                                                   tags$style(type='text/css', "#printMasque_summary {margin-top: 15px;}")
-                                                               )
-    )
+    res = div(
+      id = "boxsum",
+      style = "word-wrap: break-word;",
+      box(
+        id = "boxsum",
+        title = strong("Summary of your analysis"),
+        width = NULL,
+        background = "light-blue",
+        # HTML("<h4><b>Enter the key:</b></h4>",'<hr color="white"> <br /> <br /> '),
+        
+        HTML(text),
+        div(
+          style = "text-align:right;",
+          downloadButton("printMasque_summary", "Save"),
+          tags$style(type =
+                       'text/css', "#printMasque_summary {margin-top: 15px;}")
+        )
+      )
     )
     return(res)
   })
   
   ## Export MASQUE summary in .txt
   output$printMasque_summary <- downloadHandler(
-    filename = function() { 'Summary.txt' },
-    content = function(file){
+    filename = function() {
+      'Summary.txt'
+    },
+    content = function(file) {
       txt = textMASQUE()
-      txt = gsub("<br />",replacement = "\n",txt)
-      txt = gsub("</b>",replacement = "",txt)
-      txt = gsub("<b>",replacement = "",txt)
-      write(paste("Summary of your analysis  \n \n ",txt), file)
+      txt = gsub("<br />", replacement = "\n", txt)
+      txt = gsub("</b>", replacement = "", txt)
+      txt = gsub("<b>", replacement = "", txt)
+      write(paste("Summary of your analysis  \n \n ", txt), file)
     }
   )
   
   
   ## Send mail with the password
-  observeEvent(input$checkMail,{
-    
+  observeEvent(input$checkMail, {
     # observe( info(paste("You will received a password by email at :",isolate(input$to), '\nThis can take few seconds.')))
     to <- isolate(input$to)
     subject <- "SHAMAN Analysis"
-    body <- paste("Hello, \n You are using SHAMAN to run a quantitative metagenomic analysis. Hereafter is the key you need in SHAMAN :
-                  \n",values$pass," \n \n Best regards, \n SHAMAN team")
-    mailControl=list(smtpServer="smtp.pasteur.fr")
-    from="<shaman@pasteur.fr>"
+    body <-
+      paste(
+        "Hello, \n You are using SHAMAN to run a quantitative metagenomic analysis. Hereafter is the key you need in SHAMAN :
+                  \n",
+        values$pass,
+        " \n \n Best regards, \n SHAMAN team"
+      )
+    mailControl = list(smtpServer = "smtp.pasteur.fr")
+    from = "<shaman@pasteur.fr>"
     ## Send mail
-    if(Sys.info()["nodename"] == "ShinyPro"){
-      sendmail(from=from,to=to,subject=subject,msg=body,control=mailControl)
+    if (Sys.info()["nodename"] == "ShinyPro") {
+      sendmail(
+        from = from,
+        to = to,
+        subject = subject,
+        msg = body,
+        control = mailControl
+      )
     }
     
     ## Update the key value.
-    updateTextInput(session,"password","",value = values$pass)
+    updateTextInput(session, "password", "", value = values$pass)
     
-    ## Store the email 
+    ## Store the email
     values$login_email = to
   })
   
@@ -1929,23 +2903,23 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   ## Create button once MASQUE computation is over
   # output$MasqueToShaman_button <- renderUI({
   #   res = NULL
-  # 
+  #
   #   CMP = CheckMasque(input, values)
   #   Error = CMP$Error
   #   if(is.null(Error) && values$num>=100){
-  # 
-  # 
+  #
+  #
   #    }
-  # 
-  #   return(res)    
+  #
+  #   return(res)
   # })
-  #   
+  #
   
   # observe({
   #   if(values$num<100) disable("RunResMasque")
   #   if(values$num<100) disable("masque_database")
-  #   
-  #   if(values$num<100){ addPopover(session,"load-masque-res", 
+  #
+  #   if(values$num<100){ addPopover(session,"load-masque-res",
   #                                 title= "Waiting for the results",
   #                                 content = paste("Once the computation is over, you will received a password by email at:",values$login_email)
   #                                 )
@@ -1964,128 +2938,283 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   #})
   
   observeEvent(input$LoadResMasque, {
-    
-    if (input$masque_db == "rdp"){
-      updateSelectInput(session, "FileFormat","",selected = "fileCounts")
-      updateSelectInput(session, "TypeTaxo","",selected = "RDP")
+    if (input$masque_db == "rdp") {
+      updateSelectInput(session, "FileFormat", "", selected = "fileCounts")
+      updateSelectInput(session, "TypeTaxo", "", selected = "RDP")
       reset("fileTaxo")
       reset("fileCounts")
       values$rdp_thres_masque = as.numeric(input$rdp_thres)
-      values$rdp_annot_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),"shaman_rdp_annotation.tsv",sep= .Platform$file.sep)
-      values$count_table_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),"shaman_otu_table.tsv",sep= .Platform$file.sep)
+      values$rdp_annot_masque = paste(
+        values$curdir,
+        "www",
+        "masque",
+        "done",
+        paste("file", values$masque_key, sep = ""),
+        "shaman_rdp_annotation.tsv",
+        sep = .Platform$file.sep
+      )
+      values$count_table_masque = paste(
+        values$curdir,
+        "www",
+        "masque",
+        "done",
+        paste("file", values$masque_key, sep = ""),
+        "shaman_otu_table.tsv",
+        sep = .Platform$file.sep
+      )
     }
     else{
-      updateSelectInput(session, "FileFormat","",selected = "fileBiom")
+      updateSelectInput(session, "FileFormat", "", selected = "fileBiom")
       reset("fileBiom")
       reset("fileTree")
-      values$biom_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_",input$masque_db,".biom",sep=""),sep= .Platform$file.sep)
-      values$tree_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_",input$masque_db,"_tree.nhx",sep=""),sep= .Platform$file.sep)
+      values$biom_masque = paste(
+        values$curdir,
+        "www",
+        "masque",
+        "done",
+        paste("file", values$masque_key, sep = ""),
+        paste("shaman_", input$masque_db, ".biom", sep = ""),
+        sep = .Platform$file.sep
+      )
+      values$tree_masque = paste(
+        values$curdir,
+        "www",
+        "masque",
+        "done",
+        paste("file", values$masque_key, sep = ""),
+        paste("shaman_", input$masque_db, "_tree.nhx", sep = ""),
+        sep = .Platform$file.sep
+      )
     }
     #sendSweetAlert(messageId="LoadResMasque", title = "Success", text = "Processed data were successfully loaded. You can go to statistical analysis part to analyze your data with SHAMAN.", type = "success", html=TRUE)
-    sendSweetAlert(session, title = "Success", text = "Processed data were successfully loaded. You can go to statistical analysis part to analyze your data with SHAMAN.", type = "success", html=TRUE)
+    sendSweetAlert(
+      session,
+      title = "Success",
+      text = "Processed data were successfully loaded. You can go to statistical analysis part to analyze your data with SHAMAN.",
+      type = "success",
+      html = TRUE
+    )
   })
   
   
   
   #from home
   observeEvent(input$LoadResMasque_home, {
-    
-    if (input$masque_db_home == "rdp"){
-      updateSelectInput(session, "FileFormat","",selected = "fileCounts")
-      updateSelectInput(session, "TypeTaxo","",selected = "RDP")
+    if (input$masque_db_home == "rdp") {
+      updateSelectInput(session, "FileFormat", "", selected = "fileCounts")
+      updateSelectInput(session, "TypeTaxo", "", selected = "RDP")
       reset("fileTaxo")
       reset("fileCounts")
       values$rdp_thres_masque = as.numeric(input$rdp_thres_home)
-      values$rdp_annot_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),"shaman_rdp_annotation.tsv",sep= .Platform$file.sep)
-      values$count_table_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),"shaman_otu_table.tsv",sep= .Platform$file.sep)
+      values$rdp_annot_masque = paste(
+        values$curdir,
+        "www",
+        "masque",
+        "done",
+        paste("file", values$masque_key, sep = ""),
+        "shaman_rdp_annotation.tsv",
+        sep = .Platform$file.sep
+      )
+      values$count_table_masque = paste(
+        values$curdir,
+        "www",
+        "masque",
+        "done",
+        paste("file", values$masque_key, sep = ""),
+        "shaman_otu_table.tsv",
+        sep = .Platform$file.sep
+      )
     }
     else{
-      updateSelectInput(session, "FileFormat","",selected = "fileBiom")
+      updateSelectInput(session, "FileFormat", "", selected = "fileBiom")
       reset("fileBiom")
       reset("fileTree")
-      values$biom_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_",input$masque_db_home,".biom",sep=""),sep= .Platform$file.sep)
-      values$tree_masque = paste(values$curdir,"www","masque","done",paste("file",values$masque_key,sep=""),paste("shaman_",input$masque_db_home,"_tree.nhx",sep=""),sep= .Platform$file.sep)
+      values$biom_masque = paste(
+        values$curdir,
+        "www",
+        "masque",
+        "done",
+        paste("file", values$masque_key, sep = ""),
+        paste("shaman_", input$masque_db_home, ".biom", sep = ""),
+        sep = .Platform$file.sep
+      )
+      values$tree_masque = paste(
+        values$curdir,
+        "www",
+        "masque",
+        "done",
+        paste("file", values$masque_key, sep = ""),
+        paste("shaman_", input$masque_db_home, "_tree.nhx", sep = ""),
+        sep = .Platform$file.sep
+      )
     }
     #sendSweetAlert(messageId="LoadResMasque_home", title = "Success", text = "Processed data were successfully loaded. You can go to statistical analysis part to analyze your data with SHAMAN.", type = "success", html=TRUE)
-    sendSweetAlert(session, title = "Success", text = "Processed data were successfully loaded. You can go to statistical analysis part to analyze your data with SHAMAN.", type = "success", html=TRUE)
+    sendSweetAlert(
+      session,
+      title = "Success",
+      text = "Processed data were successfully loaded. You can go to statistical analysis part to analyze your data with SHAMAN.",
+      type = "success",
+      html = TRUE
+    )
   })
   
-  ## Export results in .zip 
+  ## Export results in .zip
   output$Download_masque_zip <- downloadHandler(
-    filename = function() { paste("SHAMAN_",values$masque_key,'.zip',sep="")},
-    content = function(file){
-      zip_file = paste(values$curdir,"www","masque","done",paste("shaman_",values$masque_key,".zip",sep=""),sep= .Platform$file.sep)
-      if(file.exists(zip_file)){file.copy(zip_file, file)}
+    filename = function() {
+      paste("SHAMAN_", values$masque_key, '.zip', sep = "")
+    },
+    content = function(file) {
+      zip_file = paste(
+        values$curdir,
+        "www",
+        "masque",
+        "done",
+        paste("shaman_", values$masque_key, ".zip", sep = ""),
+        sep = .Platform$file.sep
+      )
+      if (file.exists(zip_file)) {
+        file.copy(zip_file, file)
+      }
     }
   )
   
   ## Export results in .zip from home
   output$Download_masque_zip_home <- downloadHandler(
-    filename = function() { paste("SHAMAN_",values$masque_key,'.zip',sep="")},
-    content = function(file){
-      zip_file = paste(values$curdir,"www","masque","done",paste("shaman_",values$masque_key,".zip",sep=""),sep= .Platform$file.sep)
-      if(file.exists(zip_file)){file.copy(zip_file, file)}
+    filename = function() {
+      paste("SHAMAN_", values$masque_key, '.zip', sep = "")
+    },
+    content = function(file) {
+      zip_file = paste(
+        values$curdir,
+        "www",
+        "masque",
+        "done",
+        paste("shaman_", values$masque_key, ".zip", sep = ""),
+        sep = .Platform$file.sep
+      )
+      if (file.exists(zip_file)) {
+        file.copy(zip_file, file)
+      }
     }
   )
   
   
   
   output$Project_box_home <- renderUI({
-    
     res = NULL
     demodata = input$DemoDataset
     FileFormat = input$FileFormat
     
-    PS = Project_status(values$masque_key,values$curdir)
-    if(PS$passOK){
-      
-      if(PS$status=="done")
+    PS = Project_status(values$masque_key, values$curdir)
+    if (PS$passOK) {
+      if (PS$status == "done")
       {
         res = list()
         json_file = PS$file
-        folder_name = paste('file',values$masque_key,sep="")
-        json_file = paste(curdir,"www","masque","done",paste(folder_name, ".json", sep=""),sep= .Platform$file.sep)
-        json_data = rjson::fromJSON(file=json_file)
+        folder_name = paste('file', values$masque_key, sep = "")
+        json_file = paste(
+          curdir,
+          "www",
+          "masque",
+          "done",
+          paste(folder_name, ".json", sep = ""),
+          sep = .Platform$file.sep
+        )
+        json_data = rjson::fromJSON(file = json_file)
         
         ### Paste file name as folder
-        annot_process = paste(curdir,"www","masque","done",folder_name,"shaman_process_annotation.tsv",sep= .Platform$file.sep)
+        annot_process = paste(
+          curdir,
+          "www",
+          "masque",
+          "done",
+          folder_name,
+          "shaman_process_annotation.tsv",
+          sep = .Platform$file.sep
+        )
         
         ## Waiting for file creation (max 3min)
-        start = Sys.time(); diff = 0
-        while(!file.exists(annot_process) && diff<180){
-          annot_process = paste(curdir,"www","masque","done",folder_name,"shaman_process_annotation.tsv",sep= .Platform$file.sep)
+        start = Sys.time()
+        diff = 0
+        while (!file.exists(annot_process) && diff < 180) {
+          annot_process = paste(
+            curdir,
+            "www",
+            "masque",
+            "done",
+            folder_name,
+            "shaman_process_annotation.tsv",
+            sep = .Platform$file.sep
+          )
           tmp = Sys.time()
-          diff = tmp-start
+          diff = tmp - start
         }
         
-        if(file.exists(annot_process) && demodata=="...")
+        if (file.exists(annot_process) && demodata == "...")
         {
-          
-          ap = read.csv(annot_process,sep="\t")
-          if(json_data$type == "16S") db_choices = c("Silva" = "silva","Greengenes" = "greengenes", "RDP"= "rdp")
-          else if(json_data$type == "23S_28S" || json_data$type == "18S") db_choices = c("Silva" = "silva","RDP"= "rdp")
-          else db_choices = c("Findley" = "findley", "Underhill"= "underhill", "Unite"= "unite", "RDP"= "rdp")
+          ap = read.csv(annot_process, sep = "\t")
+          if (json_data$type == "16S")
+            db_choices = c(
+              "Silva" = "silva",
+              "Greengenes" = "greengenes",
+              "RDP" = "rdp"
+            )
+          else if (json_data$type == "23S_28S" ||
+                   json_data$type == "18S")
+            db_choices = c("Silva" = "silva", "RDP" = "rdp")
+          else
+            db_choices = c(
+              "Findley" = "findley",
+              "Underhill" = "underhill",
+              "Unite" = "unite",
+              "RDP" = "rdp"
+            )
           
           res[[1]] = fluidRow(
-            box(title="Load the results",width = 3, background = "light-blue",
-                selectInput("masque_db_home","Select the database",choices=db_choices),
-                conditionalPanel(condition="input.masque_db_home=='rdp'",numericInput("rdp_thres_home",h6(strong("Threshold:")),0.5,step=0.01,min=0.01,max=1)),
-                actionButton("LoadResMasque_home", "Upload the results",icon=icon('upload')),
-                tags$style(type='text/css', "#LoadResMasque_home { width:100%; }")#,
-                #receiveSweetAlert(messageId = "LoadResMasque_home")
+            box(
+              title = "Load the results",
+              width = 3,
+              background = "light-blue",
+              selectInput("masque_db_home", "Select the database", choices =
+                            db_choices),
+              conditionalPanel(
+                condition = "input.masque_db_home=='rdp'",
+                numericInput(
+                  "rdp_thres_home",
+                  h6(strong("Threshold:")),
+                  0.5,
+                  step = 0.01,
+                  min = 0.01,
+                  max = 1
+                )
+              ),
+              actionButton(
+                "LoadResMasque_home",
+                "Upload the results",
+                icon = icon('upload')
+              ),
+              tags$style(type = 'text/css', "#LoadResMasque_home { width:100%; }")#,
+              #receiveSweetAlert(messageId = "LoadResMasque_home")
             ),
-            box(title="Download .zip file",width = 3, status = "success",
-                downloadButton('Download_masque_zip_home', 'Download the results'),
-                tags$style(type='text/css', "#Download_masque_zip_home { width:100%;}")
+            box(
+              title = "Download .zip file",
+              width = 3,
+              status = "success",
+              downloadButton('Download_masque_zip_home', 'Download the results'),
+              tags$style(type = 'text/css', "#Download_masque_zip_home { width:100%;}")
             )
           )
         }
-        else if(file.exists(annot_process) && demodata !="..." && FileFormat == "fileBiom" )
+        else if (file.exists(annot_process) &&
+                 demodata != "..." && FileFormat == "fileBiom")
         {
           res[[1]] = fluidRow(
-            box(title="Download .zip file",width = 3, status = "success",
-                downloadButton('Download_masque_zip_home', 'Download the results'),
-                tags$style(type='text/css', "#Download_masque_zip_home { width:100%;}")
+            box(
+              title = "Download .zip file",
+              width = 3,
+              status = "success",
+              downloadButton('Download_masque_zip_home', 'Download the results'),
+              tags$style(type = 'text/css', "#Download_masque_zip_home { width:100%;}")
             )
           )
         }
@@ -2098,23 +3227,31 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   ######################## END MASQUE #################################
   
   
-  observeEvent(input$deleteTaxo,{
-    if(is.null(values$TaxoWorking)) values$TaxoWorking= dataInput()$data$taxo
+  observeEvent(input$deleteTaxo, {
+    if (is.null(values$TaxoWorking))
+      values$TaxoWorking = dataInput()$data$taxo
     if (!is.null(input$DataTaxo_rows_selected)) {
-      
-      if(nrow(values$TaxoWorking)!=0) values$labeled <- (nrow(values$TaxoWorking)-length(input$DataTaxo_rows_selected))*values$labeled/nrow(values$TaxoWorking)
-      else values$labeled <- 0
-      values$TaxoWorking <- values$TaxoWorking[-as.numeric(input$DataTaxo_rows_selected),]
+      if (nrow(values$TaxoWorking) != 0)
+        values$labeled <-
+          (nrow(values$TaxoWorking) - length(input$DataTaxo_rows_selected)) * values$labeled /
+          nrow(values$TaxoWorking)
+      else
+        values$labeled <- 0
+      values$TaxoWorking <-
+        values$TaxoWorking[-as.numeric(input$DataTaxo_rows_selected), ]
     }
   })
   
-  observeEvent(input$deleteRows,{
-    
+  observeEvent(input$deleteRows, {
     if (!is.null(input$DataTarget_rows_selected)) {
-      
-      if(nrow(values$TargetWorking)!=0) values$labeled <- (nrow(values$TargetWorking)-length(input$DataTarget_rows_selected))*values$labeled/nrow(values$TargetWorking)
-      else values$labeled <- 0
-      values$TargetWorking <- values$TargetWorking[-as.numeric(input$DataTarget_rows_selected),]
+      if (nrow(values$TargetWorking) != 0)
+        values$labeled <-
+          (nrow(values$TargetWorking) - length(input$DataTarget_rows_selected)) *
+          values$labeled / nrow(values$TargetWorking)
+      else
+        values$labeled <- 0
+      values$TargetWorking <-
+        values$TargetWorking[-as.numeric(input$DataTarget_rows_selected), ]
       
     }
   })
@@ -2125,32 +3262,49 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   ## Interest Variables
   output$SelectInterestVar <- renderUI({
-    
-    target=values$TargetWorking
-    if(!is.null(target) && !values$visTarget ) 
+    target = values$TargetWorking
+    if (!is.null(target) && !values$visTarget)
     {
       namesTarget = colnames(target)[2:ncol(target)]
-      selectInput("InterestVar",h6(strong("Select the variables")),namesTarget,selected=namesTarget,multiple=TRUE)
+      selectInput(
+        "InterestVar",
+        h6(strong("Select the variables")),
+        namesTarget,
+        selected = namesTarget,
+        multiple = TRUE
+      )
     }
-    else if(!is.null(target) && values$visTarget )
+    else if (!is.null(target) && values$visTarget)
     {
       namesTarget = colnames(target)[2:ncol(target)]
-      selectInput("InterestVar",h6(strong("Select the variables")), namesTarget,selected=namesTarget[2],multiple=TRUE)
+      selectInput(
+        "InterestVar",
+        h6(strong("Select the variables")),
+        namesTarget,
+        selected = namesTarget[2],
+        multiple = TRUE
+      )
     }
   })
   
   ## Interactions
   output$SelectInteraction2 <- renderUI({
-    
     target = values$TargetWorking
     VarInt = input$InterestVar
     res = NULL
-    if(!is.null(target) && length(input$InterestVar)>1) 
+    if (!is.null(target) && length(input$InterestVar) > 1)
     {
-      Interac = GetInteraction2(target,VarInt)
-      res = selectInput("Interaction2",h6(strong("Add interactions")),Interac,selected=NULL,multiple=TRUE)
+      Interac = GetInteraction2(target, VarInt)
+      res = selectInput(
+        "Interaction2",
+        h6(strong("Add interactions")),
+        Interac,
+        selected = NULL,
+        multiple = TRUE
+      )
     }
-    if(length(input$InterestVar)==1) res = NULL
+    if (length(input$InterestVar) == 1)
+      res = NULL
     
     return(res)
   })
@@ -2161,24 +3315,29 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     # #counts = isolate(dataMergeCounts()$counts)
     counts = isolate(dataMergeCounts()$CT_Norm)
     taxo = input$TaxoSelect
-    # 
+    #
     # if(!is.null(counts) && taxo != "...")
     # {
     resDiff = ResDiffAnal()
     int = input$Interaction2
     
-    if(!is.null(resDiff)){
-      box(title=paste("Count table (",taxo,")",sep=""),width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
-          DT::dataTableOutput("CountsMerge"),
-          downloadButton('ExportCounts', 'Export normalized counts'),
-          downloadButton('ExportRelative', 'Export relative abundance')
-      )  
+    if (!is.null(resDiff)) {
+      box(
+        title = paste("Count table (", taxo, ")", sep = ""),
+        width = NULL,
+        status = "primary",
+        solidHeader = TRUE,
+        collapsible = TRUE,
+        collapsed = TRUE,
+        DT::dataTableOutput("CountsMerge"),
+        downloadButton('ExportCounts', 'Export normalized counts'),
+        downloadButton('ExportRelative', 'Export relative abundance')
+      )
     }
   })
   
   ## Run button
   output$RunButton <- renderUI({
-    
     res = NULL
     ChTM = "Error"
     target = values$TargetWorking
@@ -2188,62 +3347,79 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     VarInt = input$InterestVar
     
     ## Return NULL if there is no error
-    if(!is.null(target) && length(VarInt)>=1) ChTM = CheckTargetModel(input,target,labeled,CT)$Error
+    if (!is.null(target) &&
+        length(VarInt) >= 1)
+      ChTM = CheckTargetModel(input, target, labeled, CT)$Error
     
-    if(!is.null(target) && taxo!="..." && is.null(ChTM) && length(VarInt)>=1) res = actionButton("RunDESeq",strong("Run analysis"),icon = icon("caret-right"))
+    if (!is.null(target) &&
+        taxo != "..." &&
+        is.null(ChTM) &&
+        length(VarInt) >= 1)
+      res = actionButton("RunDESeq", strong("Run analysis"), icon = icon("caret-right"))
     
     return(res)
   })
   
   
-  SetUpVis <-eventReactive(input$RunVis,{
+  SetUpVis <- eventReactive(input$RunVis, {
     target = NULL
     CT = dataInput()$data$counts
     fakeCondition = c("Samples", "Samples", "fakeCondition")
     samples = colnames(CT)
-    samples = gsub(pattern = "-",replacement = ".",as.character(samples))
+    samples = gsub(pattern = "-",
+                   replacement = ".",
+                   as.character(samples))
     # random is disappointing
     #condition = sample(c("A", "B"), length(samples), replace =T)
-    condition = c(rep("A",round(length(samples)/2,0)),rep("B",length(samples)-round(length(samples)/2,0)))
-    target = data.frame(samples,samples,condition, row.names = samples)
+    condition = c(rep("A", round(length(samples) / 2, 0)), rep("B", length(samples) -
+                                                                 round(length(samples) / 2, 0)))
+    target = data.frame(samples, samples, condition, row.names = samples)
     colnames(target) = fakeCondition
     values$TargetWorking = target
     values$labeled = 100.0
     values$visTarget = TRUE
-    sendSweetAlert(session, title = "Success", text = "A fake condition was as assigned to samples. Now you select the taxonomy level and run analysis.", type = "success", html=TRUE)
+    sendSweetAlert(
+      session,
+      title = "Success",
+      text = "A fake condition was as assigned to samples. Now you select the taxonomy level and run analysis.",
+      type = "success",
+      html = TRUE
+    )
   })
   
-  ## Add contrast 
-  observeEvent(input$RunVis,{  
-    
+  ## Add contrast
+  observeEvent(input$RunVis, {
     SetUpVis()
     
-  },priority=1)
+  }, priority = 1)
   
   ## Vis button
   output$VisButton <- renderUI({
-    
     res = NULL
     target = values$TargetWorking
     VarInt = input$InterestVar
     
-    if(is.null(target) && length(VarInt) == 0) {
-      res = actionButton("RunVis",strong("Setup visualization"),icon = icon("caret-right"))
+    if (is.null(target) && length(VarInt) == 0) {
+      res = actionButton("RunVis",
+                         strong("Setup visualization"),
+                         icon = icon("caret-right"))
     }
     return(res)
   })
   
   ## Var for normalization
   output$SelectVarNorm <- renderUI({
-    
-    target=values$TargetWorking
-    res = selectInput("VarNorm",h6(strong("Normalization by:")),NULL,multiple=TRUE)
-    if(!is.null(target)) 
+    target = values$TargetWorking
+    res = selectInput("VarNorm", h6(strong("Normalization by:")), NULL, multiple =
+                        TRUE)
+    if (!is.null(target))
     {
       namesTarget = colnames(target)[2:ncol(target)]
-      ind = which(apply(as.data.frame(target[,namesTarget]),2,is.numeric))
-      if(length(ind)>=1) namesTarget = namesTarget[-ind]
-      res = selectInput("VarNorm",h6(strong("Normalization by:")),c(NULL,namesTarget),multiple=TRUE)
+      ind = which(apply(as.data.frame(target[, namesTarget]), 2, is.numeric))
+      if (length(ind) >= 1)
+        namesTarget = namesTarget[-ind]
+      res = selectInput("VarNorm", h6(strong("Normalization by:")), c(NULL, namesTarget), multiple =
+                          TRUE)
     }
     return(res)
     
@@ -2253,19 +3429,20 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   ## Reference radio buttons
   output$RefSelect <- renderUI({
-    
     target = values$TargetWorking
-    RB=list()
-    if(!is.null(target)) 
+    RB = list()
+    if (!is.null(target))
     {
       InterVar = input$InterestVar
-      if(length(InterVar)>0)
+      if (length(InterVar) > 0)
       {
-        names = paste0("Ref",InterVar)
-        for(i in 1:length(names))
+        names = paste0("Ref", InterVar)
+        for (i in 1:length(names))
         {
-          val = unique(target[,InterVar[i]])
-          RB[[i]] = selectInput(names[i],paste("Reference for",InterVar[i]),as.vector(val))
+          val = unique(target[, InterVar[i]])
+          RB[[i]] = selectInput(names[i],
+                                paste("Reference for", InterVar[i]),
+                                as.vector(val))
         }
       }
     }
@@ -2279,19 +3456,39 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     #target = dataInputTarget()
     #labeled = dataMergeCounts()$labeled
     labeled = values$labeled
-    if(!is.null(labeled)) 
+    if (!is.null(labeled))
     {
       #### Ajout fontion check target
       #infoBox(h6(strong("Target file")), subtitle = h6("Your target file is OK"), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
-      labeled = round(labeled,2)
-      if(labeled>0) res = shinydashboardshaman::valueBox(paste0(labeled, "%"),h6(strong("Labeled features")), color = "green",width=NULL,icon = icon("list"))
-      else res = shinydashboardshaman::valueBox(paste0(labeled, "%"),h6(strong("Labeled features")), color = "red",width=NULL,icon = icon("list"))  
+      labeled = round(labeled, 2)
+      if (labeled > 0)
+        res = shinydashboardshaman::valueBox(
+          paste0(labeled, "%"),
+          h6(strong("Labeled features")),
+          color = "green",
+          width = NULL,
+          icon = icon("list")
+        )
+      else
+        res = shinydashboardshaman::valueBox(
+          paste0(labeled, "%"),
+          h6(strong("Labeled features")),
+          color = "red",
+          width = NULL,
+          icon = icon("list")
+        )
     }
     #else infoBox(h6(strong("Target file")), subtitle = h6("Label of the target file must correspond to count table column names") ,color = "light-blue",width=NULL,fill=TRUE, icon = icon("warning"))
-    else res = shinydashboardshaman::valueBox(paste0(0, "%"),h6(strong("Labeled features")), color = "light-blue",width=NULL,icon = icon("list"))
+    else
+      res = shinydashboardshaman::valueBox(
+        paste0(0, "%"),
+        h6(strong("Labeled features")),
+        color = "light-blue",
+        width = NULL,
+        icon = icon("list")
+      )
     return(res)
-  }
-  )
+  })
   
   
   
@@ -2299,9 +3496,14 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   ## target table
   output$DataTarget <- DT::renderDataTable(
     values$TargetWorking,
-    options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE, processing=FALSE,server=TRUE
-    ))
+    options = list(
+      lengthMenu = list(c(10, 50,-1), c('10', '50', 'All')),
+      pageLength = 10,
+      scrollX = TRUE,
+      processing = FALSE,
+      server = TRUE
+    )
+  )
   
   Target_selection <- reactive ({
     input$DataTarget_rows_selected
@@ -2311,10 +3513,14 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   ## Counts table for the selected taxonomy level
   output$CountsMerge <- DT::renderDataTable(
-    round(counts(ResDiffAnal()$dds,normalized=TRUE)),
-    options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE, processing=FALSE
-    ))
+    round(counts(ResDiffAnal()$dds, normalized = TRUE)),
+    options = list(
+      lengthMenu = list(c(10, 50,-1), c('10', '50', 'All')),
+      pageLength = 10,
+      scrollX = TRUE,
+      processing = FALSE
+    )
+  )
   
   
   ## Box for merged counts
@@ -2323,65 +3529,117 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     # #counts = isolate(dataMergeCounts()$counts)
     counts = isolate(dataMergeCounts()$CT_Norm)
     taxo = input$TaxoSelect
-    # 
+    #
     # if(!is.null(counts) && taxo != "...")
     # {
     resDiff = ResDiffAnal()
     int = input$Interaction2
     
-    if(!is.null(resDiff)){
-      box(title=paste("Count table (",taxo,")",sep=""),width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
-          DT::dataTableOutput("CountsMerge"),
-          downloadButton('ExportCounts', 'Export normalized counts'),
-          downloadButton('ExportRelative', 'Export relative abundance')
-      )  
+    if (!is.null(resDiff)) {
+      box(
+        title = paste("Count table (", taxo, ")", sep = ""),
+        width = NULL,
+        status = "primary",
+        solidHeader = TRUE,
+        collapsible = TRUE,
+        collapsed = TRUE,
+        DT::dataTableOutput("CountsMerge"),
+        downloadButton('ExportCounts', 'Export normalized counts'),
+        downloadButton('ExportRelative', 'Export relative abundance')
+      )
     }
   })
   
-  observeEvent(input$confirmTarget,{
+  observeEvent(input$confirmTarget, {
     target = NULL
     # Get the old biom
-    if (!is.null(values$biom_masque) && file.exists(values$biom_masque)){ 
-      tryCatch(read_biom(values$biom_masque)->data,
-               error=function(e) sendSweetAlert(session,
-                                                title = "Oops",
-                                                text=paste("Your file can not be read in SHAMAN.\n \n",e),type ="error"))
+    if (!is.null(values$biom_masque) &&
+        file.exists(values$biom_masque)) {
+      tryCatch(
+        read_biom(values$biom_masque) -> data,
+        error = function(e)
+          sendSweetAlert(
+            session,
+            title = "Oops",
+            text = paste("Your file can not be read in SHAMAN.\n \n", e),
+            type = "error"
+          )
+      )
     }
-    if(!is.null(data)){
-      if(is.null(sample_metadata(data))){
-        tryCatch(write_biom(make_biom(dataMergeCounts()$CT_noNorm, sample_metadata=values$TargetWorking[,-1, drop=F],
-                                      observation_metadata=dataInput()$data$taxo_biom), values$biom_masque),
-                 error=function(e) sendSweetAlert(session,
-                                                  title = "Oops",
-                                                  text=paste("The new experiment data cannot be saved in SHAMAN.\n \n",e),type ="error"),
-                 finally = sendSweetAlert(session, title = "Success", text = HTML(paste("The target file was successfully saved in the project ", values$masque_key,".
+    if (!is.null(data)) {
+      if (is.null(sample_metadata(data))) {
+        tryCatch(
+          write_biom(
+            make_biom(
+              dataMergeCounts()$CT_noNorm,
+              sample_metadata = values$TargetWorking[, -1, drop = F],
+              observation_metadata = dataInput()$data$taxo_biom
+            ),
+            values$biom_masque
+          ),
+          error = function(e)
+            sendSweetAlert(
+              session,
+              title = "Oops",
+              text = paste("The new experiment data cannot be saved in SHAMAN.\n \n", e),
+              type = "error"
+            ),
+          finally = sendSweetAlert(
+            session,
+            title = "Success",
+            text = HTML(
+              paste(
+                "The target file was successfully saved in the project ",
+                values$masque_key,
+                ".
                                   <br />
                                   <br />
                                   <br />
-                                  <em> Remind: We recommand to perform this association for every annotation database.</em>")), type = "success", html=TRUE))
+                                  <em> Remind: We recommand to perform this association for every annotation database.</em>"
+              )
+            ),
+            type = "success",
+            html = TRUE
+          )
+        )
       }
       else{
-        sendSweetAlert(session,
-                       title = "Oops",
-                       text=paste("There is alread some metadata saved for this experiment.\n Contact shaman@pasteur.fr to reset modification."),type ="error")
+        sendSweetAlert(
+          session,
+          title = "Oops",
+          text = paste(
+            "There is alread some metadata saved for this experiment.\n Contact shaman@pasteur.fr to reset modification."
+          ),
+          type = "error"
+        )
       }
     }
   })
   
-  ## Add contrast 
-  observeEvent(input$SaveTarget,{  
-    confirmSweetAlert(session = session, inputId = "confirmTarget", type = "warning", 
-                      title = "The target file can be saved only once.\n Do you confirm the modification ?",
-                      danger_mode = TRUE)
+  ## Add contrast
+  observeEvent(input$SaveTarget, {
+    confirmSweetAlert(
+      session = session,
+      inputId = "confirmTarget",
+      type = "warning",
+      title = "The target file can be saved only once.\n Do you confirm the modification ?",
+      danger_mode = TRUE
+    )
     #SetNewTarget()
-  },priority=1)
+  }, priority = 1)
   
   output$SaveExperiment  <- renderUI({
     res = NULL
     resDiff = ResDiffAnal()
     int = input$Interaction2
-    if(!is.null(resDiff) && !is.null(values$masque_key)) res = list(downloadButton('ExportBiom', 'Export BIOM'), actionButton("SaveTarget", "Save target",icon = icon("caret-right")))
-    else if(!is.null(resDiff)) res = downloadButton('ExportBiom', 'Export BIOM')
+    if (!is.null(resDiff) &&
+        !is.null(values$masque_key))
+      res = list(
+        downloadButton('ExportBiom', 'Export BIOM'),
+        actionButton("SaveTarget", "Save target", icon = icon("caret-right"))
+      )
+    else if (!is.null(resDiff))
+      res = downloadButton('ExportBiom', 'Export BIOM')
     return(res)
   })
   
@@ -2392,62 +3650,124 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   # })
   
   output$ExportBiom  <- downloadHandler(
-    filename = function() { 'SHAMAN_data.biom' },
-    content = function(file){
-      write_biom(make_biom(dataMergeCounts()$CT_noNorm, sample_metadata=values$TargetWorking[,-1, drop=F],
-                           observation_metadata=dataInput()$data$taxo_biom), file)}
+    filename = function() {
+      'SHAMAN_data.biom'
+    },
+    content = function(file) {
+      write_biom(
+        make_biom(
+          dataMergeCounts()$CT_noNorm,
+          sample_metadata = values$TargetWorking[, -1, drop = F],
+          observation_metadata = dataInput()$data$taxo_biom
+        ),
+        file
+      )
+    }
   )
   output$ExportRawCounts <- downloadHandler(
-    filename = function() { 'SHAMAN_count.csv' },
-    content = function(file){write.csv(dataInput()$data$counts, file)}
+    filename = function() {
+      'SHAMAN_count.csv'
+    },
+    content = function(file) {
+      write.csv(dataInput()$data$counts, file)
+    }
   )
   
   output$ExportTaxo <- downloadHandler(
-    filename = function() { 'SHAMAN_taxo.csv' },
-    content = function(file){write.csv(dataInput()$data$taxo, file)}
+    filename = function() {
+      'SHAMAN_taxo.csv'
+    },
+    content = function(file) {
+      write.csv(dataInput()$data$taxo, file)
+    }
   )
   output$ExportPhylo <- downloadHandler(
-    filename = function() { 'SHAMAN_tree.nhx' },
-    content = function(file){write.tree(dataInputTree()$data, file=file)}
+    filename = function() {
+      'SHAMAN_tree.nhx'
+    },
+    content = function(file) {
+      write.tree(dataInputTree()$data, file = file)
+    }
   )
   ## Export in .csv
   output$ExportCounts <- downloadHandler(
-    filename = function() { 'NormCounts.csv' },
+    filename = function() {
+      'NormCounts.csv'
+    },
     #content = function(file){write.csv(dataMergeCounts()$counts, file)}
-    content = function(file){write.csv(round(counts(ResDiffAnal()$dds,normalized=TRUE)), file)}
+    content = function(file) {
+      write.csv(round(counts(ResDiffAnal()$dds, normalized = TRUE)), file)
+    }
   )
   
   ## Export in .csv
   output$ExportRelative <- downloadHandler(
-    filename = function() { 'RelativeAb.csv' },
-    content = function(file){write.csv(sweep(round(counts(ResDiffAnal()$dds,normalized=TRUE)),2,
-                                             colSums(round(counts(ResDiffAnal()$dds,normalized=TRUE))),`/`), file)}
+    filename = function() {
+      'RelativeAb.csv'
+    },
+    content = function(file) {
+      write.csv(sweep(round(
+        counts(ResDiffAnal()$dds, normalized = TRUE)
+      ), 2,
+      colSums(round(
+        counts(ResDiffAnal()$dds, normalized = TRUE)
+      )), `/`), file)
+    }
   )
   
   ## Export size factors
   output$ExportSizeFactor <- downloadHandler(
-    filename = function() { if (input$sepsizef == "\t") 'SHAMAN_sizefactors.tsv' else 'SHAMAN_sizefactors.csv' },
-    content = function(file){write.table(SizeFactor_table(), file,quote=FALSE,row.names = FALSE,sep=input$sepsizef)}
+    filename = function() {
+      if (input$sepsizef == "\t")
+        'SHAMAN_sizefactors.tsv'
+      else
+        'SHAMAN_sizefactors.csv'
+    },
+    content = function(file) {
+      write.table(
+        SizeFactor_table(),
+        file,
+        quote = FALSE,
+        row.names = FALSE,
+        sep = input$sepsizef
+      )
+    }
   )
   
   ## Export in .csv
   output$ExportTarget <- downloadHandler(
-    filename = function() { 'Target.csv' },
-    content = function(file){write.table(values$TargetWorking, file,sep="\t",quote=FALSE,row.names = FALSE,col.names = TRUE)}
+    filename = function() {
+      'Target.csv'
+    },
+    content = function(file) {
+      write.table(
+        values$TargetWorking,
+        file,
+        sep = "\t",
+        quote = FALSE,
+        row.names = FALSE,
+        col.names = TRUE
+      )
+    }
   )
   
   ## Box for target visualisation
   output$BoxTarget <- renderUI({
-    
     target = values$TargetWorking
     
-    if(!is.null(target) &&  nrow(target)>0)
+    if (!is.null(target) &&  nrow(target) > 0)
     {
-      box(title="Target file overview",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = TRUE,
-          DT::dataTableOutput("DataTarget"),
-          actionButton("deleteRows", "Delete samples"),
-          downloadButton('ExportTarget', 'Export target file')
-      )  
+      box(
+        title = "Target file overview",
+        width = NULL,
+        status = "primary",
+        solidHeader = TRUE,
+        collapsible = TRUE,
+        collapsed = TRUE,
+        DT::dataTableOutput("DataTarget"),
+        actionButton("deleteRows", "Delete samples"),
+        downloadButton('ExportTarget', 'Export target file')
+      )
     }
     
   })
@@ -2479,14 +3799,20 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   ###                                               ###
   
   output$contrastMat <- renderUI({
-    
     resDiff = ResDiffAnal()
     dds = resDiff$dds
     names = resultsNames(dds)
     
-    Contrast=list()
+    Contrast = list()
     
-    for(i in 1:length(names)){Contrast[[i]] = numericInput(names[i],names[i],0,step=1,min=-1,max=1)}
+    for (i in 1:length(names)) {
+      Contrast[[i]] = numericInput(names[i],
+                                   names[i],
+                                   0,
+                                   step = 1,
+                                   min = -1,
+                                   max = 1)
+    }
     
     return(Contrast)
     
@@ -2494,174 +3820,265 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   
   output$ContrastOverview <- renderPrint({
-    
     resDiff = ResDiffAnal()
     dds = resDiff$dds
     names = resultsNames(dds)
     
     cont = input$ContrastList
-    filesize = file.info(namesfile)[,"size"]
-    if(is.na(filesize)){filesize=0}
-    if(filesize!=0)
-    { 
-      ContrastBase = read.table(namesfile,header=TRUE)
-      ind = which(colnames(ContrastBase)%in%cont)
-      div(HTML(PrintContrasts(names,sapply(ContrastBase[,ind],as.numeric),cont)))
+    filesize = file.info(namesfile)[, "size"]
+    if (is.na(filesize)) {
+      filesize = 0
+    }
+    if (filesize != 0)
+    {
+      ContrastBase = read.table(namesfile, header = TRUE)
+      ind = which(colnames(ContrastBase) %in% cont)
+      div(HTML(PrintContrasts(
+        names, sapply(ContrastBase[, ind], as.numeric), cont
+      )))
     }
   })
   
   
   ## Add contrast function
-  AddCont <-eventReactive(input$AddContrast,{
-    
+  AddCont <- eventReactive(input$AddContrast, {
     resDiff = ResDiffAnal()
     dds = resDiff$dds
     names = resultsNames(dds)
     
-    BaseContrast(input,names,namesfile)
-    filesize = file.info(namesfile)[,"size"]
-    if(is.na(filesize)){filesize=0}
-    if(filesize!=0) tmp = read.table(namesfile,header=TRUE)
+    BaseContrast(input, names, namesfile)
+    filesize = file.info(namesfile)[, "size"]
+    if (is.na(filesize)) {
+      filesize = 0
+    }
+    if (filesize != 0)
+      tmp = read.table(namesfile, header = TRUE)
     Contrast = colnames(as.matrix(tmp))
-    updateSelectInput(session, "ContrastList","Contrasts",Contrast)
-    updateSelectInput(session, "ContrastList_table","Contrasts",Contrast)
-    updateSelectInput(session, "ContrastList_table_Visu","For which contrasts",Contrast)
-    updateSelectInput(session, "ContrastList_table_VisuComp","For which contrasts",Contrast)
-    updateSelectInput(session, "ContrastList_table_FC","Contrasts",Contrast)
-    updateSelectInput(session, "ContrastList_table_FCVenn","Contrasts",Contrast)
-    updateSelectInput(session, "Contrast1", "Contrast 1 (X axis)", c("...",Contrast))
-    updateSelectInput(session, "Contrast2", "Contrast 2 (Y axis)", c("...",Contrast))
+    updateSelectInput(session, "ContrastList", "Contrasts", Contrast)
+    updateSelectInput(session, "ContrastList_table", "Contrasts", Contrast)
+    updateSelectInput(session,
+                      "ContrastList_table_Visu",
+                      "For which contrasts",
+                      Contrast)
+    updateSelectInput(session,
+                      "ContrastList_table_VisuComp",
+                      "For which contrasts",
+                      Contrast)
+    updateSelectInput(session, "ContrastList_table_FC", "Contrasts", Contrast)
+    updateSelectInput(session,
+                      "ContrastList_table_FCVenn",
+                      "Contrasts",
+                      Contrast)
+    updateSelectInput(session,
+                      "Contrast1",
+                      "Contrast 1 (X axis)",
+                      c("...", Contrast))
+    updateSelectInput(session,
+                      "Contrast2",
+                      "Contrast 2 (Y axis)",
+                      c("...", Contrast))
   })
   
-  ## Add contrast 
-  observeEvent(input$AddContrast,{  
-    
+  ## Add contrast
+  observeEvent(input$AddContrast, {
     AddCont()
     
-  },priority=1)
+  }, priority = 1)
   
   
   ## Add contrast function
-  AddContEasy <-eventReactive(input$AddContrastEasy,{
-    
+  AddContEasy <- eventReactive(input$AddContrastEasy, {
     resDiff = ResDiffAnal()
     dds = resDiff$dds
     target = resDiff$target
     names = resultsNames(dds)
     
-    BaseContrastEasy(input,names,namesfile,target)
-    filesize = file.info(namesfile)[,"size"]
-    if(is.na(filesize)){filesize=0}
-    if(filesize!=0) tmp = read.table(namesfile,header=TRUE)
+    BaseContrastEasy(input, names, namesfile, target)
+    filesize = file.info(namesfile)[, "size"]
+    if (is.na(filesize)) {
+      filesize = 0
+    }
+    if (filesize != 0)
+      tmp = read.table(namesfile, header = TRUE)
     Contrast = colnames(as.matrix(tmp))
     
-    updateSelectInput(session, "ContrastList","Contrasts",Contrast)
-    updateSelectInput(session, "ContrastList_table","Contrasts",Contrast)
-    updateSelectInput(session, "ContrastList_table_Visu","For which contrasts",Contrast)
-    updateSelectInput(session, "ContrastList_table_VisuComp","For which contrasts",Contrast)
-    updateSelectInput(session, "ContrastList_table_FC","Contrasts",Contrast)
-    updateSelectInput(session, "ContrastList_table_FCVenn","Contrasts",Contrast)
-    updateSelectInput(session, "Contrast1", "Contrast 1 (X axis)", c("...",Contrast))
-    updateSelectInput(session, "Contrast2", "Contrast 2 (Y axis)", c("...",Contrast))
+    updateSelectInput(session, "ContrastList", "Contrasts", Contrast)
+    updateSelectInput(session, "ContrastList_table", "Contrasts", Contrast)
+    updateSelectInput(session,
+                      "ContrastList_table_Visu",
+                      "For which contrasts",
+                      Contrast)
+    updateSelectInput(session,
+                      "ContrastList_table_VisuComp",
+                      "For which contrasts",
+                      Contrast)
+    updateSelectInput(session, "ContrastList_table_FC", "Contrasts", Contrast)
+    updateSelectInput(session,
+                      "ContrastList_table_FCVenn",
+                      "Contrasts",
+                      Contrast)
+    updateSelectInput(session,
+                      "Contrast1",
+                      "Contrast 1 (X axis)",
+                      c("...", Contrast))
+    updateSelectInput(session,
+                      "Contrast2",
+                      "Contrast 2 (Y axis)",
+                      c("...", Contrast))
   })
   
-  ## Add contrast 
-  observeEvent(input$AddContrastEasy,{  
-    
+  ## Add contrast
+  observeEvent(input$AddContrastEasy, {
     AddContEasy()
     
-  },priority=1)
+  }, priority = 1)
   
   
-  AddContFromFile <-eventReactive(input$fileContrast,{ 
-    
+  AddContFromFile <- eventReactive(input$fileContrast, {
     res = ReadContrastFile()
     resDiff = ResDiffAnal()
     dds = resDiff$dds
-    CheckCont = CheckContrast(res,dds)
+    CheckCont = CheckContrast(res, dds)
     
-    if(is.null(CheckCont$Error))
+    if (is.null(CheckCont$Error))
     {
       res = CheckCont$contrastFile
       createdCont = NULL
-      if(!is.null(res))
-      { 
-        filesize = file.info(namesfile)[,"size"]
-        if(is.na(filesize)){filesize=0}
-        if(filesize!=0){ createdCont = read.table(namesfile,header=TRUE) }
+      if (!is.null(res))
+      {
+        filesize = file.info(namesfile)[, "size"]
+        if (is.na(filesize)) {
+          filesize = 0
+        }
+        if (filesize != 0) {
+          createdCont = read.table(namesfile, header = TRUE)
+        }
         
-        if(!is.null(createdCont)) res = cbind(res,createdCont)
-        updateSelectInput(session, "ContrastList","Contrasts", colnames(res))
-        updateSelectInput(session, "ContrastList_table","Contrasts",colnames(res))
-        updateSelectInput(session, "ContrastList_table_Visu","For which contrasts",colnames(res))
-        updateSelectInput(session, "ContrastList_table_VisuComp","For which contrasts",colnames(res))
-        updateSelectInput(session, "ContrastList_table_FC","Contrasts",colnames(res))
-        updateSelectInput(session, "ContrastList_table_FCVenn","Contrasts",colnames(res))
-        updateSelectInput(session, "Contrast1", "Contrast 1 (X axis)", c("...", colnames(res)))
-        updateSelectInput(session, "Contrast2", "Contrast 2 (Y axis)", c("...", colnames(res)))
-        write.table(res,namesfile,row.names=FALSE)
+        if (!is.null(createdCont))
+          res = cbind(res, createdCont)
+        updateSelectInput(session, "ContrastList", "Contrasts", colnames(res))
+        updateSelectInput(session,
+                          "ContrastList_table",
+                          "Contrasts",
+                          colnames(res))
+        updateSelectInput(session,
+                          "ContrastList_table_Visu",
+                          "For which contrasts",
+                          colnames(res))
+        updateSelectInput(
+          session,
+          "ContrastList_table_VisuComp",
+          "For which contrasts",
+          colnames(res)
+        )
+        updateSelectInput(session,
+                          "ContrastList_table_FC",
+                          "Contrasts",
+                          colnames(res))
+        updateSelectInput(session,
+                          "ContrastList_table_FCVenn",
+                          "Contrasts",
+                          colnames(res))
+        updateSelectInput(session,
+                          "Contrast1",
+                          "Contrast 1 (X axis)",
+                          c("...", colnames(res)))
+        updateSelectInput(session,
+                          "Contrast2",
+                          "Contrast 2 (Y axis)",
+                          c("...", colnames(res)))
+        write.table(res, namesfile, row.names = FALSE)
       }
     }
   })
   
-  observeEvent(input$fileContrast,{ 
-    
+  observeEvent(input$fileContrast, {
     AddContFromFile()
-  },priority=1)
+  }, priority = 1)
   
   
   ## Remove contrast function
-  RemoveCont <-eventReactive(input$RemoveContrast,{
-    
+  RemoveCont <- eventReactive(input$RemoveContrast, {
     ## get the size of the contrast base file
-    filesize = file.info(namesfile)[,"size"]
-    if(is.na(filesize)){filesize=0}
-    if(filesize!=0)
-    { 
-      tmp = read.table(namesfile,header=TRUE)
-      ind = which(colnames(tmp)%in%input$ContrastList)
-      matKept = as.matrix(tmp[,-ind])
+    filesize = file.info(namesfile)[, "size"]
+    if (is.na(filesize)) {
+      filesize = 0
+    }
+    if (filesize != 0)
+    {
+      tmp = read.table(namesfile, header = TRUE)
+      ind = which(colnames(tmp) %in% input$ContrastList)
+      matKept = as.matrix(tmp[, -ind])
       ContrastKept = colnames(tmp)[-ind]
       
-      if(ncol(matKept)>0) write.table(matKept,namesfile,row.names=FALSE,col.names = ContrastKept)
-      else file.create(namesfile,showWarnings=FALSE)
-      updateSelectInput(session, "ContrastList","Contrasts",ContrastKept)
-      updateSelectInput(session, "ContrastList_table","Contrasts",ContrastKept)
-      updateSelectInput(session, "ContrastList_table_Visu","For which contrasts",ContrastKept)
-      updateSelectInput(session, "ContrastList_table_VisuComp","For which contrasts",ContrastKept)
-      updateSelectInput(session, "ContrastList_table_FC","Contrasts",ContrastKept)
-      updateSelectInput(session, "ContrastList_table_FCVenn","Contrasts",ContrastKept)
-      updateSelectInput(session, "Contrast1", "Contrast 1 (X axis)", c("...",ContrastKept))
-      updateSelectInput(session, "Contrast2", "Contrast 2 (Y axis)", c("...",ContrastKept))
+      if (ncol(matKept) > 0)
+        write.table(matKept,
+                    namesfile,
+                    row.names = FALSE,
+                    col.names = ContrastKept)
+      else
+        file.create(namesfile, showWarnings = FALSE)
+      updateSelectInput(session, "ContrastList", "Contrasts", ContrastKept)
+      updateSelectInput(session,
+                        "ContrastList_table",
+                        "Contrasts",
+                        ContrastKept)
+      updateSelectInput(session,
+                        "ContrastList_table_Visu",
+                        "For which contrasts",
+                        ContrastKept)
+      updateSelectInput(session,
+                        "ContrastList_table_VisuComp",
+                        "For which contrasts",
+                        ContrastKept)
+      updateSelectInput(session,
+                        "ContrastList_table_FC",
+                        "Contrasts",
+                        ContrastKept)
+      updateSelectInput(session,
+                        "ContrastList_table_FCVenn",
+                        "Contrasts",
+                        ContrastKept)
+      updateSelectInput(session,
+                        "Contrast1",
+                        "Contrast 1 (X axis)",
+                        c("...", ContrastKept))
+      updateSelectInput(session,
+                        "Contrast2",
+                        "Contrast 2 (Y axis)",
+                        c("...", ContrastKept))
     }
   })
   
   
   
   ## Remove contrast
-  observeEvent(input$RemoveContrast,{  
-    
+  observeEvent(input$RemoveContrast, {
     RemoveCont()
     
-  },priority=1)
+  }, priority = 1)
   
   ## Remove all contrasts
-  RemoveAllCont <-eventReactive(input$RunDESeq,{
-    
-    file.create(namesfile,showWarnings=FALSE)
-    updateSelectInput(session, "ContrastList","Contrasts",NULL)
-    updateSelectInput(session, "ContrastList_table","Contrasts",NULL)
-    updateSelectInput(session, "ContrastList_table_Visu","For which contrasts",NULL)
-    updateSelectInput(session, "ContrastList_table_VisuComp","For which contrasts",NULL)
-    updateSelectInput(session, "ContrastList_table_FC","Contrasts",NULL)
-    updateSelectInput(session, "ContrastList_table_FCVenn","Contrasts",NULL)
+  RemoveAllCont <- eventReactive(input$RunDESeq, {
+    file.create(namesfile, showWarnings = FALSE)
+    updateSelectInput(session, "ContrastList", "Contrasts", NULL)
+    updateSelectInput(session, "ContrastList_table", "Contrasts", NULL)
+    updateSelectInput(session,
+                      "ContrastList_table_Visu",
+                      "For which contrasts",
+                      NULL)
+    updateSelectInput(session,
+                      "ContrastList_table_VisuComp",
+                      "For which contrasts",
+                      NULL)
+    updateSelectInput(session, "ContrastList_table_FC", "Contrasts", NULL)
+    updateSelectInput(session, "ContrastList_table_FCVenn", "Contrasts", NULL)
     updateSelectInput(session, "Contrast1", "Contrast 1 (X axis)", NULL)
     updateSelectInput(session, "Contrast2", "Contrast 2 (Y axis)", NULL)
   })
   
   ## Remove all contrast
-  observeEvent(input$RunDESeq,{  
-    
+  observeEvent(input$RunDESeq, {
     RemoveAllCont()
     
   })
@@ -2675,23 +4092,57 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     input$fileContrast
     resDiff = ResDiffAnal()
     dds = resDiff$dds
-    res=NULL
+    res = NULL
     tmpFile = NULL
     
-    if(!is.null(resDiff)){
+    if (!is.null(resDiff)) {
+      res = infoBox(
+        "Contrasts",
+        subtitle = h6("At least one contrast (non null) must be defined"),
+        icon = icon("warning"),
+        color = "light-blue",
+        width = NULL,
+        fill = TRUE
+      )
       
-      res = infoBox("Contrasts", subtitle = h6("At least one contrast (non null) must be defined"), icon = icon("warning"),color = "light-blue",width=NULL,fill=TRUE)
+      filesize = isolate(file.info(namesfile)[, "size"])
       
-      filesize = isolate(file.info(namesfile)[,"size"])
-      
-      if(is.na(filesize)){filesize=0}
-      if(filesize!=0) tmpFile = read.table(namesfile,header=TRUE)
-      if(!is.null(tmpFile))
+      if (is.na(filesize)) {
+        filesize = 0
+      }
+      if (filesize != 0)
+        tmpFile = read.table(namesfile, header = TRUE)
+      if (!is.null(tmpFile))
       {
-        CheckCont = CheckContrast(tmpFile,dds)
-        if(!is.null(CheckCont$Warning)) res = infoBox(h6(strong("Contrasts")), subtitle = h6(CheckCont$Warning), icon = icon("warning"),color = "orange",width=NULL,fill=TRUE)
-        if(!is.null(CheckCont$Error)) res = infoBox(h6(strong("Contrasts")), subtitle = h6(CheckCont$Error), icon = icon("thumbs-o-down"),color = "red",width=NULL,fill=TRUE)
-        if(is.null(CheckCont$Error) && is.null(CheckCont$Warning))  res = infoBox("Contrasts", subtitle = h6("Contrasts OK"), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
+        CheckCont = CheckContrast(tmpFile, dds)
+        if (!is.null(CheckCont$Warning))
+          res = infoBox(
+            h6(strong("Contrasts")),
+            subtitle = h6(CheckCont$Warning),
+            icon = icon("warning"),
+            color = "orange",
+            width = NULL,
+            fill = TRUE
+          )
+        if (!is.null(CheckCont$Error))
+          res = infoBox(
+            h6(strong("Contrasts")),
+            subtitle = h6(CheckCont$Error),
+            icon = icon("thumbs-o-down"),
+            color = "red",
+            width = NULL,
+            fill = TRUE
+          )
+        if (is.null(CheckCont$Error) &&
+            is.null(CheckCont$Warning))
+          res = infoBox(
+            "Contrasts",
+            subtitle = h6("Contrasts OK"),
+            icon = icon("thumbs-o-up"),
+            color = "green",
+            width = NULL,
+            fill = TRUE
+          )
         
       }
       ## if user load a bad contrast file after having define one or more good contrasts
@@ -2711,18 +4162,25 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     resDiff = ResDiffAnal()
     dds = resDiff$dds
     
-    if(!is.null(resDiff)){
-      
-      if(!is.null(input$fileContrast)){
+    if (!is.null(resDiff)) {
+      if (!is.null(input$fileContrast)) {
         tmpRead = ReadContrastFile()
-        CheckCont_new = CheckContrast(tmpRead,dds)
-        if(!is.null(CheckCont_new$Warning)){      
-          box(title = "Warning", status = "warning",width = NULL,
-              h6(strong(CheckCont_new$Warning)))
+        CheckCont_new = CheckContrast(tmpRead, dds)
+        if (!is.null(CheckCont_new$Warning)) {
+          box(
+            title = "Warning",
+            status = "warning",
+            width = NULL,
+            h6(strong(CheckCont_new$Warning))
+          )
         }
-        if(!is.null(CheckCont_new$Error)){      
-          box(title = "Warning", status = "warning",width = NULL,
-              h6(strong(CheckCont_new$Error)))
+        if (!is.null(CheckCont_new$Error)) {
+          box(
+            title = "Warning",
+            status = "warning",
+            width = NULL,
+            h6(strong(CheckCont_new$Error))
+          )
         }
       }
     }
@@ -2730,21 +4188,33 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   
   output$contrastBox <- renderUI({
-    
     resDiff = ResDiffAnal()
     int = input$Interaction2
     
-    if(!is.null(resDiff))
-    { 
+    if (!is.null(resDiff))
+    {
       ## Check the R version
       #if(as.numeric(R.Version()$major)<=3 && as.numeric(R.Version()$minor) <=1.2){
-      box(title="Contrasts (New)",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = FALSE,
-          fluidRow(
-            column(width=3,selectInput("Select1_contrast","Compare","")),
-            column(width=3,selectInput("Select2_contrast","To","")),
-            if(length(int)>=1) column(width=3,selectInput("Select3_contrast",label=h6(strong("For")),"")),
-            column(width=3,br(),actionButton("AddContrastEasy","Add",icon = icon("plus")))
+      box(
+        title = "Contrasts (New)",
+        width = NULL,
+        status = "primary",
+        solidHeader = TRUE,
+        collapsible = TRUE,
+        collapsed = FALSE,
+        fluidRow(
+          column(width = 3, selectInput("Select1_contrast", "Compare", "")),
+          column(width = 3, selectInput("Select2_contrast", "To", "")),
+          if (length(int) >= 1)
+            column(width = 3, selectInput(
+              "Select3_contrast", label = h6(strong("For")), ""
+            )),
+          column(
+            width = 3,
+            br(),
+            actionButton("AddContrastEasy", "Add", icon = icon("plus"))
           )
+        )
       )
       #}
     }
@@ -2753,7 +4223,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     
   })
   
-  ModifMod_ContEasy <-eventReactive(input$Select1_contrast,{
+  ModifMod_ContEasy <- eventReactive(input$Select1_contrast, {
     input$RunDESeq
     resDiff = ResDiffAnal()
     int = input$Interaction2
@@ -2764,22 +4234,26 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     
     
     ## Get the selected variable from the selected modality
-    Sel_Var = InterVar[which(unlist(lapply(as.data.frame(target[,InterVar]),FUN = function(x){input$Select1_contrast%in%x})))]
+    Sel_Var = InterVar[which(unlist(lapply(
+      as.data.frame(target[, InterVar]),
+      FUN = function(x) {
+        input$Select1_contrast %in% x
+      }
+    )))]
     
-    ModInterestCond = levels(sapply(target[,Sel_Var],as.factor))
-    ModInterestCond = ModInterestCond[-which(ModInterestCond==input$Select1_contrast)]
+    ModInterestCond = levels(sapply(target[, Sel_Var], as.factor))
+    ModInterestCond = ModInterestCond[-which(ModInterestCond == input$Select1_contrast)]
     
-    updateSelectInput(session,"Select2_contrast","To",ModInterestCond)
+    updateSelectInput(session, "Select2_contrast", "To", ModInterestCond)
   })
   
   
-  observeEvent(input$Select1_contrast,{ 
+  observeEvent(input$Select1_contrast, {
     ModifMod_ContEasy()
   })
   
   
-  ModifMod_ContEasyFrom <-eventReactive(input$RunDESeq,{
-    
+  ModifMod_ContEasyFrom <- eventReactive(input$RunDESeq, {
     resDiff = ResDiffAnal()
     int = input$Interaction2
     target = as.data.frame(resDiff$target)
@@ -2787,82 +4261,123 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     InterVar = input$InterestVar
     
     ## Remove numeric variable
-    ind = unlist(lapply(as.data.frame(target[,InterVar]),is.numeric))
+    ind = unlist(lapply(as.data.frame(target[, InterVar]), is.numeric))
     InterVar = InterVar[!ind]
-    target_int = lapply(as.data.frame(target[,InterVar]),as.factor)
-    ModInterestAll = unique(unlist(lapply(target_int,levels)))
+    target_int = lapply(as.data.frame(target[, InterVar]), as.factor)
+    ModInterestAll = unique(unlist(lapply(target_int, levels)))
     
-    updateSelectInput(session, "Select1_contrast",label="Compare",ModInterestAll)
+    updateSelectInput(session, "Select1_contrast", label = "Compare", ModInterestAll)
   })
   
   
-  observeEvent(input$RunDESeq,{ 
-    
+  observeEvent(input$RunDESeq, {
     ModifMod_ContEasyFrom()
   })
   
   
   
-  ModifMod_ContEasyFor <-eventReactive(input$Select1_contrast,
-                                       {
-                                         
-                                         resDiff = ResDiffAnal()
-                                         int = input$Interaction2
-                                         ModInterestFor = "All"
-                                         target = as.data.frame(resDiff$target)
-                                         
-                                         InterVar = input$InterestVar
-                                         
-                                         ## Get the selected variable from the selected modality
-                                         Sel_Var = InterVar[which(unlist(lapply(as.data.frame(target[,InterVar]),FUN = function(x){input$Select1_contrast%in%x})))]
-                                         
-                                         
-                                         ## Keep only the variables in interactoin with Sel_Var
-                                         if(!is.null(Sel_Var) && length(int)>0 && length(Sel_Var)>0){
-                                           indInter = grep(Sel_Var,int)
-                                           if(length(indInter)>0) int = int[indInter]
-                                           var_Inter = unique(unlist(strsplit(int,":"))) 
-                                           var_Inter = var_Inter[-which(var_Inter%in%Sel_Var)]
-                                           
-                                           ## remove if numeric
-                                           if(length(var_Inter)>1){ind = unlist(lapply(as.data.frame(target[,var_Inter]),is.numeric));var_Inter = var_Inter[!ind]}
-                                           if(length(var_Inter)==1){ind = is.numeric(target[,var_Inter]);var_Inter = var_Inter[!ind]}
-                                           
-                                           
-                                           if(length(var_Inter)>=1)  ModInterestFor = c("All",unique(unlist(lapply(as.data.frame(target[,var_Inter]),levels))))
-                                           
-                                         }
-                                         
-                                         updateSelectInput(session,"Select3_contrast","For",ModInterestFor)
-                                       })
+  ModifMod_ContEasyFor <- eventReactive(input$Select1_contrast,
+                                        {
+                                          resDiff = ResDiffAnal()
+                                          int = input$Interaction2
+                                          ModInterestFor = "All"
+                                          target = as.data.frame(resDiff$target)
+                                          
+                                          InterVar = input$InterestVar
+                                          
+                                          ## Get the selected variable from the selected modality
+                                          Sel_Var = InterVar[which(unlist(lapply(
+                                            as.data.frame(target[, InterVar]),
+                                            FUN = function(x) {
+                                              input$Select1_contrast %in% x
+                                            }
+                                          )))]
+                                          
+                                          
+                                          ## Keep only the variables in interactoin with Sel_Var
+                                          if (!is.null(Sel_Var) &&
+                                              length(int) > 0 && length(Sel_Var) > 0) {
+                                            indInter = grep(Sel_Var, int)
+                                            if (length(indInter) > 0)
+                                              int = int[indInter]
+                                            var_Inter = unique(unlist(strsplit(int, ":")))
+                                            var_Inter = var_Inter[-which(var_Inter %in%
+                                                                           Sel_Var)]
+                                            
+                                            ## remove if numeric
+                                            if (length(var_Inter) > 1) {
+                                              ind = unlist(lapply(as.data.frame(target[, var_Inter]), is.numeric))
+                                              var_Inter = var_Inter[!ind]
+                                            }
+                                            if (length(var_Inter) == 1) {
+                                              ind = is.numeric(target[, var_Inter])
+                                              var_Inter = var_Inter[!ind]
+                                            }
+                                            
+                                            
+                                            if (length(var_Inter) >= 1)
+                                              ModInterestFor = c("All", unique(unlist(lapply(
+                                                as.data.frame(target[, var_Inter]), levels
+                                              ))))
+                                            
+                                          }
+                                          
+                                          updateSelectInput(session, "Select3_contrast", "For", ModInterestFor)
+                                        })
   
   
-  observeEvent(input$Select1_contrast,{ 
-    
+  observeEvent(input$Select1_contrast, {
     ModifMod_ContEasyFor()
   })
   
   
   output$contrastBoxAdvanced <- renderUI({
-    
     resDiff = ResDiffAnal()
     
-    if(!is.null(resDiff))
-    { 
-      box(title="Contrasts (advanced user)",width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = FALSE,
-          fluidRow(
-            column(width=9,
-                   fileInput('fileContrast', h6(strong('Select a file of contrasts')),width="80%")
-            ),
-            column(width=3,
-                   column(width=12,selectInput("sepContFile", h6(strong("Separator:")), c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";","Space"= " "),selected = " "))
-            ),
-            hr(),
-            column(width=12,h6(strong("Define contrasts by yourself"))),
-            column(width=6,textInput("ContrastName",label = NULL,value = "Contrast name")),
-            column(width=6,actionButton("AddContrast","Add contrast",icon = icon("plus")))
+    if (!is.null(resDiff))
+    {
+      box(
+        title = "Contrasts (advanced user)",
+        width = NULL,
+        status = "primary",
+        solidHeader = TRUE,
+        collapsible = TRUE,
+        collapsed = FALSE,
+        fluidRow(
+          column(width = 9,
+                 fileInput(
+                   'fileContrast', h6(strong('Select a file of contrasts')), width = "80%"
+                 )),
+          column(width = 3,
+                 column(
+                   width = 12, selectInput(
+                     "sepContFile",
+                     h6(strong("Separator:")),
+                     c(
+                       "Tab" = "\t",
+                       "Comma" = ",",
+                       "Semicolon" = ";",
+                       "Space" = " "
+                     ),
+                     selected = " "
+                   )
+                 )),
+          hr(),
+          column(width = 12, h6(
+            strong("Define contrasts by yourself")
+          )),
+          column(
+            width = 6,
+            textInput("ContrastName", label = NULL, value = "Contrast name")
           ),
-          fluidRow(column(width=12,uiOutput("contrastMat")))
+          column(
+            width = 6,
+            actionButton("AddContrast", "Add contrast", icon = icon("plus"))
+          )
+        ),
+        fluidRow(column(width = 12, uiOutput(
+          "contrastMat"
+        )))
       )
     }
     
@@ -2872,51 +4387,83 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   output$contrastDefined <- renderUI({
     resDiff = ResDiffAnal()
     
-    if(!is.null(resDiff))
-    { 
-      box(title="Defined contrasts",width = NULL, status = "primary", solidHeader = TRUE,collapsible = FALSE,collapsed = FALSE,
+    if (!is.null(resDiff))
+    {
+      box(
+        title = "Defined contrasts",
+        width = NULL,
+        status = "primary",
+        solidHeader = TRUE,
+        collapsible = FALSE,
+        collapsed = FALSE,
+        fluidRow(column(
+          width = 11,
+          selectInput(
+            "ContrastList",
+            "Contrasts",
+            "",
+            multiple = TRUE,
+            size = 4,
+            selectize = FALSE,
+            width = '100%'
+          ),
           fluidRow(
-            column(width=11,
-                   selectInput("ContrastList","Contrasts","",multiple=TRUE,size=4,selectize=FALSE,width = '100%'),
-                   fluidRow(
-                     column(width=6,actionButton("RemoveContrast","Remove",icon = icon("remove"))),
-                     column(width=6,downloadButton("exportContrast", "Export"))
-                   ),
-                   htmlOutput("ContrastOverview")
-            )
-            
-          )
+            column(
+              width = 6,
+              actionButton("RemoveContrast", "Remove", icon = icon("remove"))
+            ),
+            column(width = 6, downloadButton("exportContrast", "Export"))
+          ),
+          htmlOutput("ContrastOverview")
+        ))
       )
     }
   })
   
   
-  ReadContrastFile <-reactive({ 
-    
+  ReadContrastFile <- reactive({
     inFile <- input$fileContrast
     
-    if (is.null(inFile)) return(NULL)
+    if (is.null(inFile))
+      return(NULL)
     
-    try(read.csv(inFile$datapath,header=TRUE,sep=input$sepContFile)->res,silent=T)
+    try(read.csv(inFile$datapath,
+                 header = TRUE,
+                 sep = input$sepContFile) -> res,
+        silent = T)
     
     return(res)
   })
   
   
-  output$exportContrast <- downloadHandler(
-    filename <- function() {"Contrasts.txt"},
-    content <- function(file) {
-      file.copy(namesfile,file)
-    }
-  )
+  output$exportContrast <- downloadHandler(filename <-
+                                             function() {
+                                               "Contrasts.txt"
+                                             },
+                                           content <- function(file) {
+                                             file.copy(namesfile, file)
+                                           })
   
   ## Add Phylogenetic tree in the result
-  observeEvent(input$fileTree,{
-    updateSelectizeInput(session, "PlotVisuSelect", "", 
-                         c("Barplot"="Barplot","Heatmap"="Heatmap","Boxplot"="Boxplot",
-                           "Tree"="Tree","Scatterplot"="Scatterplot","Network"="Network","Diversity"="Diversity",
-                           "Rarefaction"="Rarefaction","Krona"="Krona","Phylogeny"="Phylogeny"))
-  }, priority=1)
+  observeEvent(input$fileTree, {
+    updateSelectizeInput(
+      session,
+      "PlotVisuSelect",
+      "",
+      c(
+        "Barplot" = "Barplot",
+        "Heatmap" = "Heatmap",
+        "Boxplot" = "Boxplot",
+        "Tree" = "Tree",
+        "Scatterplot" = "Scatterplot",
+        "Network" = "Network",
+        "Diversity" = "Diversity",
+        "Rarefaction" = "Rarefaction",
+        "Krona" = "Krona",
+        "Phylogeny" = "Phylogeny"
+      )
+    )
+  }, priority = 1)
   
   
   ###                                               ###
@@ -2932,8 +4479,15 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     input$RunDESeq
     
     resDiff = ResDiffAnal()
-    if(!is.null(resDiff)){
-      infoBox(h6(strong("Statistical analysis")), subtitle = h6("Differential analysis is done !"), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
+    if (!is.null(resDiff)) {
+      infoBox(
+        h6(strong("Statistical analysis")),
+        subtitle = h6("Differential analysis is done !"),
+        icon = icon("thumbs-o-up"),
+        color = "green",
+        width = NULL,
+        fill = TRUE
+      )
     }
     
     
@@ -2941,29 +4495,36 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   
   ## Get the results from DESeq2
-  ResDiffAnal <-eventReactive(input$RunDESeq,withProgress({
-    
-    target = values$TargetWorking
-    design = GetDesign(input,target)
-    dMC = dataMergeCounts()
-    counts = dMC$counts
-    CT_noNorm = dMC$CT_noNorm
-    CT_Norm = dMC$CT_Norm
-    
-    ## If no file, size factors are estimated
-    normFactors = SizeFactors_fromFile()$normFactors
-    
-    Get_dds_object(input,counts,target,design,normFactors,CT_noNorm,CT_Norm)
-    
-    
-  },message = "Analysis in progress"))
+  ResDiffAnal <- eventReactive(input$RunDESeq,
+                               withProgress({
+                                 target = values$TargetWorking
+                                 design = GetDesign(input, target)
+                                 dMC = dataMergeCounts()
+                                 counts = dMC$counts
+                                 CT_noNorm = dMC$CT_noNorm
+                                 CT_Norm = dMC$CT_Norm
+                                 
+                                 ## If no file, size factors are estimated
+                                 normFactors = SizeFactors_fromFile()$normFactors
+                                 
+                                 Get_dds_object(input,
+                                                counts,
+                                                target,
+                                                design,
+                                                normFactors,
+                                                CT_noNorm,
+                                                CT_Norm)
+                                 
+                                 
+                               }, message = "Analysis in progress"))
   
   
   ## Run DESeq2 via RunDESeq button
-  observeEvent(input$RunDESeq,{
-    if(.Platform$OS.type =="windows")
+  observeEvent(input$RunDESeq, {
+    if (.Platform$OS.type == "windows")
       ResDiffAnal()
-    else create_forked_task(ResDiffAnal())
+    else
+      create_forked_task(ResDiffAnal())
   })
   
   
@@ -2976,16 +4537,17 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   # Infobox Contrast
   output$SelectTaxo <- renderUI({
-    
     data = dataInput()$data
-    if(!is.null(data$taxo) && nrow(data$taxo)>0)
-    { 
+    if (!is.null(data$taxo) && nrow(data$taxo) > 0)
+    {
       tmp = colnames(data$taxo)
       ind = which(is.na(tmp))
-      if(length(ind)>0) tmp = tmp[-which(is.na(tmp))]
-      selectInput("TaxoSelect",h6(strong("Select the taxonomy level")),c("...",tmp,"OTU/Gene"))
+      if (length(ind) > 0)
+        tmp = tmp[-which(is.na(tmp))]
+      selectInput("TaxoSelect", h6(strong("Select the taxonomy level")), c("...", tmp, "OTU/Gene"))
     }
-    else selectInput("TaxoSelect",h6(strong("Select the taxonomy level")),c("..."))
+    else
+      selectInput("TaxoSelect", h6(strong("Select the taxonomy level")), c("..."))
     
   })
   
@@ -2998,37 +4560,56 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     data = isolate(dataInput()$data)
     taxo = isolate(input$TaxoSelect)
     
-    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(isolate(taxo)) && taxo!="...") 
+    if (!is.null(data$counts) &&
+        !is.null(data$taxo) &&
+        nrow(data$counts) > 0 &&
+        nrow(data$taxo) > 0 && !is.null(isolate(taxo)) && taxo != "...")
     {
       counts = isolate(dataMergeCounts()$counts)
       nfeature = nrow(counts)
-      infoBox(h6(strong("Taxonomy")), subtitle = h6(paste(taxo, ", nb features: ",nfeature,sep="")), icon = icon("thumbs-o-up"),color = "green",width=NULL,fill=TRUE)
+      infoBox(
+        h6(strong("Taxonomy")),
+        subtitle = h6(paste(
+          taxo, ", nb features: ", nfeature, sep = ""
+        )),
+        icon = icon("thumbs-o-up"),
+        color = "green",
+        width = NULL,
+        fill = TRUE
+      )
     }
-    else infoBox(h6(strong("Taxonomy")), subtitle = h6("Select the taxonomy for the analysis") ,color = "light-blue",width=NULL,fill=TRUE, icon = icon("warning"))
+    else
+      infoBox(
+        h6(strong("Taxonomy")),
+        subtitle = h6("Select the taxonomy for the analysis") ,
+        color = "light-blue",
+        width = NULL,
+        fill = TRUE,
+        icon = icon("warning")
+      )
   })
   
   
   # Infobox model/target
   #   output$InfoModel<- renderInfoBox({
-  #     res = infoBox(h6(strong("Target file and variables")), 
-  #                   subtitle = h6(strong("Your target file must contain at least 2 columns and 2 rows. NA's values are not allowed and the variables must not be collinear.")), 
+  #     res = infoBox(h6(strong("Target file and variables")),
+  #                   subtitle = h6(strong("Your target file must contain at least 2 columns and 2 rows. NA's values are not allowed and the variables must not be collinear.")),
   #                   icon = icon("book"),color = "green",width=NULL,fill=TRUE)
-  #     
+  #
   #     target = values$TargetWorking
   #     taxo = input$TaxoSelect
   #     ChTM = NULL
-  #     
+  #
   #     ## Return NULL if there is no error
   #     if(!is.null(target)) ChTM = CheckTargetModel(input,target)
-  #   
+  #
   #     if(!is.null(ChTM)) res = infoBox(h6(strong("Error")), subtitle = h6(ChTM), icon = icon("thumbs-o-down"),color = "red",width=NULL,fill=TRUE)
-  #     
+  #
   #     return(res)
-  #     
+  #
   #     })
   
-  output$InfoModel<- renderUI({
-    
+  output$InfoModel <- renderUI({
     CT = dataInput()$data$counts
     target = values$TargetWorking
     labeled = values$labeled
@@ -3036,20 +4617,26 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     ChTM = NULL
     
     ## Return NULL if there is no error
-    if(!is.null(target)) ChTM = CheckTargetModel(input,target,labeled,CT)
-    if(!is.null(ChTM$Error)) {   
-      box(title = "Error", status = "danger",width = 6,
-          h6(strong(ChTM$Error)),
-          footer = em("Reminder: Your target file must contain at least 2 columns and 2 rows. NA's values are not allowed and the variables must not be collinear.")
+    if (!is.null(target))
+      ChTM = CheckTargetModel(input, target, labeled, CT)
+    if (!is.null(ChTM$Error)) {
+      box(
+        title = "Error",
+        status = "danger",
+        width = 6,
+        h6(strong(ChTM$Error)),
+        footer = em(
+          "Reminder: Your target file must contain at least 2 columns and 2 rows. NA's values are not allowed and the variables must not be collinear."
+        )
       )
-    } else return(NULL)
+    } else
+      return(NULL)
     
   })
   
   
   
-  output$InfoModelHowTo<- renderUI({
-    
+  output$InfoModelHowTo <- renderUI({
     CT = dataInput()$data$counts
     target = values$TargetWorking
     labeled = values$labeled
@@ -3057,173 +4644,490 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     ChTM = NULL
     
     ## Return NULL if there is no error
-    if(!is.null(target)) ChTM = CheckTargetModel(input,target,labeled,CT)
+    if (!is.null(target))
+      ChTM = CheckTargetModel(input, target, labeled, CT)
     
-    if(!is.null(ChTM$HowTo)) {   
-      box(title = "How To", status = "success",width = 6,
-          h6(strong(ChTM$HowTo))
+    if (!is.null(ChTM$HowTo)) {
+      box(
+        title = "How To",
+        status = "success",
+        width = 6,
+        h6(strong(ChTM$HowTo))
       )
     }
     
   })
   
   
-  output$InfoBIOM<- renderUI({
-    
-    if(input$FileFormat=="fileBiom")
+  output$InfoBIOM <- renderUI({
+    if (input$FileFormat == "fileBiom")
     {
       inFile <- input$fileBiom
       tmpBIOM = dataInputBiom()
       
-      if(!is.null(inFile) && is.null(tmpBIOM)) {   
-        toastr_error(title="Error",message=paste("<h5>","This file can not be loaded.","</h5>","<br/> <br/>","<em>The loaded file is not in the biom format or its format is not currently supported by SHAMAN software.</em>"),
-                     closeButton = TRUE,position ="bottom-right",preventDuplicates = TRUE,newestOnTop = TRUE,
-                     progressBar = TRUE,showDuration = 300,showMethod="show",timeOut = 20000,extendedTimeOut = 2000)
+      if (!is.null(inFile) && is.null(tmpBIOM)) {
+        toastr_error(
+          title = "Error",
+          message = paste(
+            "<h5>",
+            "This file can not be loaded.",
+            "</h5>",
+            "<br/> <br/>",
+            "<em>The loaded file is not in the biom format or its format is not currently supported by SHAMAN software.</em>"
+          ),
+          closeButton = TRUE,
+          position = "bottom-right",
+          preventDuplicates = TRUE,
+          newestOnTop = TRUE,
+          progressBar = TRUE,
+          showDuration = 300,
+          showMethod = "show",
+          timeOut = 20000,
+          extendedTimeOut = 2000
+        )
       }
     }
   })
   
-  output$InfoEpi2me<- renderUI({
-    
-    if(input$FileFormat=="fileEpi2me")
+  output$InfoEpi2me <- renderUI({
+    if (input$FileFormat == "fileEpi2me")
     {
       inFile <- input$fileEpi2me
       tmpEpi2me = dataInputEpi2me()
       
-      if(!is.null(inFile) && is.null(tmpEpi2me)) {   
-        toastr_error(title="Error",message=paste("<h5>","This file can not be loaded.","</h5>","<br/> <br/>","<em>The loaded file is not in the Epi2me format or its format is not currently supported by SHAMAN software.</em>"),
-                     closeButton = TRUE,position ="bottom-right",preventDuplicates = TRUE,newestOnTop = TRUE,
-                     progressBar = TRUE,showDuration = 300,showMethod="show",timeOut = 20000,extendedTimeOut = 2000)
+      if (!is.null(inFile) && is.null(tmpEpi2me)) {
+        toastr_error(
+          title = "Error",
+          message = paste(
+            "<h5>",
+            "This file can not be loaded.",
+            "</h5>",
+            "<br/> <br/>",
+            "<em>The loaded file is not in the Epi2me format or its format is not currently supported by SHAMAN software.</em>"
+          ),
+          closeButton = TRUE,
+          position = "bottom-right",
+          preventDuplicates = TRUE,
+          newestOnTop = TRUE,
+          progressBar = TRUE,
+          showDuration = 300,
+          showMethod = "show",
+          timeOut = 20000,
+          extendedTimeOut = 2000
+        )
       }
       
     }
   })
   
-  output$InfoCountsFile<- renderUI({
-    
-    if(input$FileFormat=="fileCounts")
+  output$InfoCountsFile <- renderUI({
+    if (input$FileFormat == "fileCounts")
     {
       inFile <- input$fileCounts
       Counts = dataInputCounts()
       
-      if(!is.null(inFile) && is.null(Counts)) {   
-        toastr_error(title="Error",message=paste("<h5>","This file can not be loaded.","</h5>","<br/> <br/>","<em>The count table file is not in the correct format for SHAMAN software.</em>"),
-                     closeButton = TRUE,position ="bottom-right",preventDuplicates = TRUE,newestOnTop = TRUE,
-                     progressBar = TRUE,showDuration = 300,showMethod="show",timeOut = 20000,extendedTimeOut = 2000)
+      if (!is.null(inFile) && is.null(Counts)) {
+        toastr_error(
+          title = "Error",
+          message = paste(
+            "<h5>",
+            "This file can not be loaded.",
+            "</h5>",
+            "<br/> <br/>",
+            "<em>The count table file is not in the correct format for SHAMAN software.</em>"
+          ),
+          closeButton = TRUE,
+          position = "bottom-right",
+          preventDuplicates = TRUE,
+          newestOnTop = TRUE,
+          progressBar = TRUE,
+          showDuration = 300,
+          showMethod = "show",
+          timeOut = 20000,
+          extendedTimeOut = 2000
+        )
       }
     }
   })
   
   
-  output$InfoTaxoFile<- renderUI({
-    
-    if(input$FileFormat=="fileCounts")
+  output$InfoTaxoFile <- renderUI({
+    if (input$FileFormat == "fileCounts")
     {
       inFile <- input$fileTaxo
       Taxo = dataInputTaxo()
       
-      if(!is.null(inFile) && !input$NoTaxoFile && is.null(Taxo)) {   
-        toastr_error(title="Error",message=paste("<h5>","This file can not be loaded.","</h5>","<br/> <br/>","<em>The taxonomy table file is not in the correct format for SHAMAN software.</em>"),
-                     closeButton = TRUE,position ="bottom-right",preventDuplicates = TRUE,newestOnTop = TRUE,
-                     progressBar = TRUE,showDuration = 300,showMethod="show",timeOut = 20000,extendedTimeOut = 2000)
+      if (!is.null(inFile) &&
+          !input$NoTaxoFile && is.null(Taxo)) {
+        toastr_error(
+          title = "Error",
+          message = paste(
+            "<h5>",
+            "This file can not be loaded.",
+            "</h5>",
+            "<br/> <br/>",
+            "<em>The taxonomy table file is not in the correct format for SHAMAN software.</em>"
+          ),
+          closeButton = TRUE,
+          position = "bottom-right",
+          preventDuplicates = TRUE,
+          newestOnTop = TRUE,
+          progressBar = TRUE,
+          showDuration = 300,
+          showMethod = "show",
+          timeOut = 20000,
+          extendedTimeOut = 2000
+        )
       }
     }
   })
   
   colorsBarplot <- function() {
-    return(switch(input$colorsdiagVisuPlot,
-                           "retro palette" = c(
-                             "#048789", "#503D2E", "#D44D27", "#E2A72E", "#EFEBC8",
-                             "#6B63BF", "#7A3D3D", "#AED427", "#F7D488", "#27AED4",
-                             "#B7BF63", "#4D314A", "#BF6389", "#FF8C42", "#FF3C38"
-                           ),
-                           "easter palette" = c(
-                             "#DED4FF", "#A6E7FF", "#D4FFDE", "#FFF7AD", "#8AEEDD",
-                             "#D1F2A5", "#B56BFF", "#FFC48C", "#DF80FF", "#FF6B6B",
-                             "#FFDED4", "#14FA00", "#80A0FF", "#0091FA", "#FA6900"
-                           ),
-                           "warm palette" = c(
-                             "#FFCC0D", "#FF7326", "#FF194D", "#BF2669", "#702A8C",
-                             "#0D40FF", "#0DFF53", "#0DB9FF", "#0DBFA4", "#FF1493",
-                             "#FF69B4", "#81BF0D", "#FF7F50", "#CD5C5C", "#8B0000"
-                           ),
-                           "basic palette (1)" = c(
-                             "#f44336", "#e81e63", "#9c27b0", "#673ab7", "#3f51b5",
-                             "#2196f3", "#F37E21", "#2DF321", "#009688", "#4caf50",
-                             "#8bc34a", "#cddc39", "#ffeb3b", "#4A044E", "#ff9800",
-                             "#084E04", "#795548", "#7C8B60", "#607d8b", "#000000"
-                           ),
-                           "basic palette (2)" = c(
-                             '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
-                             '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
-                             '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000',
-                             '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080',
-                             '#ffffff', '#000000'
-                           ),
-                           "basic palette (3)" = c(
-                             '#C0362C', '#FF8642', '#F4DCB5', '#816C5B', '#B70AC3',
-                             '#B5CDF4', '#668D3C', '#B1DDA1', '#F4B5CD', '#0097AC',
-                             '#C3B70A', '#0AC3B7', '#c30a25', '#06C2F4', '#0A25C3'
-                           ),
-                           "basic palette (4)" = c(
-                             "#6929c4", "#1192e8", "#005d5d", "#9f1853", "#05DDAD",
-                             "#570408", "#198038", "#002d9c", "#FC6693", "#b28600",
-                             "#009d9a", "#012749", "#8a3800", "#a56eff"
-                           ),
-                           "basic palette (5)" = c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c"
-                                                   ,"#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5"
-                                                   ,"#8c564b","#c49c94","#e377c2","#f7b6d2","#7f7f7f"
-                                                   ,"#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"
-                           )))
+    return(switch(
+      input$colorsdiagVisuPlot,
+      "retro palette" = c(
+        "#048789",
+        "#503D2E",
+        "#D44D27",
+        "#E2A72E",
+        "#EFEBC8",
+        "#6B63BF",
+        "#7A3D3D",
+        "#AED427",
+        "#F7D488",
+        "#27AED4",
+        "#B7BF63",
+        "#4D314A",
+        "#BF6389",
+        "#FF8C42",
+        "#FF3C38"
+      ),
+      "easter palette" = c(
+        "#DED4FF",
+        "#A6E7FF",
+        "#D4FFDE",
+        "#FFF7AD",
+        "#8AEEDD",
+        "#D1F2A5",
+        "#B56BFF",
+        "#FFC48C",
+        "#DF80FF",
+        "#FF6B6B",
+        "#FFDED4",
+        "#14FA00",
+        "#80A0FF",
+        "#0091FA",
+        "#FA6900"
+      ),
+      "warm palette" = c(
+        "#FFCC0D",
+        "#FF7326",
+        "#FF194D",
+        "#BF2669",
+        "#702A8C",
+        "#0D40FF",
+        "#0DFF53",
+        "#0DB9FF",
+        "#0DBFA4",
+        "#FF1493",
+        "#FF69B4",
+        "#81BF0D",
+        "#FF7F50",
+        "#CD5C5C",
+        "#8B0000"
+      ),
+      "basic palette (1)" = c(
+        "#f44336",
+        "#e81e63",
+        "#9c27b0",
+        "#673ab7",
+        "#3f51b5",
+        "#2196f3",
+        "#F37E21",
+        "#2DF321",
+        "#009688",
+        "#4caf50",
+        "#8bc34a",
+        "#cddc39",
+        "#ffeb3b",
+        "#4A044E",
+        "#ff9800",
+        "#084E04",
+        "#795548",
+        "#7C8B60",
+        "#607d8b",
+        "#000000"
+      ),
+      "basic palette (2)" = c(
+        '#e6194b',
+        '#3cb44b',
+        '#ffe119',
+        '#4363d8',
+        '#f58231',
+        '#911eb4',
+        '#46f0f0',
+        '#f032e6',
+        '#bcf60c',
+        '#fabebe',
+        '#008080',
+        '#e6beff',
+        '#9a6324',
+        '#fffac8',
+        '#800000',
+        '#aaffc3',
+        '#808000',
+        '#ffd8b1',
+        '#000075',
+        '#808080',
+        '#ffffff',
+        '#000000'
+      ),
+      "basic palette (3)" = c(
+        '#C0362C',
+        '#FF8642',
+        '#F4DCB5',
+        '#816C5B',
+        '#B70AC3',
+        '#B5CDF4',
+        '#668D3C',
+        '#B1DDA1',
+        '#F4B5CD',
+        '#0097AC',
+        '#C3B70A',
+        '#0AC3B7',
+        '#c30a25',
+        '#06C2F4',
+        '#0A25C3'
+      ),
+      "basic palette (4)" = c(
+        "#6929c4",
+        "#1192e8",
+        "#005d5d",
+        "#9f1853",
+        "#05DDAD",
+        "#570408",
+        "#198038",
+        "#002d9c",
+        "#FC6693",
+        "#b28600",
+        "#009d9a",
+        "#012749",
+        "#8a3800",
+        "#a56eff"
+      ),
+      "basic palette (5)" = c(
+        "#1f77b4",
+        "#aec7e8",
+        "#ff7f0e",
+        "#ffbb78",
+        "#2ca02c"
+        ,
+        "#98df8a",
+        "#d62728",
+        "#ff9896",
+        "#9467bd",
+        "#c5b0d5"
+        ,
+        "#8c564b",
+        "#c49c94",
+        "#e377c2",
+        "#f7b6d2",
+        "#7f7f7f"
+        ,
+        "#c7c7c7",
+        "#bcbd22",
+        "#dbdb8d",
+        "#17becf",
+        "#9edae5"
+      )
+    ))
   }
   
-  colorsVisuPlot <- function(){
-    target = ResDiffAnal()$target 
-    return(switch(input$colorsdiagVisuPlot,
-                                                      "retro palette" = rep(c(
-                                                        "#048789", "#503D2E", "#D44D27", "#E2A72E", "#EFEBC8",
-                                                        "#6B63BF", "#7A3D3D", "#AED427", "#F7D488", "#27AED4",
-                                                        "#B7BF63", "#4D314A", "#BF6389", "#FF8C42", "#FF3C38"
-                                                      ), ceiling(nrow(target)/15)),
-                                                      "easter palette" = rep(c(
-                                                        "#DED4FF", "#A6E7FF", "#D4FFDE", "#FFF7AD", "#8AEEDD",
-                                                        "#D1F2A5", "#B56BFF", "#FFC48C", "#DF80FF", "#FF6B6B",
-                                                        "#FFDED4", "#14FA00", "#80A0FF", "#0091FA", "#FA6900"
-                                                      ), ceiling(nrow(target)/15)),
-                                                      "warm palette" = rep(c(
-                                                        "#FFCC0D", "#FF7326", "#FF194D", "#BF2669", "#702A8C",
-                                                        "#0D40FF", "#0DFF53", "#0DB9FF", "#0DBFA4", "#FF1493",
-                                                        "#FF69B4", "#81BF0D", "#FF7F50", "#CD5C5C", "#8B0000"
-                                                      ), ceiling(nrow(target)/15)),
-                                                      "basic palette (1)" = rep(c(
-                                                        "#f44336", "#e81e63", "#9c27b0", "#673ab7", "#3f51b5",
-                                                        "#2196f3", "#F37E21", "#2DF321", "#009688", "#4caf50",
-                                                        "#8bc34a", "#cddc39", "#ffeb3b", "#4A044E", "#ff9800",
-                                                        "#084E04", "#795548", "#7C8B60", "#607d8b", "#000000"
-                                                      ), ceiling(nrow(target)/20)),
-                                                      "basic palette (2)" = rep(c(
-                                                        '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
-                                                        '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
-                                                        '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000',
-                                                        '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080',
-                                                        '#ffffff', '#000000'
-                                                      ), ceiling(nrow(target)/20)),
-                                                      "basic palette (3)" = rep(c(
-                                                        '#C0362C', '#FF8642', '#F4DCB5', '#816C5B', '#B70AC3',
-                                                        '#B5CDF4', '#668D3C', '#B1DDA1', '#F4B5CD', '#0097AC',
-                                                        '#C3B70A', '#0AC3B7', '#c30a25', '#06C2F4', '#0A25C3'
-                                                      ), ceiling(nrow(target)/15)),
-                                                      "basic palette (4)" = rep(c(
-                                                        "#6929c4", "#1192e8", "#005d5d", "#9f1853", "#05DDAD",
-                                                        "#570408", "#198038", "#002d9c", "#FC6693", "#b28600",
-                                                        "#009d9a", "#012749", "#8a3800", "#a56eff"
-                                                      ), ceiling(nrow(target)/14)),
-                                                      "basic palette (5)" = rep(c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c"
-                                                                                  ,"#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5"
-                                                                                  ,"#8c564b","#c49c94","#e377c2","#f7b6d2","#7f7f7f"
-                                                                                  ,"#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"
-                                                      ), ceiling(nrow(target) / 20))
-  ))}
+  colorsVisuPlot <- function() {
+    target = ResDiffAnal()$target
+    return(switch(
+      input$colorsdiagVisuPlot,
+      "retro palette" = rep(
+        c(
+          "#048789",
+          "#503D2E",
+          "#D44D27",
+          "#E2A72E",
+          "#EFEBC8",
+          "#6B63BF",
+          "#7A3D3D",
+          "#AED427",
+          "#F7D488",
+          "#27AED4",
+          "#B7BF63",
+          "#4D314A",
+          "#BF6389",
+          "#FF8C42",
+          "#FF3C38"
+        ),
+        ceiling(nrow(target) / 15)
+      ),
+      "easter palette" = rep(
+        c(
+          "#DED4FF",
+          "#A6E7FF",
+          "#D4FFDE",
+          "#FFF7AD",
+          "#8AEEDD",
+          "#D1F2A5",
+          "#B56BFF",
+          "#FFC48C",
+          "#DF80FF",
+          "#FF6B6B",
+          "#FFDED4",
+          "#14FA00",
+          "#80A0FF",
+          "#0091FA",
+          "#FA6900"
+        ),
+        ceiling(nrow(target) / 15)
+      ),
+      "warm palette" = rep(
+        c(
+          "#FFCC0D",
+          "#FF7326",
+          "#FF194D",
+          "#BF2669",
+          "#702A8C",
+          "#0D40FF",
+          "#0DFF53",
+          "#0DB9FF",
+          "#0DBFA4",
+          "#FF1493",
+          "#FF69B4",
+          "#81BF0D",
+          "#FF7F50",
+          "#CD5C5C",
+          "#8B0000"
+        ),
+        ceiling(nrow(target) / 15)
+      ),
+      "basic palette (1)" = rep(
+        c(
+          "#f44336",
+          "#e81e63",
+          "#9c27b0",
+          "#673ab7",
+          "#3f51b5",
+          "#2196f3",
+          "#F37E21",
+          "#2DF321",
+          "#009688",
+          "#4caf50",
+          "#8bc34a",
+          "#cddc39",
+          "#ffeb3b",
+          "#4A044E",
+          "#ff9800",
+          "#084E04",
+          "#795548",
+          "#7C8B60",
+          "#607d8b",
+          "#000000"
+        ),
+        ceiling(nrow(target) / 20)
+      ),
+      "basic palette (2)" = rep(
+        c(
+          '#e6194b',
+          '#3cb44b',
+          '#ffe119',
+          '#4363d8',
+          '#f58231',
+          '#911eb4',
+          '#46f0f0',
+          '#f032e6',
+          '#bcf60c',
+          '#fabebe',
+          '#008080',
+          '#e6beff',
+          '#9a6324',
+          '#fffac8',
+          '#800000',
+          '#aaffc3',
+          '#808000',
+          '#ffd8b1',
+          '#000075',
+          '#808080',
+          '#ffffff',
+          '#000000'
+        ),
+        ceiling(nrow(target) / 20)
+      ),
+      "basic palette (3)" = rep(
+        c(
+          '#C0362C',
+          '#FF8642',
+          '#F4DCB5',
+          '#816C5B',
+          '#B70AC3',
+          '#B5CDF4',
+          '#668D3C',
+          '#B1DDA1',
+          '#F4B5CD',
+          '#0097AC',
+          '#C3B70A',
+          '#0AC3B7',
+          '#c30a25',
+          '#06C2F4',
+          '#0A25C3'
+        ),
+        ceiling(nrow(target) / 15)
+      ),
+      "basic palette (4)" = rep(
+        c(
+          "#6929c4",
+          "#1192e8",
+          "#005d5d",
+          "#9f1853",
+          "#05DDAD",
+          "#570408",
+          "#198038",
+          "#002d9c",
+          "#FC6693",
+          "#b28600",
+          "#009d9a",
+          "#012749",
+          "#8a3800",
+          "#a56eff"
+        ),
+        ceiling(nrow(target) / 14)
+      ),
+      "basic palette (5)" = rep(
+        c(
+          "#1f77b4",
+          "#aec7e8",
+          "#ff7f0e",
+          "#ffbb78",
+          "#2ca02c"
+          ,
+          "#98df8a",
+          "#d62728",
+          "#ff9896",
+          "#9467bd",
+          "#c5b0d5"
+          ,
+          "#8c564b",
+          "#c49c94",
+          "#e377c2",
+          "#f7b6d2",
+          "#7f7f7f"
+          ,
+          "#c7c7c7",
+          "#bcbd22",
+          "#dbdb8d",
+          "#17becf",
+          "#9edae5"
+        ),
+        ceiling(nrow(target) / 20)
+      )
+    ))
+  }
   
   
   
@@ -3237,13 +5141,21 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   
   output$VarIntDiag <- renderUI({
+    target = values$TargetWorking
     
-    target=values$TargetWorking
-    
-    if(!is.null(target)) 
+    if (!is.null(target))
     {
       namesTarget = colnames(target)[2:ncol(target)]
-      selectizeInput("VarInt",h6(strong("Select the variables of interest (max 2)")),namesTarget, selected = namesTarget[1],multiple = TRUE,options = list(maxItems = 2))
+      selectizeInput(
+        "VarInt",
+        h6(strong(
+          "Select the variables of interest (max 2)"
+        )),
+        namesTarget,
+        selected = namesTarget[1],
+        multiple = TRUE,
+        options = list(maxItems = 2)
+      )
     }
     
   })
@@ -3256,129 +5168,155 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     tree = dataInput()$data
     dds = resDiff$dds
     counts = resDiff$raw_counts
-    if(input$CountsType=="Normalized") counts = resDiff$countsNorm
+    if (input$CountsType == "Normalized")
+      counts = resDiff$countsNorm
     target = resDiff$target
     normFactors = resDiff$normFactors
     
     ## Counts at the OTU level
     CT = resDiff$CT_noNorm
-    if(input$CountsType=="Normalized") CT = resDiff$CT_Norm
+    if (input$CountsType == "Normalized")
+      CT = resDiff$CT_Norm
     
-    group_init = as.data.frame(target[,VarInt])
+    group_init = as.data.frame(target[, VarInt])
     rownames(group_init) = rownames(target)
-
-    cval=c()
+    
+    cval = c()
     time_set = 0
     # Set of shape
-    shape=c(19,17,15,18)
+    shape = c(19, 17, 15, 18)
     
     ## Group
-    group = as.character(apply(group_init,1,paste, collapse = "-"))
+    group = as.character(apply(group_init, 1, paste, collapse = "-"))
     
     ## Keep only some sample
     val = c()
-    for(i in 1:length(VarInt))
+    for (i in 1:length(VarInt))
     {
-      Tinput = paste("input$","Mod",VarInt[i],sep="")
-      expr=parse(text=Tinput)
+      Tinput = paste("input$", "Mod", VarInt[i], sep = "")
+      expr = parse(text = Tinput)
       ## All the modalities for all the var of interest
-      val = c(val,eval(expr))
+      val = c(val, eval(expr))
     }
-    if(length(VarInt)>1) Kval = apply(expand.grid(val,val),1,paste, collapse = "-")
-    else Kval = val
-    ind_kept = which(as.character(group)%in%Kval)
+    if (length(VarInt) > 1)
+      Kval = apply(expand.grid(val, val), 1, paste, collapse = "-")
+    else
+      Kval = val
+    ind_kept = which(as.character(group) %in% Kval)
     
     ## Get the group corresponding to the modalities
     group = group[ind_kept]
     nb = length(unique((group)))
     group = factor(group, levels = Kval)
     
-    if(nlevels(group)!=0 && !is.null(input$DistClust))
+    if (nlevels(group) != 0 && !is.null(input$DistClust))
     {
       ## Get the norm data
       counts.norm = as.data.frame(round(counts(dds)))
-      if(input$CountsType=="Normalized") counts.norm = as.data.frame(round(counts(dds, normalized = TRUE)))
+      if (input$CountsType == "Normalized")
+        counts.norm = as.data.frame(round(counts(dds, normalized = TRUE)))
       # was removed
-      counts.norm = counts.norm[,ind_kept]
+      counts.norm = counts.norm[, ind_kept]
       # print(head(counts.norm))
       ## Get the distance
-      if(input$DistClust=="sere") dist.counts.norm = as.dist(SEREcoef(counts.norm))
-      else if(input$DistClust=="Unifrac"){
+      if (input$DistClust == "sere")
+        dist.counts.norm = as.dist(SEREcoef(counts.norm))
+      else if (input$DistClust == "Unifrac") {
         #tmp = UniFracDist(CT,tree)
         data_to_save <- list(counts.norm = counts.norm, tree = tree)
         save(data_to_save, file = "dataUnifrac.RData")
-        tmp = UniFracDist(counts.norm,tree)
-        if(is.null(tree) || is.null(tmp)) dist.counts.norm = NULL
+        tmp = UniFracDist(counts.norm, tree)
+        if (is.null(tree) || is.null(tmp))
+          dist.counts.norm = NULL
         else
         {
-          dist.counts.norm = switch(input$DistClustUnifrac,
-                                    "WU" = as.dist(tmp[, , "d_1"]),
-                                    "UWU" = as.dist(tmp[, , "d_UW"]),
-                                    "VAWU" = as.dist(tmp[, , "d_VAW"]))
+          dist.counts.norm = switch(
+            input$DistClustUnifrac,
+            "WU" = as.dist(tmp[, , "d_1"]),
+            "UWU" = as.dist(tmp[, , "d_UW"]),
+            "VAWU" = as.dist(tmp[, , "d_VAW"])
+          )
         }
         
       }
-      else if(input$DistClust  %in% getDistMethods()){
-        dist = as.dist(distance(t(sweep(counts.norm,2,colSums(counts.norm),`/`)), method=input$DistClust))
-        dist[is.na(dist)]=0.0
+      else if (input$DistClust  %in% getDistMethods()) {
+        dist = as.dist(distance(t(
+          sweep(counts.norm, 2, colSums(counts.norm), `/`)
+        ), method = input$DistClust))
+        dist[is.na(dist)] = 0.0
         dist.counts.norm = dist
       }
-      else  dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
+      else
+        dist.counts.norm = vegdist(t(counts.norm), method = input$DistClust)
       #"additive_symm"
       req(dist.counts.norm)
-      if(!is.null(dist.counts.norm))
+      if (!is.null(dist.counts.norm))
       {
-       
         pcoa_df_ape <- ape::pcoa(dist.counts.norm)
         results_pcoa <- compute_arrows(pcoa_df_ape, t(counts.norm))
         
         eigen_df <- data.frame(
-          Dimensions = 1:min(10, length(results_pcoa$values$Eigenvalues)),
-          PercentageExplained = (results_pcoa$values$Eigenvalues[1:min(10, length(results_pcoa$values$Eigenvalues))]/sum(results_pcoa$values$Eigenvalues[1:min(10, length(results_pcoa$values$Eigenvalues))]))*100 #Percentage explained
+          Dimensions = 1:min(10, length(
+            results_pcoa$values$Eigenvalues
+          )),
+          PercentageExplained = (
+            results_pcoa$values$Eigenvalues[1:min(10, length(results_pcoa$values$Eigenvalues))] /
+              sum(results_pcoa$values$Eigenvalues[1:min(10, length(results_pcoa$values$Eigenvalues))])
+          ) * 100 #Percentage explained
         )
         
         eigen_df$CumulativePercentageExplained = cumsum(eigen_df$PercentageExplained)
         
-        to_plot <- as.data.frame(results_pcoa$vectors) %>% tibble::rownames_to_column("Sample.name")
+        to_plot <-
+          as.data.frame(results_pcoa$vectors) %>% tibble::rownames_to_column("Sample.name")
         to_plot$group <- group
-        return(list(results_pcoa = results_pcoa, to_plot = to_plot, eigen_df = eigen_df,dist.counts.norm = dist.counts.norm))
+        return(
+          list(
+            results_pcoa = results_pcoa,
+            to_plot = to_plot,
+            eigen_df = eigen_df,
+            dist.counts.norm = dist.counts.norm
+          )
+        )
       }
       
     }
     
   })
   pca_data <- reactive({
-    
     resDiff = ResDiffAnal()
     #Variable of interest
     VarInt = input$VarInt
     dds = resDiff$dds
     counts = resDiff$raw_counts
-    if(input$CountsType=="Normalized") counts = resDiff$countsNorm
+    if (input$CountsType == "Normalized")
+      counts = resDiff$countsNorm
     target = resDiff$target
     normFactors = resDiff$normFactors
     
     
-    group_init = as.data.frame(target[,VarInt])
+    group_init = as.data.frame(target[, VarInt])
     rownames(group_init) = rownames(target)
     n = min(500, nrow(counts(dds)))
     type.trans = c("VST", "rlog")
     
-    group = as.character(apply(group_init,1,paste, collapse = "-"))
+    group = as.character(apply(group_init, 1, paste, collapse = "-"))
     group_init = group
     
-    ## Keep only some sample 
+    ## Keep only some sample
     val = c()
-    for(i in 1:length(VarInt))
-    { 
-      Tinput = paste("input$","Mod",VarInt[i],sep="") 
-      expr=parse(text=Tinput)
+    for (i in 1:length(VarInt))
+    {
+      Tinput = paste("input$", "Mod", VarInt[i], sep = "")
+      expr = parse(text = Tinput)
       ## All the modalities for all the var of interest
-      val = c(val,eval(expr))
+      val = c(val, eval(expr))
     }
-    if(length(VarInt)>1) Kval = apply(expand.grid(val,val),1,paste, collapse = "-")
-    else Kval = val
-    ind_kept = which(as.character(group)%in%Kval)
+    if (length(VarInt) > 1)
+      Kval = apply(expand.grid(val, val), 1, paste, collapse = "-")
+    else
+      Kval = val
+    ind_kept = which(as.character(group) %in% Kval)
     
     # save(val,Kval,dds,group_init,type.trans,VarInt,ind_kept,file="testLDA")
     ## Get the group corresponding to the modalities
@@ -3388,31 +5326,42 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     group = as.factor(group)
     
     ## To select the colors
-    indgrp =as.integer(as.factor(group_init))[ind_kept]
+    indgrp = as.integer(as.factor(group_init))[ind_kept]
     
     
-    if(nlevels(group)!=0)
-    { 
+    if (nlevels(group) != 0)
+    {
       type.trans <- type.trans[1]
       
-      if (type.trans == "VST") counts.trans <- SummarizedExperiment::assay(varianceStabilizingTransformation(dds))
-      else counts.trans <- SummarizedExperiment::assay(rlogTransformation(dds))
-      counts.trans = counts.trans[,ind_kept]
+      if (type.trans == "VST")
+        counts.trans <-
+          SummarizedExperiment::assay(varianceStabilizingTransformation(dds))
+      else
+        counts.trans <-
+          SummarizedExperiment::assay(rlogTransformation(dds))
+      counts.trans = counts.trans[, ind_kept]
       
       rv = apply(counts.trans, 1, var, na.rm = TRUE)
       #Méthodes avec l'opérateur de résolution de portée
       req(counts.trans)
       #PCA data
-      dat <- t(counts.trans[order(rv, decreasing = TRUE),][1:n, ]) %>% data.frame
-      pca_res <- FactoMineR::PCA(dat, ncp = 10, scale.unit = TRUE, graph = FALSE)
+      dat <-
+        t(counts.trans[order(rv, decreasing = TRUE), ][1:n,]) %>% data.frame
+      pca_res <-
+        FactoMineR::PCA(dat,
+                        ncp = 10,
+                        scale.unit = TRUE,
+                        graph = FALSE)
       
       pca_res$group <- group
       pca_res$eigen_df <- data.frame(
         Dimensions = 1:min(10, length(pca_res$eig[, 1])),
         Eigenvalues = pca_res$eig[1:min(10, length(pca_res$eig[, 1])), 1],
-        PercentageExplained = (pca_res$eig[1:min(10, length(pca_res$eig[, 1])), 1]/ sum(pca_res$eig[1:min(10, length(pca_res$eig[, 1])), 1])) *100
+        PercentageExplained = (pca_res$eig[1:min(10, length(pca_res$eig[, 1])), 1] / sum(pca_res$eig[1:min(10, length(pca_res$eig[, 1])), 1])) *
+          100
       )
-      pca_res$eigen_df$CumulativePercentageExplained <- cumsum(pca_res$eigen_df$PercentageExplained)
+      pca_res$eigen_df$CumulativePercentageExplained <-
+        cumsum(pca_res$eigen_df$PercentageExplained)
       
       contrib_df <- tibble::as_tibble(pca_res$var$contrib)
       contrib_df <- contrib_df %>%
@@ -3422,9 +5371,11 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       colnames(pca_res$contrib_df) <- colnames(pca_res$var$contrib)
       rownames(pca_res$contrib_df) <- rownames(pca_res$var$contrib)
       pca_res$contrib_df$Variable <- rownames(pca_res$contrib_df)
-      pca_res$contrib_df <- tidyr::gather(pca_res$contrib_df, Dimension, Contribution, -Variable)
+      pca_res$contrib_df <-
+        tidyr::gather(pca_res$contrib_df, Dimension, Contribution,-Variable)
       
-      pca_res$contrib_df$Variable <- sub("^contrib\\.", "", pca_res$contrib_df$Variable)
+      pca_res$contrib_df$Variable <-
+        sub("^contrib\\.", "", pca_res$contrib_df$Variable)
       return(pca_res = pca_res)
     }
   })
@@ -3437,31 +5388,34 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     VarInt = input$VarInt
     dds = resDiff$dds
     counts = resDiff$raw_counts
-    if(input$CountsType=="Normalized") counts = resDiff$countsNorm
+    if (input$CountsType == "Normalized")
+      counts = resDiff$countsNorm
     target = resDiff$target
     normFactors = resDiff$normFactors
     
     
-    group_init = as.data.frame(target[,VarInt])
+    group_init = as.data.frame(target[, VarInt])
     rownames(group_init) = rownames(target)
     n = min(500, nrow(counts(dds)))
     type.trans = c("VST", "rlog")
     
-    group = as.character(apply(group_init,1,paste, collapse = "-"))
+    group = as.character(apply(group_init, 1, paste, collapse = "-"))
     group_init = group
     
-    ## Keep only some sample 
+    ## Keep only some sample
     val = c()
-    for(i in 1:length(VarInt))
-    { 
-      Tinput = paste("input$","Mod",VarInt[i],sep="") 
-      expr=parse(text=Tinput)
+    for (i in 1:length(VarInt))
+    {
+      Tinput = paste("input$", "Mod", VarInt[i], sep = "")
+      expr = parse(text = Tinput)
       ## All the modalities for all the var of interest
-      val = c(val,eval(expr))
+      val = c(val, eval(expr))
     }
-    if(length(VarInt)>1) Kval = apply(expand.grid(val,val),1,paste, collapse = "-")
-    else Kval = val
-    ind_kept = which(as.character(group)%in%Kval)
+    if (length(VarInt) > 1)
+      Kval = apply(expand.grid(val, val), 1, paste, collapse = "-")
+    else
+      Kval = val
+    ind_kept = which(as.character(group) %in% Kval)
     
     # save(val,Kval,dds,group_init,type.trans,VarInt,ind_kept,file="testLDA")
     ## Get the group corresponding to the modalities
@@ -3471,19 +5425,32 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     group = as.factor(group)
     
     ## To select the colors
-    indgrp =as.integer(as.factor(group_init))[ind_kept]
+    indgrp = as.integer(as.factor(group_init))[ind_kept]
     
-    if(nlevels(group)!=0)
-    { 
+    if (nlevels(group) != 0)
+    {
       type.trans <- type.trans[1]
       
-      if (type.trans == "VST") counts.trans <- SummarizedExperiment::assay(varianceStabilizingTransformation(dds))
-      else counts.trans <- SummarizedExperiment::assay(rlogTransformation(dds))
-      counts.trans = counts.trans[,ind_kept]
+      if (type.trans == "VST")
+        counts.trans <-
+          SummarizedExperiment::assay(varianceStabilizingTransformation(dds))
+      else
+        counts.trans <-
+          SummarizedExperiment::assay(rlogTransformation(dds))
+      counts.trans = counts.trans[, ind_kept]
       final <-  NULL
       #UMAP
-      updateSliderInput(session = session, "neighborsKNN", max = ncol(counts.trans) -1)
-      counts.umap <- umap::umap(t(counts.trans), n_components = 2, random_state = 15, n_neighbors = input$neighborsKNN, metric = input$distanceUMAP)
+      updateSliderInput(session = session,
+                        "neighborsKNN",
+                        max = ncol(counts.trans) - 1)
+      counts.umap <-
+        umap::umap(
+          t(counts.trans),
+          n_components = 2,
+          random_state = 15,
+          n_neighbors = input$neighborsKNN,
+          metric = input$distanceUMAP
+        )
       counts.samples = rownames(t(counts.trans))
       layout_dat <- counts.umap$layout
       final <- (data.frame(layout_dat))
@@ -3494,35 +5461,64 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   
   output$centeringButton <- renderUI({
-    if ((input$radioPCA == 3) && (input$DiagPlot=='pcaPlot')) {
+    if ((input$radioPCA == 3) && (input$DiagPlot == 'pcaPlot')) {
       return(NULL)  # Hide the button when the third radio button is selected
     } else {
-      return(checkboxInput("centerPlot", label = strong("Center plot"), value = TRUE))
+      return(checkboxInput(
+        "centerPlot",
+        label = strong("Center plot"),
+        value = TRUE
+      ))
     }
   })
   
   observeEvent(input$TaxoSelect, {
-    if(input$TaxoSelect != "..."){
-      updateRadioButtons(session, "radioPCA", choiceNames = c("Samples", "Biplot", as.character(input$TaxoSelect)), choiceValues = c(1, 2, 3))
+    if (input$TaxoSelect != "...") {
+      updateRadioButtons(
+        session,
+        "radioPCA",
+        choiceNames = c("Samples", "Biplot", as.character(input$TaxoSelect)),
+        choiceValues = c(1, 2, 3)
+      )
     }
   })
   
   
   output$labelBiplotButton <- renderUI({
-    if ((input$DiagPlot=='pcaPlot') && (input$radioPCA ==1)) {
-      return(checkboxGroupInput("checkLabelSamples",label = strong("Display label"), choices = list("Samples" = 1, "Groups" = 2), selected = 2))   
-    }else if ((input$DiagPlot=='pcaPlot') && (input$radioPCA ==3)) {
-      return(checkboxInput("checkLabelTaxo", label = strong("Display label"), value = TRUE))   
-    }else if((input$DiagPlot=='pcaPlot') && (input$radioPCA == 2)){
-      return(checkboxGroupInput("checkLabelBiplot", label = strong("Display label"), choices = list("Samples" = 1, "Variables" = 2), selected = 2))
+    if ((input$DiagPlot == 'pcaPlot') && (input$radioPCA == 1)) {
+      return(
+        checkboxGroupInput(
+          "checkLabelSamples",
+          label = strong("Display label"),
+          choices = list("Samples" = 1, "Groups" = 2),
+          selected = 2
+        )
+      )
+    } else if ((input$DiagPlot == 'pcaPlot') &&
+               (input$radioPCA == 3)) {
+      return(checkboxInput(
+        "checkLabelTaxo",
+        label = strong("Display label"),
+        value = TRUE
+      ))
+    } else if ((input$DiagPlot == 'pcaPlot') &&
+               (input$radioPCA == 2)) {
+      return(
+        checkboxGroupInput(
+          "checkLabelBiplot",
+          label = strong("Display label"),
+          choices = list("Samples" = 1, "Variables" = 2),
+          selected = 2
+        )
+      )
     } else {
       return(NULL)
     }
-  })  
+  })
   
   
   observe({
-    if(input$DiagPlot == 'pcoaPlot'){
+    if (input$DiagPlot == 'pcoaPlot') {
       updateSelectInput(
         session = session,
         "labelPCOA",
@@ -3534,26 +5530,30 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   })
   
   observe({
-    if((input$radioPCA == 1) && isFALSE(input$ellipsePCA)){
-      updateCheckboxGroupInput(session = session, 
-                               "checkLabelSamples",
-                               label = NULL,
-                               choiceNames = list("Samples"),
-                               choiceValues = 1)
+    if ((input$radioPCA == 1) && isFALSE(input$ellipsePCA)) {
+      updateCheckboxGroupInput(
+        session = session,
+        "checkLabelSamples",
+        label = NULL,
+        choiceNames = list("Samples"),
+        choiceValues = 1
+      )
     }
-    if((input$radioPCA == 1) && isTRUE(input$ellipsePCA)){
-      updateCheckboxGroupInput(session = session, 
-                               "checkLabelSamples",
-                               label = NULL,
-                               choiceNames = list("Samples", "Groups"),
-                               choiceValues = c(1, 2))
+    if ((input$radioPCA == 1) && isTRUE(input$ellipsePCA)) {
+      updateCheckboxGroupInput(
+        session = session,
+        "checkLabelSamples",
+        label = NULL,
+        choiceNames = list("Samples", "Groups"),
+        choiceValues = c(1, 2)
+      )
     }
   })
   
   
   observe({
-    if ((input$DiagPlot == 'pcaPlot')&& (input$radioPCA == 2)) {
-      if(isTRUE(input$ellipsePCA)){
+    if ((input$DiagPlot == 'pcaPlot') && (input$radioPCA == 2)) {
+      if (isTRUE(input$ellipsePCA)) {
         updateCheckboxGroupInput(
           session = session,
           "checkLabelBiplot",
@@ -3562,7 +5562,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
           choiceValues = c(1, 2, 3)
         )
       }
-      else if(isFALSE(input$ellipsePCA)){
+      else if (isFALSE(input$ellipsePCA)) {
         updateCheckboxGroupInput(
           session = session,
           "checkLabelBiplot",
@@ -3584,103 +5584,125 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     resDiff = isolate(ResDiffAnal())
     ## Phylogenetic tree
     tree = dataInputTree()$data
-    if(input$DiagPlot == 'pcoaPlot')
-      Plot_diag(input,resDiff,tree, calcul_df = pcoa_data())
-    else if(input$DiagPlot == 'umapPlot')
-      Plot_diag(input,resDiff,tree, calcul_df = umap_data())
+    if (input$DiagPlot == 'pcoaPlot')
+      Plot_diag(input, resDiff, tree, calcul_df = pcoa_data())
+    else if (input$DiagPlot == 'umapPlot')
+      Plot_diag(input, resDiff, tree, calcul_df = umap_data())
     else
-      Plot_diag(input,resDiff,tree, calcul_df = pca_data())
-  },height = reactive(input$heightDiag), width = reactive(ifelse(input$modifwidthDiag,input$widthDiag,"auto")))
+      Plot_diag(input, resDiff, tree, calcul_df = pca_data())
+  }, height = reactive(input$heightDiag), width = reactive(ifelse(
+    input$modifwidthDiag, input$widthDiag, "auto"
+  )))
   
   
   
   
   ## Select PCA/PCOA axis
-  output$PC1_sel <-renderUI ({
+  output$PC1_sel <- renderUI ({
     res = NULL
     resDiff = ResDiffAnal()
     ## Phylogenetic tree
     tree = dataInputTree()$data
     
-    if(!is.null(resDiff)){ 
-      if(input$DiagPlot == 'pcaPlot')
-        tab = Plot_diag(input,resDiff,tree,getTable=TRUE, calcul_df = pca_data())
-      if(input$DiagPlot == 'pcoaPlot')
-        tab = Plot_diag(input,resDiff,tree,getTable=TRUE, calcul_df = pcoa_data())
+    if (!is.null(resDiff)) {
+      if (input$DiagPlot == 'pcaPlot')
+        tab = Plot_diag(input,
+                        resDiff,
+                        tree,
+                        getTable = TRUE,
+                        calcul_df = pca_data())
+      if (input$DiagPlot == 'pcoaPlot')
+        tab = Plot_diag(input,
+                        resDiff,
+                        tree,
+                        getTable = TRUE,
+                        calcul_df = pcoa_data())
       else
-        tab = Plot_diag(input,resDiff,tree,getTable=TRUE, calcul_df = pca_data())
-      if(!is.null(tab)) 
+        tab = Plot_diag(input,
+                        resDiff,
+                        tree,
+                        getTable = TRUE,
+                        calcul_df = pca_data())
+      if (!is.null(tab))
       {
-        pc_axes = paste("PC",seq(1,ncol(tab)),sep="")
-        res = selectizeInput("PCaxe1","X-axis",pc_axes)
+        pc_axes = paste("PC", seq(1, ncol(tab)), sep = "")
+        res = selectizeInput("PCaxe1", "X-axis", pc_axes)
       }
     }
     return(res)
   })
   
-  output$PC2_sel <-renderUI ({
+  output$PC2_sel <- renderUI ({
     res = NULL
     resDiff = ResDiffAnal()
     ## Phylogenetic tree
     tree = dataInputTree()$data
     
-    if(!is.null(resDiff)){ 
-      if(input$DiagPlot == 'pcaPlot')
-        tab = Plot_diag(input,resDiff,tree,getTable=TRUE, calcul_df = pca_data())
-      if(input$DiagPlot == 'pcoaPlot')
-        tab = Plot_diag(input,resDiff,tree,getTable=TRUE, calcul_df = pcoa_data())
+    if (!is.null(resDiff)) {
+      if (input$DiagPlot == 'pcaPlot')
+        tab = Plot_diag(input,
+                        resDiff,
+                        tree,
+                        getTable = TRUE,
+                        calcul_df = pca_data())
+      if (input$DiagPlot == 'pcoaPlot')
+        tab = Plot_diag(input,
+                        resDiff,
+                        tree,
+                        getTable = TRUE,
+                        calcul_df = pcoa_data())
       else
-        tab = Plot_diag(input,resDiff,tree,getTable=TRUE, calcul_df = pca_data())
-      if(!is.null(tab)) 
+        tab = Plot_diag(input,
+                        resDiff,
+                        tree,
+                        getTable = TRUE,
+                        calcul_df = pca_data())
+      if (!is.null(tab))
       {
-        pc_axes = paste("PC",seq(1,ncol(tab[, 1:ncol(tab)])),sep="")
-        res = selectizeInput("PCaxe2","Y-axis",pc_axes,selected=pc_axes[min(2,ncol(tab[, 1:ncol(tab)]))])
+        pc_axes = paste("PC", seq(1, ncol(tab[, 1:ncol(tab)])), sep = "")
+        res = selectizeInput("PCaxe2", "Y-axis", pc_axes, selected = pc_axes[min(2, ncol(tab[, 1:ncol(tab)]))])
       }
     }
     return(res)
   })
   
   output$PlotnmdsStress <- renderPlot({
-    
     resDiff = ResDiffAnal()
     ## Phylogenetic tree
     tree = dataInputTree()$data
     
-    Plot_diag_nmdsStress(input,resDiff,tree)
-  },height = 400)
+    Plot_diag_nmdsStress(input, resDiff, tree)
+  }, height = 400)
   
   
   output$PlotpcoaEigen <- renderPlot({
-    
     resDiff = ResDiffAnal()
     ## Phylogenetic tree
     tree = dataInputTree()$data
     
-    Plot_diag_pcoaEigen(input,resDiff,tree, calcul_df = pcoa_data())$plot
-  },height = 400)
+    Plot_diag_pcoaEigen(input, resDiff, tree, calcul_df = pcoa_data())$plot
+  }, height = 400)
   
   
   output$PlotEigen <- renderPlot({
-    
     resDiff = ResDiffAnal()
-    Plot_diag_Eigen(input,resDiff, pca_data())
-  },height =400)
+    Plot_diag_Eigen(input, resDiff, pca_data())
+  }, height = 400)
   
   output$PlotContrib <- renderPlot({
-    
     resDiff = ResDiffAnal()
-    if(input$DiagPlot == 'pcaPlot')
+    if (input$DiagPlot == 'pcaPlot')
       Plot_diag_Contrib(input, resDiff, pca_data())
-    if(input$DiagPlot == 'pcoaPlot')
+    if (input$DiagPlot == 'pcoaPlot')
       Plot_diag_Contrib(input, resDiff, pcoa_data())
     else
       Plot_diag_Contrib(input, resDiff, pca_data())
-  },height =400)
+  }, height = 400)
   
   
-  SizeFactor_table <-reactive({ 
+  SizeFactor_table <- reactive({
     res = ResDiffAnal()
-    return(t(data.frame(Factor=res$normFactors)))
+    return(t(data.frame(Factor = res$normFactors)))
     
   })
   
@@ -3689,13 +5711,20 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       resDiff = ResDiffAnal()
       ## Phylogenetic tree
       tree = dataInputTree()$data
-      if(!is.null(Plot_diag_pcoaEigen(input,resDiff,tree, calcul_df = pcoa_data())$dataDiv))
-        mat = as.matrix(Plot_diag_pcoaEigen(input,resDiff,tree, calcul_df = pcoa_data())$dataDiv)
-    }, rownames= TRUE, options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')), scroller = TRUE,
-                                      pageLength = 10,scrollX=TRUE
+      if (!is.null(Plot_diag_pcoaEigen(input, resDiff, tree, calcul_df = pcoa_data())$dataDiv))
+        mat = as.matrix(Plot_diag_pcoaEigen(input, resDiff, tree, calcul_df = pcoa_data())$dataDiv)
+    }, rownames = TRUE, options = list(
+      lengthMenu = list(c(10, 50,-1), c('10', '50', 'All')),
+      scroller = TRUE,
+      pageLength = 10,
+      scrollX = TRUE
     )) %>%
-      DT::formatRound(c(1:length(colnames(mat))), digits = 3) %>%
-      formatStyle(columns = c(1:length(colnames(mat))), 'text-align' = 'center')
+      DT::formatRound(c(1:length(colnames(
+        mat
+      ))), digits = 3) %>%
+      formatStyle(columns = c(1:length(colnames(
+        mat
+      ))), 'text-align' = 'center')
   )
   
   output$MatrixCoordinatetable <- renderDataTable(
@@ -3704,69 +5733,99 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       VarInt = input$VarInt
       dds = resDiff$dds
       counts = resDiff$raw_counts
-      if(input$CountsType=="Normalized") counts = resDiff$countsNorm
+      if (input$CountsType == "Normalized")
+        counts = resDiff$countsNorm
       target = resDiff$target
       normFactors = resDiff$normFactors
       
       ## Counts at the OTU level
       CT = resDiff$CT_noNorm
-      if(input$CountsType=="Normalized") CT = resDiff$CT_Norm
+      if (input$CountsType == "Normalized")
+        CT = resDiff$CT_Norm
       
-      group = as.data.frame(target[,VarInt])
+      group = as.data.frame(target[, VarInt])
       rownames(group) = rownames(target)
       ## Phylogenetic tree
       tree = dataInputTree()$data
-      if(!is.null(Get_pca_table(input, dds, group)$table))
+      if (!is.null(Get_pca_table(input, dds, group)$table))
         mat = as.matrix(Get_pca_table(input, dds, group)$table)
-    }, rownames= TRUE, options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')), scroller = TRUE,
-                                      pageLength = 10,scrollX=TRUE
+    }, rownames = TRUE, options = list(
+      lengthMenu = list(c(10, 50,-1), c('10', '50', 'All')),
+      scroller = TRUE,
+      pageLength = 10,
+      scrollX = TRUE
     )) %>%
-      DT::formatRound(c(1:length(colnames(mat))), digits = 3) %>%
-      formatStyle(columns = c(1:length(colnames(mat))), 'text-align' = 'center')
+      DT::formatRound(c(1:length(colnames(
+        mat
+      ))), digits = 3) %>%
+      formatStyle(columns = c(1:length(colnames(
+        mat
+      ))), 'text-align' = 'center')
   )
   
   
   ## Export Distancetable in .csv
   output$ExportDistancetable <- downloadHandler(
     filename = function() {
-      if(input$sepdistance=="\t") 'SHAMAN_PCA_Matrix.tsv'
-      else 'SHAMAN_PCA_Matrix.csv'
+      if (input$sepdistance == "\t")
+        'SHAMAN_PCA_Matrix.tsv'
+      else
+        'SHAMAN_PCA_Matrix.csv'
     },
-    content = function(file){
+    content = function(file) {
       resDiff = ResDiffAnal()
       ## Phylogenetic tree
       tree = dataInputTree()$data
-      tmp = as.matrix(Plot_diag_pcoaEigen(input,resDiff,tree, calcul_df = pcoa_data())$dataDiv)
+      tmp = as.matrix(Plot_diag_pcoaEigen(input, resDiff, tree, calcul_df = pcoa_data())$dataDiv)
       #datatable(tmp,rownames= FALSE)
-      write.table(tmp, file,row.names = TRUE, col.names = NA, sep=input$sepdistance, fileEncoding = "UTF-8")
-    })
+      write.table(
+        tmp,
+        file,
+        row.names = TRUE,
+        col.names = NA,
+        sep = input$sepdistance,
+        fileEncoding = "UTF-8"
+      )
+    }
+  )
   
   output$ExportDistancetablePCA <- downloadHandler(
     filename = function() {
-      if (input$sepdistancePCA == "\t") 'SHAMAN_Distance.tsv'
-      else 'SHAMAN_Distance.csv'
+      if (input$sepdistancePCA == "\t")
+        'SHAMAN_Distance.tsv'
+      else
+        'SHAMAN_Distance.csv'
     },
     content = function(file) {
       resDiff = ResDiffAnal()
       VarInt = input$VarInt
       dds = resDiff$dds
       counts = resDiff$raw_counts
-      if(input$CountsType=="Normalized") counts = resDiff$countsNorm
+      if (input$CountsType == "Normalized")
+        counts = resDiff$countsNorm
       target = resDiff$target
       normFactors = resDiff$normFactors
       
       ## Counts at the OTU level
       CT = resDiff$CT_noNorm
-      if(input$CountsType=="Normalized") CT = resDiff$CT_Norm
+      if (input$CountsType == "Normalized")
+        CT = resDiff$CT_Norm
       
-      group = as.data.frame(target[,VarInt])
+      group = as.data.frame(target[, VarInt])
       rownames(group) = rownames(target)
       ## Phylogenetic tree
       tree = dataInputTree()$data
       tmp = as.data.frame(Get_pca_table(input, dds, group)$table)
       
       # Write to file
-      write.table(tmp, file, row.names = TRUE, col.names = NA, sep = input$sepdistancePCA, fileEncoding = "UTF-8")
+      write.table(
+        tmp,
+        file,
+        row.names = TRUE,
+        col.names = NA,
+        sep = input$sepdistancePCA,
+        fileEncoding = "UTF-8"
+      )
     }
   )
   
@@ -3776,75 +5835,143 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   
   output$ResPermaTestBox <- renderUI({
-    
     resDiff = ResDiffAnal()
     ## Phylogenetic tree
     tree = dataInputTree()$data
     
-    resTest = Perma_test_Diag(input,resDiff,tree)
+    resTest = Perma_test_Diag(input, resDiff, tree)
     resBox = NULL
-    if(!is.null(resDiff) && !is.null(resTest))
-    {    
+    if (!is.null(resDiff) && !is.null(resTest))
+    {
       res = list()
       ## Title
-      res$title = paste("<center><b><font size='+3'>","Permanova test","</font></b></center><br/>")
+      res$title = paste("<center><b><font size='+3'>",
+                        "Permanova test",
+                        "</font></b></center><br/>")
       ## Subtitle
-      if(input$DiagPlot == 'pcaPlot')
-        res$subtitle = paste("<center><em>","Analysis of variance using Euclidean distance from matrix coordinates","</em></center><br/>")
-      else{  
-        res$subtitle = paste("<center><em>","Analysis of variance using distance matrices","</em></center><br/>")
+      if (input$DiagPlot == 'pcaPlot')
+        res$subtitle = paste(
+          "<center><em>",
+          "Analysis of variance using Euclidean distance from matrix coordinates",
+          "</em></center><br/>"
+        )
+      else{
+        res$subtitle = paste(
+          "<center><em>",
+          "Analysis of variance using distance matrices",
+          "</em></center><br/>"
+        )
       }
-      ## Pvalue   
-      res$ccl = paste("<center><b><font size='+1'>p-value :",round(resTest,5),"</font></b></center><br/>")
-      
-      resBox = box(title="Permanova ",width = 6, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed = FALSE,
-                   HTML(unlist(res))
+      ## Pvalue
+      res$ccl = paste(
+        "<center><b><font size='+1'>p-value :",
+        round(resTest, 5),
+        "</font></b></center><br/>"
       )
-    } 
+      
+      resBox = box(
+        title = "Permanova ",
+        width = 6,
+        status = "primary",
+        solidHeader = TRUE,
+        collapsible = TRUE,
+        collapsed = FALSE,
+        HTML(unlist(res))
+      )
+    }
     return(resBox)
   })
   
   
   
-  output$DistList <-renderUI ({
+  output$DistList <- renderUI ({
     tree = dataInputTree()$data
     ErrorTree = dataInputTree()$Error
     TaxoSelect = input$TaxoSelect
     
-    dist_phyl = getDistMethods()[!getDistMethods() %in% c("additive_symm", "jensen-shannon", "jensen_difference", "minkowski", "topsoe")]
-    res = selectInput("DistClust","Distance", unique(sort(c("altGower", "binomial", "bray", "canberra", "cao", "chao", "euclidean","gower", "horn",
-                                                            "jaccard", "kulczynski",  "mahalanobis", "morisita", "mountford","raup",
-                                                            "SERE"="sere", dist_phyl))),selected="bray")
+    dist_phyl = getDistMethods()[!getDistMethods() %in% c("additive_symm",
+                                                          "jensen-shannon",
+                                                          "jensen_difference",
+                                                          "minkowski",
+                                                          "topsoe")]
+    res = selectInput("DistClust", "Distance", unique(sort(
+      c(
+        "altGower",
+        "binomial",
+        "bray",
+        "canberra",
+        "cao",
+        "chao",
+        "euclidean",
+        "gower",
+        "horn",
+        "jaccard",
+        "kulczynski",
+        "mahalanobis",
+        "morisita",
+        "mountford",
+        "raup",
+        "SERE" = "sere",
+        dist_phyl
+      )
+    )), selected = "bray")
     ## Add the unifrac distance
-    if(!is.null(tree) && is.null(ErrorTree)  && TaxoSelect %in% c("OTU/Gene", "MGS"))
+    if (!is.null(tree) &&
+        is.null(ErrorTree)  && TaxoSelect %in% c("OTU/Gene", "MGS"))
     {
-      res = selectInput("DistClust","Distance",unique(sort(c("altGower", "binomial", "bray", "canberra", "cao", "chao", "euclidean","gower", "horn",
-                                                             "jaccard","kulczynski",  "mahalanobis", "morisita", "mountford", "raup",
-                                                             "SERE"="sere","Unifrac", dist_phyl))),selected="bray")
+      res = selectInput("DistClust", "Distance", unique(sort(
+        c(
+          "altGower",
+          "binomial",
+          "bray",
+          "canberra",
+          "cao",
+          "chao",
+          "euclidean",
+          "gower",
+          "horn",
+          "jaccard",
+          "kulczynski",
+          "mahalanobis",
+          "morisita",
+          "mountford",
+          "raup",
+          "SERE" = "sere",
+          "Unifrac",
+          dist_phyl
+        )
+      )), selected = "bray")
     }
     return(res)
   })
   
   
   
-  output$SizeFactTable <- DT::renderDataTable(
-    SizeFactor_table(),
-    options = list(scrollX=TRUE,searching = FALSE, processing=FALSE
-    ))
+  output$SizeFactTable <- DT::renderDataTable(SizeFactor_table(),
+                                              options = list(
+                                                scrollX = TRUE,
+                                                searching = FALSE,
+                                                processing = FALSE
+                                              ))
   
   
   ## Select Modality DiagPlot
   
   output$ModMat <- renderUI({
-    
     VarInt = input$VarInt
     target = values$TargetWorking
     
     Mod = list()
     
-    for(i in 1:length(VarInt)){
-      value = as.character(unique(as.factor(target[,VarInt[i]])))
-      Mod[[i]] = selectizeInput(paste("Mod",VarInt[i],sep=""),VarInt[i],value,selected=value, multiple = TRUE)
+    for (i in 1:length(VarInt)) {
+      value = as.character(unique(as.factor(target[, VarInt[i]])))
+      Mod[[i]] = selectizeInput(
+        paste("Mod", VarInt[i], sep = ""),
+        VarInt[i],
+        value,
+        selected = value,
+        multiple = TRUE
+      )
     }
     
     return(Mod)
@@ -3859,13 +5986,19 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     
     VisuVarInt = input$VisuVarInt
     target = values$TargetWorking
-    if(!is.null(VisuVarInt))
+    if (!is.null(VisuVarInt))
     {
       Mod = list()
       
-      for(i in 1:length(VisuVarInt)){
-        value = as.character(unique(as.factor(target[,VisuVarInt[i]])))
-        Mod[[i]] = selectizeInput(paste("ModVisu",VisuVarInt[i],sep=""),VisuVarInt[i],value,selected=value, multiple = TRUE)
+      for (i in 1:length(VisuVarInt)) {
+        value = as.character(unique(as.factor(target[, VisuVarInt[i]])))
+        Mod[[i]] = selectizeInput(
+          paste("ModVisu", VisuVarInt[i], sep = ""),
+          VisuVarInt[i],
+          value,
+          selected = value,
+          multiple = TRUE
+        )
         #print(paste("ModVisu",VisuVarInt[i],sep=""))
       }
     }
@@ -3874,14 +6007,20 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   })
   
   observe({
-    if((input$DiagPlot == "pcaPlot") || (input$DiagPlot == "pcoaPlot")){
-      DiagPlot_keys <- c("PCA"="pcaPlot", "PCoA"="pcoaPlot")
-      DiagPlot <- names(DiagPlot_keys[DiagPlot_keys == input$DiagPlot])
-      updateSelectInput(session = session, "Exp_plot", choices = c(DiagPlot, "Contribution"))
+    if ((input$DiagPlot == "pcaPlot") ||
+        (input$DiagPlot == "pcoaPlot")) {
+      DiagPlot_keys <- c("PCA" = "pcaPlot", "PCoA" = "pcoaPlot")
+      DiagPlot <-
+        names(DiagPlot_keys[DiagPlot_keys == input$DiagPlot])
+      updateSelectInput(
+        session = session,
+        "Exp_plot",
+        choices = c(DiagPlot, "Contribution")
+      )
       shinyjs::show("Exp_plot", anim = TRUE, animType = "fade")
     }
     else{
-      shinyjs::hide("Exp_plot", anim=TRUE, animType = "fade")
+      shinyjs::hide("Exp_plot", anim = TRUE, animType = "fade")
     }
   })
   
@@ -3894,29 +6033,54 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   #### Export Diag
   output$exportdiag <- downloadHandler(
     filename = function() {
-    plotType <- if (input$Exp_plot == "Contribution") "Contribution" else ""
-    paste(input$DiagPlot, plotType, paste('SHAMAN', input$Exp_format, sep = "."), sep = "_")
-  },
+      plotType <-
+        if (input$Exp_plot == "Contribution")
+          "Contribution"
+      else
+        ""
+      paste(input$DiagPlot,
+            plotType,
+            paste('SHAMAN', input$Exp_format, sep = "."),
+            sep = "_")
+    },
     content <- function(file) {
-      if(input$Exp_format=="png") png(file, width = input$widthDiagExport, height = input$heightDiagExport)
-      else if(input$Exp_format=="pdf") pdf(file, width = input$widthDiagExport/96, height = input$heightDiagExport/96)
-      else if(input$Exp_format=="eps") postscript(file, width = input$widthDiagExport/96, height = input$heightDiagExport/96)
-      else if(input$Exp_format=="svg") svg(file, width = input$widthDiagExport/96, height = input$heightDiagExport/96)
+      if (input$Exp_format == "png")
+        png(file,
+            width = input$widthDiagExport,
+            height = input$heightDiagExport)
+      else if (input$Exp_format == "pdf")
+        pdf(
+          file,
+          width = input$widthDiagExport / 96,
+          height = input$heightDiagExport / 96
+        )
+      else if (input$Exp_format == "eps")
+        postscript(
+          file,
+          width = input$widthDiagExport / 96,
+          height = input$heightDiagExport / 96
+        )
+      else if (input$Exp_format == "svg")
+        svg(
+          file,
+          width = input$widthDiagExport / 96,
+          height = input$heightDiagExport / 96
+        )
       resDiff = ResDiffAnal()
       tree = isolate(dataInputTree()$data)
-      if(input$Exp_plot == "Contribution"){
-        if(input$DiagPlot=="pcoaPlot")
+      if (input$Exp_plot == "Contribution") {
+        if (input$DiagPlot == "pcoaPlot")
           print(Plot_diag_Contrib(input, resDiff, calcul_df = pcoa_data()))
         else
-          print(Plot_diag_Contrib(input,resDiff, calcul_df = pca_data()))
+          print(Plot_diag_Contrib(input, resDiff, calcul_df = pca_data()))
       }
       else{
-        if(input$DiagPlot == "pcoaPlot")
-          print(Plot_diag(input,resDiff,tree, calcul_df = pcoa_data()))
-        else if(input$DiagPlot=="umapPlot")
+        if (input$DiagPlot == "pcoaPlot")
+          print(Plot_diag(input, resDiff, tree, calcul_df = pcoa_data()))
+        else if (input$DiagPlot == "umapPlot")
           print(Plot_diag_Contrib(input, resDiff, calcul_df = umap_data()))
         else
-          print(Plot_diag(input,resDiff,tree, calcul_df = pca_data()))
+          print(Plot_diag(input, resDiff, tree, calcul_df = pca_data()))
       }
       dev.off()
     }
@@ -3930,99 +6094,253 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   
   #### Export Visu
-  output$exportVisu <- downloadHandler(
-    filename <- function() { paste(input$PlotVisuSelect,paste('SHAMAN',input$Exp_format_Visu,sep="."),sep="_") },
-    content <- function(file) {
-      
-      taxo = input$TaxoSelect
-      target = ResDiffAnal()$target
-      colors = colorsVisuPlot()
-      counts = dataMergeCounts()$counts
-      sumTot = rowSums(counts)
-      ord = order(sumTot,decreasing=TRUE)
-      Available_taxo = rownames(counts)[ord]
-      req(colors)
-      if(input$Exp_format_Visu=="png") png(file, width = input$widthVisuExport, height = input$heightVisuExport)
-      else if(input$Exp_format_Visu=="pdf") pdf(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96)
-      else if(input$Exp_format_Visu=="eps") postscript(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96,paper="special")
-      else if(input$Exp_format_Visu=="svg") svg(file, width = input$widthVisuExport/96, height = input$heightVisuExport/96)
-      
-      if(input$PlotVisuSelect=="Barplot") {
-        others = get_others()$others
-        print(Plot_Visu_Barplot(input,ResDiffAnal(), colors, others)$gg)
-      }
-      else if(input$PlotVisuSelect=="Heatmap") Plot_Visu_Heatmap(input,ResDiffAnal(),export=TRUE)
-      else if(input$PlotVisuSelect=="Boxplot") print(Plot_Visu_Boxplot(input,ResDiffAnal(),alpha=ifelse(input$Exp_format_Visu=="eps",1,0.7), dataDiff(), colors = colors))
-      else if(input$PlotVisuSelect=="Scatterplot") print(Plot_Visu_Scatterplot(input,ResDiffAnal(),export=TRUE,lmEst = FALSE))
-      else if(input$PlotVisuSelect=="Network") print(Plot_network(input,ResDiffAnal(), Available_taxo, SelectTaxoPlotNetworkDebounce(), qualiVariable, colors = colorsVisuPlot())$voronoi)
-      else if(input$PlotVisuSelect=="Diversity"){
-        if(input$Exp_format_Visu == "eps") print(Plot_Visu_Diversity(input, ResDiffAnal(), colors, FALSE, 1)$plot)
-        else print(Plot_Visu_Diversity(input,ResDiffAnal(), colors)$plot)
-      }
-      else if(input$PlotVisuSelect=="Rarefaction") print(Plot_Visu_Rarefaction(input,ResDiffAnal(),ranges$x,ranges$y,ylab=taxo))
-      dev.off()
-      
-    }
-  )
+  output$exportVisu <- downloadHandler(filename <-
+                                         function() {
+                                           paste(input$PlotVisuSelect,
+                                                 paste('SHAMAN', input$Exp_format_Visu, sep = "."),
+                                                 sep = "_")
+                                         },
+                                       content <- function(file) {
+                                         taxo = input$TaxoSelect
+                                         target = ResDiffAnal()$target
+                                         colors = colorsVisuPlot()
+                                         counts = dataMergeCounts()$counts
+                                         sumTot = rowSums(counts)
+                                         ord = order(sumTot, decreasing = TRUE)
+                                         Available_taxo = rownames(counts)[ord]
+                                         req(colors)
+                                         if (input$Exp_format_Visu == "png")
+                                           png(file,
+                                               width = input$widthVisuExport,
+                                               height = input$heightVisuExport)
+                                         else if (input$Exp_format_Visu == "pdf")
+                                           pdf(
+                                             file,
+                                             width = input$widthVisuExport / 96,
+                                             height = input$heightVisuExport / 96
+                                           )
+                                         else if (input$Exp_format_Visu == "eps")
+                                           postscript(
+                                             file,
+                                             width = input$widthVisuExport / 96,
+                                             height = input$heightVisuExport / 96,
+                                             paper = "special"
+                                           )
+                                         else if (input$Exp_format_Visu == "svg")
+                                           svg(
+                                             file,
+                                             width = input$widthVisuExport / 96,
+                                             height = input$heightVisuExport / 96
+                                           )
+                                         
+                                         if (input$PlotVisuSelect == "Barplot") {
+                                           others = get_others()$others
+                                           print(Plot_Visu_Barplot(input, ResDiffAnal(), colors, others)$gg)
+                                         }
+                                         else if (input$PlotVisuSelect == "Heatmap")
+                                           Plot_Visu_Heatmap(input, ResDiffAnal(), export = TRUE)
+                                         else if (input$PlotVisuSelect == "Boxplot")
+                                           print(
+                                             Plot_Visu_Boxplot(
+                                               input,
+                                               ResDiffAnal(),
+                                               alpha = ifelse(input$Exp_format_Visu == "eps", 1, 0.7),
+                                               dataDiff(),
+                                               colors = colors
+                                             )
+                                           )
+                                         else if (input$PlotVisuSelect == "Scatterplot")
+                                           print(Plot_Visu_Scatterplot(input, ResDiffAnal(), export = TRUE, lmEst = FALSE))
+                                         else if (input$PlotVisuSelect == "Network"){
+                                           print(
+                                             Plot_network(
+                                               input,
+                                               ResDiffAnal(),
+                                               Available_taxo,
+                                               SelectTaxoPlotNetworkDebounce(),
+                                               qualiVariable,
+                                               colors = colorsVisuPlot(),
+                                               dataInputTaxo = dataInput()
+                                             )$voronoi
+                                           )
+                                         }
+                                         else if (input$PlotVisuSelect == "Diversity") {
+                                           if (input$Exp_format_Visu == "eps")
+                                             print(Plot_Visu_Diversity(input, ResDiffAnal(), colors, FALSE, 1)$plot)
+                                           else
+                                             print(Plot_Visu_Diversity(input, ResDiffAnal(), colors)$plot)
+                                         }
+                                         else if (input$PlotVisuSelect == "Rarefaction")
+                                           print(Plot_Visu_Rarefaction(input, ResDiffAnal(), ranges$x, ranges$y, ylab =
+                                                                         taxo))
+                                         dev.off()
+                                         
+                                       })
   
   
   #### Export Visu
-  output$exportVisuComp <- downloadHandler(
-    filename <- function() { 
-      paste(input$PlotVisuSelectComp,paste('SHAMAN',input$Exp_format_VisuComp,sep="."),sep="_") },
-    content <- function(file) {
-      
-      taxo = input$TaxoSelect
-      
-      if(input$Exp_format_VisuComp=="png") png(file, width = input$widthVisuExportComp, height = input$heightVisuExportComp)
-      else if(input$Exp_format_VisuComp=="pdf") pdf(file, width = input$widthVisuExportComp/96, height = input$heightVisuExportComp/96)
-      else if(input$Exp_format_VisuComp=="eps") postscript(file, width = input$widthVisuExportComp/96, height = input$heightVisuExportComp/96,paper="special")
-      else if(input$Exp_format_VisuComp=="svg") svg(file, width = input$widthVisuExportComp/96, height = input$heightVisuExportComp/96)
-      
-      BaseContrast = read.table(namesfile,header=TRUE)
-      filesize = file.info(namesfile)[,"size"]
-      if(is.na(filesize)){filesize=0}
-      
-      if(input$PlotVisuSelectComp=="Venn"){ 
-        if(filesize!=0) print(Plot_Visu_Venn(input,BaseContrast,ResDiffAnal(),ContrastListVennDebounce, export=TRUE)$res)
-      }
-      if(input$PlotVisuSelectComp=="Heatmap_comp"){
-        if(filesize!=0) print(Plot_Visu_Heatmap_FC(input,BaseContrast,ResDiffAnal(),ContrastListDebounce, SelectTaxoPlotCompDebounce, export=TRUE))
-      }
-      if(input$PlotVisuSelectComp=="pValueDensity"){
-        if(filesize!=0) print(Plot_pValue_Density(input, BaseContrast, ResDiffAnal(), ContrastListDebounce, input$AlphaVal, InputpValueDensityfocus))
-      }
-      if(input$PlotVisuSelectComp=="multipleVenn"){
-        if(filesize!=0) print(Plot_MultipleVenn(input, BaseContrast, ResDiffAnal(), ContrastListDebounce)$plot)
-      }
-      if(input$PlotVisuSelectComp=="UpSet"){
-        if(filesize!=0) print(Plot_UpSet(input, BaseContrast, ResDiffAnal(), ContrastListDebounce, export=TRUE)$plot)
-      }
-      if(input$PlotVisuSelectComp=="LogitPlot"){
-        if(filesize!=0) print(Plot_Comp_Logit(input, BaseContrast, ResDiffAnal(), SelectTaxoPlotCompDebounce, export = TRUE))
-      }
-      
-      dev.off()
-      
+  output$exportVisuComp <- downloadHandler(filename <- function() {
+    paste(
+      input$PlotVisuSelectComp,
+      paste('SHAMAN', input$Exp_format_VisuComp, sep = "."),
+      sep = "_"
+    )
+  },
+  content <- function(file) {
+    taxo = input$TaxoSelect
+    
+    if (input$Exp_format_VisuComp == "png")
+      png(
+        file,
+        width = input$widthVisuExportComp,
+        height = input$heightVisuExportComp
+      )
+    else if (input$Exp_format_VisuComp == "pdf")
+      pdf(
+        file,
+        width = input$widthVisuExportComp / 96,
+        height = input$heightVisuExportComp / 96
+      )
+    else if (input$Exp_format_VisuComp == "eps")
+      postscript(
+        file,
+        width = input$widthVisuExportComp / 96,
+        height = input$heightVisuExportComp / 96,
+        paper = "special"
+      )
+    else if (input$Exp_format_VisuComp == "svg")
+      svg(
+        file,
+        width = input$widthVisuExportComp / 96,
+        height = input$heightVisuExportComp / 96
+      )
+    
+    BaseContrast = read.table(namesfile, header = TRUE)
+    filesize = file.info(namesfile)[, "size"]
+    if (is.na(filesize)) {
+      filesize = 0
     }
-  )
+    
+    if (input$PlotVisuSelectComp == "Venn") {
+      if (filesize != 0)
+        print(
+          Plot_Visu_Venn(
+            input,
+            BaseContrast,
+            ResDiffAnal(),
+            ContrastListVennDebounce,
+            export = TRUE
+          )$res
+        )
+    }
+    if (input$PlotVisuSelectComp == "Heatmap_comp") {
+      if (filesize != 0)
+        print(
+          Plot_Visu_Heatmap_FC(
+            input,
+            BaseContrast,
+            ResDiffAnal(),
+            ContrastListDebounce,
+            SelectTaxoPlotCompDebounce,
+            export = TRUE
+          )
+        )
+    }
+    if (input$PlotVisuSelectComp == "pValueDensity") {
+      if (filesize != 0)
+        print(
+          Plot_pValue_Density(
+            input,
+            BaseContrast,
+            ResDiffAnal(),
+            ContrastListDebounce,
+            input$AlphaVal,
+            InputpValueDensityfocus
+          )
+        )
+    }
+    if (input$PlotVisuSelectComp == "multipleVenn") {
+      if (filesize != 0)
+        print(
+          Plot_MultipleVenn(
+            input,
+            BaseContrast,
+            ResDiffAnal(),
+            ContrastListDebounce
+          )$plot
+        )
+    }
+    if (input$PlotVisuSelectComp == "UpSet") {
+      if (filesize != 0)
+        print(
+          Plot_UpSet(
+            input,
+            BaseContrast,
+            ResDiffAnal(),
+            ContrastListDebounce,
+            export = TRUE
+          )$plot
+        )
+    }
+    if (input$PlotVisuSelectComp == "LogitPlot") {
+      if (filesize != 0)
+        print(
+          Plot_Comp_Logit(
+            input,
+            BaseContrast,
+            ResDiffAnal(),
+            SelectTaxoPlotCompDebounce,
+            export = TRUE
+          )
+        )
+    }
+    
+    dev.off()
+    
+  })
   
   output$exportVisuCompTableUpSet <- downloadHandler(
     filename = function() {
-      extension='SHAMAN.csv'
-      if(input$sepTabUpset == "\t") extension='SHAMAN.tsv' 
-      paste("UpSet_Table",extension,sep="_")
+      extension = 'SHAMAN.csv'
+      if (input$sepTabUpset == "\t")
+        extension = 'SHAMAN.tsv'
+      paste("UpSet_Table", extension, sep = "_")
     },
-    content = function(file){write.table(Plot_UpSet(input,read.table(namesfile,header=TRUE), ResDiffAnal(), ContrastListDebounce)$table, file,row.names = FALSE, sep=input$sepTabUpset)}
+    content = function(file) {
+      write.table(
+        Plot_UpSet(
+          input,
+          read.table(namesfile, header = TRUE),
+          ResDiffAnal(),
+          ContrastListDebounce
+        )$table,
+        file,
+        row.names = FALSE,
+        sep = input$sepTabUpset
+      )
+    }
   )
   
   output$exportVisuCompTableVenn <- downloadHandler(
     filename = function() {
-      extension='SHAMAN.csv'
-      if(input$sepTabVenn == "\t") extension='SHAMAN.tsv' 
-      paste("Venn_Table",extension,sep="_")
+      extension = 'SHAMAN.csv'
+      if (input$sepTabVenn == "\t")
+        extension = 'SHAMAN.tsv'
+      paste("Venn_Table", extension, sep = "_")
     },
-    content = function(file){write.table(GetData_venn(input,ContrastListVennDebounce(),read.table(namesfile,header=TRUE),ResDiffAnal())$df.tot, file,row.names = FALSE, sep=input$sepTabVenn)}
+    content = function(file) {
+      write.table(
+        GetData_venn(
+          input,
+          ContrastListVennDebounce(),
+          read.table(namesfile, header = TRUE),
+          ResDiffAnal()
+        )$df.tot,
+        file,
+        row.names = FALSE,
+        sep = input$sepTabVenn
+      )
+    }
   )
   
   
@@ -4034,37 +6352,40 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   
   #   output$ContrastListTable <- renderUI({
-  #     
+  #
   #     filesize = file.info(namesfile)[,"size"]
   #     if(filesize!=0)
-  #     { 
+  #     {
   #       tmp = read.table(namesfile,header=TRUE)
   #       cont = colnames(tmp)
-  #     }  
+  #     }
   #     selectInput("ContrastList_table",h6(strong("Contrast list")),cont, multiple = FALSE)
-  #     
+  #
   #   })
   
   
   output$ContrastOverviewTable <- renderPrint({
-    
     resDiff = ResDiffAnal()
     dds = resDiff$dds
     names = resultsNames(dds)
     
     cont = input$ContrastList_table
-    filesize = file.info(namesfile)[,"size"]
-    if(is.na(filesize)){filesize=0}
-    if(filesize!=0)
-    { 
-      ContrastBase = read.table(namesfile,header=TRUE)
-      ind = which(colnames(ContrastBase)%in%cont)
-      div(HTML(PrintContrasts(names,sapply(ContrastBase[,ind],as.numeric),cont)))
+    filesize = file.info(namesfile)[, "size"]
+    if (is.na(filesize)) {
+      filesize = 0
+    }
+    if (filesize != 0)
+    {
+      ContrastBase = read.table(namesfile, header = TRUE)
+      ind = which(colnames(ContrastBase) %in% cont)
+      div(HTML(PrintContrasts(
+        names, sapply(ContrastBase[, ind], as.numeric), cont
+      )))
     }
   })
   
   ## Get the diff table
-  dataDiff <-reactive({ 
+  dataDiff <- reactive({
     input$AddContrast
     input$AddContrastEasy
     input$RemoveContrast
@@ -4072,14 +6393,16 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     input$RunDESeq
     
     resDiff = ResDiffAnal()
-    filesize = file.info(namesfile)[,"size"]
-    res=NULL 
-    if(is.na(filesize)){filesize=0}
-    if(filesize!=0)
-    { 
-      BaseContrast = read.table(namesfile,header=TRUE)
-      res = TableDiff_print(input,BaseContrast,resDiff, info = NULL) 
-    } 
+    filesize = file.info(namesfile)[, "size"]
+    res = NULL
+    if (is.na(filesize)) {
+      filesize = 0
+    }
+    if (filesize != 0)
+    {
+      BaseContrast = read.table(namesfile, header = TRUE)
+      res = TableDiff_print(input, BaseContrast, resDiff, info = NULL)
+    }
     return(res)
   })
   
@@ -4092,7 +6415,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       data_table,
       rownames = FALSE,
       options = list(
-        lengthMenu = list(c(10, 50,-1), c('10', '50', 'All')),
+        lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
         pageLength = 10,
         scrollX = TRUE,
         processing = FALSE,
@@ -4110,7 +6433,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       data_table,
       rownames = FALSE,
       options = list(
-        lengthMenu = list(c(10, 50,-1), c('10', '50', 'All')),
+        lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
         pageLength = 10,
         scrollX = TRUE,
         processing = FALSE,
@@ -4128,7 +6451,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       data_table,
       rownames = FALSE,
       options = list(
-        lengthMenu = list(c(10, 50,-1), c('10', '50', 'All')),
+        lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
         pageLength = 10,
         scrollX = TRUE,
         processing = FALSE,
@@ -4146,7 +6469,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       data_table,
       rownames = FALSE,
       options = list(
-        lengthMenu = list(c(10, 50,-1), c('10', '50', 'All')),
+        lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
         pageLength = 10,
         scrollX = TRUE,
         processing = FALSE,
@@ -4165,7 +6488,10 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
         id = "tabBoxDiffTable",
         width = NULL,
         selected = "Significant",
-        tabPanel("Significant",DT::dataTableOutput("DataDiffsignificant")),
+        tabPanel(
+          "Significant",
+          DT::dataTableOutput("DataDiffsignificant")
+        ),
         tabPanel("Complete", DT::dataTableOutput("DataDiffcomplete")),
         tabPanel("Up", DT::dataTableOutput("DataDiffup")),
         tabPanel("Down", DT::dataTableOutput("DataDiffdown"))
@@ -4178,7 +6504,13 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   })
   
   output$VolcanoPlotContainer <- renderUI({
-    fluidPage(scatterD3Output("VolcanoPlot", height = input$heightVolcanoPlot + 10, width=ifelse(input$modifwidthVolcano,input$widthVolcanoPlot,"100%")))
+    fluidPage(
+      scatterD3Output(
+        "VolcanoPlot",
+        height = input$heightVolcanoPlot + 10,
+        width = ifelse(input$modifwidthVolcano, input$widthVolcanoPlot, "100%")
+      )
+    )
   })
   
   output$BarChartTables <- renderAmCharts({
@@ -4192,7 +6524,9 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       "heightBarChartTables",
       h6(strong(paste("Height"))),
       min = 50,
-      max = max(500*((20*NROW(input$selectTaxoPlotBarChart))%/%500)+500,5000),
+      max = max(500 * ((
+        20 * NROW(input$selectTaxoPlotBarChart)
+      ) %/% 500) + 500, 5000),
       value = 100 + 18 * NROW(input$selectTaxoPlotBarChart)
     )
   })
@@ -4211,47 +6545,101 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   #### Export diff table
   output$exportDiffTable <- downloadHandler(
     filename = function() {
-      extension='SHAMAN.csv'
-      if(input$sepexpdiff == "\t") extension='SHAMAN.tsv' 
-      paste(input$WhichExportTable,input$ContrastList_table,extension,sep="_")
+      extension = 'SHAMAN.csv'
+      if (input$sepexpdiff == "\t")
+        extension = 'SHAMAN.tsv'
+      paste(input$WhichExportTable,
+            input$ContrastList_table,
+            extension,
+            sep = "_")
     },
     
-    content = function(file){
-      switch(input$WhichExportTable,
-             "Significant" = write.table(dataDiff()$significant, file,row.names = FALSE, sep=input$sepexpdiff),
-             "Complete" = write.table(dataDiff()$complete, file,row.names = FALSE, sep=input$sepexpdiff),
-             "Up" =  write.table(dataDiff()$up, file,row.names = FALSE, sep=input$sepexpdiff),
-             "Down" =  write.table(dataDiff()$down, file,row.names = FALSE, sep=input$sepexpdiff)
+    content = function(file) {
+      switch(
+        input$WhichExportTable,
+        "Significant" = write.table(
+          dataDiff()$significant,
+          file,
+          row.names = FALSE,
+          sep = input$sepexpdiff
+        ),
+        "Complete" = write.table(
+          dataDiff()$complete,
+          file,
+          row.names = FALSE,
+          sep = input$sepexpdiff
+        ),
+        "Up" =  write.table(
+          dataDiff()$up,
+          file,
+          row.names = FALSE,
+          sep = input$sepexpdiff
+        ),
+        "Down" =  write.table(
+          dataDiff()$down,
+          file,
+          row.names = FALSE,
+          sep = input$sepexpdiff
+        )
       )
     }
   )
   
   
   output$ExportTableButton <- renderUI({
-    
     res = NULL
     table = dataDiff()$complete
-    if(nrow(table)>0) res = downloadButton('exportDiffTable', 'Export table')
+    if (nrow(table) > 0)
+      res = downloadButton('exportDiffTable', 'Export table')
     
     return(res)
   })
   
   #### Export Plot Tables
-  output$exportPlotTables <- downloadHandler(
-    filename <- function() { paste(input$WhichPlotTables,paste('SHAMAN',input$Exp_format_PlotTables,sep="."),sep="_") },
-    content <- function(file) {
-      
-      if(input$Exp_format_PlotTables=="png") png(file, width = input$widthTablePlotExport, height = input$heightTablePlotExport)
-      else if(input$Exp_format_PlotTables=="pdf") pdf(file, width = input$widthTablePlotExport/96, height = input$heightTablePlotExport/96)
-      else if(input$Exp_format_PlotTables=="eps") postscript(file, width = input$widthTablePlotExport/96, height = input$heightTablePlotExport/96, paper="special")
-      else if(input$Exp_format_PlotTables=="svg") svg(file, width = input$widthTablePlotExport/96, height = input$heightTablePlotExport/96)
-      
-      if(input$WhichPlotTables=="BarChart") {print(Bar_Chart_Tables(input, dataDiff(), export = TRUE))}
-      else if(input$WhichPlotTables=="VolcanoPlot") 
-      {print(Volcano_Plot(input, dataDiff(), export = TRUE))}
-      dev.off()
-    }
-  )
+  output$exportPlotTables <- downloadHandler(filename <-
+                                               function() {
+                                                 paste(
+                                                   input$WhichPlotTables,
+                                                   paste('SHAMAN', input$Exp_format_PlotTables, sep = "."),
+                                                   sep = "_"
+                                                 )
+                                               },
+                                             content <- function(file) {
+                                               if (input$Exp_format_PlotTables == "png")
+                                                 png(
+                                                   file,
+                                                   width = input$widthTablePlotExport,
+                                                   height = input$heightTablePlotExport
+                                                 )
+                                               else if (input$Exp_format_PlotTables == "pdf")
+                                                 pdf(
+                                                   file,
+                                                   width = input$widthTablePlotExport / 96,
+                                                   height = input$heightTablePlotExport / 96
+                                                 )
+                                               else if (input$Exp_format_PlotTables == "eps")
+                                                 postscript(
+                                                   file,
+                                                   width = input$widthTablePlotExport / 96,
+                                                   height = input$heightTablePlotExport / 96,
+                                                   paper = "special"
+                                                 )
+                                               else if (input$Exp_format_PlotTables == "svg")
+                                                 svg(
+                                                   file,
+                                                   width = input$widthTablePlotExport / 96,
+                                                   height = input$heightTablePlotExport / 96
+                                                 )
+                                               
+                                               if (input$WhichPlotTables == "BarChart") {
+                                                 print(Bar_Chart_Tables(input, dataDiff(), export = TRUE))
+                                               }
+                                               else if (input$WhichPlotTables == "VolcanoPlot")
+                                               {
+                                                 print(Volcano_Plot(input, dataDiff(), export = TRUE))
+                                               }
+                                               dev.off()
+                                             })
   
   ###                                               ###
   ##
@@ -4266,9 +6654,29 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     treeseq = dataInputTree()$treeseq
     
     
-    if(!is.null(resDiff$dds) && length(input$VisuVarInt)>=1 ) 
-      if(input$NormOrRaw=="norm") withProgress(message="Loading...", Plot_Visu_Phylotree(input, resDiff, dataMergeCounts()$CT_Norm, taxo_table, treeseq))
-    else withProgress(message="Loading...", Plot_Visu_Phylotree(input, resDiff, dataMergeCounts()$CT_noNorm, taxo_table, treeseq))
+    if (!is.null(resDiff$dds) && length(input$VisuVarInt) >= 1)
+      if (input$NormOrRaw == "norm")
+        withProgress(
+          message = "Loading...",
+          Plot_Visu_Phylotree(
+            input,
+            resDiff,
+            dataMergeCounts()$CT_Norm,
+            taxo_table,
+            treeseq
+          )
+        )
+    else
+      withProgress(
+        message = "Loading...",
+        Plot_Visu_Phylotree(
+          input,
+          resDiff,
+          dataMergeCounts()$CT_noNorm,
+          taxo_table,
+          treeseq
+        )
+      )
   })
   
   
@@ -4278,26 +6686,39 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     
     
     res = NULL
-    if(!is.null(resDiff$dds) && length(input$VisuVarInt)>=1){
-      if(input$NormOrRaw=="norm") res = Plot_Visu_Tree(input,resDiff,dataMergeCounts()$CT_Norm,taxo_table)
-      else res = Plot_Visu_Tree(input,resDiff,dataMergeCounts()$CT_noNorm,taxo_table)
-    } 
+    if (!is.null(resDiff$dds) && length(input$VisuVarInt) >= 1) {
+      if (input$NormOrRaw == "norm")
+        res = Plot_Visu_Tree(input, resDiff, dataMergeCounts()$CT_Norm, taxo_table)
+      else
+        res = Plot_Visu_Tree(input, resDiff, dataMergeCounts()$CT_noNorm, taxo_table)
+    }
     return(res)
     
   })
   
-  KronaR =function(){
+  KronaR = function() {
     resDiff = ResDiffAnal()
     taxo_table = dataInput()$data$taxo
     
     res = NULL
-    if(!is.null(resDiff$dds) && length(input$VisuVarInt)>=1){
-      if(input$NormOrRaw=="norm") res = Plot_Visu_Krona(input,resDiff,dataMergeCounts()$CT_Norm,taxo_table)
-      else res = Plot_Visu_Krona(input,resDiff,dataMergeCounts()$CT_noNorm,taxo_table)
+    if (!is.null(resDiff$dds) && length(input$VisuVarInt) >= 1) {
+      if (input$NormOrRaw == "norm")
+        res = Plot_Visu_Krona(input, resDiff, dataMergeCounts()$CT_Norm, taxo_table)
+      else
+        res = Plot_Visu_Krona(input, resDiff, dataMergeCounts()$CT_noNorm, taxo_table)
     }
     tempdir = tempdir()
-    temp = tempfile(pattern = "file", tmpdir=tempdir, fileext =".tsv")
-    write.table(res, file=temp, quote=F, sep="\t", row.names =F, col.names=F)
+    temp = tempfile(pattern = "file",
+                    tmpdir = tempdir,
+                    fileext = ".tsv")
+    write.table(
+      res,
+      file = temp,
+      quote = F,
+      sep = "\t",
+      row.names = F,
+      col.names = F
+    )
     Sys.chmod(tempdir, mode = "0777")
     Sys.chmod(temp, mode = "0777")
     
@@ -4310,15 +6731,19 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     res = NULL
     tmp = NULL
     others = get_others()$others
-    if(!is.null(resDiff$dds) && length(input$VisuVarInt)>=1) tmp = Plot_Visu_Barplot(input,resDiff, colors, others)
-    if(!is.null(tmp)) res = tmp$plotd3
+    if (!is.null(resDiff$dds) &&
+        length(input$VisuVarInt) >= 1)
+      tmp = Plot_Visu_Barplot(input, resDiff, colors, others)
+    if (!is.null(tmp))
+      res = tmp$plotd3
     return(res)
   })
   
   output$heatmap <- renderD3heatmap({
     resDiff = ResDiffAnal()
     resplot = NULL
-    if(!is.null(resDiff$dds)) resplot = withProgress(message="Loading...",Plot_Visu_Heatmap(input,resDiff))
+    if (!is.null(resDiff$dds))
+      resplot = withProgress(message = "Loading...", Plot_Visu_Heatmap(input, resDiff))
     
     return(resplot)
   })
@@ -4330,12 +6755,24 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     #SelContrast = input$ContrastList_table_FC
     
     resplot = NULL
-    filesize = file.info(namesfile)[,"size"]
-    if(is.na(filesize)){filesize=0}
-    if(filesize!=0)
+    filesize = file.info(namesfile)[, "size"]
+    if (is.na(filesize)) {
+      filesize = 0
+    }
+    if (filesize != 0)
     {
-      BaseContrast = read.table(namesfile,header=TRUE)
-      if(!is.null(resDiff$dds)) resplot = withProgress(message="Loading...",Plot_Visu_Heatmap_FC(input,BaseContrast,resDiff, ContrastListDebounce, SelectTaxoPlotCompDebounce))
+      BaseContrast = read.table(namesfile, header = TRUE)
+      if (!is.null(resDiff$dds))
+        resplot = withProgress(
+          message = "Loading...",
+          Plot_Visu_Heatmap_FC(
+            input,
+            BaseContrast,
+            resDiff,
+            ContrastListDebounce,
+            SelectTaxoPlotCompDebounce
+          )
+        )
     }
     return(resplot)
   })
@@ -4343,12 +6780,15 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   output$ScatterplotD3 <- renderScatterD3({
     resDiff = ResDiffAnal()
-    if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Scatterplot(input,resDiff))
+    if (!is.null(resDiff$dds))
+      withProgress(message = "Loading...", Plot_Visu_Scatterplot(input, resDiff))
   })
   
   output$Scatterplotgg <- renderPlot({
     resDiff = ResDiffAnal()
-    if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Scatterplot(input,resDiff,lmEst=FALSE))
+    if (!is.null(resDiff$dds))
+      withProgress(message = "Loading...",
+                   Plot_Visu_Scatterplot(input, resDiff, lmEst = FALSE))
   })
   
   ### ___Venn diagram ####
@@ -4356,11 +6796,17 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     resDiff = ResDiffAnal()
     ## Just for reactivity
     # SelContrast = input$ContrastList_table_FCVenn
-    filesize = file.info(namesfile)[,"size"]
-    if(is.na(filesize)){filesize=0}
-    if(filesize!=0){
-      BaseContrast = read.table(namesfile,header=TRUE)
-      if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Venn(input,BaseContrast,resDiff, ContrastListVennDebounce)$res)
+    filesize = file.info(namesfile)[, "size"]
+    if (is.na(filesize)) {
+      filesize = 0
+    }
+    if (filesize != 0) {
+      BaseContrast = read.table(namesfile, header = TRUE)
+      if (!is.null(resDiff$dds))
+        withProgress(
+          message = "Loading...",
+          Plot_Visu_Venn(input, BaseContrast, resDiff, ContrastListVennDebounce)$res
+        )
     }
   })
   
@@ -4369,44 +6815,89 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     resDiff = ResDiffAnal()
     ## Just for reactivity ???
     #SelContrast = c(input$Contrast1, input$Contrast2) ???
-    filesize = file.info(namesfile)[,"size"]
-    if(is.na(filesize)){filesize=0}
-    if(filesize!=0){
-      BaseContrast = read.table(namesfile,header=TRUE)
-      if(!is.null(resDiff$dds) && input$Contrast1 != input$Contrast2 && input$Contrast1 != "..." && input$Contrast2 != "...") withProgress(message="Loading...",Plot_Comp_Logit(input, BaseContrast, resDiff, SelectTaxoPlotCompDebounce))
+    filesize = file.info(namesfile)[, "size"]
+    if (is.na(filesize)) {
+      filesize = 0
+    }
+    if (filesize != 0) {
+      BaseContrast = read.table(namesfile, header = TRUE)
+      if (!is.null(resDiff$dds) &&
+          input$Contrast1 != input$Contrast2 &&
+          input$Contrast1 != "..." &&
+          input$Contrast2 != "...")
+        withProgress(
+          message = "Loading...",
+          Plot_Comp_Logit(
+            input,
+            BaseContrast,
+            resDiff,
+            SelectTaxoPlotCompDebounce
+          )
+        )
     }
   })
   
   ### ___Density plot ####
   output$pValueDensity <- renderPlot({
     resDiff = ResDiffAnal()
-    filesize = file.info(namesfile)[,"size"]
-    if(is.na(filesize)){filesize=0}
-    if(filesize!=0){
-      BaseContrast = read.table(namesfile,header=TRUE)
-      if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_pValue_Density(input, BaseContrast, resDiff, ContrastListDebounce, input$AlphaVal, InputpValueDensityfocus))
+    filesize = file.info(namesfile)[, "size"]
+    if (is.na(filesize)) {
+      filesize = 0
+    }
+    if (filesize != 0) {
+      BaseContrast = read.table(namesfile, header = TRUE)
+      if (!is.null(resDiff$dds))
+        withProgress(
+          message = "Loading...",
+          Plot_pValue_Density(
+            input,
+            BaseContrast,
+            resDiff,
+            ContrastListDebounce,
+            input$AlphaVal,
+            InputpValueDensityfocus
+          )
+        )
     }
   })
   
   ### ___UpSet ####
   output$UpSet <- renderPlot({
     resDiff = ResDiffAnal()
-    filesize = file.info(namesfile)[,"size"]
-    if(is.na(filesize)){filesize=0}
-    if(filesize!=0){
-      BaseContrast = read.table(namesfile,header=TRUE)
-      if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_UpSet(input, BaseContrast, resDiff, ContrastListDebounce, export=TRUE)$plot)
+    filesize = file.info(namesfile)[, "size"]
+    if (is.na(filesize)) {
+      filesize = 0
+    }
+    if (filesize != 0) {
+      BaseContrast = read.table(namesfile, header = TRUE)
+      if (!is.null(resDiff$dds))
+        withProgress(
+          message = "Loading...",
+          Plot_UpSet(
+            input,
+            BaseContrast,
+            resDiff,
+            ContrastListDebounce,
+            export = TRUE
+          )$plot
+        )
     }
   })
   
   ### ___Contrasts comparison ####
   output$multipleVennPlot <- renderPlot({
     resDiff = ResDiffAnal()
-    filesize = file.info(namesfile)[,"size"]
-    if(is.na(filesize)){filesize=0}
-    if(filesize!=0){
-      BaseContrast = read.table(namesfile,header=TRUE)
-      if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_MultipleVenn(input, BaseContrast, resDiff, ContrastListDebounce)$plot)
+    filesize = file.info(namesfile)[, "size"]
+    if (is.na(filesize)) {
+      filesize = 0
+    }
+    if (filesize != 0) {
+      BaseContrast = read.table(namesfile, header = TRUE)
+      if (!is.null(resDiff$dds))
+        withProgress(
+          message = "Loading...",
+          Plot_MultipleVenn(input, BaseContrast, resDiff, ContrastListDebounce)$plot
+        )
     }
   })
   
@@ -4414,76 +6905,142 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   output$contrastsNoDiff <- renderUI({
     res = NULL
     resDiff = ResDiffAnal()
-    filesize = file.info(namesfile)[,"size"]
-    if(is.na(filesize)){filesize=0}
-    if(filesize!=0){
-      BaseContrast = read.table(namesfile,header=TRUE)
-      if(!is.null(resDiff$dds)) {
+    filesize = file.info(namesfile)[, "size"]
+    if (is.na(filesize)) {
+      filesize = 0
+    }
+    if (filesize != 0) {
+      BaseContrast = read.table(namesfile, header = TRUE)
+      if (!is.null(resDiff$dds)) {
         lst <- NULL
-        if(input$PlotVisuSelectComp == "UpSet"){lst <- Plot_UpSet(input, BaseContrast, resDiff, ContrastListDebounce)$contrasts_without_diff}
-        else{if(input$PlotVisuSelectComp == "Venn"){lst <- Plot_Visu_Venn(input,BaseContrast,resDiff, ContrastListVennDebounce)$contrasts_without_diff}
-          else{if(input$PlotVisuSelectComp == "multipleVenn"){lst <- Plot_MultipleVenn(input, BaseContrast, resDiff, ContrastListDebounce)$contrasts_without_diff}
-          }}
+        if (input$PlotVisuSelectComp == "UpSet") {
+          lst <-
+            Plot_UpSet(input, BaseContrast, resDiff, ContrastListDebounce)$contrasts_without_diff
+        }
+        else{
+          if (input$PlotVisuSelectComp == "Venn") {
+            lst <-
+              Plot_Visu_Venn(input,
+                             BaseContrast,
+                             resDiff,
+                             ContrastListVennDebounce)$contrasts_without_diff
+          }
+          else{
+            if (input$PlotVisuSelectComp == "multipleVenn") {
+              lst <-
+                Plot_MultipleVenn(input,
+                                  BaseContrast,
+                                  resDiff,
+                                  ContrastListDebounce)$contrasts_without_diff
+            }
+          }
+        }
         
-        if(!is.null(lst)){print(lst)
-          res <- div(h5("The following contrasts have no significant differential element:"), div(paste(lst, sep = "  ", collapse = "  "), align = "center"), h5(strong("Select minimum two contrasts with differential elements.")))}
-        return(res)}}
+        if (!is.null(lst)) {
+          print(lst)
+          res <-
+            div(
+              h5(
+                "The following contrasts have no significant differential element:"
+              ),
+              div(paste(
+                lst, sep = "  ", collapse = "  "
+              ), align = "center"),
+              h5(
+                strong(
+                  "Select minimum two contrasts with differential elements."
+                )
+              )
+            )
+        }
+        return(res)
+      }
+    }
   })
   
   #### to delay reactivity
   ContrastList <- reactive({
-    input$ContrastList_table_FC})
+    input$ContrastList_table_FC
+  })
   ContrastListDebounce <- debounce(ContrastList, 1000)
   
   ContrastListVenn <- reactive({
-    input$ContrastList_table_FCVenn})
+    input$ContrastList_table_FCVenn
+  })
   ContrastListVennDebounce <- debounce(ContrastListVenn, 1000)
   
   SelectTaxoPlotComp <- reactive({
-    input$selectTaxoPlotComp})
+    input$selectTaxoPlotComp
+  })
   SelectTaxoPlotCompDebounce <- debounce(SelectTaxoPlotComp, 1000)
   
   InputDensityP <- reactive({
     input$adaptBWtoFocus
-    input$focusUnderThreshold})
+    input$focusUnderThreshold
+  })
   InputpValueDensityfocus <- debounce(InputDensityP, 1000)
   ####
   
   
   ## Regression coefficients Table
   output$lmRegScatter <- DT::renderDataTable(
-    Plot_Visu_Scatterplot(input,ResDiffAnal(),lmEst=TRUE)$regCoef, 
-    options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE, processing=FALSE
-    ))
+    Plot_Visu_Scatterplot(input, ResDiffAnal(), lmEst = TRUE)$regCoef,
+    options = list(
+      lengthMenu = list(c(10, 50,-1), c('10', '50', 'All')),
+      pageLength = 10,
+      scrollX = TRUE,
+      processing = FALSE
+    )
+  )
   
   ## Correlation coefficients Table
   output$CorTable <- DT::renderDataTable(
-    Plot_Visu_Scatterplot(input,ResDiffAnal(),CorEst=TRUE)$cor.est, 
-    options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE, processing=FALSE
-    ))
+    Plot_Visu_Scatterplot(input, ResDiffAnal(), CorEst = TRUE)$cor.est,
+    options = list(
+      lengthMenu = list(c(10, 50,-1), c('10', '50', 'All')),
+      pageLength = 10,
+      scrollX = TRUE,
+      processing = FALSE
+    )
+  )
   
   ## Export Diversitytable in .csv
   output$ExportCorTable <- downloadHandler(
-    filename = function() { 
-      if(input$sepcortable=="\t") 'SHAMAN_correlation.tsv'
-      else 'SHAMAN_correlation.csv'
+    filename = function() {
+      if (input$sepcortable == "\t")
+        'SHAMAN_correlation.tsv'
+      else
+        'SHAMAN_correlation.csv'
     },
-    content = function(file){
-      tmp = Plot_Visu_Scatterplot(input,ResDiffAnal(),CorEst=TRUE)$cor.est
-      write.table(tmp, file,row.names = FALSE, sep=input$sepcortable)
+    content = function(file) {
+      tmp = Plot_Visu_Scatterplot(input, ResDiffAnal(), CorEst = TRUE)$cor.est
+      write.table(tmp,
+                  file,
+                  row.names = FALSE,
+                  sep = input$sepcortable)
     }
   )
   
-  output$lmEquation <- renderPrint({ 
-    res = Plot_Visu_Scatterplot(input,ResDiffAnal(),lmEst=TRUE)
+  output$lmEquation <- renderPrint({
+    res = Plot_Visu_Scatterplot(input, ResDiffAnal(), lmEst = TRUE)
     coef = res$regCoef
     Rsq = res$Rsq
     
-    div(HTML(paste(h4(strong("Linear equation: ")),
-                   "y =", round(coef[2,1],2),'x ',ifelse(coef[1,1]>=0,"+",""), round(coef[1,1],2),'<br/>','<br/>',
-                   h4(strong("Adjusted R squared:")),round(Rsq,5)*100," %")))
+    div(HTML(
+      paste(
+        h4(strong("Linear equation: ")),
+        "y =",
+        round(coef[2, 1], 2),
+        'x ',
+        ifelse(coef[1, 1] >= 0, "+", ""),
+        round(coef[1, 1], 2),
+        '<br/>',
+        '<br/>',
+        h4(strong("Adjusted R squared:")),
+        round(Rsq, 5) * 100,
+        " %"
+      )
+    ))
   })
   
   
@@ -4495,7 +7052,10 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     
     tmpFact = SizeFactors_fromFile()
     
-    if(!tmpFact$Check) res = div(HTML(paste('<p><font color="red">',tmpFact$Error,'</font></p>')))
+    if (!tmpFact$Check)
+      res = div(HTML(
+        paste('<p><font color="red">', tmpFact$Error, '</font></p>')
+      ))
     
     return(res)
   })
@@ -4506,15 +7066,35 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     target = resDiff$target
     colors = colorsVisuPlot()
     
-    if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Boxplot(input,resDiff, dataDiff = dataDiff, colors = colors))
-  },height=reactive(input$heightVisu))
+    if (!is.null(resDiff$dds))
+      withProgress(message = "Loading...",
+                   Plot_Visu_Boxplot(input, resDiff, dataDiff = dataDiff, colors = colors))
+  }, height = reactive(input$heightVisu))
   
   
   output$WhichDivSelect <- renderUI({
-    if(input$DiversityPlots == 2)
-      return(selectizeInput("WhichDiv",h6(strong("Diversity")),c('Beta', 'Gamma'),selected  = 'Beta',multiple=TRUE))    
+    if (input$DiversityPlots == 2)
+      return(selectizeInput(
+        "WhichDiv",
+        h6(strong("Diversity")),
+        c('Beta', 'Gamma'),
+        selected  = 'Beta',
+        multiple = TRUE
+      ))
     else if (input$DiversityPlots == 1)
-      return(selectizeInput("WhichDiv",h6(strong("Diversity")),c('Alpha','Bray-Curtis','Shannon','Simpson','Inv.Simpson'),selected  = 'Alpha',multiple=FALSE))    
+      return(selectizeInput(
+        "WhichDiv",
+        h6(strong("Diversity")),
+        c(
+          'Alpha',
+          'Bray-Curtis',
+          'Shannon',
+          'Simpson',
+          'Inv.Simpson'
+        ),
+        selected  = 'Alpha',
+        multiple = FALSE
+      ))
   })
   
   
@@ -4523,91 +7103,155 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     target = resDiff$target
     colors = colorsVisuPlot()
     req(colors)
-    if(!is.null(resDiff$dds)) withProgress(message="Loading...",Plot_Visu_Diversity(input,resDiff, colors)$plot)
+    if (!is.null(resDiff$dds))
+      withProgress(message = "Loading...",
+                   Plot_Visu_Diversity(input, resDiff, colors)$plot)
   })
   
   observe({
-    if(input$DiversityPlots == 2)
+    if (input$DiversityPlots == 2)
       shinyjs::hide("DivScale", anim = TRUE, animType = "fade")
-    else if(input$DiversityPlots != 2)
+    else if (input$DiversityPlots != 2)
       shinyjs::show("DivScale", anim = TRUE, animType = "fade")
   })
   
   output$Diversitytable <- DT::renderDataTable(
     datatable({
       resDiff = ResDiffAnal()
-      tmp = Plot_Visu_Diversity(input,resDiff)$dataDiv
-      tmp$VarX=NULL; tmp$VarCol=NULL
-      tmp[,c(4,5,1)]},rownames= FALSE),
-    options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE, processing=FALSE
-    ))
+      tmp = Plot_Visu_Diversity(input, resDiff)$dataDiv
+      tmp$VarX = NULL
+      tmp$VarCol = NULL
+      tmp[, c(4, 5, 1)]
+    }, rownames = FALSE),
+    options = list(
+      lengthMenu = list(c(10, 50,-1), c('10', '50', 'All')),
+      pageLength = 10,
+      scrollX = TRUE,
+      processing = FALSE
+    )
+  )
   
   output$DiversityRichnesstable <- DT::renderDataTable(
     datatable({
       resDiff = ResDiffAnal()
-      tmp = Plot_Visu_Diversity(input,resDiff)$dataDiv
-      tmp$VarX=NULL; tmp$VarCol=NULL
-      tmp[,c(1:6)]},rownames= FALSE),
-    options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE, processing=FALSE
-    ))
+      tmp = Plot_Visu_Diversity(input, resDiff)$dataDiv
+      tmp$VarX = NULL
+      tmp$VarCol = NULL
+      tmp[, c(1:6)]
+    }, rownames = FALSE),
+    options = list(
+      lengthMenu = list(c(10, 50,-1), c('10', '50', 'All')),
+      pageLength = 10,
+      scrollX = TRUE,
+      processing = FALSE
+    )
+  )
   
   output$CommunityComparison <- DT::renderDataTable(
     datatable({
       resDiff = ResDiffAnal()
       counts = dataMergeCounts()$counts
       sumTot = rowSums(counts)
-      ord = order(sumTot,decreasing=TRUE)
+      ord = order(sumTot, decreasing = TRUE)
       Available_taxo = rownames(counts)[ord]
-      tmp = Plot_network(input, resDiff, Available_taxo, SelectTaxoPlotNetworkDebounce(), qualiVariable, colors = colorsVisuPlot())$data$nodes
+      tmp = Plot_network(
+        input,
+        resDiff,
+        Available_taxo,
+        SelectTaxoPlotNetworkDebounce(),
+        qualiVariable,
+        colors = colorsVisuPlot(),
+        dataInputTaxo = dataInput()
+      )$data$nodes
       names(tmp)[names(tmp) == 'id'] <- as.character(input$TaxoSelect)
-      tmp[, c(as.character(input$TaxoSelect), 'community')]}, rownames = FALSE),
-    options = list(lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
-                   pageLength = 10,scrollX=TRUE, processing=FALSE
-  ))
+      community <- tmp[, c(as.character(input$TaxoSelect), 'community', 'color.background')]
+      tmp[, c(as.character(input$TaxoSelect), 'community')]
+    }, rownames = FALSE) %>%
+      formatStyle(
+        columns = c(as.character(input$TaxoSelect), 'community'),
+        backgroundColor = styleEqual(
+          levels(factor(tmp$community)),
+          sapply(levels(factor(tmp$community)), function(x) community$color.background[tmp$community == x][1])
+        )
+      ),
+    options = list(
+      lengthMenu = list(c(10, 50, -1), c('10', '50', 'All')),
+      pageLength = 10,
+      scrollX = TRUE,
+      processing = FALSE
+    )
+  )
+  
   
   ## Export Diversitytable in .csv
   output$ExportDiversitytable <- downloadHandler(
-    filename = function() { 
-      if(input$sepdiversity=="\t") 'SHAMAN_Diversity.tsv'
-      else 'SHAMAN_Beta-Gamma.csv'
+    filename = function() {
+      if (input$sepdiversity == "\t")
+        'SHAMAN_Diversity.tsv'
+      else
+        'SHAMAN_Beta-Gamma.csv'
     },
-    content = function(file){
+    content = function(file) {
       resDiff = ResDiffAnal()
-      tmp = Plot_Visu_Diversity(input,resDiff)$dataDiv
-      tmp$VarX=NULL; tmp$VarCol=NULL
-      write.table(tmp[, c(4, 5, 1)], file,row.names = FALSE, sep=input$sepdiversity)
+      tmp = Plot_Visu_Diversity(input, resDiff)$dataDiv
+      tmp$VarX = NULL
+      tmp$VarCol = NULL
+      write.table(tmp[, c(4, 5, 1)],
+                  file,
+                  row.names = FALSE,
+                  sep = input$sepdiversity)
     }
   )
   
   output$ExportDiversityRichnesstable <- downloadHandler(
-    filename = function() { 
-      if(input$sepdiversityrichness=="\t") 'SHAMAN_Diversity.tsv'
-      else 'SHAMAN_Richness.csv'
+    filename = function() {
+      if (input$sepdiversityrichness == "\t")
+        'SHAMAN_Diversity.tsv'
+      else
+        'SHAMAN_Richness.csv'
     },
-    content = function(file){
+    content = function(file) {
       resDiff = ResDiffAnal()
-      tmp = Plot_Visu_Diversity(input,resDiff)$dataDiv
-      tmp$VarX=NULL; tmp$VarCol=NULL
-      write.table(tmp[, c(1:6)], file,row.names = FALSE, sep=input$sepdiversity)
+      tmp = Plot_Visu_Diversity(input, resDiff)$dataDiv
+      tmp$VarX = NULL
+      tmp$VarCol = NULL
+      write.table(tmp[, c(1:6)],
+                  file,
+                  row.names = FALSE,
+                  sep = input$sepdiversity)
     }
   )
   
   output$ExportCommunitytable <- downloadHandler(
     filename = function() {
-      if(input$sepcommunity=='\t') 'SHAMAN_Community.tsv'
-      else 'SHAMAN_Richness.csv'
+      if (input$sepcommunity == '\t')
+        'SHAMAN_Community.tsv'
+      else
+        'SHAMAN_Richness.csv'
     },
-    content = function(file){
+    content = function(file) {
       resDiff = ResDiffAnal()
       counts = dataMergeCounts()$counts
       sumTot = rowSums(counts)
-      ord = order(sumTot,decreasing=TRUE)
+      ord = order(sumTot, decreasing = TRUE)
       Available_taxo = rownames(counts)[ord]
-      tmp = isolate(Plot_network(input, resDiff, Available_taxo, SelectTaxoPlotNetworkDebounce(), qualiVariable, colors = colorsVisuPlot())$data$nodes)
-      names(tmp)[names(tmp) == 'id'] <- as.character(input$TaxoSelect)
-      write.table(tmp[, c(as.character(input$TaxoSelect), 'community')], file, row.names = FALSE, sep = input$sepcommunity)
+      tmp = isolate(
+        Plot_network(
+          input,
+          resDiff,
+          Available_taxo,
+          SelectTaxoPlotNetworkDebounce(),
+          qualiVariable,
+          colors = colorsVisuPlot(),
+          dataInputTaxo = dataInput()
+        )$data$nodes
+      )
+      names(tmp)[names(tmp) == 'id'] <-
+        as.character(input$TaxoSelect)
+      write.table(tmp[, c(as.character(input$TaxoSelect), 'community')],
+                  file,
+                  row.names = FALSE,
+                  sep = input$sepcommunity)
     }
   )
   
@@ -4616,7 +7260,9 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   output$RarefactionPlot <- renderPlot({
     resDiff = ResDiffAnal()
     taxo = input$TaxoSelect
-    if(!is.null(resDiff)) withProgress(message="Loading...",Plot_Visu_Rarefaction(input,resDiff,ranges$x,ranges$y,ylab=taxo))
+    if (!is.null(resDiff))
+      withProgress(message = "Loading...",
+                   Plot_Visu_Rarefaction(input, resDiff, ranges$x, ranges$y, ylab = taxo))
   }, height = reactive(input$heightVisu))
   
   observeEvent(input$RarefactionPlot_dblclick, {
@@ -4638,11 +7284,24 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     #ind_taxo = input$selectTaxoPlotNetwork
     counts = dataMergeCounts()$counts
     sumTot = rowSums(counts)
-    ord = order(sumTot,decreasing=TRUE)
+    ord = order(sumTot, decreasing = TRUE)
     Available_taxo = rownames(counts)[ord]
     
     InputColorCorrDebounce() # For reactivity
-    if(!is.null(resDiff) && !is.null(ind_taxo)) withProgress(message="Loading...",Plot_network(input,resDiff,Available_taxo, ind_taxo, qualiVariable, colors = colorsVisuPlot())$plot)
+    if (!is.null(resDiff) &&
+        !is.null(ind_taxo))
+      withProgress(
+        message = "Loading...",
+        Plot_network(
+          input,
+          resDiff,
+          Available_taxo,
+          ind_taxo,
+          qualiVariable,
+          colors = colorsVisuPlot(),
+          dataInputTaxo = dataInput()
+        )$plot
+      )
   })
   
   # React only once to change in one or several of the inputs
@@ -4656,129 +7315,277 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   #### Select color and split for diversity
   
   output$SelectVarBoxDiv <- renderUI({
-    
     selectVar = input$VisuVarInt
-    selectInput("VarBoxDiv", h6(strong("Color by")),selectVar,selectVar[1],multiple = TRUE)
+    selectInput("VarBoxDiv", h6(strong("Color by")), selectVar, selectVar[1], multiple = TRUE)
     
   })
   
   
   output$SelectPairsBoxDiv <- renderUI({
     VarInt = as.character(input$VisuVarInt)
-    input_names <- lapply(VarInt, function(var) paste("ModVisu", var, sep = ""))
+    input_names <-
+      lapply(VarInt, function(var)
+        paste("ModVisu", var, sep = ""))
     
-    #Each pair will appear at most one 
-    at_most_one <- lapply(input_names, function(input_name) unique(input[[input_name]]))
+    #Each pair will appear at most one
+    at_most_one <-
+      lapply(input_names, function(input_name)
+        unique(input[[input_name]]))
     at_most_one <- expand.grid(at_most_one)
-    at_most_one$combined <- apply(at_most_one, 1, function(row) paste(row, collapse = "-"))
-    #at_most_one data frame contains all the unique combined variables of interest 
+    at_most_one$combined <-
+      apply(at_most_one, 1, function(row)
+        paste(row, collapse = "-"))
+    #at_most_one data frame contains all the unique combined variables of interest
     combined_rows <- lapply(at_most_one$combined, as.character)
-    if(length(combined_rows) >= 2)
-      combined_rows <- combn(combined_rows, 2, FUN = function(x) paste(x, collapse = " VS "), simplify = FALSE)
-    else combined_rows <-  NULL
-    selectInput("SelectizePairs", "Select your comparison (Wilcoxon test, p-value adjusted)", combined_rows, multiple = TRUE)
+    if (length(combined_rows) >= 2)
+      combined_rows <-
+      combn(
+        combined_rows,
+        2,
+        FUN = function(x)
+          paste(x, collapse = " VS "),
+        simplify = FALSE
+      )
+    else
+      combined_rows <-  NULL
+    selectInput(
+      "SelectizePairs",
+      "Select your comparison (Wilcoxon test, p-value adjusted)",
+      combined_rows,
+      multiple = TRUE
+    )
   })
   
   
   #   output$SelectVarDivCol <- renderUI({
-  #     
+  #
   #     selectVar = input$VisuVarInt
   #     VarB = input$VarBoxDiv
-  #     
-  #     if(length(selectVar)>1) 
+  #
+  #     if(length(selectVar)>1)
   #     {
   #       selectInput("VarDivCol", h6(strong("Color by")),c(NULL,selectVar[-which(selectVar%in%VarB)]),multiple = FALSE)
   #     }
-  #     
+  #
   #   })
-  #   
-  
+  #
   
   
   output$plotVisu <- renderUI({
-    res=NULL
-    if(input$PlotVisuSelect=="Barplot") res =  showOutput("PlotVisuBar")
-    else if(input$PlotVisuSelect=="Heatmap") res =  d3heatmapOutput("heatmap", height = input$heightVisu+10, width=ifelse(input$modifwidthVisu,input$widthVisu,"100%"))
-    else if(input$PlotVisuSelect=="Boxplot") res = plotOutput("Boxplot", height = input$heightVisu+10, width=if(input$modifwidthVisu){input$widthVisu})
-    else if(input$PlotVisuSelect=="Krona"){
-      if(Sys.info()["nodename"] == "ShinyPro"){
-        res= tags$iframe(src=paste0("https://kronashiny.pasteur.fr/?parameter=",KronaR()), height = input$heightVisu+10, width=ifelse(input$modifwidthVisu,input$widthVisu,"100%"), seamless=NA)
+    res = NULL
+    if (input$PlotVisuSelect == "Barplot")
+      res =  showOutput("PlotVisuBar")
+    else if (input$PlotVisuSelect == "Heatmap")
+      res =  d3heatmapOutput(
+        "heatmap",
+        height = input$heightVisu + 10,
+        width = ifelse(input$modifwidthVisu, input$widthVisu, "100%")
+      )
+    else if (input$PlotVisuSelect == "Boxplot")
+      res = plotOutput("Boxplot",
+                       height = input$heightVisu + 10,
+                       width = if (input$modifwidthVisu) {
+                         input$widthVisu
+                       })
+    else if (input$PlotVisuSelect == "Krona") {
+      if (Sys.info()["nodename"] == "ShinyPro") {
+        res = tags$iframe(
+          src = paste0(
+            "https://kronashiny.pasteur.fr/?parameter=",
+            KronaR()
+          ),
+          height = input$heightVisu + 10,
+          width = ifelse(input$modifwidthVisu, input$widthVisu, "100%"),
+          seamless = NA
+        )
       }
       else{
-        res= tags$iframe(src=paste0("http://127.0.0.1:5438/?parameter=",KronaR()), height = input$heightVisu+10, width=ifelse(input$modifwidthVisu,input$widthVisu,"100%"), seamless=NA)  
+        res = tags$iframe(
+          src = paste0("http://127.0.0.1:5438/?parameter=", KronaR()),
+          height = input$heightVisu + 10,
+          width = ifelse(input$modifwidthVisu, input$widthVisu, "100%"),
+          seamless = NA
+        )
       }
     }
-    else if(input$PlotVisuSelect=="Tree") res = treeWeightD3Output('PlotVisuTree', height = input$heightVisu+10,width=ifelse(input$modifwidthVisu,input$widthVisu,"100%"))
-    else if(input$PlotVisuSelect=="Scatterplot" && !input$AddRegScatter) res = scatterD3Output("ScatterplotD3", height = input$heightVisu+10, width=ifelse(input$modifwidthVisu,input$widthVisu,"100%"))
-    else if(input$PlotVisuSelect=="Scatterplot" && input$AddRegScatter) res = plotOutput("Scatterplotgg", height = input$heightVisu+10,width=if(input$modifwidthVisu){input$widthVisu})
-    else if(input$PlotVisuSelect=="Diversity") res =  plotOutput("DiversityPlot", height = input$heightVisu+10, width=if(input$modifwidthVisu){input$widthVisu})
-    else if(input$PlotVisuSelect=="Rarefaction") res = plotOutput("RarefactionPlot",dblclick = "RarefactionPlot_dblclick",brush = brushOpts(id = "RarefactionPlot_brush",resetOnNew = TRUE), height = input$heightVisu+10, width=if(input$modifwidthVisu){input$widthVisu})
-    else if(input$PlotVisuSelect=="Phylogeny") res = PhyloTreeMetaROutput('PhyloTreeMetaR2')
+    else if (input$PlotVisuSelect == "Tree")
+      res = treeWeightD3Output(
+        'PlotVisuTree',
+        height = input$heightVisu + 10,
+        width = ifelse(input$modifwidthVisu, input$widthVisu, "100%")
+      )
+    else if (input$PlotVisuSelect == "Scatterplot" &&
+             !input$AddRegScatter)
+      res = scatterD3Output(
+        "ScatterplotD3",
+        height = input$heightVisu + 10,
+        width = ifelse(input$modifwidthVisu, input$widthVisu, "100%")
+      )
+    else if (input$PlotVisuSelect == "Scatterplot" &&
+             input$AddRegScatter)
+      res = plotOutput("Scatterplotgg",
+                       height = input$heightVisu + 10,
+                       width = if (input$modifwidthVisu) {
+                         input$widthVisu
+                       })
+    else if (input$PlotVisuSelect == "Diversity")
+      res =  plotOutput("DiversityPlot",
+                        height = input$heightVisu + 10,
+                        width = if (input$modifwidthVisu) {
+                          input$widthVisu
+                        })
+    else if (input$PlotVisuSelect == "Rarefaction")
+      res = plotOutput(
+        "RarefactionPlot",
+        dblclick = "RarefactionPlot_dblclick",
+        brush = brushOpts(id = "RarefactionPlot_brush", resetOnNew = TRUE),
+        height = input$heightVisu + 10,
+        width = if (input$modifwidthVisu) {
+          input$widthVisu
+        }
+      )
+    else if (input$PlotVisuSelect == "Phylogeny")
+      res = PhyloTreeMetaROutput('PhyloTreeMetaR2')
     return(res)
   })
   
   
   ## Comparison plots
   output$plotVisuComp <- renderUI({
-    
-    res=NULL
-    if(input$PlotVisuSelectComp=="Heatmap_comp") res =  d3heatmapOutput("heatmap_comp", height = input$heightVisuComp+10, width=ifelse(input$modifwidthComp,input$widthComp,"100%"))
-    if(input$PlotVisuSelectComp=="Venn") res =  d3vennROutput("VennD3", height = input$heightVisuComp+10, width=ifelse(input$modifwidthComp,input$widthComp,"100%"))
-    if(input$PlotVisuSelectComp=="LogitPlot") res = scatterD3Output("LogitPlotD3", height = input$heightVisuComp+10, width=ifelse(input$modifwidthComp,input$widthComp,"100%"))
-    if(input$PlotVisuSelectComp=="pValueDensity") res = div(style = "position:relative",
-                                                            plotOutput("pValueDensity", height = input$heightVisuComp+10, width=ifelse(input$modifwidthComp,input$widthComp,"100%")
-                                                                       , hover = hoverOpts(id = "plot_hover_pValueDensity", delay = 10, delayType = "throttle")),
-                                                            uiOutput("tooltippValueDensity")
-    )
-    if(input$PlotVisuSelectComp=="UpSet") res = plotOutput("UpSet", height = input$heightVisuComp+10, width=ifelse(input$modifwidthComp,input$widthComp,"100%"))
-    if(input$PlotVisuSelectComp=="multipleVenn") res = plotOutput("multipleVennPlot", height = input$heightVisuComp+10, width=ifelse(input$modifwidthComp,input$widthComp,"100%"))
+    res = NULL
+    if (input$PlotVisuSelectComp == "Heatmap_comp")
+      res =  d3heatmapOutput(
+        "heatmap_comp",
+        height = input$heightVisuComp + 10,
+        width = ifelse(input$modifwidthComp, input$widthComp, "100%")
+      )
+    if (input$PlotVisuSelectComp == "Venn")
+      res =  d3vennROutput(
+        "VennD3",
+        height = input$heightVisuComp + 10,
+        width = ifelse(input$modifwidthComp, input$widthComp, "100%")
+      )
+    if (input$PlotVisuSelectComp == "LogitPlot")
+      res = scatterD3Output(
+        "LogitPlotD3",
+        height = input$heightVisuComp + 10,
+        width = ifelse(input$modifwidthComp, input$widthComp, "100%")
+      )
+    if (input$PlotVisuSelectComp == "pValueDensity")
+      res = div(
+        style = "position:relative",
+        plotOutput(
+          "pValueDensity",
+          height = input$heightVisuComp + 10,
+          width = ifelse(input$modifwidthComp, input$widthComp, "100%")
+          ,
+          hover = hoverOpts(
+            id = "plot_hover_pValueDensity",
+            delay = 10,
+            delayType = "throttle"
+          )
+        ),
+        uiOutput("tooltippValueDensity")
+      )
+    if (input$PlotVisuSelectComp == "UpSet")
+      res = plotOutput(
+        "UpSet",
+        height = input$heightVisuComp + 10,
+        width = ifelse(input$modifwidthComp, input$widthComp, "100%")
+      )
+    if (input$PlotVisuSelectComp == "multipleVenn")
+      res = plotOutput(
+        "multipleVennPlot",
+        height = input$heightVisuComp + 10,
+        width = ifelse(input$modifwidthComp, input$widthComp, "100%")
+      )
     return(res)
   })
   
   ####
   output$tooltippValueDensity <- renderUI({
     hover <- input$plot_hover_pValueDensity
-    point <- nearPoints(pValueDensityData(), hover, xvar = "x", yvar = "y", threshold = 20, maxpoints = 1)
-    if (is.null(nrow(point)) || nrow(point) == 0) return(NULL)
+    point <-
+      nearPoints(
+        pValueDensityData(),
+        hover,
+        xvar = "x",
+        yvar = "y",
+        threshold = 20,
+        maxpoints = 1
+      )
+    if (is.null(nrow(point)) || nrow(point) == 0)
+      return(NULL)
     # calculate point position INSIDE the image as percent of total dimensions from left (horizontal) and from top (vertical)
-    left_pct <- (hover$x - hover$domain$left) / (hover$domain$right - hover$domain$left)
-    top_pct <- (hover$domain$top - hover$y) / (hover$domain$top - hover$domain$bottom)
+    left_pct <-
+      (hover$x - hover$domain$left) / (hover$domain$right - hover$domain$left)
+    top_pct <-
+      (hover$domain$top - hover$y) / (hover$domain$top - hover$domain$bottom)
     # calculate distance from left and bottom side of the picture in pixels
-    left_px <- hover$range$left + left_pct * (hover$range$right - hover$range$left)
-    top_px <- hover$range$top + top_pct * (hover$range$bottom - hover$range$top)
+    left_px <-
+      hover$range$left + left_pct * (hover$range$right - hover$range$left)
+    top_px <-
+      hover$range$top + top_pct * (hover$range$bottom - hover$range$top)
     # print("left_px")
     # print(left_px)
     # print("top_px")
     # print(top_px)
     
     # create style property fot tooltip, background color is set so tooltip is a bit transparent, z-index is set so we are sure are tooltip will be on top
-    style <- paste0("position:absolute; z-index:100; padding-top : 5px ; padding-bottom : 5px ; padding-right : 15px ; padding-left : 15px ; background-color: rgba(245, 245, 245, 0.85); border-color :", point$colour ,"; border-width : 2px ;",
-                    "left:", left_px + 2, "px; top:", top_px + 2, "px;")
+    style <-
+      paste0(
+        "position:absolute; z-index:100; padding-top : 5px ; padding-bottom : 5px ; padding-right : 15px ; padding-left : 15px ; background-color: rgba(245, 245, 245, 0.85); border-color :",
+        point$colour ,
+        "; border-width : 2px ;",
+        "left:",
+        left_px + 2,
+        "px; top:",
+        top_px + 2,
+        "px;"
+      )
     # actual tooltip created as wellPanel
-    wellPanel(
-      style = style,
-      (h5(strong(ContrastListDebounce()[point$group])))
-    )
+    wellPanel(style = style,
+              (h5(strong(
+                ContrastListDebounce()[point$group]
+              ))))
   })
   
   pValueDensityData <- reactive({
     resDiff = ResDiffAnal()
-    filesize = file.info(namesfile)[,"size"]
-    if(is.na(filesize)){filesize=0}
-    if(filesize!=0){
-      BaseContrast = read.table(namesfile,header=TRUE)
-      if(!is.null(resDiff$dds))
-      {p <- Plot_pValue_Density(input, BaseContrast, resDiff, ContrastListDebounce, input$AlphaVal, InputpValueDensityfocus)
-      if(!is.null(p)){
-        data <- ggplot_build(p)$data[[1]]}}
-    }})
+    filesize = file.info(namesfile)[, "size"]
+    if (is.na(filesize)) {
+      filesize = 0
+    }
+    if (filesize != 0) {
+      BaseContrast = read.table(namesfile, header = TRUE)
+      if (!is.null(resDiff$dds))
+      {
+        p <-
+          Plot_pValue_Density(
+            input,
+            BaseContrast,
+            resDiff,
+            ContrastListDebounce,
+            input$AlphaVal,
+            InputpValueDensityfocus
+          )
+        if (!is.null(p)) {
+          data <- ggplot_build(p)$data[[1]]
+        }
+      }
+    }
+  })
   ####
   
   output$ColBoxplot <- renderUI({
-    
     VarInt = input$VisuVarInt
     res = NULL
-    if(length(VarInt)>1) res = selectizeInput("BoxColorBy",h6(strong(paste("Color by"))),VarInt, selected = VarInt,multiple = TRUE)
+    if (length(VarInt) > 1)
+      res = selectizeInput("BoxColorBy",
+                           h6(strong(paste("Color by"))),
+                           VarInt,
+                           selected = VarInt,
+                           multiple = TRUE)
     return(res)
   })
   
@@ -4788,76 +7595,161 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   #   })
   
   get_others <- reactive({
-    data = dataInput()$data 
+    data = dataInput()$data
     taxo = input$TaxoSelect
     resDiff = ResDiffAnal()
     res = NULL
     
-    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="...") 
+    if (!is.null(data$counts) &&
+        !is.null(data$taxo) &&
+        nrow(data$counts) > 0 &&
+        nrow(data$taxo) > 0 && !is.null(taxo) && taxo != "...")
     {
       counts = dataMergeCounts()$counts
       sumTot = rowSums(counts)
-      ord = order(sumTot,decreasing=TRUE)
+      ord = order(sumTot, decreasing = TRUE)
       Available_taxo = rownames(counts)[ord]
-      selTaxo = Available_taxo[1:min(12,length(Available_taxo))]
+      selTaxo = Available_taxo[1:min(12, length(Available_taxo))]
       
-      if(input$SelectSpecifTaxo=="Most")  res = selectizeInput("selectTaxoPlot",h6(strong(paste("Select the",input$TaxoSelect, "to plot"))),Available_taxo, selected = selTaxo,multiple = TRUE)
-      if(input$SelectSpecifTaxo=="Diff" && length(input$ContrastList_table_Visu)>=1)
+      if (input$SelectSpecifTaxo == "Most")
+        res = selectizeInput(
+          "selectTaxoPlot",
+          h6(strong(
+            paste("Select the", input$TaxoSelect, "to plot")
+          )),
+          Available_taxo,
+          selected = selTaxo,
+          multiple = TRUE
+        )
+      if (input$SelectSpecifTaxo == "Diff" &&
+          length(input$ContrastList_table_Visu) >= 1)
       {
-        filesize = file.info(namesfile)[,"size"]
-        if(is.na(filesize)){filesize=0}
-        if(filesize!=0)
-        { 
-          BaseContrast = read.table(namesfile,header=TRUE)
+        filesize = file.info(namesfile)[, "size"]
+        if (is.na(filesize)) {
+          filesize = 0
+        }
+        if (filesize != 0)
+        {
+          BaseContrast = read.table(namesfile, header = TRUE)
           SelContrast = input$ContrastList_table_Visu
           #padj = Get_log2FC_padj(input,BaseContrast,resDiff, info = NULL)$padj
-          selcontrast_matrix = as.matrix(BaseContrast[,SelContrast])
+          selcontrast_matrix = as.matrix(BaseContrast[, SelContrast])
           colnames(selcontrast_matrix) = SelContrast
-          padj = Get_log2FC_padj(input,selcontrast_matrix,resDiff, info = NULL)$padj
+          padj = Get_log2FC_padj(input, selcontrast_matrix, resDiff, info = NULL)$padj
           Feature_names = rownames(padj)
-          if(ncol(as.matrix(padj))>1)
-          { 
-            cont = which(colnames(padj)%in%SelContrast)
-            padj = padj[,cont] 
+          if (ncol(as.matrix(padj)) > 1)
+          {
+            cont = which(colnames(padj) %in% SelContrast)
+            padj = padj[, cont]
           }
-          if(ncol(padj)<2) ind = which(padj<=as.numeric(input$AlphaVal))
-          if(ncol(padj) >= 2 && input$UnionInterContrasts=="Union") ind = which(apply(apply(padj,2,FUN = function(x){x<=as.numeric(input$AlphaVal)}),1,any))
-          if(ncol(padj) >= 2 && input$UnionInterContrasts=="Inter") ind = which(!apply(!apply(padj,2,FUN = function(x){x<=as.numeric(input$AlphaVal)}),1,any))
+          if (ncol(padj) < 2)
+            ind = which(padj <= as.numeric(input$AlphaVal))
+          if (ncol(padj) >= 2 &&
+              input$UnionInterContrasts == "Union")
+            ind = which(apply(apply(
+              padj,
+              2,
+              FUN = function(x) {
+                x <= as.numeric(input$AlphaVal)
+              }
+            ), 1, any))
+          if (ncol(padj) >= 2 &&
+              input$UnionInterContrasts == "Inter")
+            ind = which(!apply(!apply(
+              padj,
+              2,
+              FUN = function(x) {
+                x <= as.numeric(input$AlphaVal)
+              }
+            ), 1, any))
           
-          if(length(ind)>0 && !is.null(ind)) selTaxo = Feature_names[ind]
-          else selTaxo = NULL
-          res = selectizeInput("selectTaxoPlot",h6(strong(paste("Select the",input$TaxoSelect, "to plot"))),Available_taxo, selected = selTaxo,multiple = TRUE,options = list(minItems = 2))
-        }    
+          if (length(ind) > 0 &&
+              !is.null(ind))
+            selTaxo = Feature_names[ind]
+          else
+            selTaxo = NULL
+          res = selectizeInput(
+            "selectTaxoPlot",
+            h6(strong(
+              paste("Select the", input$TaxoSelect, "to plot")
+            )),
+            Available_taxo,
+            selected = selTaxo,
+            multiple = TRUE,
+            options = list(minItems = 2)
+          )
+        }
       }
-      if(input$SelectSpecifTaxo=="NoDiff" && length(input$ContrastList_table_Visu)>=1)
+      if (input$SelectSpecifTaxo == "NoDiff" &&
+          length(input$ContrastList_table_Visu) >= 1)
       {
-        filesize = file.info(namesfile)[,"size"]
-        if(is.na(filesize)){filesize=0}
-        if(filesize!=0)
-        { 
-          BaseContrast = read.table(namesfile,header=TRUE)
+        filesize = file.info(namesfile)[, "size"]
+        if (is.na(filesize)) {
+          filesize = 0
+        }
+        if (filesize != 0)
+        {
+          BaseContrast = read.table(namesfile, header = TRUE)
           SelContrast = input$ContrastList_table_Visu
           #padj = Get_log2FC_padj(input,BaseContrast,resDiff, info = NULL)$padj
-          selcontrast_matrix = as.matrix(BaseContrast[,SelContrast])
+          selcontrast_matrix = as.matrix(BaseContrast[, SelContrast])
           colnames(selcontrast_matrix) = SelContrast
-          padj = Get_log2FC_padj(input,selcontrast_matrix,resDiff, info = NULL)$padj
+          padj = Get_log2FC_padj(input, selcontrast_matrix, resDiff, info = NULL)$padj
           Feature_names = rownames(padj)
           
-          if(ncol(as.matrix(padj))>1)
-          { 
-            cont = which(colnames(padj)%in%SelContrast)
-            padj = as.matrix(padj[,cont])
+          if (ncol(as.matrix(padj)) > 1)
+          {
+            cont = which(colnames(padj) %in% SelContrast)
+            padj = as.matrix(padj[, cont])
           }
-          if(ncol(padj)<2) ind = which(padj>as.numeric(input$AlphaVal))
-          if(ncol(padj) >= 2 && input$UnionInterContrasts=="Union") ind = which(apply(apply(padj,2,FUN = function(x){x>as.numeric(input$AlphaVal)}),1,any))
-          if(ncol(padj) >= 2 && input$UnionInterContrasts=="Inter") ind = which(!apply(!apply(padj,2,FUN = function(x){x>as.numeric(input$AlphaVal)}),1,any))
+          if (ncol(padj) < 2)
+            ind = which(padj > as.numeric(input$AlphaVal))
+          if (ncol(padj) >= 2 &&
+              input$UnionInterContrasts == "Union")
+            ind = which(apply(apply(
+              padj,
+              2,
+              FUN = function(x) {
+                x > as.numeric(input$AlphaVal)
+              }
+            ), 1, any))
+          if (ncol(padj) >= 2 &&
+              input$UnionInterContrasts == "Inter")
+            ind = which(!apply(!apply(
+              padj,
+              2,
+              FUN = function(x) {
+                x > as.numeric(input$AlphaVal)
+              }
+            ), 1, any))
           
-          if(length(ind)>0 && !is.null(ind)) selTaxo = Feature_names[ind]
-          else selTaxo = NULL
-          res = selectizeInput("selectTaxoPlot",h6(strong(paste("Select the",input$TaxoSelect, "to plot"))),Available_taxo, selected = selTaxo,multiple = TRUE,options = list(minItems = 2))
-        }    
+          if (length(ind) > 0 &&
+              !is.null(ind))
+            selTaxo = Feature_names[ind]
+          else
+            selTaxo = NULL
+          res = selectizeInput(
+            "selectTaxoPlot",
+            h6(strong(
+              paste("Select the", input$TaxoSelect, "to plot")
+            )),
+            Available_taxo,
+            selected = selTaxo,
+            multiple = TRUE,
+            options = list(minItems = 2)
+          )
+        }
       }
-      if(input$SelectSpecifTaxo=="All") res = selectizeInput("selectTaxoPlot",h6(strong(paste("Select the",input$TaxoSelect, "to plot"))),Available_taxo, selected = Available_taxo,multiple = TRUE)
+      if (input$SelectSpecifTaxo == "All")
+        res = selectizeInput(
+          "selectTaxoPlot",
+          h6(strong(
+            paste("Select the", input$TaxoSelect, "to plot")
+          )),
+          Available_taxo,
+          selected = Available_taxo,
+          multiple = TRUE
+        )
       others = setdiff(Available_taxo, selTaxo)
     }
     return(list(res = res, others = others))
@@ -4868,72 +7760,118 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     return(res)
   })
   
-  output$SelectTaxoToPlotNetwork <- renderUI(
-    radioButtons("SelectTaxoNetwork", h5(strong(paste("Select the",input$TaxoSelect, "to plot"))), c("Linked to at least one other"="Linked", "All"="All"))
-  )
+  output$SelectTaxoToPlotNetwork <- renderUI(radioButtons(
+    "SelectTaxoNetwork",
+    h5(strong(
+      paste("Select the", input$TaxoSelect, "to plot")
+    )),
+    c("Linked to at least one other" = "Linked", "All" = "All")
+  ))
   
   output$TaxoToPlotNetwork <- renderUI({
     withProgress({
-      data = dataInput()$data 
+      data = dataInput()$data
       taxo = input$TaxoSelect
       resDiff = ResDiffAnal()
       res = NULL
       
-      if(!is.null(input$SelectTaxoNetwork) && !is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="...") 
+      if (!is.null(input$SelectTaxoNetwork) &&
+          !is.null(data$counts) &&
+          !is.null(data$taxo) &&
+          nrow(data$counts) > 0 &&
+          nrow(data$taxo) > 0 && !is.null(taxo) && taxo != "...")
       {
         counts = dataMergeCounts()$counts
         sumTot = rowSums(counts)
-        ord = order(sumTot,decreasing=TRUE)
+        ord = order(sumTot, decreasing = TRUE)
         Available_taxo = rownames(counts)[ord]
         
-        if(input$SelectTaxoNetwork=="All") res = selectizeInput("selectTaxoPlotNetwork",h6(strong("Custom selection")),Available_taxo, selected = Available_taxo,multiple = TRUE)
-        if(input$SelectTaxoNetwork=="Linked") {edges <- Plot_network(input,ResDiffAnal(),Available_taxo, Available_taxo, qualiVariable)$data$edges
-        edgesFrom <- unique(edges$from)
-        edgesTo <- unique(edges$to)
-        linked <- unique(c(edgesFrom, edgesTo))
-        res = selectizeInput("selectTaxoPlotNetwork",h6(strong("Custom selection")),Available_taxo, selected = linked,multiple = TRUE)
+        if (input$SelectTaxoNetwork == "All")
+          res = selectizeInput(
+            "selectTaxoPlotNetwork",
+            h6(strong("Custom selection")),
+            Available_taxo,
+            selected = Available_taxo,
+            multiple = TRUE
+          )
+        if (input$SelectTaxoNetwork == "Linked") {
+          edges <-
+            Plot_network(input,
+                         ResDiffAnal(),
+                         Available_taxo,
+                         Available_taxo,
+                         qualiVariable,
+                         dataInputTaxo = dataInput())$data$edges
+          edgesFrom <- unique(edges$from)
+          edgesTo <- unique(edges$to)
+          linked <- unique(c(edgesFrom, edgesTo))
+          res = selectizeInput(
+            "selectTaxoPlotNetwork",
+            h6(strong("Custom selection")),
+            Available_taxo,
+            selected = linked,
+            multiple = TRUE
+          )
         }
       }
-      return(res)} , message = "Loading...")
+      return(res)
+    } , message = "Loading...")
   })
   
-  output$Research <- renderUI(
-    selectizeInput("searchNode", "Research", choices = c("...", SelectTaxoPlotNetworkDebounce()))
-  )
+  output$Research <- renderUI(selectizeInput(
+    "searchNode",
+    "Research",
+    choices = c("...", SelectTaxoPlotNetworkDebounce())
+  ))
   
   
   output$SelectSecVariable <- renderUI({
-    target=isolate(values$TargetWorking)
-    if(!is.null(target))
-    {namesTarget = colnames(target)[2:ncol(target)]
-    selectInput("sec_variable", "Choose variable", choices = namesTarget)
+    target = isolate(values$TargetWorking)
+    if (!is.null(target))
+    {
+      namesTarget = colnames(target)[2:ncol(target)]
+      selectInput("sec_variable", "Choose variable", choices = namesTarget)
     }
   })
   
   qualiVariable <- reactive({
-    target=isolate(values$TargetWorking)
-    if(!is.null(target)) {
-      if(!is.numeric(target[,input$sec_variable])){shinyjs::show("ValueOfQualitativeVaribale")}else{shinyjs::hide("ValueOfQualitativeVaribale")}
-      return(!is.numeric(target[,input$sec_variable]))
+    target = isolate(values$TargetWorking)
+    if (!is.null(target)) {
+      if (!is.numeric(target[, input$sec_variable])) {
+        shinyjs::show("ValueOfQualitativeVaribale")
+      } else{
+        shinyjs::hide("ValueOfQualitativeVaribale")
+      }
+      return(!is.numeric(target[, input$sec_variable]))
     }
   })
   
   output$SelectValueQualiVar <- renderUI({
-    target=isolate(values$TargetWorking)
-    if(!is.null(target)) {
-      conditionalPanel(condition = "input.colorCorr == 'corr'",
-                       selectInput("values1", 'Values to consider as "1"', choices = as.character(unique(as.factor(target[,input$sec_variable]))), selected = min(as.character(unique(as.factor(target[,input$sec_variable])))), multiple = TRUE),
-                       h6('Other values will be considered as "0"', align = "center"))
+    target = isolate(values$TargetWorking)
+    if (!is.null(target)) {
+      conditionalPanel(
+        condition = "input.colorCorr == 'corr'",
+        selectInput(
+          "values1",
+          'Values to consider as "1"',
+          choices = as.character(unique(as.factor(target[, input$sec_variable]))),
+          selected = min(as.character(unique(
+            as.factor(target[, input$sec_variable])
+          ))),
+          multiple = TRUE
+        ),
+        h6('Other values will be considered as "0"', align = "center")
+      )
     }
   })
   
   # output$SelectToLabelNetwork <- renderUI({
-  #   data = dataInput()$data 
+  #   data = dataInput()$data
   #   taxo = input$TaxoSelect
   #   resDiff = ResDiffAnal()
   #   res = NULL
-  #   
-  #   if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(input$SelectTaxoNetwork)) 
+  #
+  #   if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(input$SelectTaxoNetwork))
   #   {
   #     counts = dataMergeCounts()$counts
   #     sumTot = rowSums(counts)
@@ -4954,78 +7892,181 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   ## For comp plot
   output$TaxoToPlotVisuComp <- renderUI({
-    
-    data = dataInput()$data 
+    data = dataInput()$data
     taxo = input$TaxoSelect
     resDiff = ResDiffAnal()
     res = NULL
     
-    if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="...") 
+    if (!is.null(data$counts) &&
+        !is.null(data$taxo) &&
+        nrow(data$counts) > 0 &&
+        nrow(data$taxo) > 0 && !is.null(taxo) && taxo != "...")
     {
       counts = dataMergeCounts()$counts
       sumTot = rowSums(counts)
-      ord = order(sumTot,decreasing=TRUE)
+      ord = order(sumTot, decreasing = TRUE)
       Available_taxo = rownames(counts)[ord]
-      selTaxo = Available_taxo[1:min(12,length(Available_taxo))]
+      selTaxo = Available_taxo[1:min(12, length(Available_taxo))]
       
-      if(input$SelectSpecifTaxoComp=="Most")  res = selectizeInput("selectTaxoPlotComp",h6(strong(paste("Select the",input$TaxoSelect, "to ",if(input$PlotVisuSelectComp=="LogitPlot"){"label"}else{"plot"}))),Available_taxo, selected = selTaxo,multiple = TRUE)
-      if(input$SelectSpecifTaxoComp=="Diff" && length(input$ContrastList_table_VisuComp)>=1)
+      if (input$SelectSpecifTaxoComp == "Most")
+        res = selectizeInput(
+          "selectTaxoPlotComp",
+          h6(strong(
+            paste("Select the", input$TaxoSelect, "to ", if (input$PlotVisuSelectComp ==
+                                                             "LogitPlot") {
+              "label"
+            } else{
+              "plot"
+            })
+          )),
+          Available_taxo,
+          selected = selTaxo,
+          multiple = TRUE
+        )
+      if (input$SelectSpecifTaxoComp == "Diff" &&
+          length(input$ContrastList_table_VisuComp) >= 1)
       {
-        
-        filesize = file.info(namesfile)[,"size"]
-        if(is.na(filesize)){filesize=0}
-        if(filesize!=0)
-        { 
-          BaseContrast = read.table(namesfile,header=TRUE)
+        filesize = file.info(namesfile)[, "size"]
+        if (is.na(filesize)) {
+          filesize = 0
+        }
+        if (filesize != 0)
+        {
+          BaseContrast = read.table(namesfile, header = TRUE)
           SelContrast = input$ContrastList_table_VisuComp
           #padj = Get_log2FC_padj(input,BaseContrast,resDiff, info = NULL)$padj
-          selcontrast_matrix = as.matrix(BaseContrast[,SelContrast])
+          selcontrast_matrix = as.matrix(BaseContrast[, SelContrast])
           colnames(selcontrast_matrix) = SelContrast
-          padj = Get_log2FC_padj(input,selcontrast_matrix,resDiff, info = NULL)$padj
+          padj = Get_log2FC_padj(input, selcontrast_matrix, resDiff, info = NULL)$padj
           Feature_names = rownames(padj)
-          if(ncol(as.matrix(padj))>1)
-          { 
-            cont = which(colnames(padj)%in%SelContrast)
-            padj = padj[,cont] 
+          if (ncol(as.matrix(padj)) > 1)
+          {
+            cont = which(colnames(padj) %in% SelContrast)
+            padj = padj[, cont]
           }
-          if(ncol(padj)<2) ind = which(padj<=as.numeric(input$AlphaVal))
-          if(ncol(padj) >= 2 && input$UnionInterContrastsComp=="Union") ind = which(apply(apply(padj,2,FUN = function(x){x<=as.numeric(input$AlphaVal)}),1,any))
-          if(ncol(padj) >= 2 && input$UnionInterContrastsComp=="Inter") ind = which(!apply(!apply(padj,2,FUN = function(x){x<=as.numeric(input$AlphaVal)}),1,any))
+          if (ncol(padj) < 2)
+            ind = which(padj <= as.numeric(input$AlphaVal))
+          if (ncol(padj) >= 2 &&
+              input$UnionInterContrastsComp == "Union")
+            ind = which(apply(apply(
+              padj,
+              2,
+              FUN = function(x) {
+                x <= as.numeric(input$AlphaVal)
+              }
+            ), 1, any))
+          if (ncol(padj) >= 2 &&
+              input$UnionInterContrastsComp == "Inter")
+            ind = which(!apply(!apply(
+              padj,
+              2,
+              FUN = function(x) {
+                x <= as.numeric(input$AlphaVal)
+              }
+            ), 1, any))
           
-          if(length(ind)>0 && !is.null(ind)) selTaxo = Feature_names[ind]
-          else selTaxo = NULL
-          res = selectizeInput("selectTaxoPlotComp",h6(strong(paste("Select the",input$TaxoSelect, "to ",if(input$PlotVisuSelectComp=="LogitPlot"){"label"}else{"plot"}))),Available_taxo, selected = selTaxo,multiple = TRUE,options = list(minItems = 2))
-        }    
+          if (length(ind) > 0 &&
+              !is.null(ind))
+            selTaxo = Feature_names[ind]
+          else
+            selTaxo = NULL
+          res = selectizeInput(
+            "selectTaxoPlotComp",
+            h6(strong(
+              paste("Select the", input$TaxoSelect, "to ", if (input$PlotVisuSelectComp ==
+                                                               "LogitPlot") {
+                "label"
+              } else{
+                "plot"
+              })
+            )),
+            Available_taxo,
+            selected = selTaxo,
+            multiple = TRUE,
+            options = list(minItems = 2)
+          )
+        }
       }
-      if(input$SelectSpecifTaxoComp=="NoDiff"  && length(input$ContrastList_table_VisuComp)>=1)
+      if (input$SelectSpecifTaxoComp == "NoDiff"  &&
+          length(input$ContrastList_table_VisuComp) >= 1)
       {
-        filesize = file.info(namesfile)[,"size"]
-        if(is.na(filesize)){filesize=0}
-        if(filesize!=0)
-        { 
-          BaseContrast = read.table(namesfile,header=TRUE)
+        filesize = file.info(namesfile)[, "size"]
+        if (is.na(filesize)) {
+          filesize = 0
+        }
+        if (filesize != 0)
+        {
+          BaseContrast = read.table(namesfile, header = TRUE)
           SelContrast = input$ContrastList_table_VisuComp
           #padj = Get_log2FC_padj(input,BaseContrast,resDiff, info = NULL)$padj
-          selcontrast_matrix = as.matrix(BaseContrast[,SelContrast])
+          selcontrast_matrix = as.matrix(BaseContrast[, SelContrast])
           colnames(selcontrast_matrix) = SelContrast
-          padj = Get_log2FC_padj(input,selcontrast_matrix,resDiff, info = NULL)$padj
+          padj = Get_log2FC_padj(input, selcontrast_matrix, resDiff, info = NULL)$padj
           Feature_names = rownames(padj)
           
-          if(ncol(as.matrix(padj))>1)
-          { 
-            cont = which(colnames(padj)%in%SelContrast)
-            padj = padj[,cont] 
+          if (ncol(as.matrix(padj)) > 1)
+          {
+            cont = which(colnames(padj) %in% SelContrast)
+            padj = padj[, cont]
           }
-          if(ncol(padj)<2) ind = which(padj>as.numeric(input$AlphaVal))
-          if(ncol(padj) >= 2 && input$UnionInterContrastsComp=="Union") ind = which(apply(apply(padj,2,FUN = function(x){x>as.numeric(input$AlphaVal)}),1,any))
-          if(ncol(padj) >= 2 && input$UnionInterContrastsComp=="Inter") ind = which(!apply(!apply(padj,2,FUN = function(x){x>as.numeric(input$AlphaVal)}),1,any))
+          if (ncol(padj) < 2)
+            ind = which(padj > as.numeric(input$AlphaVal))
+          if (ncol(padj) >= 2 &&
+              input$UnionInterContrastsComp == "Union")
+            ind = which(apply(apply(
+              padj,
+              2,
+              FUN = function(x) {
+                x > as.numeric(input$AlphaVal)
+              }
+            ), 1, any))
+          if (ncol(padj) >= 2 &&
+              input$UnionInterContrastsComp == "Inter")
+            ind = which(!apply(!apply(
+              padj,
+              2,
+              FUN = function(x) {
+                x > as.numeric(input$AlphaVal)
+              }
+            ), 1, any))
           
-          if(length(ind)>0 && !is.null(ind)) selTaxo = Feature_names[ind]
-          else selTaxo = NULL
-          res = selectizeInput("selectTaxoPlotComp",h6(strong(paste("Select the",input$TaxoSelect, "to ",if(input$PlotVisuSelectComp=="LogitPlot"){"label"}else{"plot"}))),Available_taxo, selected = selTaxo,multiple = TRUE,options = list(minItems = 2))
-        }    
+          if (length(ind) > 0 &&
+              !is.null(ind))
+            selTaxo = Feature_names[ind]
+          else
+            selTaxo = NULL
+          res = selectizeInput(
+            "selectTaxoPlotComp",
+            h6(strong(
+              paste("Select the", input$TaxoSelect, "to ", if (input$PlotVisuSelectComp ==
+                                                               "LogitPlot") {
+                "label"
+              } else{
+                "plot"
+              })
+            )),
+            Available_taxo,
+            selected = selTaxo,
+            multiple = TRUE,
+            options = list(minItems = 2)
+          )
+        }
       }
-      if(input$SelectSpecifTaxoComp=="All") res = selectizeInput("selectTaxoPlotComp",h6(strong(paste("Select the",input$TaxoSelect, "to ",if(input$PlotVisuSelectComp=="LogitPlot"){"label"}else{"plot"}))),Available_taxo, selected = Available_taxo,multiple = TRUE)
+      if (input$SelectSpecifTaxoComp == "All")
+        res = selectizeInput(
+          "selectTaxoPlotComp",
+          h6(strong(
+            paste("Select the", input$TaxoSelect, "to ", if (input$PlotVisuSelectComp ==
+                                                             "LogitPlot") {
+              "label"
+            } else{
+              "plot"
+            })
+          )),
+          Available_taxo,
+          selected = Available_taxo,
+          multiple = TRUE
+        )
     }
     return(res)
   })
@@ -5043,14 +8084,14 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
         !is.null(data$taxo) &&
         nrow(data$counts) > 0 &&
         nrow(data$taxo) > 0 && !is.null(taxo) && taxo != "...")
-    { 
+    {
       counts = dataMergeCounts()$counts
       sumTot = rowSums(counts)
       ord = order(sumTot, decreasing = TRUE)
       Available_taxo = rownames(counts)[ord]
       selTaxo = Available_taxo[1:min(12, length(Available_taxo))]
       
-      if (input$SelectSpecifTaxoTablesVolcano == "Most"){
+      if (input$SelectSpecifTaxoTablesVolcano == "Most") {
         res = selectizeInput(
           "selectTaxoLabelVolcano",
           h6(strong("Custom selection")),
@@ -5078,7 +8119,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
           multiple = TRUE
         )
       }
-      if (input$SelectSpecifTaxoTablesVolcano == "None"){
+      if (input$SelectSpecifTaxoTablesVolcano == "None") {
         res = selectizeInput(
           "selectTaxoLabelVolcano",
           h6(strong("Custom selection")),
@@ -5096,10 +8137,10 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   })
   
   # observeEvent(input$SelectSpecifTaxoTablesVolcano,{
-  #   
+  #
   #   data = dataInput()$data
   #   taxo = input$TaxoSelect
-  # 
+  #
   #   if (!is.null(data$counts) &&
   #       !is.null(data$taxo) &&
   #       nrow(data$counts) > 0 &&
@@ -5109,7 +8150,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   #     ord = order(sumTot, decreasing = TRUE)
   #     Available_taxo = rownames(counts)[ord]
   #     selTaxo = Available_taxo[1:min(12, length(Available_taxo))]
-  #     
+  #
   #     if (input$SelectSpecifTaxoTablesVolcano == "Most"){
   #       sel = selTaxo
   #     }
@@ -5123,10 +8164,10 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   #     if (input$SelectSpecifTaxoTablesVolcano == "None"){
   #       sel = NULL
   #     }
-  #   
+  #
   #   updateSelectizeInput(session, "selectTaxoLabelVolcano", choices = Available_taxo, selected = sel)
   # }}, priority=1)
-  # 
+  #
   
   
   # output$RadioButtonSelectedVolcano <- renderUI({
@@ -5208,54 +8249,94 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   })
   
   output$VarIntVisu <- renderUI({
-    
     #     int = input$InterestVar
     #     if(length(int)>=2) intSel = int[c(1,2)]
     #     else intSel = int[1]
     
-    target=values$TargetWorking
+    target = values$TargetWorking
     
-    if(!is.null(target)) 
+    if (!is.null(target))
     {
       namesTarget = colnames(target)[2:ncol(target)]
-      selectizeInput("VisuVarInt",h6(strong("Select the variables of interest")),namesTarget, selected = namesTarget[1],multiple = TRUE)
+      selectizeInput(
+        "VisuVarInt",
+        h6(strong("Select the variables of interest")),
+        namesTarget,
+        selected = namesTarget[1],
+        multiple = TRUE
+      )
     }
     
   })
   
   
   output$VarIntVisuScatter <- renderUI({
-    
-    target=values$TargetWorking
-    data = dataInput()$data 
+    target = values$TargetWorking
+    data = dataInput()$data
     taxo = input$TaxoSelect
     resDiff = ResDiffAnal()
     res = list()
     namesTarget = colnames(target)[2:ncol(target)]
     #!is.null(data$taxo) &&
-    if(!is.null(data$counts) &&  nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target)) 
+    if (!is.null(data$counts) &&
+        nrow(data$counts) > 0 &&
+        nrow(data$taxo) > 0 &&
+        !is.null(taxo) && taxo != "..." && !is.null(target))
     {
       counts = dataMergeCounts()$counts
       
       ## Get numeric variables from target
-      typesTarget = sapply(target,class)
-      numInd = (typesTarget%in%c("integer","numeric"))[2:ncol(target)]
+      typesTarget = sapply(target, class)
+      numInd = (typesTarget %in% c("integer", "numeric"))[2:ncol(target)]
       ## Using list slows down the application if the number of rows too high
-      #if(nrow(counts)<300) 
+      #if(nrow(counts)<300)
       #{
-      Available_x = list(x1 = c(sort(rownames(counts))),"Diversity" = c("Alpha div","Shannon div","Inv.Simpson div","Simpson div"))
+      Available_x = list(
+        x1 = c(sort(rownames(counts))),
+        "Diversity" = c(
+          "Alpha div",
+          "Shannon div",
+          "Inv.Simpson div",
+          "Simpson div"
+        )
+      )
       names(Available_x)[1] = taxo
-      if(any(numInd)) Available_x$Variables = c(namesTarget[numInd],"")
+      if (any(numInd))
+        Available_x$Variables = c(namesTarget[numInd], "")
       #} #else{
       #Available_x = c(sort(rownames(counts)),"Alpha div","Shannon div","Inv.Simpson div","Simpson div")
       #if(any(numInd)) Available_x = c(Available_x,namesTarget[numInd])
       #}
       Available_y = Available_x
-      res[[1]] = selectizeInput("Xscatter",h6(strong("X variable")),Available_x, selected = Available_x[1],multiple = FALSE)
-      res[[2]] = selectizeInput("Yscatter",h6(strong("Y variable")),Available_y, selected = Available_x[2],multiple = FALSE)
-      res[[3]] = selectizeInput("ColorBy",h6(strong("Color variable")),c("None"="None",namesTarget[!numInd]),multiple = FALSE)
-      res[[4]] = selectizeInput("PchBy",h6(strong("Symbol variable")),c("None"="None",namesTarget[!numInd]),multiple = FALSE)
-      res[[5]] = selectizeInput("PointSize",h6(strong("Point size according to")),c("None"="None",Available_x), selected = NULL,multiple = FALSE)
+      res[[1]] = selectizeInput(
+        "Xscatter",
+        h6(strong("X variable")),
+        Available_x,
+        selected = Available_x[1],
+        multiple = FALSE
+      )
+      res[[2]] = selectizeInput(
+        "Yscatter",
+        h6(strong("Y variable")),
+        Available_y,
+        selected = Available_x[2],
+        multiple = FALSE
+      )
+      res[[3]] = selectizeInput("ColorBy",
+                                h6(strong("Color variable")),
+                                c("None" = "None", namesTarget[!numInd]),
+                                multiple = FALSE)
+      res[[4]] = selectizeInput("PchBy",
+                                h6(strong("Symbol variable")),
+                                c("None" = "None", namesTarget[!numInd]),
+                                multiple = FALSE)
+      res[[5]] = selectizeInput(
+        "PointSize",
+        h6(strong("Point size according to")),
+        c("None" = "None", Available_x),
+        selected = NULL,
+        multiple = FALSE
+      )
     }
     
     return(res)
@@ -5264,25 +8345,25 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   
   # output$VarIntVisuTree <- renderUI({
-  # 
+  #
   #   target=values$TargetWorking
   #   data = dataInput()$data
   #   taxo = input$TaxoSelect
   #   resDiff = ResDiffAnal()
   #   res = NULL
-  # 
+  #
   #   if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="..." && !is.null(target))
   #   {
   #     counts = dataMergeCounts()$counts
-  # 
+  #
   #     Available_x = sort(rownames(counts))
-  # 
+  #
   #     res = selectizeInput("TaxoTree",h6(strong(paste("Select a specific",taxo,sep=" "))),c("...",Available_x),multiple = TRUE)
-  # 
+  #
   #   }
-  # 
+  #
   #   return(res)
-  # 
+  #
   # })
   
   ###                                               ###
@@ -5291,13 +8372,13 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   ##
   ###                                               ###
   #output$kronar <- renderTable({
-  #  data = dataInput()$data 
+  #  data = dataInput()$data
   #  taxo = input$TaxoSelect
-  #  if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="...") 
+  #  if(!is.null(data$counts) && !is.null(data$taxo) && nrow(data$counts)>0 && nrow(data$taxo)>0 && !is.null(taxo) && taxo!="...")
   #  {
   #    print(counts)
   #    print(data)
-  #KronaR(dat) 
+  #KronaR(dat)
   #print(data$counts)
   #krona_table=tempfile(pattern = "krona", tmpdir = tempdir(), fileext = "")
   #url=paste(krona_table, ".html", sep="")
@@ -5319,31 +8400,32 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   ## Disable the actionbutton if the number of feature is lower than 2
   observe({
-    
     input$TaxoSelect
     counts = dataMergeCounts()$counts
     ChTM = ""
     CT = dataInput()$data$counts
     target = values$TargetWorking
-    labeled= values$labeled
-    ChTM = CheckTargetModel(input,target,labeled,CT)$Error
+    labeled = values$labeled
+    ChTM = CheckTargetModel(input, target, labeled, CT)$Error
     
-    if(input$AddFilter && !is.null(input$SliderThSamp) && !is.null(input$SliderThAb) && is.null(ChTM))
+    if (input$AddFilter &&
+        !is.null(input$SliderThSamp) &&
+        !is.null(input$SliderThAb) && is.null(ChTM))
     {
-      ind.filter =Filtered_feature(counts,input$SliderThSamp,input$SliderThAb)$ind
-      counts = counts[-ind.filter,]
+      ind.filter = Filtered_feature(counts, input$SliderThSamp, input$SliderThAb)$ind
+      counts = counts[-ind.filter, ]
     }
     
     
-    if (!is.null(counts)){
-      if (nrow(counts)>=2){
+    if (!is.null(counts)) {
+      if (nrow(counts) >= 2) {
         shinyjs::enable("RunDESeq")
       }
-      if (nrow(counts)<2) {
+      if (nrow(counts) < 2) {
         shinyjs::disable("RunDESeq")
       }
-    } 
-    if (is.null(counts) ) {
+    }
+    if (is.null(counts)) {
       shinyjs::disable("RunDESeq")
     }
     
@@ -5352,18 +8434,27 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   observe({
     taxo = input$TaxoSelect
-    target=values$TargetWorking
-    if(is.null(target) || is.null(taxo)) shinyjs::disable("AddFilter")
-    else if (is.null(target) || taxo =="...")  shinyjs::disable("AddFilter")
-    else shinyjs::enable("AddFilter")
+    target = values$TargetWorking
+    if (is.null(target) ||
+        is.null(taxo))
+      shinyjs::disable("AddFilter")
+    else if (is.null(target) ||
+             taxo == "...")
+      shinyjs::disable("AddFilter")
+    else
+      shinyjs::enable("AddFilter")
     
   })
   
   ###                                               ###
   # NETWORK
   ###                                               ###
+  
+  
   observeEvent(input$searchNode, {
-    if(input$searchNode == "..."){visNetworkProxy("NetworkPlot") %>% visFit()}
+    if (input$searchNode == "...") {
+      visNetworkProxy("NetworkPlot") %>% visFit()
+    }
     else{
       visNetworkProxy("NetworkPlot") %>%
         visFocus(id = input$searchNode, scale = 1) %>%
@@ -5371,29 +8462,51 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     }
   })
   
+  
   observe({
     visNetworkProxy("NetworkPlot") %>%
       visNodes(size = input$nodeSizeNetwork) %>%
       visEdges(width = input$linkWidth) %>%
-      visOptions(width = if(input$modifwidthVisu){input$widthVisu}, height = input$heightVisu, autoResize = FALSE)
+      visOptions(
+        width = if (input$modifwidthVisu) {
+          input$widthVisu
+        },
+        height = input$heightVisu,
+        autoResize = FALSE
+      )
   })
+  
+
   
   observe({
     visNetworkProxy("NetworkPlot") %>%
       visGetNodes(input = "NetworkPlot_nodes") %>%
-      visGetEdges(input = "NetworkPlot_edges")  
-    colors <- colorsVisuPlot() 
+      visGetEdges(input = "NetworkPlot_edges")
+    colors <- colorsVisuPlot()
     data <- list()
+    
     # Get the current "nodes" as a data.frame
-    if(!is.null(input$NetworkPlot_nodes)){
+    if (!is.null(input$NetworkPlot_nodes)) {
       list_nodes <- input$NetworkPlot_nodes
-      data$nodes <- data.frame(matrix(unlist(list_nodes), nrow = length(list_nodes), byrow = TRUE), stringsAsFactors=FALSE)
+      data$nodes <-
+        data.frame(matrix(
+          unlist(list_nodes),
+          nrow = length(list_nodes),
+          byrow = TRUE
+        ),
+        stringsAsFactors = FALSE)
       colnames(data$nodes) <- colnames(data.frame(list_nodes[[1]]))
     }
     # Get the current "edges" as a data.frame
-    if(!is.null(input$NetworkPlot_edges)){
+    if (!is.null(input$NetworkPlot_edges)) {
       list_edges <- input$NetworkPlot_edges
-      data$edges <- data.frame(matrix(unlist(list_edges), nrow = length(list_edges), byrow = TRUE), stringsAsFactors=FALSE)
+      data$edges <-
+        data.frame(matrix(
+          unlist(list_edges),
+          nrow = length(list_edges),
+          byrow = TRUE
+        ),
+        stringsAsFactors = FALSE)
       colnames(data$edges) <- colnames(data.frame(list_edges[[1]]))
     }
     
@@ -5409,45 +8522,61 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     input$edgeColorNegative
     input$colorsdiagVisuPlot
     
-    if(!is.null(data$nodes)){
-      if(isolate(input$colorCorr == 'corr')){
-        scale <- if(input$scaleFree){max(c(max(as.numeric(data$nodes$cor)),-min(as.numeric(data$nodes$cor))))}else{1}
-        data$nodes$color.background <- sapply(as.numeric(data$nodes$cor), function(x) colorRampPalette(rev(brewer.pal(9, input$colorPalette)))(200)[round(x, digits = 2)*100/scale+100])
-        data$nodes$color.highlight.background <- data$nodes$color.background
+    if (!is.null(data$nodes)) {
+      if (isolate(input$colorCorr == 'corr')) {
+        scale <-
+          if (input$scaleFree) {
+            max(c(max(as.numeric(
+              data$nodes$cor
+            )), -min(as.numeric(
+              data$nodes$cor
+            ))))
+          } else{
+            1
+          }
+        data$nodes$color.background <-
+          sapply(as.numeric(data$nodes$cor), function(x)
+            colorRampPalette(rev(
+              brewer.pal(9, input$colorPalette)
+            ))(200)[round(x, digits = 2) * 100 / scale + 100])
+        data$nodes$color.highlight.background <-
+          data$nodes$color.background
       }
       
       else
       {
-        data$nodes$color.background <- colors[1 + (as.integer(data$nodes$community) -1) %% length(colors)]
-        data$nodes$color.highlight.background <- data$nodes$color.background
+        data$nodes$color.background <-
+          colors[1 + (as.integer(data$nodes$community) - 1) %% length(colors)]
+        data$nodes$color.highlight.background <-
+          data$nodes$color.background
       }
       # else{data$nodes$color.background <- input$colorBackground
       # data$nodes$color.highlight.background <- input$colorHighlightBackground}
       
       data$nodes$color.border <- input$colorBorder
-      data$nodes$color.highlight.border <- input$colorHighlightBorder
+      data$nodes$color.highlight.border <-
+        input$colorHighlightBorder
       
       
       list_to_label <- input$ToLabelNetwork
       data$nodes$label <- data$nodes$id
     }
-      #data$nodes$label <- sapply(data$nodes$id, function(x)if(is.element(x, list_to_label)){x}else{""})}
+    #data$nodes$label <- sapply(data$nodes$id, function(x)if(is.element(x, list_to_label)){x}else{""})}
     
-    if(!is.null(data$edges)){
-      if(input$colorCorr == 'pcorr'){
-        data$edges$color <- ifelse(data$edges$pcor > 0, '#FF0000', ifelse(data$edges$pcor < 0, '#0000FF', '#000000'))
-        #data$edges$weight <- abs(as.numeric(data$edges$weight))
+    if (!is.null(data$edges)) {
+      if (input$colorCorr == 'pcorr') {
+        data$edges$color[data$edges$pcor > 0] <- input$edgeColorPositive
+        data$edges$color[data$edges$pcor <= 0] <- input$edgeColorNegative
       }
       else
         data$edges$color <- '#000000'
-      }
+    }
     
     visNetworkProxy("NetworkPlot") %>%
       visUpdateNodes(nodes = data$nodes) %>%
-      visUpdateEdges(edges = data$edges)
-   
+      visUpdateEdges(edges = data$edges) 
+    
   })
-  
   
   # output$legendNetworkCorr <- renderPlot({
   #   par(mar=c(1,0,0,0))
@@ -5456,40 +8585,98 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   # }, bg = "transparent")
   
   ListSelectTaxoToPlotNetwork <- reactive({
-    input$selectTaxoPlotNetwork})
+    input$selectTaxoPlotNetwork
+  })
   
-  SelectTaxoPlotNetworkDebounce <- debounce(ListSelectTaxoToPlotNetwork, 1000)
+  SelectTaxoPlotNetworkDebounce <-
+    debounce(ListSelectTaxoToPlotNetwork, 1000)
+  
   
   observe({
-    if(input$PlotVisuSelect == "Network")
-      updateRadioButtons(session = session, "NormOrRaw", choiceNames = c("Norm", "Raw", "VST"), choiceValues = c("norm", "raw", "vst"), inline = TRUE)
+    if (input$PlotVisuSelect == "Network")
+      updateRadioButtons(
+        session = session,
+        "NormOrRaw",
+        choiceNames = c("Norm", "Raw", "VST"),
+        choiceValues = c("norm", "raw", "vst"),
+        inline = TRUE
+      )
     else
-      updateRadioButtons(session = session, "NormOrRaw", choiceNames = c("Norm", "Raw"), choiceValues = c("norm", "raw"), inline = TRUE)
+      updateRadioButtons(
+        session = session,
+        "NormOrRaw",
+        choiceNames = c("Norm", "Raw"),
+        choiceValues = c("norm", "raw"),
+        inline = TRUE
+      )
     
   })
   
+  
   # observe({
-  #   shinyjs::runjs("console.log(document.getElementById('selectedByNetworkPlot').value);")
+  #   data = dataInput()$data
+  #     taxo = input$TaxoSelect
+  #     resDiff = ResDiffAnal()
+  #     res = NULL
+  #     counts = dataMergeCounts()$counts
+  #     sumTot = rowSums(counts)
+  #     ord = order(sumTot,decreasing=TRUE)
+  #     Available_taxo = rownames(counts)[ord]
+  #     mat <- as.matrix(Plot_network(input,ResDiffAnal(),Available_taxo, Available_taxo, qualiVariable)$pcor_mat)
+  #     req(mat)
+  #     updateSliderInput(session, "pcorrThreshold", min = round(min(abs(mat))), max = max(abs(mat)))
   # })
+  
+  
   output$Panels <- renderPlot({
     counts = dataMergeCounts()$counts
     sumTot = rowSums(counts)
-    ord = order(sumTot,decreasing=TRUE)
+    ord = order(sumTot, decreasing = TRUE)
     Available_taxo = rownames(counts)[ord]
-    res = Plot_network(input,ResDiffAnal(), Available_taxo, SelectTaxoPlotNetworkDebounce(), qualiVariable, colors = colorsVisuPlot())$voronoi
+    res = Plot_network(
+      input,
+      ResDiffAnal(),
+      Available_taxo,
+      SelectTaxoPlotNetworkDebounce(),
+      qualiVariable,
+      colors = colorsVisuPlot(),
+      dataInputTaxo = dataInput()
+    )$voronoi
     return(res)
-  },height = reactive(input$heightVisu), width = reactive(ifelse(input$modifwidthVisu,input$widthVisu,"auto")))
+  }, height = reactive(input$heightVisu), width = reactive(ifelse(
+    input$modifwidthVisu, input$widthVisu, "auto"
+  )))
   
+  output$CommunityBarplot <- renderPlot({
+    
+    
+  }, height = reactive(input$heightVisu), width = reactive(ifelse(
+    input$modifwidthVisu, input$widthVisu, "auto"
+  )))
+  
+  get_data_input <- reactive({
+    data = dataInput()
+    return(data)
+  })
   
   output$downloadNetwork <- downloadHandler(
-    filename = function() {"network_SHAMAN.html"},
+    filename = function() {
+      "network_SHAMAN.html"
+    },
     content = function(con) {
       counts = dataMergeCounts()$counts
       sumTot = rowSums(counts)
-      ord = order(sumTot,decreasing=TRUE)
+      ord = order(sumTot, decreasing = TRUE)
       Available_taxo = rownames(counts)[ord]
-      Plot_network(input,ResDiffAnal(), Available_taxo, SelectTaxoPlotNetworkDebounce(), qualiVariable, colors = colorsVisuPlot())$plot %>% visSave(con)
+      Plot_network(
+        input,
+        ResDiffAnal(),
+        Available_taxo,
+        SelectTaxoPlotNetworkDebounce(),
+        qualiVariable,
+        colors = colorsVisuPlot(),
+        dataInputTaxo = dataInput()
+      )$plot %>% visSave(con)
     }
   )
 })
-
