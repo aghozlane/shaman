@@ -6158,7 +6158,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
                                                SelectTaxoPlotNetworkDebounce(),
                                                qualiVariable,
                                                colors = colorsVisuPlot(),
-                                               dataInputTaxo = dataInput()
+                                               dataInput = dataInput()
                                              )$voronoi
                                            )
                                          }
@@ -7159,7 +7159,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
         SelectTaxoPlotNetworkDebounce(),
         qualiVariable,
         colors = colorsVisuPlot(),
-        dataInputTaxo = dataInput()
+        dataInput = dataInput()
       )$data$nodes
       names(tmp)[names(tmp) == 'id'] <- as.character(input$TaxoSelect)
       community <- tmp[, c(as.character(input$TaxoSelect), 'community', 'color.background')]
@@ -7241,7 +7241,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
           SelectTaxoPlotNetworkDebounce(),
           qualiVariable,
           colors = colorsVisuPlot(),
-          dataInputTaxo = dataInput()
+          dataInput = dataInput()
         )$data$nodes
       )
       names(tmp)[names(tmp) == 'id'] <-
@@ -7297,7 +7297,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
           ind_taxo,
           qualiVariable,
           colors = colorsVisuPlot(),
-          dataInputTaxo = dataInput()
+          dataInput = dataInput()
         )$plot
       )
   })
@@ -7799,7 +7799,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
                          Available_taxo,
                          Available_taxo,
                          qualiVariable,
-                         dataInputTaxo = dataInput())$data$edges
+                         dataInput = dataInput())$data$edges
           edgesFrom <- unique(edges$from)
           edgesTo <- unique(edges$to)
           linked <- unique(c(edgesFrom, edgesTo))
@@ -8638,7 +8638,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       SelectTaxoPlotNetworkDebounce(),
       qualiVariable,
       colors = colorsVisuPlot(),
-      dataInputTaxo = dataInput()
+      dataInput = dataInput()
     )$voronoi
     return(res)
   }, height = reactive(input$heightVisu), width = reactive(ifelse(
@@ -8673,7 +8673,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
         SelectTaxoPlotNetworkDebounce(),
         qualiVariable,
         colors = colorsVisuPlot(),
-        dataInputTaxo = dataInput()
+        dataInput = dataInput()
       )$plot %>% visSave(con)
     }
   )
