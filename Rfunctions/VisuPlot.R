@@ -7,9 +7,10 @@
 ##                       ##
 
 Plot_Visu_Barplot <-
-  function(input, resDiff, colors, others, plot = "classic")
+  function(input, resDiff, colors, others, plot = "classic", community = NULL)
   {
     req(colors)
+    target = resDiff$target
     #Sort the palette for the barchart
     rgb <- grDevices::col2rgb(colors)
     tsp <- TSP::as.ATSP(dist(t(rgb)))
@@ -18,20 +19,20 @@ Plot_Visu_Barplot <-
     ## Get Input for BarPlot
     VarInt = input$VisuVarInt
     ind_taxo = input$selectTaxoPlot
-    others <- others[!(others %in% ind_taxo)]
-    #tmp_combined = GetDataToPlot(input,resDiff,VarInt,ind_taxo)
-    #counts_tmp_combined = tmp_combined$counts
-    other_tmp_combined = GetDataToPlot(input, resDiff, VarInt, others)
-    others_counts_tmp_combined = other_tmp_combined$counts
     nbKept = length(ind_taxo)
-    #SamplesNames = tmp_combined$namesCounts
-    OthersSamplesNames = other_tmp_combined$namesCounts
-    #if(nbKept>1) namesTax = colnames(counts_tmp_combined)
-    #else if(nbKept==1) namesTax = ind_taxo
-    if (!is.null(OthersSamplesNames))
-      OthersnamesTax = colnames(others_counts_tmp_combined)
-    else if (!is.null(others))
-      OthersnamesTax = others
+    if(is.null(community)){
+      others <- others[!(others %in% ind_taxo)]
+      other_tmp_combined = GetDataToPlot(input, resDiff, VarInt, others)
+      others_counts_tmp_combined = other_tmp_combined$counts
+      OthersSamplesNames = other_tmp_combined$namesCounts
+      if (!is.null(OthersSamplesNames))
+        OthersnamesTax = colnames(others_counts_tmp_combined)
+      else if (!is.null(others))
+        OthersnamesTax = others
+    }
+    else{
+      
+    }
     dataNull = data.frame(x = c(0, 0), y = c(1, 2))
     
     all_tmp_combined <-
@@ -59,32 +60,18 @@ Plot_Visu_Barplot <-
         !is.null(all_counts_tmp_combined) &&
         nrow(all_counts_tmp_combined) > 0)
     {
-      # ## Create the data frame for the plot function
-      # dataBarPlot_mat = c()
-      # tmp_mat = matrix(0,ncol=3,nrow=nbKept)
-      # tmp_counts = c()
-      #
-      # for(i in 1:(nrow(counts_tmp_combined)))
-      # {
-      #   ## Taxo
-      #   tmp_mat[1:nbKept,1] = namesTax
-      #
-      #   ## Counts
-      #
-      #   tmpProp = counts_tmp_combined[i,]
-      #   if(input$CountsOrProp=="prop")
-      #   {
-      #     tmpProp = round(tmpProp/sum(tmpProp),3)
-      #     tmpProp = as.numeric(tmpProp/sum(tmpProp) * 100)
-      #   }
-      #   tmp_counts = c(tmp_counts,tmpProp)
-      #
-      #   ## Meta data
-      #   tmp_mat[1:nbKept,3] = as.character(rep(SamplesNames[i],nbKept))
-      #
-      #   ## Conbined the sample
-      #   dataBarPlot_mat = rbind(dataBarPlot_mat,tmp_mat)
-      # }
+      val = NULL
+      #Get the modalities
+      for (i in 1:length(VarInt))
+      {
+        ## Replace "-" by "."
+        target[, VarInt[i]] =  gsub("-", ".", target[, VarInt[i]])
+        
+        Tinput = paste("input$", "ModVisu", VarInt[i], sep = "")
+        expr = parse(text = Tinput)
+        ## All the modalities for all the var of interest
+        val = c(val, eval(expr))
+      }
       
       ## Create the others data frame for the plot function
       all_dataBarPlot_mat = c()
@@ -130,10 +117,12 @@ Plot_Visu_Barplot <-
         as.data.frame(others_dataBarPlot_mat)
       main_dataBarPlot_mat <- as.data.frame(main_dataBarPlot_mat)
       
-      main_dataBarPlot_mat <-
-        rbind(main_dataBarPlot_mat, others_dataBarPlot_mat) %>%
+      main_dataBarPlot_mat$AllVar <- factor(main_dataBarPlot_mat$AllVar, levels = val)
+      
+      main_dataBarPlot_mat <- rbind(main_dataBarPlot_mat, others_dataBarPlot_mat)
+      
+      main_dataBarPlot_mat <- main_dataBarPlot_mat %>%
         dplyr::arrange(AllVar)
-      # dplyr::arrange(AllVar, desc(Proportions)) instead
       
       main_dataBarPlot_mat <- as.data.frame(main_dataBarPlot_mat)
       if (input$SensPlotVisu == "Vertical")
@@ -1498,7 +1487,7 @@ Plot_network <-
            availableTaxo,
            ind_taxo,
            qualiVariable,
-           dataInputTaxo,
+           dataInput,
            export = FALSE,
            colors = NULL) {
     plot = NULL
@@ -1926,16 +1915,27 @@ Plot_network <-
         ###### taxonomy data table ######
         #################################
         
-        taxo <- data.frame(dataInputTaxo$data$taxo)
+        taxo <- data.frame(dataInput$data$taxo)
+        #print(head(taxo))
+        counts <- data.frame(dataInput$data$counts)
         colnames(cluster_df) <- c("Community", as.character(input$TaxoSelect))
+        taxo <- data.frame(RowName = rownames(taxo), taxo)
         
+        # Perform data transformation
         taxo <- dplyr::inner_join(taxo, cluster_df, by = as.character(input$TaxoSelect)) %>%
           dplyr::mutate(across(where(is.factor), as.character)) %>% # Convert factors to characters
           tidyr::replace_na(setNames(lapply(taxo, function(x) "Unknown"), names(taxo))) %>%
-          dplyr::arrange(Community) %>%
-          as.data.frame()
+          dplyr::arrange(Community)
         
-        print(taxo)
+        # Reassign the column 'RowName' as row names
+        rownames(taxo) <- taxo$RowName
+        # Optionally, remove the 'RowName' column if it's no longer needed
+        taxo <- taxo %>% dplyr::select(-RowName)
+        # Convert back to data frame if needed
+        taxo <- as.data.frame(taxo)
+        #print(head(counts))
+        #print(head(taxo))
+        
       }
       pcor_mat = pcor
     }
