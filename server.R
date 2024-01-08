@@ -6133,7 +6133,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
                                          
                                          if (input$PlotVisuSelect == "Barplot") {
                                            others = get_others()$others
-                                           print(Plot_Visu_Barplot(input, ResDiffAnal(), colors, others)$gg)
+                                           print(Plot_Visu_Barplot(input, ResDiffAnal(), colors = colorsBarplot(), others)$gg)
                                          }
                                          else if (input$PlotVisuSelect == "Heatmap")
                                            Plot_Visu_Heatmap(input, ResDiffAnal(), export = TRUE)
@@ -8645,7 +8645,57 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     input$modifwidthVisu, input$widthVisu, "auto"
   )))
   
-  output$CommunityBarplot <- renderPlot({
+  output$CommunitySunburst <- renderPlot({
+    counts = dataMergeCounts()$counts
+    sumTot = rowSums(counts)
+    ord = order(sumTot, decreasing = TRUE)
+    Available_taxo = rownames(counts)[ord]
+    res = Plot_network(
+      input,
+      ResDiffAnal(),
+      Available_taxo,
+      SelectTaxoPlotNetworkDebounce(),
+      qualiVariable,
+      colors = colorsVisuPlot(),
+      dataInput = dataInput()
+    )$taxo
+    
+    # res <- res %>%
+    #   dplyr::filter(Community == 1) %>%
+    #   dplyr::select(-Community)
+    # 
+    # df_parent_node <- dplyr::mutate(res, across(Kingdom:OTU_annotation, ~gsub("-", "_", .))) %>%
+    #   dplyr::mutate(
+    #     Kingdom_Parent = "Root",
+    #     Phylum_Parent = Kingdom,
+    #     Class_Parent = Phylum,
+    #     Order_Parent = Class,
+    #     Family_Parent = Order,
+    #     Genus_Parent = Family,
+    #     Species_Parent = Genus,
+    #     OTUannotation_Parent = Species
+    #   ) %>%
+    #   tidyr::pivot_longer(
+    #     cols = dplyr::contains("_Parent"),
+    #     names_to = "level",
+    #     values_to = "parent"
+    #   ) %>%
+    #   dplyr::select(level, parent, name = Species, OTU_annotation) %>%
+    #   dplyr::group_by(level, name) %>%
+    #   dplyr::summarize(parent = dplyr::first(parent), .groups = "drop") %>%
+    #   dplyr::ungroup()
+    # 
+    # # Write the transformed data to a CSV file
+    # write.csv(df_parent_node, "taxonomy_parent_node.csv", row.names = FALSE)
+    # 
+    # # Read the data and create a sunburst plot
+    # sb <- ggsunburst::sunburst_data("taxonomy_parent_node.csv", type = "node_parent")
+    # p <- ggsunburst::sunburst(sb, node_labels = TRUE, leaf_labels = FALSE, rects.fill.aes = "name") + 
+    #   scale_fill_discrete(guide = FALSE)
+    
+    
+    return(p)
+    
     
     
   }, height = reactive(input$heightVisu), width = reactive(ifelse(

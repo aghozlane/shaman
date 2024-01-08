@@ -116,14 +116,18 @@ Plot_Visu_Barplot <-
       others_dataBarPlot_mat <-
         as.data.frame(others_dataBarPlot_mat)
       main_dataBarPlot_mat <- as.data.frame(main_dataBarPlot_mat)
-      
-      main_dataBarPlot_mat$AllVar <- factor(main_dataBarPlot_mat$AllVar, levels = val)
-      
-      main_dataBarPlot_mat <- rbind(main_dataBarPlot_mat, others_dataBarPlot_mat)
-      
-      main_dataBarPlot_mat <- main_dataBarPlot_mat %>%
-        dplyr::arrange(AllVar)
-      
+      if(length(VarInt) == 1){
+        main_dataBarPlot_mat$AllVar <- factor(main_dataBarPlot_mat$AllVar, levels = val)
+        
+        main_dataBarPlot_mat <- rbind(main_dataBarPlot_mat, others_dataBarPlot_mat)
+        
+        main_dataBarPlot_mat <- main_dataBarPlot_mat %>%
+          dplyr::arrange(AllVar)
+      }
+      else{
+          main_dataBarPlot_mat$AllVar <- factor(main_dataBarPlot_mat$AllVar, levels = unique(others_dataBarPlot_mat$AllVar))
+          main_dataBarPlot_mat <- rbind(main_dataBarPlot_mat, others_dataBarPlot_mat)
+      }
       main_dataBarPlot_mat <- as.data.frame(main_dataBarPlot_mat)
       if (input$SensPlotVisu == "Vertical")
         Sens = "multiBarChart"
@@ -162,23 +166,26 @@ Plot_Visu_Barplot <-
       # tax.colors=rep(c("#1f77b4","#aec7e8","#ff7f0e","#ffbb78", "#2ca02c","#98df8a","#d62728","#ff9896","#9467bd","#c5b0d5"
       #                  ,"#8c564b","#c49c94","#e377c2","#f7b6d2","#7f7f7f", "#c7c7c7","#bcbd22","#dbdb8d","#17becf","#9edae5"),ceiling(nbKept/20))
       
-      main_dataBarPlot_mat$Taxonomy = factor(main_dataBarPlot_mat$Taxonomy,
-                                             levels = c(allnamesTax[!(allnamesTax %in% others)], 'Others'))
-      main_dataBarPlot_mat$AllVar = factor(main_dataBarPlot_mat$AllVar, levels = rev(unique(main_dataBarPlot_mat$AllVar)))
+      # main_dataBarPlot_mat$Taxonomy = factor(main_dataBarPlot_mat$Taxonomy,
+      #                                        levels = c(allnamesTax[!(allnamesTax %in% others)], 'Others'))
+      # main_dataBarPlot_mat$AllVar = factor(main_dataBarPlot_mat$AllVar, levels = rev(unique(main_dataBarPlot_mat$AllVar)))
+      
       # main_dataBarPlot_mat <- main_dataBarPlot_mat %>%
       #   dplyr::arrange(AllVar)
-      colors <- rev(colors[1:(length(ind_taxo) + 1)])
+      
+      #colors <- colorRampPalette(brewer.pal(9, "Set1"))(length(unique(main_dataBarPlot_mat$Taxonomy)))
+      colors <- rev(rep(colors, length.out = length(unique(main_dataBarPlot_mat$Taxonomy))))
       gg = ggplot(main_dataBarPlot_mat,
                   aes(
                     x = AllVar,
                     y = Proportions,
                     fill = forcats::fct_rev(Taxonomy)
-                  )) + guides(fill = guide_legend("Taxonomy"))
+                  )) + guides(fill = guide_legend(input$TaxoSelect))
       if (input$CountsOrProp == "counts" &&
           input$positionBarPlot == "fill")
-        gg = gg + geom_col()
+        gg = gg + geom_bar(position='stack', stat='identity')
       else
-        gg = gg + geom_col(position = input$positionBarPlot)
+        gg = gg + geom_bar(position = input$positionBarPlot, stat = 'identity')
       gg = gg + theme_bw() + scale_fill_manual(values = colors)
       gg = gg + theme(
         panel.grid.minor.x = element_blank(),
@@ -195,8 +202,8 @@ Plot_Visu_Barplot <-
         gg = gg + labs(y = "Raw counts", x = "")
       if (input$SensPlotVisu == "Horizontal")
         gg = gg + coord_flip()
+      
     }
-    
     return(list(plotd3 = plotd3, gg = gg))
   }
 
@@ -1496,6 +1503,7 @@ Plot_network <-
     cluster_df = NULL
     voronoi = NULL
     pcor_mat= NULL
+    community_barplot = NULL
     VarInt = input$VisuVarInt
     
     if (isolate(input$colorCorr == 'corr')) {
@@ -1916,8 +1924,6 @@ Plot_network <-
         #################################
         
         taxo <- data.frame(dataInput$data$taxo)
-        #print(head(taxo))
-        counts <- data.frame(dataInput$data$counts)
         colnames(cluster_df) <- c("Community", as.character(input$TaxoSelect))
         taxo <- data.frame(RowName = rownames(taxo), taxo)
         
@@ -1933,8 +1939,8 @@ Plot_network <-
         taxo <- taxo %>% dplyr::select(-RowName)
         # Convert back to data frame if needed
         taxo <- as.data.frame(taxo)
-        #print(head(counts))
         #print(head(taxo))
+        
         
       }
       pcor_mat = pcor
@@ -1944,6 +1950,17 @@ Plot_network <-
       plot = plot,
       data = dataVN,
       voronoi = voronoi,
-      pcor_mat = pcor
+      pcor_mat = pcor, 
+      taxo = taxo
     ))
   }
+
+Plot_network_sunburst <- function(inout,
+                                  resDiff,
+                                  availableTaxo,
+                                  ind_taxo,
+                                  qualiVariable, 
+                                  dataInput,
+                                  colors){
+  
+}

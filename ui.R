@@ -1094,7 +1094,7 @@ function(request) {
                                                        selected = "Network",
                                                        tabPanel("Network", uiOutput("Research"), div(visNetworkOutput("NetworkPlot", height = "400px"))),
                                                        tabPanel("Panels", plotOutput("Panels")),
-                                                       tabPanel("Community barplot", plotOutput("CommunityBarplot"))),
+                                                       tabPanel("Community sunburst", plotOutput("CommunitySunburst"))),
                                                 style = "background-color: #edf1f4;")
                              ),
                              conditionalPanel(condition="input.PlotVisuSelect!='Network'",
