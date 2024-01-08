@@ -8563,11 +8563,12 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     
     if (!is.null(data$edges)) {
       if (input$colorCorr == 'pcorr') {
-        data$edges$color[data$edges$pcor > 0] <- input$edgeColorPositive
-        data$edges$color[data$edges$pcor <= 0] <- input$edgeColorNegative
+        print(input$edgeColorPositive)
+        data$edges$color[data$edges$pcor > 0] <- toString(input$edgeColorPositive)
+        data$edges$color[data$edges$pcor <= 0] <- toString(input$edgeColorNegative)
       }
       else
-        data$edges$color <- '#000000'
+        data$edges$color <- "#000000"
     }
     
     visNetworkProxy("NetworkPlot") %>%
@@ -8645,12 +8646,12 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     input$modifwidthVisu, input$widthVisu, "auto"
   )))
   
-  output$CommunitySunburst <- renderPlot({
+  output$Community <- renderUI({
     counts = dataMergeCounts()$counts
     sumTot = rowSums(counts)
     ord = order(sumTot, decreasing = TRUE)
     Available_taxo = rownames(counts)[ord]
-    res = Plot_network(
+    res = unique(Plot_network(
       input,
       ResDiffAnal(),
       Available_taxo,
@@ -8658,49 +8659,28 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       qualiVariable,
       colors = colorsVisuPlot(),
       dataInput = dataInput()
-    )$taxo
-    
-    # res <- res %>%
-    #   dplyr::filter(Community == 1) %>%
-    #   dplyr::select(-Community)
-    # 
-    # df_parent_node <- dplyr::mutate(res, across(Kingdom:OTU_annotation, ~gsub("-", "_", .))) %>%
-    #   dplyr::mutate(
-    #     Kingdom_Parent = "Root",
-    #     Phylum_Parent = Kingdom,
-    #     Class_Parent = Phylum,
-    #     Order_Parent = Class,
-    #     Family_Parent = Order,
-    #     Genus_Parent = Family,
-    #     Species_Parent = Genus,
-    #     OTUannotation_Parent = Species
-    #   ) %>%
-    #   tidyr::pivot_longer(
-    #     cols = dplyr::contains("_Parent"),
-    #     names_to = "level",
-    #     values_to = "parent"
-    #   ) %>%
-    #   dplyr::select(level, parent, name = Species, OTU_annotation) %>%
-    #   dplyr::group_by(level, name) %>%
-    #   dplyr::summarize(parent = dplyr::first(parent), .groups = "drop") %>%
-    #   dplyr::ungroup()
-    # 
-    # # Write the transformed data to a CSV file
-    # write.csv(df_parent_node, "taxonomy_parent_node.csv", row.names = FALSE)
-    # 
-    # # Read the data and create a sunburst plot
-    # sb <- ggsunburst::sunburst_data("taxonomy_parent_node.csv", type = "node_parent")
-    # p <- ggsunburst::sunburst(sb, node_labels = TRUE, leaf_labels = FALSE, rects.fill.aes = "name") + 
-    #   scale_fill_discrete(guide = FALSE)
-    
-    
-    return(p)
-    
-    
-    
-  }, height = reactive(input$heightVisu), width = reactive(ifelse(
-    input$modifwidthVisu, input$widthVisu, "auto"
-  )))
+    )$taxo$Community)
+    selectizeInput("CommunitySunburst", 
+                   "Select the community",
+                   choices = res)
+  })
+  
+  output$CommunitySunburst <- sunburstR::renderSunburst({
+    counts = dataMergeCounts()$counts
+    sumTot = rowSums(counts)
+    ord = order(sumTot, decreasing = TRUE)
+    Available_taxo = rownames(counts)[ord]
+    res = Plot_network_sunburst(
+      input,
+      ResDiffAnal(),
+      Available_taxo,
+      SelectTaxoPlotNetworkDebounce(),
+      qualiVariable,
+      colors = colorsVisuPlot(),
+      dataInput = dataInput()
+    )
+    return(res)
+  })
   
   get_data_input <- reactive({
     data = dataInput()

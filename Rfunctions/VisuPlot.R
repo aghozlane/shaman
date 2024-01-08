@@ -144,8 +144,8 @@ Plot_Visu_Barplot <-
           id = 'barplotTaxo',
           height = ifelse(
             is.na(input$heightVisu),
-            800,
-            as.character(input$heightVisu)
+            toString(800),
+            toString(as.character(input$heightVisu))
           ),
           width = if (input$modifwidthVisu) {
             as.character(input$widthVisu)
@@ -1658,11 +1658,11 @@ Plot_network <-
           # Assign colors based on the correlation: Red for positive, Blue for negative
           dataVN$edges$color <-
             ifelse(dataVN$edges$pcor > 0,
-                   isolate(input$edgeColorPositive),
-                   isolate(input$edgeColorNegative))
+                   toString(isolate(input$edgeColorPositive)),
+                   toString(isolate(input$edgeColorNegative)))
         }
         else{
-          dataVN$edges$color <- '#000000'
+          dataVN$edges$color <- "#000000"
           dataVN$edges$pcor <- 0
         }
         
@@ -1938,7 +1938,7 @@ Plot_network <-
         # Optionally, remove the 'RowName' column if it's no longer needed
         taxo <- taxo %>% dplyr::select(-RowName)
         # Convert back to data frame if needed
-        taxo <- as.data.frame(taxo)
+        resTaxo <- as.data.frame(taxo)
         #print(head(taxo))
         
         
@@ -1951,16 +1951,58 @@ Plot_network <-
       data = dataVN,
       voronoi = voronoi,
       pcor_mat = pcor, 
-      taxo = taxo
+      taxo = resTaxo
     ))
   }
 
-Plot_network_sunburst <- function(inout,
+
+Plot_network_sunburst <- function(input,
                                   resDiff,
                                   availableTaxo,
                                   ind_taxo,
                                   qualiVariable, 
                                   dataInput,
                                   colors){
+  res = isolate(Plot_network(input,
+         resDiff,
+         availableTaxo,
+         ind_taxo,
+         qualiVariable,
+         dataInput,
+         colors = colors)$taxo)
+
+  # Filter for the first community
+  res_community <- res %>%
+    dplyr::filter(Community == as.integer(input$CommunitySunburst)) %>% 
+    dplyr::select(-Community)
+  
+  # Replace hyphens in taxonomy names to avoid issues with sunburstR paths
+  res_community <- res_community %>%
+    dplyr::mutate(across(Kingdom:OTU_annotation, ~ gsub("-", "_", .)))
+  
+  # Create the path string for sunburstR from the taxonomy columns
+  res_community <- res_community %>%
+    dplyr::mutate(path = paste(Kingdom, Phylum, Class, Order, Family, Genus, Species, OTU_annotation,OTU/Gene, sep = "-"))
+  
+  # Count the occurrences of each unique path
+  res_counts <- res_community %>%
+    dplyr::count(path) %>%
+    dplyr::rename(count = n)
+  
+  # Create the sunburst plot data frame
+  sunburst_data <- data.frame(paths = res_counts$path, counts = res_counts$count)
+  
+  # Generate the sunburst plot for the first community
+  p <- sunburstR::sunburst(sunburst_data, count = TRUE, height = ifelse(
+    is.na(input$heightVisu),
+    toString(800),
+    toString(as.character(input$heightVisu))
+  ),
+  width = if (input$modifwidthVisu) {
+    as.character(input$widthVisu)
+  })
+  
+  # Return the sunburst plot for the first community
+  return(p)
   
 }
