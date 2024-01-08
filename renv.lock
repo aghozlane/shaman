@@ -1802,6 +1802,23 @@
       ],
       "Hash": "a57f0f5dbcfd0d77ad4ff33032f5dc79"
     },
+    "ggsunburst": {
+      "Package": "ggsunburst",
+      "Version": "0.3.0",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "didacs",
+      "RemoteRepo": "ggsunburst",
+      "RemoteRef": "master",
+      "RemoteSha": "aec6ad9e3ea036e1a3d1a766dcd78f9dde3e4213",
+      "Requirements": [
+        "R",
+        "ggplot2",
+        "reticulate"
+      ],
+      "Hash": "53088d45072b03194c049341dea042be"
+    },
     "gh": {
       "Package": "gh",
       "Version": "1.1.0",
