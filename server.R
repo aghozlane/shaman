@@ -8563,7 +8563,6 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     
     if (!is.null(data$edges)) {
       if (input$colorCorr == 'pcorr') {
-        print(input$edgeColorPositive)
         data$edges$color[data$edges$pcor > 0] <- toString(input$edgeColorPositive)
         data$edges$color[data$edges$pcor <= 0] <- toString(input$edgeColorNegative)
       }
