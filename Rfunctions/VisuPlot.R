@@ -1572,16 +1572,17 @@ Plot_network <-
         
         if (input$colorCorr == "pcorr") {
           adjacency <- matrix(apply(pcor, c(1, 2), function(x) {
-            if (abs(x) > input$pcorrThreshold) {
+            # Check for NA values in x and ensure input$pcorrThreshold is not NA
+            if (!is.na(x) && !is.na(input$pcorrThreshold) && abs(x) > as.numeric(input$pcorrThreshold)) {
               return(x)
             } else {
               return(0)
             }
-          }),
-          nrow = nrow(pcor),
-          ncol = ncol(pcor))
+          }), nrow = nrow(pcor), ncol = ncol(pcor))
+          
           rownames(adjacency) <- colnames(pcor)
           colnames(adjacency) <- colnames(pcor)
+          
         }
         else{
           adjacency <-
