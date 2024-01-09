@@ -1094,7 +1094,7 @@ function(request) {
                                                        selected = "Network",
                                                        tabPanel("Network", uiOutput("Research"), div(visNetworkOutput("NetworkPlot", height = "400px"))),
                                                        tabPanel("Panels", plotOutput("Panels")),
-                                                       tabPanel("Community sunburst", uiOutput("Community"), sunburstR::sunburstOutput("CommunitySunburst"))),
+                                                       tabPanel("Sunburst", uiOutput("Community"), sunburstR::sunburstOutput("CommunitySunburst"))),
                                                 style = "background-color: #edf1f4;")
                              ),
                              conditionalPanel(condition="input.PlotVisuSelect!='Network'",

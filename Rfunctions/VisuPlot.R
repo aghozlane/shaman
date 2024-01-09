@@ -1926,7 +1926,6 @@ Plot_network <-
         taxo <- data.frame(dataInput$data$taxo)
         colnames(cluster_df) <- c("Community", as.character(input$TaxoSelect))
         taxo <- data.frame(RowName = rownames(taxo), taxo)
-        
         # Perform data transformation
         taxo <- dplyr::inner_join(taxo, cluster_df, by = as.character(input$TaxoSelect)) %>%
           dplyr::mutate(across(where(is.factor), as.character)) %>% # Convert factors to characters
@@ -1939,7 +1938,7 @@ Plot_network <-
         taxo <- taxo %>% dplyr::select(-RowName)
         # Convert back to data frame if needed
         resTaxo <- as.data.frame(taxo)
-        #print(head(taxo))
+        print(head(taxo))
         
         
       }
@@ -1970,7 +1969,8 @@ Plot_network_sunburst <- function(input,
          qualiVariable,
          dataInput,
          colors = colors)$taxo)
-
+  req(input$CommunitySunburst)
+  req(res)
   # Filter for the first community
   res_community <- res %>%
     dplyr::filter(Community == as.integer(input$CommunitySunburst)) %>% 
@@ -1978,11 +1978,11 @@ Plot_network_sunburst <- function(input,
   
   # Replace hyphens in taxonomy names to avoid issues with sunburstR paths
   res_community <- res_community %>%
-    dplyr::mutate(across(Kingdom:OTU_annotation, ~ gsub("-", "_", .)))
+    dplyr::mutate(across(everything(), ~ gsub("-", "_", .)))
   
   # Create the path string for sunburstR from the taxonomy columns
-  res_community <- res_community %>%
-    dplyr::mutate(path = paste(Kingdom, Phylum, Class, Order, Family, Genus, Species, OTU_annotation,OTU/Gene, sep = "-"))
+  taxonomy_cols <- setdiff(names(res), "Community")
+  res_community$path <- do.call(paste, c(res_community[taxonomy_cols], sep = "-"))
   
   # Count the occurrences of each unique path
   res_counts <- res_community %>%
@@ -1993,10 +1993,10 @@ Plot_network_sunburst <- function(input,
   sunburst_data <- data.frame(paths = res_counts$path, counts = res_counts$count)
   
   # Generate the sunburst plot for the first community
-  p <- sunburstR::sunburst(sunburst_data, count = TRUE, height = ifelse(
+  p <- sunburstR::sunburst(sunburst_data, count = TRUE, legend = 0, colors = colors, height = ifelse(
     is.na(input$heightVisu),
-    toString(800),
-    toString(as.character(input$heightVisu))
+    toString(paste0(800, "px")),
+    toString(paste0(as.character(input$heightVisu), "px"))
   ),
   width = if (input$modifwidthVisu) {
     as.character(input$widthVisu)
