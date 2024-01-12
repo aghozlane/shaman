@@ -8706,4 +8706,34 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       )$plot %>% visSave(con)
     }
   )
+  
+  output$Exportpcor <- downloadHandler(
+    filename = function() {
+      if (input$seppcor == '\t')
+        'SHAMAN_Pcor.tsv'
+    },
+    content = function(file) {
+      resDiff = ResDiffAnal()
+      counts = dataMergeCounts()$counts
+      sumTot = rowSums(counts)
+      ord = order(sumTot, decreasing = TRUE)
+      Available_taxo = rownames(counts)[ord]
+      tmp = isolate(
+        Plot_network(
+          input,
+          resDiff,
+          Available_taxo,
+          SelectTaxoPlotNetworkDebounce(),
+          qualiVariable,
+          colors = colorsVisuPlot(),
+          dataInput = dataInput()
+        )$pcor
+      )
+      write.table(tmp,
+                  file,
+                  row.names = TRUE,
+                  sep = input$seppcor)
+    }
+  )
 })
+

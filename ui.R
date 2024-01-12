@@ -66,7 +66,7 @@ function(request) {
                                     ),
                                     tabPanel("Citing SHAMAN",
                                              p("If you use SHAMAN for your project, please cite the following publication:",style = "font-family: 'times'; font-si16pt"),
-                                             p(a("SHAMAN: a user-friendly website for metataxonomic analysis from raw reads to statistical analysis", href="https://pubmed.ncbi.nlm.nih.gov/32778056/"), "Volant S, Lechat P, Woringer P, Motreff L, Campagne P, Malabat C, Kennedy S, Ghozlane A; BMC Bioinformatics 2020 Aug 10;21(1):345.",style = "font-family: 'times'; font-si16pt"),
+                                             p(a("SHAMAN: a user-friendly website for metataxonomic analysis from raw reads to statistical analysis", href="https://pubmed.ncbi.nlm.nih.gov/32778056/"), "Volant S, Lechat P, Woringer P, Azmani Z, Motreff L, Campagne P, Malabat C, Kennedy S, Ghozlane A; BMC Bioinformatics 2020 Aug 10;21(1):345.",style = "font-family: 'times'; font-si16pt"),
                                              p("Publication using SHAMAN:",style = "font-family: 'times'; font-si18pt; font-style: strong"),
                                              p(a("Prediction of the intestinal resistome by a three-dimensional structure-based method.", href="https://www.ncbi.nlm.nih.gov/pubmed/30478291"),"Ruppé E, Ghozlane A, Tap J, et al.;Nature microbiology 2018",style = "font-family: 'times'; font-si16pt"),
                                              
@@ -921,7 +921,7 @@ function(request) {
                            ),
                            conditionalPanel(condition="input.DiagPlot=='pcoaPlot'",  selectInput("labelPCOA","Label type",c("Group", "Sample"),selected="Group"),
                                             #checkboxInput("colorgroup","Same color for the group",value=FALSE),
-                                            #sliderInput("cexcircle", "Circle size",min=0,max=1,value = 0.95,step =0.05),
+                                            sliderInput("cexcircle", "Circle size",min=0,max=1,value = 0.95,step =0.05),
                                             #sliderInput("cexpoint", "Point size",min=0,max=3,value = 1,step =0.1)
                                             # sliderInput("cexstar", "Star height",min=0,max=1,value = 0.95,step =0.1)
                            ),
@@ -1162,7 +1162,9 @@ function(request) {
                                               DT::dataTableOutput("CommunityComparison"),
                                               fluidRow(
                                                 column(width=3, style = "margin-top: 17px", downloadButton('ExportCommunitytable', 'Export table')),
-                                                column(width=3, style = "margin-top: 30px", selectInput("sepcommunity", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
+                                                column(width=3, style = "margin-top: 30px", selectInput("sepcommunity", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";"))),
+                                                column(width=3, style = "margin-top: 17px", downloadButton('Exportpcor', 'Export pcor table')),
+                                                column(width=3, style = "margin-top: 30px", selectInput("seppcor", "Separator:", c("Tab" = "\t", "Comma" = ",", "Semicolon" = ";")))
                                               ),
                                               tags$style(type='text/css', "#ExportCommunitytable { margin-top: 37px;}")
                                           )
@@ -1226,8 +1228,8 @@ function(request) {
                                               radioButtons("clusterWeightsParam", label = "Add weights as a clustering parameter", choices = c("Yes" = "Yes", "No" = "No"), selected = "No")
                              ),
                              conditionalPanel(condition="input.colorCorr=='pcorr' && input.PlotVisuSelect=='Network'",
-                                              radioButtons("pcorrMethod", label = "Select the partial correlation coefficient", choices = c("Pearson" = "pearson", "Kendall" = "kendall", "Spearman" = "spearman"), selected = "pearson"),
-                                              sliderInput("pcorrThreshold", label = "Select the partial correlation threshold", min = 0, max= 1, value = 0.5, step = 0.01)
+                                              radioButtons("pcorrMethod", label = "Select the partial correlation coefficient", choices = c("Pearson" = "pearson", "Kendall" = "kendall", "Spearman" = "spearman"), selected = "pearson")
+                                              #sliderInput("pcorrThreshold", label = "Select the partial correlation threshold", min = 0, max= 1, value = 0.5, step = 0.01)
                              ),
                              conditionalPanel(condition="input.PlotVisuSelect=='Network'",
                                               uiOutput("SelectTaxoToPlotNetwork"),

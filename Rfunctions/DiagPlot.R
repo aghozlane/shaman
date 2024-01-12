@@ -499,7 +499,6 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree, col = c("SpringGreen"
       tibble::rownames_to_column(input$TaxoSelect) %>%
       dplyr::arrange(desc(abs(!!sym(paste0("Axis.", min_axis)))))
     
-    
     contribThreshold <- round(length(rownames(variables)) - round(input$varSlider*length(rownames(variables))))
     
     if (plot == "pcoa"){
@@ -514,6 +513,18 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree, col = c("SpringGreen"
       Axis2_samples <-  to_plot[, as.numeric(gsub("PC", "", input$PCaxe2)) + 1]
       Axis1_variables <-  variables[, as.numeric(gsub("PC", "", input$PCaxe1)) + 1]
       Axis2_variables <-  variables[, as.numeric(gsub("PC", "", input$PCaxe2)) + 1]
+      
+      
+      #get the centroids
+      group_centroids <- to_plot %>%
+        dplyr::group_by(group) %>%
+        dplyr::summarise(
+          !!A1_axis := mean(.data[[A1_axis]], na.rm = TRUE), 
+          !!A2_axis := mean(.data[[A2_axis]], na.rm = TRUE)
+        ) %>%
+        as.data.frame()
+      
+      
       x_range <- max(abs(min(Axis1_samples)), abs(max(Axis1_samples)), abs(min(Axis1_variables)), abs(max(Axis1_variables)))
       y_range <- max(abs(min(Axis2_samples)), abs(max(Axis2_samples)), abs(min(Axis2_variables)), abs(max(Axis2_variables)))
       x_lim <- c(as.numeric(-x_range), as.numeric(x_range)) #to center the plot
@@ -565,12 +576,19 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree, col = c("SpringGreen"
         scale_fill_manual(values = col) +
         geom_point(aes(fill = group, colour = group),alpha = 1, size = input$cexLabelDiag) 
       
-      if(input$labelPCOA == "Group")
-        pp <- pp + ggforce::geom_mark_ellipse(data = to_plot[, -1], mapping = aes(fill = group, label = .data[["group"]]), label.fontsize = input$cexPointsLabelDiag *6)
-      
+      if(input$labelPCOA == "Group"){
+        # pp <- pp + ggforce::geom_mark_ellipse(data = to_plot[, -1], mapping = aes(fill = group, label = .data[["group"]]), label.fontsize = input$cexPointsLabelDiag *6)
+        pp <- pp + stat_ellipse(data = to_plot[, -1], aes(color = group), type = "t", level = input$cexcircle)
+        pp <- pp + geom_text_repel(data = group_centroids,
+                             aes(label = .data[["group"]], color = group),
+                             show.legend = FALSE,
+                             fontface = "bold",
+                             vjust = -1)
+        
+      }
       if(input$labelPCOA == as.character(input$TaxoSelect))
-        pp <- pp + ggforce::geom_mark_ellipse(data = to_plot[, -1], mapping = aes(fill = group))
-      
+        # pp <- pp + ggforce::geom_mark_ellipse(data = to_plot[, -1], mapping = aes(fill = group))
+          pp <- pp + stat_ellipse(data = to_plot[, -1], aes(color = .data[["group"]]), type = "t", level = input$cexcircle)
       
       if(input$labelPCOA == "Samples")
       {

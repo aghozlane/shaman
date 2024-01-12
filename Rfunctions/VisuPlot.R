@@ -1549,6 +1549,25 @@ Plot_network <-
         rownames(pcor) <- colnames(countsMatrix)
         colnames(pcor) <- colnames(countsMatrix)
         
+        n <- nrow(countsMatrix)  # Number of observations
+        
+        # Step 1: Calculate the variance-covariance matrix
+        covMatrix <- cov(countsMatrix)
+        
+        # Step 2: Compute the inverse
+        invCovMatrix <- MASS::ginv(covMatrix)
+        
+        
+        # Step 3: Calculate partial correlations
+        pcorMatrix <- -invCovMatrix / sqrt(outer(diag(invCovMatrix), diag(invCovMatrix)))
+        
+        # Set diagonal to zero (self-correlation is not meaningful)
+        diag(pcorMatrix) <- 0
+        
+        # Step 4: Calculate p-values
+        t_values <- pcorMatrix * sqrt((n - 2) / (1 - pcorMatrix^2))
+        p_values <- 2 * pt(-abs(t_values), df = n - 2)
+        
         n <- ncol(countsMatrix)
         resCorrTest <- corr.test(countsMatrix, ci = FALSE)
         cor <- resCorrTest$r
@@ -1571,14 +1590,22 @@ Plot_network <-
         
         
         if (input$colorCorr == "pcorr") {
-          adjacency <- matrix(apply(pcor, c(1, 2), function(x) {
-            # Check for NA values in x and ensure input$pcorrThreshold is not NA
-            if (!is.na(x) && !is.na(input$pcorrThreshold) && abs(x) > as.numeric(input$pcorrThreshold)) {
-              return(x)
+          adjacency <- matrix(apply(p_values, c(1, 2), function(p_val, pcor_val) {
+            if (!is.na(p_val) && p_val <= 0.05) {
+              return(1) 
             } else {
               return(0)
             }
-          }), nrow = nrow(pcor), ncol = ncol(pcor))
+          }, pcor_val = pcor), nrow = nrow(p_values), ncol = ncol(p_values))
+          
+          # adjacency <- matrix(apply(pcor, c(1, 2), function(x) {
+          #   # Check for NA values in x and ensure input$pcorrThreshold is not NA
+          #   if (!is.na(x) && !is.na(input$pcorrThreshold) && abs(x) > as.numeric(input$pcorrThreshold)) {
+          #     return(x)
+          #   } else {
+          #     return(0)
+          #   }
+          # }), nrow = nrow(pcor), ncol = ncol(pcor))
           
           rownames(adjacency) <- colnames(pcor)
           colnames(adjacency) <- colnames(pcor)
@@ -1594,7 +1621,6 @@ Plot_network <-
           rownames(adjacency) <- colnames(countsMatrix)
           colnames(adjacency) <- colnames(countsMatrix)
         }
-        
         # ### Remove rows and columns with only NA        # this way, elements with the same count in all sample (often 0 in this case) will not appear
         # adjacency <- adjacency[apply(adjacency, 1, function(y) !all(is.na(y))),]
         # adjacency <- t(adjacency)
@@ -1642,25 +1668,26 @@ Plot_network <-
           # Loop over the edges to get the existing partial correlation values
           for (i in seq_len(nrow(dataVN$edges))) {
             from_index <- node_mapping[which(nodesPcor == dataVN$edges$from[i])]
-            to_index <-
-              node_mapping[which(nodesPcor == dataVN$edges$to[i])]
+            to_index <- node_mapping[which(nodesPcor == dataVN$edges$to[i])]
             
-            # Categorize the correlation values based on the threshold
-            # pcor_values[i] <- ifelse(
-            #   pcor[from_index, to_index] < -1 * as.numeric(input$pcorrThreshold), -1,
-            #   ifelse(pcor[from_index, to_index] > as.numeric(input$pcorrThreshold), 1, 0)
-            # )
+            # Store the partial correlation value
             pcor_values[i] <- pcor[from_index, to_index]
           }
           
-          # Store the categorized values back into the 'pcor' column
+          # Store the correlation values back into the 'pcor' column
           dataVN$edges$pcor <- pcor_values
           
           # Assign colors based on the correlation: Red for positive, Blue for negative
-          dataVN$edges$color <-
-            ifelse(dataVN$edges$pcor > 0,
-                   toString(isolate(input$edgeColorPositive)),
-                   toString(isolate(input$edgeColorNegative)))
+          dataVN$edges$color <- ifelse(dataVN$edges$pcor >= 0, 
+                                       toString(isolate(input$edgeColorPositive)),
+                                       toString(isolate(input$edgeColorNegative)))
+        
+          
+          
+          # dataVN$edges$color <-
+          #   ifelse(dataVN$edges$pcor > 0,
+          #          toString(isolate(input$edgeColorPositive)),
+          #          toString(isolate(input$edgeColorNegative)))
         }
         else{
           dataVN$edges$color <- "#000000"
@@ -1939,7 +1966,6 @@ Plot_network <-
         taxo <- taxo %>% dplyr::select(-RowName)
         # Convert back to data frame if needed
         resTaxo <- as.data.frame(taxo)
-        print(head(taxo))
         
         
       }
@@ -1951,7 +1977,8 @@ Plot_network <-
       data = dataVN,
       voronoi = voronoi,
       pcor_mat = pcor, 
-      taxo = resTaxo
+      taxo = resTaxo,
+      pcor = pcor
     ))
   }
 
