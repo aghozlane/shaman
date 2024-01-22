@@ -1044,13 +1044,14 @@ Plot_Visu_Diversity <-
               comparisons = lapply(input$SelectizePairs, function(element)
                 strsplit(element, " VS ")[[1]]),
               method = "wilcox.test",
-              paired = ifelse(input$PairedSamplesBoxDiv == "Paired", TRUE, FALSE),
-              p.adjust.method = input$AdjMeth
-            ) +
+              paired = FALSE,
+              p.adjust.method = input$AdjMeth,
+              size = input$sizeDiversityTests) +
             ggpubr::stat_compare_means(
               label.x.npc = "center",
               label.y = y_range[1] * 0.9,
-              paired = ifelse(input$PairedSamplesBoxDiv == "Paired", TRUE, FALSE)
+              paired = FALSE,
+              size = input$sizeDiversityTests
             ) + coord_cartesian()
           gg = gg + labs(
             x = paste(VarIntBoxDiv, collapse = "-"),
@@ -1062,6 +1063,11 @@ Plot_Visu_Diversity <-
       }
       ## Get interactivity
       #ff = ggplotly(gg)
+      gg <- gg +
+        theme(axis.text.x = element_text(size = input$sizeDiversityTitle),  
+              axis.text.y = element_text(size = input$sizeDiversityTitle),   
+              axis.title.x = element_text(size = input$sizeDiversityTitle * 1.3),  
+              axis.title.y = element_text(size = input$sizeDiversityTitle * 1.3))    
     }
     return(list(plot = gg, dataDiv = dataDiv))
     

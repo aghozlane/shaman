@@ -5691,10 +5691,11 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   output$PlotContrib <- renderPlot({
     resDiff = ResDiffAnal()
+    target = resDiff$target
     if (input$DiagPlot == 'pcaPlot')
-      Plot_diag_Contrib(input, resDiff, pca_data())
+      Plot_diag_Contrib(input, resDiff, pca_data(), colors = colorsVisuPlot())
     if (input$DiagPlot == 'pcoaPlot')
-      Plot_diag_Contrib(input, resDiff, pcoa_data())
+      Plot_diag_Contrib(input, resDiff, pcoa_data(), colors = colorsVisuPlot())
   }, height = 400)
   
   
@@ -6066,11 +6067,13 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
         )
       resDiff = ResDiffAnal()
       tree = isolate(dataInputTree()$data)
+      target = resDiff$target
+
       if (input$Exp_plot == "Contribution") {
         if (input$DiagPlot == "pcoaPlot")
-          print(Plot_diag_Contrib(input, resDiff, calcul_df = pcoa_data()))
+          print(Plot_diag_Contrib(input, resDiff, calcul_df = pcoa_data()), colors = colorsVisuPlot())
         else
-          print(Plot_diag_Contrib(input, resDiff, calcul_df = pca_data()))
+          print(Plot_diag_Contrib(input, resDiff, calcul_df = pca_data()), colors = colorsVisuPlot())
       }
       else{
         if (input$DiagPlot == "pcoaPlot")
@@ -7326,6 +7329,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
         paste("ModVisu", var, sep = ""))
     
     #Each pair will appear at most one
+    
     at_most_one <-
       lapply(input_names, function(input_name)
         unique(input[[input_name]]))
@@ -7333,6 +7337,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     at_most_one$combined <-
       apply(at_most_one, 1, function(row)
         paste(row, collapse = "-"))
+    
     #at_most_one data frame contains all the unique combined variables of interest
     combined_rows <- lapply(at_most_one$combined, as.character)
     if (length(combined_rows) >= 2)
@@ -7348,7 +7353,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       combined_rows <-  NULL
     selectInput(
       "SelectizePairs",
-      "Select your comparison (Wilcoxon test, p-value adjusted)",
+      "Select your comparison (Wilcoxon test, unpaired samples and p-value adjusted)",
       combined_rows,
       multiple = TRUE
     )

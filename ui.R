@@ -87,6 +87,7 @@ function(request) {
                          box(
                            title = "What's new in SHAMAN", width = NULL, status = "primary",
                            div(style = 'overflow-y: scroll; height: 550px',
+                               addNews("January 8th 2024", "Sunburst visualization", "You can now see the composition of the communities detected in the Network."),
                                addNews("December 6th 2023", "Database update", "Greengenes2 and unite are up-to-date. New host genomes (mostly mosquitoes) are available."),
                                addNews("November 23th 2023", "New data visualization and Global View features", "UMAP has been added. We have also updated the Barplot to show other abundances for visualization of the 12 most abundant. For diversity, we have added a visualization of richness with comparison tests."),
                                addNews("October 15th 2023", "Updates of PCA and PCoA", "These updates bring new data visualizations. We have added some useful features for cluster visualization."),
@@ -873,6 +874,9 @@ function(request) {
                                               column(width = 4, checkboxInput("ellipsePCA", label = strong("Show groups"), value = TRUE))
                              ),
                              
+                             conditionalPanel(condition="input.DiagPlot=='pcaPlot' && input.radioPCA != 3 && input.ellipsePCA",
+                                              column(width = 12, sliderInput("cexcirclePCA", "Circle size",min=0,max=1,value = 0.25,step =0.05))
+                             ),
                              
                              conditionalPanel(condition=" (input.DiagPlot=='pcoaPlot' && input.labelPCOA == input.TaxoSelect) || (input.DiagPlot=='pcaPlot' && (input.radioPCA == 2 || input.radioPCA == 3)) ",
                                               fluidRow(column(12,sliderInput("varSlider", "Select the contribution threshold", min = 0, max = 1, value = 0.8, step = 0.05)),
@@ -921,7 +925,7 @@ function(request) {
                            ),
                            conditionalPanel(condition="input.DiagPlot=='pcoaPlot'",  selectInput("labelPCOA","Label type",c("Group", "Sample"),selected="Group"),
                                             #checkboxInput("colorgroup","Same color for the group",value=FALSE),
-                                            sliderInput("cexcircle", "Circle size",min=0,max=1,value = 0.95,step =0.05),
+                                            sliderInput("cexcircle", "Circle size",min=0,max=1,value = 0.25,step =0.05),
                                             #sliderInput("cexpoint", "Point size",min=0,max=3,value = 1,step =0.1)
                                             # sliderInput("cexstar", "Star height",min=0,max=1,value = 0.95,step =0.1)
                            ),
@@ -1275,7 +1279,7 @@ function(request) {
                                               uiOutput("WhichDivSelect")
                              ),
                              conditionalPanel(condition="input.PlotVisuSelect=='Diversity' && input.DiversityPlots == 1 ",
-                                              radioButtons("PairedSamplesBoxDiv", label = "Type of samples", c("Paired" = "Paired", "Unpaired" = "Unpaired"), selected = "Unpaired"),
+                                              #radioButtons("PairedSamplesBoxDiv", label = "Type of samples", c("Paired" = "Paired", "Unpaired" = "Unpaired"), selected = "Unpaired"),
                                               uiOutput("SelectPairsBoxDiv")
                              ),
                              conditionalPanel(condition="input.PlotVisuSelect=='Diversity'",
@@ -1293,7 +1297,12 @@ function(request) {
                              sliderInput("heightVisu", h6(strong("Height")),min=100,max=4000,value = 800),
                              checkboxInput("modifwidthVisu","Set width",value=FALSE),
                              conditionalPanel(condition="input.modifwidthVisu",
-                                              sliderInput("widthVisu", h6(strong("Width")),min=100,max=4000,value = 800)),
+                                              sliderInput("widthVisu", h6(strong("Width")),min=100,max=4000,value = 800))
+                             ,
+                             conditionalPanel(condition="input.PlotVisuSelect=='Diversity'",
+                                              column(width = 6, sliderInput("sizeDiversityTests", h6(strong("Tests")), min = 0, max = 10, step = 0.25, value = 5)),
+                                              column(width = 6, sliderInput("sizeDiversityTitle", h6(strong("Titles and scales")), min = 0, max = 40, step = 1, value = 15)))
+                             ,
                              ###            ###
                              ### _______barplot ####
                              ###            ###
