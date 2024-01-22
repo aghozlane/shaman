@@ -506,12 +506,16 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree, col = c("SpringGreen"
       group_centroids <- to_plot %>%
         dplyr::group_by(group) %>%
         dplyr::summarise(
-          !!A1_axis := mean(.data[[A1_axis]], na.rm = TRUE), 
-          !!A2_axis := mean(.data[[A2_axis]], na.rm = TRUE)
+          mean_Axis_1 = mean(.data[[A1_axis]], na.rm = TRUE), 
+          mean_Axis_2 = mean(.data[[A2_axis]], na.rm = TRUE)
         ) %>%
         as.data.frame()
       
+      merged_centroids <- to_plot %>%
+        dplyr::left_join(group_centroids, by = "group", suffix = c("", ".centroid")) %>%
+        dplyr::mutate(group = as.factor(group))
       
+
       x_range <- max(abs(min(Axis1_samples)), abs(max(Axis1_samples)), abs(min(Axis1_variables)), abs(max(Axis1_variables)))
       y_range <- max(abs(min(Axis2_samples)), abs(max(Axis2_samples)), abs(min(Axis2_variables)), abs(max(Axis2_variables)))
       x_lim <- c(as.numeric(-x_range), as.numeric(x_range)) #to center the plot
@@ -523,7 +527,6 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree, col = c("SpringGreen"
       # Update the limits with margin
       x_limit <- c(-x_range * input$cexTitleDiag - x_margin, x_range * input$cexTitleDiag + x_margin)
       y_limit <- c(-y_range * input$cexTitleDiag- y_margin, y_range * input$cexTitleDiag + y_margin)
-      
       pp <- ggplot(data = to_plot, aes(x = !!sym(A1_axis), y = !!sym(A2_axis))) +
         geom_hline(yintercept = 0, linetype = 2) +
         geom_vline(xintercept = 0, linetype = 2) +
@@ -564,16 +567,40 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree, col = c("SpringGreen"
         geom_point(aes(fill = group, colour = group),alpha = 1, size = input$cexLabelDiag) 
       
       if(input$labelPCOA == "Group"){
-        pp <- pp + stat_ellipse(data = to_plot[, -1], aes(color = group), type = "t", level = input$cexcircle)
+        pp <- pp + stat_ellipse(data = to_plot[, -1], aes(color = group), type = "t", level = input$cexcircle) + 
+          geom_segment(
+            data = merged_centroids,
+            aes(
+              x = .data[[A1_axis]],
+              y = .data[[A2_axis]],
+              xend = .data[["mean_Axis_1"]],
+              yend = .data[["mean_Axis_2"]],
+              color = group
+            )
+          ) +
+          geom_point(data= group_centroids, aes(x=mean_Axis_1, y = mean_Axis_2, color = group), size = input$cexLabelDiag *2.5) 
+        
         pp <- pp + geom_text_repel(data = group_centroids,
-                             aes(label = .data[["group"]], color = group),
+                             aes(x=mean_Axis_1, y = mean_Axis_2, label = .data[["group"]], color = group),
                              show.legend = FALSE,
                              fontface = "bold",
-                             vjust = -1)
+                             vjust = -1,
+                             size = input$cexPointsLabelDiag *2)
         
       }
       if(input$labelPCOA == as.character(input$TaxoSelect))
-          pp <- pp + stat_ellipse(data = to_plot[, -1], aes(color = .data[["group"]]), type = "t", level = input$cexcircle)
+          pp <- pp + stat_ellipse(data = to_plot[, -1], aes(color = .data[["group"]]), type = "t", level = input$cexcircle) +
+                geom_segment(
+                data = merged_centroids,
+                aes(
+                  x = .data[[A1_axis]],
+                  y = .data[[A2_axis]],
+                  xend = .data[["mean_Axis_1"]],
+                  yend = .data[["mean_Axis_2"]],
+                  color = group
+                )
+              ) +
+                geom_point(data= group_centroids, aes(x=A1_axis, y = A2_axis, color = group), size = input$cexLabelDiag *1.5) 
       
       if(input$labelPCOA == "Samples")
       {
@@ -830,7 +857,8 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
                             aes(x = PC1, y = PC2, label = group, color = group),
                             show.legend = FALSE,
                             fontface = "bold",
-                            vjust = -1)
+                            vjust = -1,
+                            size = input$cexPointsLabelDiag *2)
         
         else 
           pca_plot <- pca_plot + 
@@ -963,7 +991,8 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
                               aes(x = PC1, y = PC2, label = group, color = group),
                               show.legend = FALSE,
                               fontface = "bold",
-                              vjust = -1) +
+                              vjust = -1,
+                              size = input$cexPointsLabelDiag *2) +
               coord_cartesian(ylim = c(-y_range * input$cexTitleDiag, y_range * input$cexTitleDiag)) +
               theme_minimal() +
               pca_theme
@@ -975,7 +1004,8 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
                               aes(x = PC1, y = PC2, label = group, color = group),
                               show.legend = FALSE,
                               fontface = "bold",
-                              vjust = -1)
+                              vjust = -1,
+                              size = input$cexPointsLabelDiag *2)
             
           }
           if(isTRUE(input$ellipsePCA) && (input$checkLabelBiplot != 3)){

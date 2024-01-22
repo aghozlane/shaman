@@ -1067,7 +1067,9 @@ Plot_Visu_Diversity <-
         theme(axis.text.x = element_text(size = input$sizeDiversityTitle),  
               axis.text.y = element_text(size = input$sizeDiversityTitle),   
               axis.title.x = element_text(size = input$sizeDiversityTitle * 1.3),  
-              axis.title.y = element_text(size = input$sizeDiversityTitle * 1.3))    
+              axis.title.y = element_text(size = input$sizeDiversityTitle * 1.3),
+              legend.text = element_text(size = input$sizeDiversityLegend)) +
+        guides(fill = guide_legend(title="Groups"))
     }
     return(list(plot = gg, dataDiv = dataDiv))
     
