@@ -1097,7 +1097,7 @@ function(request) {
                                                        height = 1000,
                                                        selected = "Network",
                                                        tabPanel("Network", uiOutput("Research"), div(visNetworkOutput("NetworkPlot", height = "400px"))),
-                                                       tabPanel("Panels", plotOutput("Panels")),
+                                                       #tabPanel("Panels", plotOutput("Panels")),
                                                        tabPanel("Sunburst", uiOutput("Community"), sunburstR::sunburstOutput("CommunitySunburst"))),
                                                 style = "background-color: #edf1f4;")
                              ),
@@ -1411,7 +1411,7 @@ function(request) {
                                               conditionalPanel(condition="input.PlotVisuSelect=='Barplot'",
                                                                radioButtons("positionBarPlot","Position",c("Grouped"="dodge","Stacked"="fill"), selected = "fill",inline=TRUE)
                                               ),
-                                              conditionalPanel(condition = "input.PlotVisuSelect",
+                                              conditionalPanel(condition = "input.PlotVisuSelect != 'Network'",
                                                selectInput("Exp_format_Visu",h5(strong("Export format")),c("png"="png","pdf"="pdf","eps"="eps","svg"="svg"), multiple = FALSE),
                                                fluidRow(
                                                  column(width=6,numericInput("heightVisuExport", "Height (in px)",min=100,max=NA,value = 500,step =1)),
@@ -1422,6 +1422,7 @@ function(request) {
                                               conditionalPanel(condition = "input.PlotVisuSelect=='Network'", column(width = 6, downloadButton("downloadNetwork", "Export as .html")))
                                           )
                          )
+                         
                   )
                 )
         ),

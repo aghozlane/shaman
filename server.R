@@ -6152,19 +6152,19 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
                                            )
                                          else if (input$PlotVisuSelect == "Scatterplot")
                                            print(Plot_Visu_Scatterplot(input, ResDiffAnal(), export = TRUE, lmEst = FALSE))
-                                         else if (input$PlotVisuSelect == "Network"){
-                                           print(
-                                             Plot_network(
-                                               input,
-                                               ResDiffAnal(),
-                                               Available_taxo,
-                                               SelectTaxoPlotNetworkDebounce(),
-                                               qualiVariable,
-                                               colors = colorsVisuPlot(),
-                                               dataInput = dataInput()
-                                             )$voronoi
-                                           )
-                                         }
+                                         # else if (input$PlotVisuSelect == "Network"){
+                                         #   print(
+                                         #     Plot_network(
+                                         #       input,
+                                         #       ResDiffAnal(),
+                                         #       Available_taxo,
+                                         #       SelectTaxoPlotNetworkDebounce(),
+                                         #       qualiVariable,
+                                         #       colors = colorsVisuPlot(),
+                                         #       dataInput = dataInput()
+                                         #     )$voronoi
+                                         #   )
+                                         # }
                                          else if (input$PlotVisuSelect == "Diversity") {
                                            if (input$Exp_format_Visu == "eps")
                                              print(Plot_Visu_Diversity(input, ResDiffAnal(), colors, FALSE, 1)$plot)
@@ -8631,24 +8631,24 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   # })
   
   
-  output$Panels <- renderPlot({
-    counts = dataMergeCounts()$counts
-    sumTot = rowSums(counts)
-    ord = order(sumTot, decreasing = TRUE)
-    Available_taxo = rownames(counts)[ord]
-    res = Plot_network(
-      input,
-      ResDiffAnal(),
-      Available_taxo,
-      SelectTaxoPlotNetworkDebounce(),
-      qualiVariable,
-      colors = colorsVisuPlot(),
-      dataInput = dataInput()
-    )$voronoi
-    return(res)
-  }, height = reactive(input$heightVisu), width = reactive(ifelse(
-    input$modifwidthVisu, input$widthVisu, "auto"
-  )))
+  # output$Panels <- renderPlot({
+  #   counts = dataMergeCounts()$counts
+  #   sumTot = rowSums(counts)
+  #   ord = order(sumTot, decreasing = TRUE)
+  #   Available_taxo = rownames(counts)[ord]
+  #   res = Plot_network(
+  #     input,
+  #     ResDiffAnal(),
+  #     Available_taxo,
+  #     SelectTaxoPlotNetworkDebounce(),
+  #     qualiVariable,
+  #     colors = colorsVisuPlot(),
+  #     dataInput = dataInput()
+  #   )$voronoi
+  #   return(res)
+  # }, height = reactive(input$heightVisu), width = reactive(ifelse(
+  #   input$modifwidthVisu, input$widthVisu, "auto"
+  # )))
   
   output$Community <- renderUI({
     counts = dataMergeCounts()$counts
