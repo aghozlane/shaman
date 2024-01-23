@@ -852,11 +852,11 @@ function(request) {
                                               uiOutput("ModMat"),
                              ),
                              conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='pcaPlot' || input.DiagPlot=='nmdsPlot'",
-                               fluidRow(
-                                 column(width=5,uiOutput("PC1_sel")),
-                                 column(width=2,br(),br(),p("VS")),
-                                 column(width=5,uiOutput("PC2_sel"))
-                               )
+                                              fluidRow(
+                                                column(width=5,uiOutput("PC1_sel")),
+                                                column(width=2,br(),br(),p("VS")),
+                                                column(width=5,uiOutput("PC2_sel"))
+                                              )
                              ),
                              conditionalPanel(condition="input.DiagPlot=='pcoaPlot' || input.DiagPlot=='nmdsPlot' || input.DiagPlot=='SERE' || input.DiagPlot=='clustPlot'",
                                               uiOutput("DistList")
@@ -1232,8 +1232,11 @@ function(request) {
                                               radioButtons("clusterWeightsParam", label = "Add weights as a clustering parameter", choices = c("Yes" = "Yes", "No" = "No"), selected = "No")
                              ),
                              conditionalPanel(condition="input.colorCorr=='pcorr' && input.PlotVisuSelect=='Network'",
-                                              radioButtons("pcorrMethod", label = "Select the partial correlation coefficient", choices = c("Pearson" = "pearson", "Kendall" = "kendall", "Spearman" = "spearman"), selected = "pearson")
-                                              #sliderInput("pcorrThreshold", label = "Select the partial correlation threshold", min = 0, max= 1, value = 0.5, step = 0.01)
+                                              radioButtons("pcorrMethod", label = "Select the partial correlation coefficient", choices = c("Pearson" = "pearson", "Kendall" = "kendall", "Spearman" = "spearman"), selected = "pearson"),
+                                              sliderInput("pcorrThreshold", label = "Select the p-value threshold", min = 0.01, max= 0.05, value = 0.025, step = 0.01)
+                             ),
+                             conditionalPanel(condition="input.colorCorr=='pcorr' && input.PlotVisuSelect=='Network'",
+                                              sliderInput("permThreshold", label = "Select the number of permutation test iteration", min = 1, max= 100, value = 10, step = 1)
                              ),
                              conditionalPanel(condition="input.PlotVisuSelect=='Network'",
                                               uiOutput("SelectTaxoToPlotNetwork"),
@@ -1323,7 +1326,7 @@ function(request) {
                              ###            ###
                              conditionalPanel(condition="input.PlotVisuSelect=='Diversity'",
                                               radioButtons("DivScale","Scales",c("Fixed"="fixed","Free"="free"),selected = "free",inline=TRUE)
-                                              ),
+                             ),
                              conditionalPanel(condition="input.PlotVisuSelect=='Boxplot' || input.PlotVisuSelect=='Barplot' || input.PlotVisuSelect == 'Diversity' || input.PlotVisuSelect == 'Network'",
                                               selectInput("colorsdiagVisuPlot", label=h6(strong("Gradient of colors")),choices = c("retro palette", "easter palette", "warm palette", "basic palette (1)", "basic palette (2)", "basic palette (3)", "basic palette (4)", "basic palette (5)"),selected = "retro palette")
                              ),
@@ -1376,11 +1379,11 @@ function(request) {
                                                 column(width = 1)
                                               ),
                                               conditionalPanel(condition="input.colorCorr == 'pcorr'",
-                                                fluidRow(
-                                                  column(width=5,colourpicker::colourInput("edgeColorPositive", "Positive correlation", value = "red", showColour = "both")),
-                                                  column(width=5,colourpicker::colourInput("edgeColorNegative",  "Negative correlation", value = "blue", showColour = "both")),
-                                                  column(width = 1)
-                                                )
+                                                               fluidRow(
+                                                                 column(width=5,colourpicker::colourInput("edgeColorPositive", "Positive correlation", value = "red", showColour = "both")),
+                                                                 column(width=5,colourpicker::colourInput("edgeColorNegative",  "Negative correlation", value = "blue", showColour = "both")),
+                                                                 column(width = 1)
+                                                               )
                                               ),
                                               conditionalPanel(condition="input.colorCorr != 'corr'",
                                                                fluidRow(column(width=5,colourpicker::colourInput("colorBackground", "Node color", value = "#BBBBBB", showColour = "both")),
@@ -1412,12 +1415,12 @@ function(request) {
                                                                radioButtons("positionBarPlot","Position",c("Grouped"="dodge","Stacked"="fill"), selected = "fill",inline=TRUE)
                                               ),
                                               conditionalPanel(condition = "input.PlotVisuSelect != 'Network'",
-                                               selectInput("Exp_format_Visu",h5(strong("Export format")),c("png"="png","pdf"="pdf","eps"="eps","svg"="svg"), multiple = FALSE),
-                                               fluidRow(
-                                                 column(width=6,numericInput("heightVisuExport", "Height (in px)",min=100,max=NA,value = 500,step =1)),
-                                                 column(width=6,numericInput("widthVisuExport", "Width (in px)",min=100,max=NA,value = 500,step =1)),
-                                              ),
-                                              column(width = 6, downloadButton("exportVisu", "Export"))
+                                                               selectInput("Exp_format_Visu",h5(strong("Export format")),c("png"="png","pdf"="pdf","eps"="eps","svg"="svg"), multiple = FALSE),
+                                                               fluidRow(
+                                                                 column(width=6,numericInput("heightVisuExport", "Height (in px)",min=100,max=NA,value = 500,step =1)),
+                                                                 column(width=6,numericInput("widthVisuExport", "Width (in px)",min=100,max=NA,value = 500,step =1)),
+                                                               ),
+                                                               column(width = 6, downloadButton("exportVisu", "Export"))
                                               ),
                                               conditionalPanel(condition = "input.PlotVisuSelect=='Network'", column(width = 6, downloadButton("downloadNetwork", "Export as .html")))
                                           )
