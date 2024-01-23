@@ -1500,74 +1500,68 @@ Plot_Visu_Tree <- function(input, resDiff, CT_Norm_OTU, taxo_table)
 #input: mat, max iteration number
 #output: adjacency matrix
 
-compute_pcor <- function(input, 
-                         mat, 
-                         n_iter = 100) {
-  
-  correlation_storage <- vector("list", length = nrow(mat))
-  n_rows <- nrow(mat)
-  adjacency_matrix <- matrix(0, nrow = n_rows, ncol = n_rows)
-  correlation_matrix <- matrix(NA, nrow = n_rows, ncol = n_rows)
-  
-  # Loop through each row for shuffling and correlation calculations
-  for (i in 1:n_rows) {
-    # Initialize a matrix to store correlations for the i-th row, for each shuffle
-    correlation_storage[[i]] <- matrix(NA, nrow = n_iter, ncol = n_rows)
-    
-    # Shuffle and compute correlations n_iter times
-    for (shuffle in 1:n_iter) {
-      # Create a copy of the matrix for shuffling
-      mat_shuffled <- mat
-      # Shuffle only the i-th row of the copy
-      mat_shuffled[i, ] <- sample(mat[i, ])
-      
-      # Compute correlation of the shuffled i-th row with every row of the original matrix and store the results
-      correlations <- sapply(1:n_rows, function(j) {
-        if (i != j) {
-          cor(mat_shuffled[i, ], mat[j, ])
-        } else {
-          NA  # Ignore correlation of the row with itself
-        }
-      })
-      
-      # Store the correlations of this shuffle in the correlation storage
-      correlation_storage[[i]][shuffle, ] <- correlations
-    }
-  }  
-  
-  # Compute the observed correlations for the original matrix and construct the adjacency matrix
-  for (i in 1:n_rows) {
-    for (j in 1:n_rows) {
-      if (i != j) {
-        # Calculate the actual observed correlation between rows i and j
-        observed_correlation <- cor(mat[i, ], mat[j, ])
-        correlation_matrix[i, j] <- observed_correlation
-        
-        # Retrieve the empirical distribution of correlations for rows i and j
-        empirical_correlations <- correlation_storage[[i]][, j]
-        
-        # Calculate the p-value for the observed correlation in the empirical distribution
-        less_than_observed <- sum(empirical_correlations < observed_correlation, na.rm = TRUE)
-        greater_than_observed <- sum(empirical_correlations > observed_correlation, na.rm = TRUE)
-        p_value <- min(less_than_observed, greater_than_observed) / length(empirical_correlations)
-        
-        # Determine significance based on the p-value and the sign of the observed correlation
-        if ((p_value <= 0.025 || p_value >= 0.975) && observed_correlation > 0) {
-          adjacency_matrix[i, j] <- 1
-        } else if ((p_value <= 0.025 || p_value >= 0.975) && observed_correlation < 0) {
-          adjacency_matrix[i, j] <- -1
-        }
-      }
-    }
-  }
-  
-  # Return the adjacency matrix and the correlation matrix
-  return(list(adjacency_matrix = adjacency_matrix, correlation_matrix = correlation_matrix))
-}
+# compute_pcor <- function(input, mat, n_iter = 100) {
+#   
+#   n_rows <- nrow(mat)
+#   correlation_storage <- vector("list", length = n_rows)
+#   for (i in 1:n_rows) {
+#     correlation_storage[[i]] <- numeric(n_iter * (n_rows - 1))
+#   }
+#   adjacency_matrix <- matrix(0, nrow = n_rows, ncol = n_rows)
+#   correlation_matrix <- matrix(NA, nrow = n_rows, ncol = n_rows)
+#   
+#   # Loop through each pair of rows
+#   for (i in 1:(n_rows - 1)) {
+#     for (j in (i + 1):n_rows) {
+#       # Initialize vectors to store correlations between rows i and j for each shuffle
+#       correlations_i <- numeric(n_iter)
+#       correlations_j <- numeric(n_iter)
+#       
+#       # Shuffle and compute correlations n_iter times
+#       for (shuffle in 1:n_iter) {
+#         # Shuffle only the i-th and j-th row
+#         mat_shuffled_i <- mat
+#         mat_shuffled_j <- mat
+#         mat_shuffled_i[i, ] <- sample(mat[i, ])
+#         mat_shuffled_j[j, ] <- sample(mat[j, ])
+#         
+#         # Compute correlation of the shuffled i-th row with row j and vice versa
+#         correlations_i[shuffle] <- cor(mat_shuffled_i[i, ], mat[j, ])
+#         correlations_j[shuffle] <- cor(mat_shuffled_j[j, ], mat[i, ])
+#       }
+#       
+#       # Store the shuffled correlations
+#       correlation_storage[[i]][((j - 1) * n_iter + 1):(j * n_iter)] <- correlations_i
+#       correlation_storage[[j]][((i - 1) * n_iter + 1):(i * n_iter)] <- correlations_j
+#       
+#       # Compute the observed correlation once for each unique pair of rows
+#       observed_correlation <- cor(mat[i, ], mat[j, ])
+#       correlation_matrix[i, j] <- observed_correlation
+#       correlation_matrix[j, i] <- observed_correlation  # symmetry
+#       
+#       # Calculate p-values and fill the adjacency matrix using the observed_correlation
+#       p_value_i <- min(sum(correlations_i < observed_correlation), sum(correlations_i > observed_correlation)) / n_iter
+#       p_value_j <- min(sum(correlations_j < observed_correlation), sum(correlations_j > observed_correlation)) / n_iter
+#       
+#       # Determine significance based on the p-value and the sign of the observed correlation
+#       if ((p_value_i <= 0.025 || p_value_i >= 0.975) && observed_correlation > 0) {
+#         adjacency_matrix[i, j] <- 1
+#         adjacency_matrix[j, i] <- 1
+#       } else if ((p_value_i <= 0.025 || p_value_i >= 0.975) && observed_correlation < 0) {
+#         adjacency_matrix[i, j] <- -1
+#         adjacency_matrix[j, i] <- -1
+#       }
+#     }
+#   }
+#   
+#   # Return the adjacency matrix and the correlation matrix
+#   return(list(adjacency_matrix = adjacency_matrix, correlation_matrix = correlation_matrix))
+# }
 
 Plot_network <-
   function(input,
            resDiff,
+           compute_pcor,
            availableTaxo,
            ind_taxo,
            qualiVariable,
@@ -1684,7 +1678,7 @@ Plot_network <-
           #   }
           # }), nrow = nrow(pcor), ncol = ncol(pcor))
           
-          permutation <- isolate(compute_pcor(input, t(countsMatrix)))
+          permutation <- compute_pcor
           adjacency <- permutation$adjacency_matrix
           rownames(adjacency) <- colnames(countsMatrix)
           colnames(adjacency) <- colnames(countsMatrix)
@@ -1771,8 +1765,10 @@ Plot_network <-
         else{
           dataVN$edges$color <- "#000000"
           dataVN$edges$pcor <- 0
+          dataVN$edges$weights <- 0
         }
         
+        dataVN$edges$weight <- dataVN$edges$pcor
         if (!is.null(sec_variable) &&
             (isolate(input$colorCorr) == "corr")) {
           cor <-
@@ -2065,6 +2061,7 @@ Plot_network <-
 
 Plot_network_sunburst <- function(input,
                                   resDiff,
+                                  compute_pcor,
                                   availableTaxo,
                                   ind_taxo,
                                   qualiVariable, 
@@ -2072,6 +2069,7 @@ Plot_network_sunburst <- function(input,
                                   colors){
   res = isolate(Plot_network(input,
                              resDiff,
+                             compute_pcor,
                              availableTaxo,
                              ind_taxo,
                              qualiVariable,
