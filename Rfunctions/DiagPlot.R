@@ -557,7 +557,7 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree, col = c("SpringGreen"
                                x = 0, y = 0, alpha = 0.8,
                                mapping = aes(x = 0, y = 0, xend = !!sym(A1_axis), yend = !!sym(A2_axis)),
                                color = "#1D4D68",
-                               arrow = arrow(length = unit(3, "mm"))) +
+                               arrow = arrow(length = unit(input$cexLabelDiag*1.5, "mm"))) +
         geom_text_repel(data = variables, aes(label = .data[[input$TaxoSelect]]), color = "#1D4D68", show.legend = FALSE, size = input$cexPointsLabelDiag *2) 
       
       pp <- pp + scale_color_manual(values = col) +
@@ -588,19 +588,7 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree, col = c("SpringGreen"
                              size = input$cexPointsLabelDiag *2)
         
       }
-      if(input$labelPCOA == as.character(input$TaxoSelect))
-          pp <- pp + stat_ellipse(data = to_plot[, -1], aes(color = .data[["group"]]), type = "t", level = input$cexcircle) +
-                geom_segment(
-                data = merged_centroids,
-                aes(
-                  x = .data[[A1_axis]],
-                  y = .data[[A2_axis]],
-                  xend = .data[["mean_Axis_1"]],
-                  yend = .data[["mean_Axis_2"]],
-                  color = group
-                )
-              ) +
-                geom_point(data= group_centroids, aes(x=A1_axis, y = A2_axis, color = group), size = input$cexLabelDiag *1.5) 
+      
       
       if(input$labelPCOA == "Samples")
       {
