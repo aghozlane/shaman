@@ -125,8 +125,8 @@ Plot_Visu_Barplot <-
           dplyr::arrange(AllVar)
       }
       else{
-          main_dataBarPlot_mat$AllVar <- factor(main_dataBarPlot_mat$AllVar, levels = unique(others_dataBarPlot_mat$AllVar))
-          main_dataBarPlot_mat <- rbind(main_dataBarPlot_mat, others_dataBarPlot_mat)
+        main_dataBarPlot_mat$AllVar <- factor(main_dataBarPlot_mat$AllVar, levels = unique(others_dataBarPlot_mat$AllVar))
+        main_dataBarPlot_mat <- rbind(main_dataBarPlot_mat, others_dataBarPlot_mat)
       }
       main_dataBarPlot_mat <- as.data.frame(main_dataBarPlot_mat)
       if (input$SensPlotVisu == "Vertical")
@@ -1496,6 +1496,75 @@ Plot_Visu_Tree <- function(input, resDiff, CT_Norm_OTU, taxo_table)
 ##      NETWORK
 ##                       ##
 
+#Function that computes a permutation test and return an adjacency matrix
+#input: mat, max iteration number
+#output: adjacency matrix
+
+compute_pcor <- function(input, 
+                         mat, 
+                         n_iter = 100) {
+  
+  correlation_storage <- vector("list", length = nrow(mat))
+  n_rows <- nrow(mat)
+  adjacency_matrix <- matrix(0, nrow = n_rows, ncol = n_rows)
+  correlation_matrix <- matrix(NA, nrow = n_rows, ncol = n_rows)
+  
+  # Loop through each row for shuffling and correlation calculations
+  for (i in 1:n_rows) {
+    # Initialize a matrix to store correlations for the i-th row, for each shuffle
+    correlation_storage[[i]] <- matrix(NA, nrow = n_iter, ncol = n_rows)
+    
+    # Shuffle and compute correlations n_iter times
+    for (shuffle in 1:n_iter) {
+      # Create a copy of the matrix for shuffling
+      mat_shuffled <- mat
+      # Shuffle only the i-th row of the copy
+      mat_shuffled[i, ] <- sample(mat[i, ])
+      
+      # Compute correlation of the shuffled i-th row with every row of the original matrix and store the results
+      correlations <- sapply(1:n_rows, function(j) {
+        if (i != j) {
+          cor(mat_shuffled[i, ], mat[j, ])
+        } else {
+          NA  # Ignore correlation of the row with itself
+        }
+      })
+      
+      # Store the correlations of this shuffle in the correlation storage
+      correlation_storage[[i]][shuffle, ] <- correlations
+    }
+  }  
+  
+  # Compute the observed correlations for the original matrix and construct the adjacency matrix
+  for (i in 1:n_rows) {
+    for (j in 1:n_rows) {
+      if (i != j) {
+        # Calculate the actual observed correlation between rows i and j
+        observed_correlation <- cor(mat[i, ], mat[j, ])
+        correlation_matrix[i, j] <- observed_correlation
+        
+        # Retrieve the empirical distribution of correlations for rows i and j
+        empirical_correlations <- correlation_storage[[i]][, j]
+        
+        # Calculate the p-value for the observed correlation in the empirical distribution
+        less_than_observed <- sum(empirical_correlations < observed_correlation, na.rm = TRUE)
+        greater_than_observed <- sum(empirical_correlations > observed_correlation, na.rm = TRUE)
+        p_value <- min(less_than_observed, greater_than_observed) / length(empirical_correlations)
+        
+        # Determine significance based on the p-value and the sign of the observed correlation
+        if ((p_value <= 0.025 || p_value >= 0.975) && observed_correlation > 0) {
+          adjacency_matrix[i, j] <- 1
+        } else if ((p_value <= 0.025 || p_value >= 0.975) && observed_correlation < 0) {
+          adjacency_matrix[i, j] <- -1
+        }
+      }
+    }
+  }
+  
+  # Return the adjacency matrix and the correlation matrix
+  return(list(adjacency_matrix = adjacency_matrix, correlation_matrix = correlation_matrix))
+}
+
 Plot_network <-
   function(input,
            resDiff,
@@ -1551,46 +1620,46 @@ Plot_network <-
         #################################
         
         countsMatrix <- as.matrix(counts_tmp_combined)
-        ppcor <-
-          ppcor::pcor(countsMatrix, method = input$pcorrMethod)
-        pcor <- ppcor$estimate
-        rownames(pcor) <- colnames(countsMatrix)
-        colnames(pcor) <- colnames(countsMatrix)
-        
-        n <- nrow(countsMatrix)  # Number of observations
-        
-        # Step 1: Calculate the variance-covariance matrix
-        covMatrix <- cov(countsMatrix)
-        
-        # Step 2: Compute the inverse
-        invCovMatrix <- MASS::ginv(covMatrix)
-        
-        
-        # Step 3: Calculate partial correlations
-        pcorMatrix <- -invCovMatrix / sqrt(outer(diag(invCovMatrix), diag(invCovMatrix)))
-        
-        # Set diagonal to zero (self-correlation is not meaningful)
-        diag(pcorMatrix) <- 0
-        
-        # Step 4: Calculate p-values
-        t_values <- pcorMatrix * sqrt((n - 2) / (1 - pcorMatrix^2))
-        p_values <- 2 * pt(-abs(t_values), df = n - 2)
-        
-        n <- ncol(countsMatrix)
-        resCorrTest <- corr.test(countsMatrix, ci = FALSE)
-        cor <- resCorrTest$r
-        pval <- resCorrTest$p
-        
-        pval_bool <-
-          t(apply(pval, 1, function(v) {
-            sapply(v, function(x) {
-              x < 0.05
-            })
-          }))
-        
-        cor_sgn <- t(apply(cor, 1, function(v) {
-          sapply(v, sign)
-        }))
+        # ppcor <-
+        #   ppcor::pcor(countsMatrix, method = input$pcorrMethod)
+        # pcor <- ppcor$estimate
+        # rownames(pcor) <- colnames(countsMatrix)
+        # colnames(pcor) <- colnames(countsMatrix)
+        # 
+        # n <- nrow(countsMatrix)  # Number of observations
+        # 
+        # # Step 1: Calculate the variance-covariance matrix
+        # covMatrix <- cov(countsMatrix)
+        # 
+        # # Step 2: Compute the inverse
+        # invCovMatrix <- MASS::ginv(covMatrix)
+        # 
+        # 
+        # # Step 3: Calculate partial correlations
+        # pcorMatrix <- -invCovMatrix / sqrt(outer(diag(invCovMatrix), diag(invCovMatrix)))
+        # 
+        # # Set diagonal to zero (self-correlation is not meaningful)
+        # diag(pcorMatrix) <- 0
+        # 
+        # # Step 4: Calculate p-values
+        # t_values <- pcorMatrix * sqrt((n - 2) / (1 - pcorMatrix^2))
+        # p_values <- 2 * pt(-abs(t_values), df = n - 2)
+        # 
+        # n <- ncol(countsMatrix)
+        # resCorrTest <- corr.test(countsMatrix, ci = FALSE)
+        # cor <- resCorrTest$r
+        # pval <- resCorrTest$p
+        # 
+        # pval_bool <-
+        #   t(apply(pval, 1, function(v) {
+        #     sapply(v, function(x) {
+        #       x < 0.05
+        #     })
+        #   }))
+        # 
+        # cor_sgn <- t(apply(cor, 1, function(v) {
+        #   sapply(v, sign)
+        # }))
         
         ################################
         ####### adjacency matrix #######
@@ -1598,13 +1667,13 @@ Plot_network <-
         
         
         if (input$colorCorr == "pcorr") {
-          adjacency <- matrix(apply(p_values, c(1, 2), function(p_val, pcor_val) {
-            if (!is.na(p_val) && p_val <= 0.05) {
-              return(1) 
-            } else {
-              return(0)
-            }
-          }, pcor_val = pcor), nrow = nrow(p_values), ncol = ncol(p_values))
+          #   adjacency <- matrix(apply(p_values, c(1, 2), function(p_val, pcor_val) {
+          #     if (!is.na(p_val) && p_val <= 0.05) {
+          #       return(1) 
+          #     } else {
+          #       return(0)
+          #     }
+          #   }, pcor_val = pcor), nrow = nrow(p_values), ncol = ncol(p_values))
           
           # adjacency <- matrix(apply(pcor, c(1, 2), function(x) {
           #   # Check for NA values in x and ensure input$pcorrThreshold is not NA
@@ -1615,9 +1684,11 @@ Plot_network <-
           #   }
           # }), nrow = nrow(pcor), ncol = ncol(pcor))
           
-          rownames(adjacency) <- colnames(pcor)
-          colnames(adjacency) <- colnames(pcor)
-          
+          permutation <- isolate(compute_pcor(input, t(countsMatrix)))
+          adjacency <- permutation$adjacency_matrix
+          rownames(adjacency) <- colnames(countsMatrix)
+          colnames(adjacency) <- colnames(countsMatrix)
+          observed_correlation <- permutation$correlation_matrix
         }
         else{
           adjacency <-
@@ -1637,7 +1708,7 @@ Plot_network <-
         
         ### Replace NA by zeros (ie "no correlation")     # this way, those elements will appear as single nodes
         adjacency[is.na(adjacency)] <- 0
-        adjacency <- abs(adjacency)
+        #adjacency <- abs(adjacency)
         req(adjacency)
         adjacency <- adjacency[, ind_taxo]
         adjacency <- adjacency[ind_taxo, ]
@@ -1668,7 +1739,7 @@ Plot_network <-
           nodesPcor <- unique(c(dataVN$edges$from, dataVN$edges$to))
           
           # Create a mapping from node names to their indices based on the column names of 'pcor'
-          node_mapping <- match(nodesPcor, colnames(pcor))
+          node_mapping <- match(nodesPcor, colnames(countsMatrix))
           
           # Initialize a vector to store partial correlation values
           pcor_values <- numeric(nrow(dataVN$edges))
@@ -1679,7 +1750,7 @@ Plot_network <-
             to_index <- node_mapping[which(nodesPcor == dataVN$edges$to[i])]
             
             # Store the partial correlation value
-            pcor_values[i] <- pcor[from_index, to_index]
+            pcor_values[i] <- observed_correlation[from_index, to_index]
           }
           
           # Store the correlation values back into the 'pcor' column
@@ -1689,7 +1760,7 @@ Plot_network <-
           dataVN$edges$color <- ifelse(dataVN$edges$pcor >= 0, 
                                        toString(isolate(input$edgeColorPositive)),
                                        toString(isolate(input$edgeColorNegative)))
-        
+          
           
           
           # dataVN$edges$color <-
@@ -1723,7 +1794,7 @@ Plot_network <-
             dataVN$nodes$color.background
         }
         palette <- isolate(input$colorsdiagVisuPlot)
-        
+        dataVN$edges$weight <- abs(dataVN$edges$weight)
         #################################
         ########### clustering ##########
         #################################
@@ -1809,6 +1880,7 @@ Plot_network <-
         dataVN$edges[which(!dataVN$edges$from %in% dataVN$nodes),]
         dataVN$edges[which(!dataVN$edges$to %in% dataVN$nodes),]
         
+        
         plot <-
           visNetwork(nodes = dataVN$nodes, edges = dataVN$edges)
         plot <-
@@ -1853,107 +1925,107 @@ Plot_network <-
           )
         plot <- visLayout(plot, randomSeed = 22)
         
-        #Get a new graph from computed nodes and edges
-        graph_igraph <-
-          graph_from_data_frame(dataVN$edges,
-                                directed = FALSE,
-                                vertices = dataVN$nodes)
-        V(graph_igraph)$label.cex = 0.75
-        membership <- cluster$membership
-        
-        #Find only lonely nodes in the membership list (they have a unique integer) then set it to 0
-        membership[!(membership %in% membership[duplicated(membership)])] <-
-          0
-        cluster$membership <-
-          as_membership(as.integer(factor(membership)))
-        
-        V(igraphGraph)$community <- membership(cluster)
-        if (isFALSE(input$showLabelNetwork)) {
-          if (input$SelectTaxoNetwork == "Linked") {
-            voronoi <-
-              plot(
-                cluster,
-                graph_igraph,
-                mark.groups = communities(cluster),
-                mark.border = "black",
-                #vertex.color = V(igraphGraph)$community ,
-                edge.color = dataVN$edges$color,
-                vertex.size = input$nodeSizeNetwork / 2,
-                edge.arrow.size = input$linkWidth / 10,
-                vertex.label = NA,
-                main = paste0(
-                  "Community detection using ",
-                  input$pcorrClustAlgo,
-                  " algorithm for ",
-                  input$TaxoSelect
-                ),
-                layout = igraph::layout_nicely(graph_igraph)
-              )
-          }
-          else{
-            voronoi <-
-              plot(
-                graph_igraph,
-                mark.groups = communities(cluster),
-                mark.border = "black",
-                #vertex.color = dataVN$nodes$color.background,
-                edge.color = dataVN$edges$color,
-                vertex.size = input$nodeSizeNetwork / 2,
-                edge.arrow.size = input$linkWidth / 10,
-                vertex.label = NA,
-                main = paste0(
-                  "Community detection using ",
-                  input$pcorrClustAlgo,
-                  " algorithm for ",
-                  input$TaxoSelect
-                ),
-                layout = igraph::layout_nicely(graph_igraph)
-              )
-          }
-        }
-        else{
-          if (input$SelectTaxoNetwork == "Linked") {
-            voronoi <-
-              plot(
-                cluster,
-                graph_igraph,
-                mark.groups = communities(cluster),
-                mark.border = "black",
-                #vertex.color = dataVN$nodes$color.background,
-                edge.color = dataVN$edges$color,
-                vertex.label.color = "black",
-                vertex.label.dist = 1.5,
-                vertex.size = input$nodeSizeNetwork / 2,
-                edge.arrow.size = input$linkWidth / 10,
-                vertex.label = V(graph_igraph)$label,
-                main = paste0(
-                  "Community detection using Louvain algorithm for ",
-                  input$TaxoSelect
-                ),
-                layout = igraph::layout_nicely(graph_igraph)
-              )
-          }
-          else{
-            voronoi <-
-              plot(
-                graph_igraph,
-                mark.groups = communities(cluster),
-                mark.border = "black",
-                vertex.color = dataVN$nodes$color.background,
-                edge.color = dataVN$edges$color,
-                vertex.label.color = "black",
-                vertex.label.dist = 1.5,
-                vertex.size = input$nodeSizeNetwork / 2,
-                edge.arrow.size = input$linkWidth / 10,
-                vertex.label = V(graph_igraph)$label,
-                main = paste0(
-                  "Community detection using Louvain algorithm for ",
-                  input$TaxoSelect
-                ),
-                layout = igraph::layout_nicely(graph_igraph)
-              )
-          }
-        }
+        # #Get a new graph from computed nodes and edges
+        # graph_igraph <-
+        #   graph_from_data_frame(dataVN$edges,
+        #                         directed = FALSE,
+        #                         vertices = dataVN$nodes)
+        # V(graph_igraph)$label.cex = 0.75
+        # membership <- cluster$membership
+        # 
+        # #Find only lonely nodes in the membership list (they have a unique integer) then set it to 0
+        # membership[!(membership %in% membership[duplicated(membership)])] <-
+        #   0
+        # cluster$membership <-
+        #   as_membership(as.integer(factor(membership)))
+        # 
+        # V(igraphGraph)$community <- membership(cluster)
+        # if (isFALSE(input$showLabelNetwork)) {
+        #   if (input$SelectTaxoNetwork == "Linked") {
+        #     voronoi <-
+        #       plot(
+        #         cluster,
+        #         graph_igraph,
+        #         mark.groups = communities(cluster),
+        #         mark.border = "black",
+        #         #vertex.color = V(igraphGraph)$community ,
+        #         edge.color = dataVN$edges$color,
+        #         vertex.size = input$nodeSizeNetwork / 2,
+        #         edge.arrow.size = input$linkWidth / 10,
+        #         vertex.label = NA,
+        #         main = paste0(
+        #           "Community detection using ",
+        #           input$pcorrClustAlgo,
+        #           " algorithm for ",
+        #           input$TaxoSelect
+        #         ),
+        #         layout = igraph::layout_nicely(graph_igraph)
+        #       )
+        #   }
+        #   else{
+        #     voronoi <-
+        #       plot(
+        #         graph_igraph,
+        #         mark.groups = communities(cluster),
+        #         mark.border = "black",
+        #         #vertex.color = dataVN$nodes$color.background,
+        #         edge.color = dataVN$edges$color,
+        #         vertex.size = input$nodeSizeNetwork / 2,
+        #         edge.arrow.size = input$linkWidth / 10,
+        #         vertex.label = NA,
+        #         main = paste0(
+        #           "Community detection using ",
+        #           input$pcorrClustAlgo,
+        #           " algorithm for ",
+        #           input$TaxoSelect
+        #         ),
+        #         layout = igraph::layout_nicely(graph_igraph)
+        #       )
+        #   }
+        # }
+        # else{
+        #   if (input$SelectTaxoNetwork == "Linked") {
+        #     voronoi <-
+        #       plot(
+        #         cluster,
+        #         graph_igraph,
+        #         mark.groups = communities(cluster),
+        #         mark.border = "black",
+        #         #vertex.color = dataVN$nodes$color.background,
+        #         edge.color = dataVN$edges$color,
+        #         vertex.label.color = "black",
+        #         vertex.label.dist = 1.5,
+        #         vertex.size = input$nodeSizeNetwork / 2,
+        #         edge.arrow.size = input$linkWidth / 10,
+        #         vertex.label = V(graph_igraph)$label,
+        #         main = paste0(
+        #           "Community detection using Louvain algorithm for ",
+        #           input$TaxoSelect
+        #         ),
+        #         layout = igraph::layout_nicely(graph_igraph)
+        #       )
+        #   }
+        #   else{
+        #     voronoi <-
+        #       plot(
+        #         graph_igraph,
+        #         mark.groups = communities(cluster),
+        #         mark.border = "black",
+        #         vertex.color = dataVN$nodes$color.background,
+        #         edge.color = dataVN$edges$color,
+        #         vertex.label.color = "black",
+        #         vertex.label.dist = 1.5,
+        #         vertex.size = input$nodeSizeNetwork / 2,
+        #         edge.arrow.size = input$linkWidth / 10,
+        #         vertex.label = V(graph_igraph)$label,
+        #         main = paste0(
+        #           "Community detection using Louvain algorithm for ",
+        #           input$TaxoSelect
+        #         ),
+        #         layout = igraph::layout_nicely(graph_igraph)
+        #       )
+        #   }
+        # }
         
         #################################
         ###### taxonomy data table ######
@@ -1983,7 +2055,7 @@ Plot_network <-
     return(list(
       plot = plot,
       data = dataVN,
-      voronoi = voronoi,
+      #voronoi = voronoi,
       pcor_mat = pcor, 
       taxo = resTaxo,
       pcor = pcor
@@ -1999,12 +2071,12 @@ Plot_network_sunburst <- function(input,
                                   dataInput,
                                   colors){
   res = isolate(Plot_network(input,
-         resDiff,
-         availableTaxo,
-         ind_taxo,
-         qualiVariable,
-         dataInput,
-         colors = colors)$taxo)
+                             resDiff,
+                             availableTaxo,
+                             ind_taxo,
+                             qualiVariable,
+                             dataInput,
+                             colors = colors)$taxo)
   req(input$CommunitySunburst)
   req(res)
   # Filter for the first community
