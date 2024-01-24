@@ -1029,7 +1029,7 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
           
           if(isTRUE(input$ellipsePCA)){
             pca_plot <- pca_plot + 
-              stat_ellipse(aes(color = Groups), type = "t", level = input$cexcirclePCAPCA)
+              stat_ellipse(aes(color = Groups), type = "t", level = input$cexcirclePCA)
           }
         }
       }
@@ -1156,6 +1156,8 @@ UmapPlot_meta <- function(input, dds, group_init, n = min(500, nrow(counts(dds))
     y_limit <- c(-y_range * input$cexTitleDiag- y_margin, y_range * input$cexTitleDiag + y_margin)
     
     gg <- ggplot(final, aes(x = !!sym("X1"), y = !!sym("X2"), color = .data[["group"]])) +
+      geom_hline(yintercept = 0, linetype = 2) +
+      geom_vline(xintercept = 0, linetype = 2) +
       scale_color_manual(values = col) +
       scale_fill_manual(values = col) +
       geom_point(aes(fill = group, colour = group),alpha = 1, size = input$cexLabelDiag *2) +
