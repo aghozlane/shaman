@@ -515,7 +515,6 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree, col = c("SpringGreen"
         dplyr::left_join(group_centroids, by = "group", suffix = c("", ".centroid")) %>%
         dplyr::mutate(group = as.factor(group))
       
-
       x_range <- max(abs(min(Axis1_samples)), abs(max(Axis1_samples)), abs(min(Axis1_variables)), abs(max(Axis1_variables)))
       y_range <- max(abs(min(Axis2_samples)), abs(max(Axis2_samples)), abs(min(Axis2_variables)), abs(max(Axis2_variables)))
       x_lim <- c(as.numeric(-x_range), as.numeric(x_range)) #to center the plot
@@ -779,6 +778,7 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
         PC2 = PC2,
         group = Groups
       )
+      
       #get the centroids
       group_centroids <- group_centroids %>%
         dplyr::group_by(group) %>%
@@ -787,6 +787,13 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
           PC2 = mean(PC2, na.rm = TRUE)
         ) %>%
         as.data.frame()
+      
+      pca_centroids <- as.data.frame(pca_res$ind$coord)
+      pca_centroids$group <- pca_res$group
+      
+      merged_centroids <-  pca_centroids %>%
+        dplyr::left_join(group_centroids, by = "group", suffix = c("", ".centroid")) %>%
+        dplyr::mutate(group = as.factor(group))
       
       if ((input$radioPCA == 1)) {
         pca_plot <- NULL
@@ -841,6 +848,16 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
         if(2 %in% input$checkLabelSamples)
           pca_plot <- pca_plot +  
             stat_ellipse(aes(color = Groups), type = "t", level = input$cexcirclePCA) +
+            geom_segment(
+              data = merged_centroids,
+              aes(
+                x = .data[[paste0("Dim.", PC1_axis)]],
+                y = .data[[paste0("Dim.", PC2_axis)]],
+                xend = .data[["PC1"]],
+                yend = .data[["PC2"]],
+                color = group
+              )) + 
+            geom_point(data= group_centroids, aes(x=PC1, y = PC2, color = group), size = input$cexLabelDiag *2.5) +
             geom_text_repel(data = group_centroids,
                             aes(x = PC1, y = PC2, label = group, color = group),
                             show.legend = FALSE,
@@ -850,8 +867,17 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
         
         else 
           pca_plot <- pca_plot + 
-            stat_ellipse(aes(color = Groups), type = "t", level = input$cexcirclePCA)
-        
+            stat_ellipse(aes(color = Groups), type = "t", level = input$cexcirclePCA) +
+            geom_segment(
+              data = merged_centroids,
+              aes(
+                x = .data[[paste0("Dim.", PC1_axis)]],
+                y = .data[[paste0("Dim.", PC2_axis)]],
+                xend = .data[["PC1"]],
+                yend = .data[["PC2"]],
+                color = group
+              )) +
+            geom_point(data= group_centroids, aes(x=PC1, y = PC2, color = group), size = input$cexLabelDiag *2.5)         
       }
       if(isTRUE(input$checkLabelTaxo) && (input$radioPCA == 3))
       {
@@ -975,6 +1001,16 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
               scale_color_manual(values = col, name = "Groups") +
               scale_fill_manual(values = col, name = "Groups") + 
               stat_ellipse(aes(color = Groups), type = "t", level = input$cexcirclePCA) +
+              geom_segment(
+                data = merged_centroids,
+                aes(
+                  x = .data[[paste0("Dim.", PC1_axis)]],
+                  y = .data[[paste0("Dim.", PC2_axis)]],
+                  xend = .data[["PC1"]],
+                  yend = .data[["PC2"]],
+                  color = group
+                )) +
+              geom_point(data= group_centroids, aes(x=PC1, y = PC2, color = group), size = input$cexLabelDiag *2.5)  +
               geom_text_repel(data = group_centroids,
                               aes(x = PC1, y = PC2, label = group, color = group),
                               show.legend = FALSE,
@@ -988,6 +1024,16 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
           if(3 %in% input$checkLabelBiplot && length(input$checkLabelBiplot) != 1){
             pca_plot <- pca_plot +  
               stat_ellipse(aes(color = Groups), type = "t", level = input$cexcirclePCA) +
+              geom_segment(
+                data = merged_centroids,
+                aes(
+                  x = .data[[paste0("Dim.", PC1_axis)]],
+                  y = .data[[paste0("Dim.", PC2_axis)]],
+                  xend = .data[["PC1"]],
+                  yend = .data[["PC2"]],
+                  color = group
+                )) +
+              geom_point(data= group_centroids, aes(x=PC1, y = PC2, color = group), size = input$cexLabelDiag *2.5) +
               geom_text_repel(data = group_centroids,
                               aes(x = PC1, y = PC2, label = group, color = group),
                               show.legend = FALSE,
@@ -998,7 +1044,17 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
           }
           if(isTRUE(input$ellipsePCA) && (input$checkLabelBiplot != 3)){
             pca_plot <- pca_plot + 
-              stat_ellipse(aes(color = Groups), type = "t", level = input$cexcirclePCA)
+              stat_ellipse(aes(color = Groups), type = "t", level = input$cexcirclePCA) +
+              geom_segment(
+                data = merged_centroids,
+                aes(
+                  x = .data[[paste0("Dim.", PC1_axis)]],
+                  y = .data[[paste0("Dim.", PC2_axis)]],
+                  xend = .data[["PC1"]],
+                  yend = .data[["PC2"]],
+                  color = group
+                )) +
+              geom_point(data= group_centroids, aes(x=PC1, y = PC2, color = group), size = input$cexLabelDiag *2.5)
             
           }
         }
@@ -1029,7 +1085,17 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
           
           if(isTRUE(input$ellipsePCA)){
             pca_plot <- pca_plot + 
-              stat_ellipse(aes(color = Groups), type = "t", level = input$cexcirclePCA)
+              stat_ellipse(aes(color = Groups), type = "t", level = input$cexcirclePCA) +
+              geom_segment(
+                data = merged_centroids,
+                aes(
+                  x = .data[[paste0("Dim.", PC1_axis)]],
+                  y = .data[[paste0("Dim.", PC2_axis)]],
+                  xend = .data[["PC1"]],
+                  yend = .data[["PC2"]],
+                  color = group
+                )) +
+              geom_point(data= group_centroids, aes(x=PC1, y = PC2, color = group), size = input$cexLabelDiag *2.5)
           }
         }
       }
