@@ -1307,6 +1307,10 @@ function(request) {
                                               column(width = 6, sliderInput("sizeDiversityTitle", h6(strong("Titles and scales")), min = 0, max = 40, step = 1, value = 15)),
                                               column(width = 6, sliderInput("sizeDiversityLegend", h6(strong("Legend")), min = 0, max = 20, step = 1, value = 12)))
                              ,
+                             conditionalPanel(condition="input.PlotVisuSelect=='Barplot'",
+                                              column(width = 6, sliderInput("sizeBarplotTitle", h6(strong("Titles and scales")), min = 0, max = 40, step = 1, value = 15)),
+                                              column(width = 6, sliderInput("sizeBarplotLegend", h6(strong("Legend")), min = 0, max = 20, step = 1, value = 12)))
+                             ,
                              ###            ###
                              ### _______barplot ####
                              ###            ###

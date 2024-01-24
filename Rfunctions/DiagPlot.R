@@ -557,7 +557,7 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree, col = c("SpringGreen"
                                mapping = aes(x = 0, y = 0, xend = !!sym(A1_axis), yend = !!sym(A2_axis)),
                                color = "#1D4D68",
                                arrow = arrow(length = unit(input$cexLabelDiag*1.5, "mm"))) +
-        geom_text_repel(data = variables, aes(label = .data[[input$TaxoSelect]]), color = "#1D4D68", show.legend = FALSE, size = input$cexPointsLabelDiag *2) 
+        geom_text_repel(data = variables, aes(label = .data[[input$TaxoSelect]]), color = "#1D4D68", show.legend = FALSE, size = input$cexPointsLabelDiag *2)
       
       pp <- pp + scale_color_manual(values = col) +
         new_scale_color() + 
@@ -579,12 +579,19 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree, col = c("SpringGreen"
           ) +
           geom_point(data= group_centroids, aes(x=mean_Axis_1, y = mean_Axis_2, color = group), size = input$cexLabelDiag *2.5) 
         
-        pp <- pp + geom_text_repel(data = group_centroids,
-                             aes(x=mean_Axis_1, y = mean_Axis_2, label = .data[["group"]], color = group),
-                             show.legend = FALSE,
-                             fontface = "bold",
-                             vjust = -1,
-                             size = input$cexPointsLabelDiag *2)
+        pp <- pp + 
+          geom_label_repel(data = group_centroids, aes(x=mean_Axis_1, y = mean_Axis_2, label = .data[["group"]], color = group), 
+                     label.size = 1,
+                     show.legend = FALSE,
+                     fontface = "bold",
+                     vjust = -1,
+                     size = input$cexPointsLabelDiag *2)
+        # geom_text_repel(data = group_centroids,
+        #                    aes(x=mean_Axis_1, y = mean_Axis_2, label = .data[["group"]], color = group),
+        #                    show.legend = FALSE,
+        #                    fontface = "bold",
+        #                    vjust = -1,
+        #                    size = input$cexPointsLabelDiag *2)
         
       }
       
@@ -858,7 +865,8 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
                 color = group
               )) + 
             geom_point(data= group_centroids, aes(x=PC1, y = PC2, color = group), size = input$cexLabelDiag *2.5) +
-            geom_text_repel(data = group_centroids,
+            geom_label_repel(data = group_centroids,
+                             label.size = 1,
                             aes(x = PC1, y = PC2, label = group, color = group),
                             show.legend = FALSE,
                             fontface = "bold",
@@ -909,8 +917,8 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
               select.var = list(contrib = contribThreshold)
             ) +
               labs(subtitle = paste0(as.character(input$varSlider *100), " % ", "Threshold"),
-                                     x = paste0(Dim_1, " (", round(pca_res$eigen_df$PercentageExplained[PC1_axis], 2), " %)"),
-                                     y = paste0(Dim_2, " (", round(pca_res$eigen_df$PercentageExplained[PC2_axis], 2), " %)")) +
+                   x = paste0(Dim_1, " (", round(pca_res$eigen_df$PercentageExplained[PC1_axis], 2), " %)"),
+                   y = paste0(Dim_2, " (", round(pca_res$eigen_df$PercentageExplained[PC2_axis], 2), " %)")) +
               geom_point(aes(colour = as.factor(pca_res$group)), size = input$cexLabelDiag) +
               scale_color_manual(values = col, name = "Groups") +
               scale_fill_manual(values = col, name = "Groups") + 
@@ -933,8 +941,8 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
               select.var = list(contrib = contribThreshold)
             ) +
               labs(subtitle = paste0(as.character(input$varSlider *100), " % ", "Threshold"),
-                              x = paste0(Dim_1, " (", pca_res$eigen_df$PercentageExplained[PC1_axis], " %)"),
-                              y = paste0(Dim_2, " (", pca_res$eigen_df$PercentageExplained[PC2_axis], " %)")) +
+                   x = paste0(Dim_1, " (", pca_res$eigen_df$PercentageExplained[PC1_axis], " %)"),
+                   y = paste0(Dim_2, " (", pca_res$eigen_df$PercentageExplained[PC2_axis], " %)")) +
               geom_point(aes(colour = as.factor(pca_res$group)), size = input$cexLabelDiag) + 
               geom_text_repel(
                 aes(x = PC1, y = PC2, colour = Groups, label = rownames(pca_res$ind$coord)),  
@@ -1011,12 +1019,13 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
                   color = group
                 )) +
               geom_point(data= group_centroids, aes(x=PC1, y = PC2, color = group), size = input$cexLabelDiag *2.5)  +
-              geom_text_repel(data = group_centroids,
-                              aes(x = PC1, y = PC2, label = group, color = group),
-                              show.legend = FALSE,
-                              fontface = "bold",
-                              vjust = -1,
-                              size = input$cexPointsLabelDiag *2) +
+              geom_label_repel(data = group_centroids,
+                               label.size = 1,
+                               aes(x = PC1, y = PC2, label = group, color = group),
+                               show.legend = FALSE,
+                               fontface = "bold",
+                               vjust = -1,
+                               size = input$cexPointsLabelDiag *2) +
               coord_cartesian(ylim = c(-y_range * input$cexTitleDiag, y_range * input$cexTitleDiag)) +
               theme_minimal() +
               pca_theme
@@ -1034,12 +1043,13 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
                   color = group
                 )) +
               geom_point(data= group_centroids, aes(x=PC1, y = PC2, color = group), size = input$cexLabelDiag *2.5) +
-              geom_text_repel(data = group_centroids,
-                              aes(x = PC1, y = PC2, label = group, color = group),
-                              show.legend = FALSE,
-                              fontface = "bold",
-                              vjust = -1,
-                              size = input$cexPointsLabelDiag *2)
+              geom_label_repel(data = group_centroids,
+                               label.size = 1,
+                               aes(x = PC1, y = PC2, label = group, color = group),
+                               show.legend = FALSE,
+                               fontface = "bold",
+                               vjust = -1,
+                               size = input$cexPointsLabelDiag *2)
             
           }
           if(isTRUE(input$ellipsePCA) && (input$checkLabelBiplot != 3)){
