@@ -180,7 +180,7 @@ Plot_Visu_Barplot <-
                     x = AllVar,
                     y = Proportions,
                     fill = forcats::fct_rev(Taxonomy)
-                  )) + guides(fill = guide_legend(input$TaxoSelect))
+                  )) 
       if (input$CountsOrProp == "counts" &&
           input$positionBarPlot == "fill")
         gg = gg + geom_bar(position='stack', stat='identity')
@@ -190,8 +190,14 @@ Plot_Visu_Barplot <-
       gg = gg + theme(
         panel.grid.minor.x = element_blank(),
         panel.grid.major.x = element_blank(),
-        axis.text.x = element_text(angle = XRotate)
-      )
+        axis.text.x = element_text(size = input$sizeBarplotTitle, angle = XRotate),  
+        axis.text.y = element_text(size = input$sizeBarplotTitle),   
+        axis.title.x = element_text(size = input$sizeBarplotTitle * 1.3),  
+        axis.title.y = element_text(size = input$sizeBarplotTitle * 1.3),
+        legend.title = element_text(size = input$sizeBarplotLegend *1.3),
+        legend.text = element_text(size = input$sizeBarplotLegend)) + 
+        guides(fill = guide_legend(input$TaxoSelect))
+      
       if (input$CountsOrProp == "prop")
         gg = gg + labs(y = "Relative abundance (%)", x = "")
       if (input$CountsOrProp == "counts" &&
