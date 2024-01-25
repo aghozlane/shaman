@@ -8677,12 +8677,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
 #     }
 #   }
 # })
-  
-  
-  
-  
-  
-  
+
   
   compute_pcor <- reactive({
     dataInput = dataInput()$data
@@ -8693,14 +8688,14 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     sumTot = rowSums(counts)
     ord = order(sumTot,decreasing=TRUE)
     Available_taxo = rownames(counts)[ord]
-
+    
     if (isolate(input$colorCorr == 'corr')) {
       sec_variable = isolate(input$sec_variable)
     }
     else{
       sec_variable = NULL
     }
-
+    
     data <-
       GetDataToPlot(
         input,
@@ -8724,59 +8719,73 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
               0
             })
       }
-
-      if(!is.null(counts_tmp_combined)) {
-        countsMatrix <- as.matrix(counts_tmp_combined)  
-        req(countsMatrix)
-        mat <- t(countsMatrix)
-        
-        n_rows <- nrow(mat)
-        corr_storage <- vector("list", length = n_rows)
-        adjacency <- matrix(0, nrow = n_rows, ncol = n_rows)
-        corr_matrix <- matrix(NA, nrow = n_rows, ncol = n_rows)
-        
-        # Compute shuffled correlations using lapply
-        corr_results <- lapply(1:(n_rows - 1), function(i) {
-          corr_i <- replicate(input$permThreshold, {
+      
+      if(!is.null(counts_tmp_combined))
+        countsMatrix <- as.matrix(counts_tmp_combined)
+      
+      req(countsMatrix)
+      mat <- t(countsMatrix)
+      
+      n_rows <- nrow(mat)
+      corr_storage <- vector("list", length = n_rows)
+      for (i in 1:n_rows) {
+        corr_storage[[i]] <- numeric(input$permThreshold * (n_rows - 1))
+      }
+      adjacency <- matrix(0, nrow = n_rows, ncol = n_rows)
+      corr_matrix <- matrix(NA, nrow = n_rows, ncol = n_rows)
+      
+      for (i in 1:(n_rows - 1)) {
+        for (j in (i + 1):n_rows) {
+          
+          corr_i <- numeric(input$permThreshold)
+          
+          # Shuffle and compute corr n_iter times for row i
+          for (shuffle in 1:input$permThreshold) {
+            # Shuffle only the i-th row
             mat_shuffled_i <- mat
             mat_shuffled_i[i, ] <- sample(mat[i, ])
-            sapply((i + 1):n_rows, function(j) cor(mat_shuffled_i[i, ], mat[j, ], method = input$pcorrMethod))
-          })
-          list(corr_i = corr_i)
-        })
-        
-        # Compute the observed correlations and fill adjacency and correlation matrices
-        observed_correlations <- outer(1:n_rows, 1:n_rows, Vectorize(function(i, j) if (i != j) cor(mat[i, ], mat[j, ], method = input$pcorrMethod) else NA))
-        
-        # Calculate p-values and fill the adjacency matrix using the observed_corr
-        p_values <- mapply(function(i, corr_i) {
-          sapply(1:ncol(corr_i), function(j) {
-            observed_corr <- observed_correlations[i, i + j]
-            min(sum(corr_i[, j] < observed_corr), sum(corr_i[, j] > observed_corr)) / input$permThreshold
-          })
-        }, 1:(n_rows - 1), corr_results)
-        
-        # Fill the adjacency and correlation matrices
-        adjacency[lower.tri(adjacency)] <- mapply(function(p_value_i, observed_corr) {
+            
+            # Compute correlation of the shuffled i-th row with row j
+            corr_i[shuffle] <- cor(mat_shuffled_i[i, ], mat[j, ], method = input$pcorrMethod)
+          }
+          
+          # Store the shuffled corr
+          corr_storage[[i]][((j - 1) * input$permThreshold + 1):(j * input$permThreshold)] <- corr_i
+          
+          # Compute the observed correlation once for each unique pair of rows
+          observed_corr <- cor(mat[i, ], mat[j, ], method = input$pcorrMethod)
+          corr_matrix[i, j] <- observed_corr
+          corr_matrix[j, i] <- observed_corr  # symmetry
+          
+          # Calculate p-values
+          p_value_i <- min(sum(corr_i < observed_corr), sum(corr_i > observed_corr)) / input$permThreshold
+          
+          # Determine significance based on the p-value and the sign of the observed correlation
           if (!is.na(p_value_i) && !is.na(observed_corr) && !is.na(input$pcorrThreshold)) {
-            if ((p_value_i <= input$pcorrThreshold/2 || p_value_i >= 1 - input$pcorrThreshold/2) && observed_corr > 0) 1
-            else if ((p_value_i <= input$pcorrThreshold/2 || p_value_i >= 1 - input$pcorrThreshold/2) && observed_corr < 0) -1
-            else 0
-          } else 0
-        }, p_values, observed_correlations[lower.tri(observed_correlations)])
-        
-        # Mirror the lower triangle to the upper triangle
-        adjacency <- adjacency + t(adjacency)
-        corr_matrix[lower.tri(corr_matrix)] <- observed_correlations[lower.tri(observed_correlations)]
-        corr_matrix <- corr_matrix + t(corr_matrix)
-        
-        rownames(adjacency) <- colnames(countsMatrix)
-        colnames(adjacency) <- colnames(countsMatrix)
-        
-        return(list(adjacency = adjacency, corr_matrix = corr_matrix))
+            if ((p_value_i <= input$pcorrThreshold/2 || p_value_i >= 1 - input$pcorrThreshold/2) && observed_corr > 0) {
+              adjacency[i, j] <- 1
+              adjacency[j, i] <- 1
+            } else if ((p_value_i <= input$pcorrThreshold/2 || p_value_i >= 1 - input$pcorrThreshold/2) && observed_corr < 0) {
+              adjacency[i, j] <- -1
+              adjacency[j, i] <- -1
+            }
+            else{
+              adjacency[i, j] <- 0
+              adjacency[j, i] <- 0
+            }
+          }
+          else{
+            adjacency[i, j] <- 0
+            adjacency[j, i] <- 0
+          }
+        }
       }
     }
-    })
+    rownames(adjacency) <- colnames(countsMatrix)
+    colnames(adjacency) <- colnames(countsMatrix)
+    
+    return(list(adjacency = adjacency, corr_matrix = corr_matrix))
+  })
   
   # observe({
   #   data = dataInput()$data
