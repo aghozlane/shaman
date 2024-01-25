@@ -216,19 +216,8 @@ Plot_diag_Eigen <- function(input,resDiff, pca)
   return(res)
 }
 
-Plot_diag_Contrib <- function(input, resDiff, calcul_df)
+Plot_diag_Contrib <- function(input, resDiff, calcul_df, colors)
 {
-  colors = switch(input$colorsdiag,
-                  "retro palette" = rep(c(
-                    "#048789", "#503D2E",  "#FF3C38"
-                  )),
-                  "easter palette" = rep(c(
-                    "#DED4FF", "#A6E7FF", "#C7FFCD"
-                  )),
-                  "warm palette" = rep(c(
-                    "#FF6347", "#FF194D", "#702A8C"
-                  ))
-  )
   VarInt = input$VarInt
   dds = resDiff$dds
   counts = resDiff$counts
@@ -237,13 +226,11 @@ Plot_diag_Contrib <- function(input, resDiff, calcul_df)
   CT = resDiff$CT_noNorm
   if(input$CountsType=="Normalized") CT = resDiff$CT_Norm
   
-  ## If more than 4 levels for one factor
-  maxFact =max(sapply(group,FUN=function(x) length(levels(x))))
-  if(maxFact>=4) colors = rainbow(maxFact)
   if(input$DiagPlot == 'pcaPlot')
     res = PCAPlot_meta(input,dds, group,  type.trans = input$TransType, col = colors, plot = "contrib", pca_res = calcul_df)
   if(input$DiagPlot == 'pcoaPlot')
     res = PCoAPlot_meta(input, dds, group, CT, tree = NULL, col = colors, plot = "contrib", resDiff = resDiff, pcoa_df = calcul_df)$plot
+  
   return(res)
 }
 
@@ -499,7 +486,6 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree, col = c("SpringGreen"
       tibble::rownames_to_column(input$TaxoSelect) %>%
       dplyr::arrange(desc(abs(!!sym(paste0("Axis.", min_axis)))))
     
-    
     contribThreshold <- round(length(rownames(variables)) - round(input$varSlider*length(rownames(variables))))
     
     if (plot == "pcoa"){
@@ -514,6 +500,21 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree, col = c("SpringGreen"
       Axis2_samples <-  to_plot[, as.numeric(gsub("PC", "", input$PCaxe2)) + 1]
       Axis1_variables <-  variables[, as.numeric(gsub("PC", "", input$PCaxe1)) + 1]
       Axis2_variables <-  variables[, as.numeric(gsub("PC", "", input$PCaxe2)) + 1]
+      
+      
+      #get the centroids
+      group_centroids <- to_plot %>%
+        dplyr::group_by(group) %>%
+        dplyr::summarise(
+          mean_Axis_1 = mean(.data[[A1_axis]], na.rm = TRUE), 
+          mean_Axis_2 = mean(.data[[A2_axis]], na.rm = TRUE)
+        ) %>%
+        as.data.frame()
+      
+      merged_centroids <- to_plot %>%
+        dplyr::left_join(group_centroids, by = "group", suffix = c("", ".centroid")) %>%
+        dplyr::mutate(group = as.factor(group))
+      
       x_range <- max(abs(min(Axis1_samples)), abs(max(Axis1_samples)), abs(min(Axis1_variables)), abs(max(Axis1_variables)))
       y_range <- max(abs(min(Axis2_samples)), abs(max(Axis2_samples)), abs(min(Axis2_variables)), abs(max(Axis2_variables)))
       x_lim <- c(as.numeric(-x_range), as.numeric(x_range)) #to center the plot
@@ -525,7 +526,6 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree, col = c("SpringGreen"
       # Update the limits with margin
       x_limit <- c(-x_range * input$cexTitleDiag - x_margin, x_range * input$cexTitleDiag + x_margin)
       y_limit <- c(-y_range * input$cexTitleDiag- y_margin, y_range * input$cexTitleDiag + y_margin)
-      
       pp <- ggplot(data = to_plot, aes(x = !!sym(A1_axis), y = !!sym(A2_axis))) +
         geom_hline(yintercept = 0, linetype = 2) +
         geom_vline(xintercept = 0, linetype = 2) +
@@ -556,8 +556,8 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree, col = c("SpringGreen"
                                x = 0, y = 0, alpha = 0.8,
                                mapping = aes(x = 0, y = 0, xend = !!sym(A1_axis), yend = !!sym(A2_axis)),
                                color = "#1D4D68",
-                               arrow = arrow(length = unit(3, "mm"))) +
-        geom_text_repel(data = variables, aes(label = .data[[input$TaxoSelect]]), color = "#1D4D68", show.legend = FALSE, size = input$cexPointsLabelDiag *2) 
+                               arrow = arrow(length = unit(input$cexLabelDiag*1.5, "mm"))) +
+        geom_text_repel(data = variables, aes(label = .data[[input$TaxoSelect]]), color = "#1D4D68", show.legend = FALSE, size = input$cexPointsLabelDiag *2)
       
       pp <- pp + scale_color_manual(values = col) +
         new_scale_color() + 
@@ -565,11 +565,35 @@ PCoAPlot_meta <-function (input, dds, group_init, CT,tree, col = c("SpringGreen"
         scale_fill_manual(values = col) +
         geom_point(aes(fill = group, colour = group),alpha = 1, size = input$cexLabelDiag) 
       
-      if(input$labelPCOA == "Group")
-        pp <- pp + ggforce::geom_mark_ellipse(data = to_plot[, -1], mapping = aes(fill = group, label = .data[["group"]]), label.fontsize = input$cexPointsLabelDiag *6)
-      
-      if(input$labelPCOA == as.character(input$TaxoSelect))
-        pp <- pp + ggforce::geom_mark_ellipse(data = to_plot[, -1], mapping = aes(fill = group))
+      if(input$labelPCOA == "Group"){
+        pp <- pp + stat_ellipse(data = to_plot[, -1], aes(color = group), type = "t", level = input$cexcircle) + 
+          geom_segment(
+            data = merged_centroids,
+            aes(
+              x = .data[[A1_axis]],
+              y = .data[[A2_axis]],
+              xend = .data[["mean_Axis_1"]],
+              yend = .data[["mean_Axis_2"]],
+              color = group
+            )
+          ) +
+          geom_point(data= group_centroids, aes(x=mean_Axis_1, y = mean_Axis_2, color = group), size = input$cexLabelDiag *2.5) 
+        
+        pp <- pp + 
+          geom_label_repel(data = group_centroids, aes(x=mean_Axis_1, y = mean_Axis_2, label = .data[["group"]], color = group), 
+                     label.size = 1,
+                     show.legend = FALSE,
+                     fontface = "bold",
+                     vjust = -1,
+                     size = input$cexPointsLabelDiag *2)
+        # geom_text_repel(data = group_centroids,
+        #                    aes(x=mean_Axis_1, y = mean_Axis_2, label = .data[["group"]], color = group),
+        #                    show.legend = FALSE,
+        #                    fontface = "bold",
+        #                    vjust = -1,
+        #                    size = input$cexPointsLabelDiag *2)
+        
+      }
       
       
       if(input$labelPCOA == "Samples")
@@ -699,7 +723,7 @@ diagplot_themes <-  function(input = NULL) {
       legend.title = element_text(colour = "black", size =12.5*input$cexLegendDiag, face = "bold.italic", family = "Helvetica"),
       legend.text = element_text(face = "italic", size =12.5*input$cexLegendDiag *2/3, colour = "black", family = "Helvetica"),
       axis.title = element_text(family = "Helvetica", size = input$cexAxisLabelDiag *10, colour = "black"),
-      axis.text = element_text(family = "Courier", colour = "black", size = input$cexScaleLabelDiag*10)
+      axis.text = element_text(family = "Helvetica", colour = "black", size = input$cexScaleLabelDiag*10)
     )
   }
   else{
@@ -709,7 +733,7 @@ diagplot_themes <-  function(input = NULL) {
       legend.title = element_text(colour = "black", face = "bold.italic", family = "Helvetica"),
       legend.text = element_text(face = "italic", colour = "black", family = "Helvetica"),
       axis.title = element_text(family = "Helvetica", size = 10, colour = "black"),
-      axis.text = element_text(family = "Courier", colour = "black", size = 10)
+      axis.text = element_text(family = "Helvetica", colour = "black", size = 10)
     )
   }
   
@@ -724,8 +748,6 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
   req(pca_res)
   if(!is.null(input$PCaxe1) && !is.null(input$PCaxe2) && !is.null(input$radioPCA))
   {
-    
-    
     Groups = pca_res$group
     #PCaxes
     PC1 <- pca_res$ind$coord[, as.numeric(gsub("PC", "", input$PCaxe1))]
@@ -757,6 +779,28 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
       x_limit <- c(-var_x_max * input$cexTitleDiag * 0.75 - x_margin, var_x_max * input$cexTitleDiag * 0.75 + x_margin)
       y_limit <- c(-var_y_max * input$cexTitleDiag * 0.75 - y_margin, var_y_max * input$cexTitleDiag * 0.75 + y_margin)
       pca_plot <- NULL
+      
+      group_centroids <- data.frame(
+        PC1 = PC1,
+        PC2 = PC2,
+        group = Groups
+      )
+      
+      #get the centroids
+      group_centroids <- group_centroids %>%
+        dplyr::group_by(group) %>%
+        dplyr::summarise(
+          PC1 = mean(PC1, na.rm = TRUE), 
+          PC2 = mean(PC2, na.rm = TRUE)
+        ) %>%
+        as.data.frame()
+      
+      pca_centroids <- as.data.frame(pca_res$ind$coord)
+      pca_centroids$group <- pca_res$group
+      
+      merged_centroids <-  pca_centroids %>%
+        dplyr::left_join(group_centroids, by = "group", suffix = c("", ".centroid")) %>%
+        dplyr::mutate(group = as.factor(group))
       
       if ((input$radioPCA == 1)) {
         pca_plot <- NULL
@@ -810,14 +854,38 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
       if(isTRUE(input$ellipsePCA) && (input$radioPCA == 1)){
         if(2 %in% input$checkLabelSamples)
           pca_plot <- pca_plot +  
-            new_scale_color() +
-            ggforce::geom_mark_ellipse(mapping = aes(fill = Groups, label = Groups), label.fontsize = input$cexPointsLabelDiag *6) 
+            stat_ellipse(aes(color = Groups), type = "t", level = input$cexcirclePCA) +
+            geom_segment(
+              data = merged_centroids,
+              aes(
+                x = .data[[paste0("Dim.", PC1_axis)]],
+                y = .data[[paste0("Dim.", PC2_axis)]],
+                xend = .data[["PC1"]],
+                yend = .data[["PC2"]],
+                color = group
+              )) + 
+            geom_point(data= group_centroids, aes(x=PC1, y = PC2, color = group), size = input$cexLabelDiag *2.5) +
+            geom_label_repel(data = group_centroids,
+                             label.size = 1,
+                            aes(x = PC1, y = PC2, label = group, color = group),
+                            show.legend = FALSE,
+                            fontface = "bold",
+                            vjust = -1,
+                            size = input$cexPointsLabelDiag *2)
         
         else 
           pca_plot <- pca_plot + 
-            new_scale_color() +
-            ggforce::geom_mark_ellipse(mapping = aes(fill = Groups)) 
-        
+            stat_ellipse(aes(color = Groups), type = "t", level = input$cexcirclePCA) +
+            geom_segment(
+              data = merged_centroids,
+              aes(
+                x = .data[[paste0("Dim.", PC1_axis)]],
+                y = .data[[paste0("Dim.", PC2_axis)]],
+                xend = .data[["PC1"]],
+                yend = .data[["PC2"]],
+                color = group
+              )) +
+            geom_point(data= group_centroids, aes(x=PC1, y = PC2, color = group), size = input$cexLabelDiag *2.5)         
       }
       if(isTRUE(input$checkLabelTaxo) && (input$radioPCA == 3))
       {
@@ -849,8 +917,8 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
               select.var = list(contrib = contribThreshold)
             ) +
               labs(subtitle = paste0(as.character(input$varSlider *100), " % ", "Threshold"),
-                                     x = paste0(Dim_1, " (", round(pca_res$eigen_df$PercentageExplained[PC1_axis], 2), " %)"),
-                                     y = paste0(Dim_2, " (", round(pca_res$eigen_df$PercentageExplained[PC2_axis], 2), " %)")) +
+                   x = paste0(Dim_1, " (", round(pca_res$eigen_df$PercentageExplained[PC1_axis], 2), " %)"),
+                   y = paste0(Dim_2, " (", round(pca_res$eigen_df$PercentageExplained[PC2_axis], 2), " %)")) +
               geom_point(aes(colour = as.factor(pca_res$group)), size = input$cexLabelDiag) +
               scale_color_manual(values = col, name = "Groups") +
               scale_fill_manual(values = col, name = "Groups") + 
@@ -873,8 +941,8 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
               select.var = list(contrib = contribThreshold)
             ) +
               labs(subtitle = paste0(as.character(input$varSlider *100), " % ", "Threshold"),
-                              x = paste0(Dim_1, " (", pca_res$eigen_df$PercentageExplained[PC1_axis], " %)"),
-                              y = paste0(Dim_2, " (", pca_res$eigen_df$PercentageExplained[PC2_axis], " %)")) +
+                   x = paste0(Dim_1, " (", pca_res$eigen_df$PercentageExplained[PC1_axis], " %)"),
+                   y = paste0(Dim_2, " (", pca_res$eigen_df$PercentageExplained[PC2_axis], " %)")) +
               geom_point(aes(colour = as.factor(pca_res$group)), size = input$cexLabelDiag) + 
               geom_text_repel(
                 aes(x = PC1, y = PC2, colour = Groups, label = rownames(pca_res$ind$coord)),  
@@ -940,21 +1008,64 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
               geom_point(aes(colour = as.factor(pca_res$group)), size = input$cexLabelDiag) +  
               scale_color_manual(values = col, name = "Groups") +
               scale_fill_manual(values = col, name = "Groups") + 
-              new_scale_color() +
-              ggforce::geom_mark_ellipse(mapping = aes(fill = Groups, label = Groups), label.fontsize = input$cexPointsLabelDiag *6)  +
+              stat_ellipse(aes(color = Groups), type = "t", level = input$cexcirclePCA) +
+              geom_segment(
+                data = merged_centroids,
+                aes(
+                  x = .data[[paste0("Dim.", PC1_axis)]],
+                  y = .data[[paste0("Dim.", PC2_axis)]],
+                  xend = .data[["PC1"]],
+                  yend = .data[["PC2"]],
+                  color = group
+                )) +
+              geom_point(data= group_centroids, aes(x=PC1, y = PC2, color = group), size = input$cexLabelDiag *2.5)  +
+              geom_label_repel(data = group_centroids,
+                               label.size = 1,
+                               aes(x = PC1, y = PC2, label = group, color = group),
+                               show.legend = FALSE,
+                               fontface = "bold",
+                               vjust = -1,
+                               size = input$cexPointsLabelDiag *2) +
               coord_cartesian(ylim = c(-y_range * input$cexTitleDiag, y_range * input$cexTitleDiag)) +
               theme_minimal() +
               pca_theme
           }
           if(3 %in% input$checkLabelBiplot && length(input$checkLabelBiplot) != 1){
             pca_plot <- pca_plot +  
-              new_scale_color() +
-              ggforce::geom_mark_ellipse(mapping = aes(fill = Groups, label = Groups), label.fontsize = input$cexPointsLabelDiag *6) 
+              stat_ellipse(aes(color = Groups), type = "t", level = input$cexcirclePCA) +
+              geom_segment(
+                data = merged_centroids,
+                aes(
+                  x = .data[[paste0("Dim.", PC1_axis)]],
+                  y = .data[[paste0("Dim.", PC2_axis)]],
+                  xend = .data[["PC1"]],
+                  yend = .data[["PC2"]],
+                  color = group
+                )) +
+              geom_point(data= group_centroids, aes(x=PC1, y = PC2, color = group), size = input$cexLabelDiag *2.5) +
+              geom_label_repel(data = group_centroids,
+                               label.size = 1,
+                               aes(x = PC1, y = PC2, label = group, color = group),
+                               show.legend = FALSE,
+                               fontface = "bold",
+                               vjust = -1,
+                               size = input$cexPointsLabelDiag *2)
+            
           }
           if(isTRUE(input$ellipsePCA) && (input$checkLabelBiplot != 3)){
             pca_plot <- pca_plot + 
-              new_scale_color() +
-              ggforce::geom_mark_ellipse(mapping = aes(fill = Groups)) 
+              stat_ellipse(aes(color = Groups), type = "t", level = input$cexcirclePCA) +
+              geom_segment(
+                data = merged_centroids,
+                aes(
+                  x = .data[[paste0("Dim.", PC1_axis)]],
+                  y = .data[[paste0("Dim.", PC2_axis)]],
+                  xend = .data[["PC1"]],
+                  yend = .data[["PC2"]],
+                  color = group
+                )) +
+              geom_point(data= group_centroids, aes(x=PC1, y = PC2, color = group), size = input$cexLabelDiag *2.5)
+            
           }
         }
         
@@ -984,8 +1095,17 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
           
           if(isTRUE(input$ellipsePCA)){
             pca_plot <- pca_plot + 
-              new_scale_color() +
-              ggforce::geom_mark_ellipse(mapping = aes(fill = Groups)) 
+              stat_ellipse(aes(color = Groups), type = "t", level = input$cexcirclePCA) +
+              geom_segment(
+                data = merged_centroids,
+                aes(
+                  x = .data[[paste0("Dim.", PC1_axis)]],
+                  y = .data[[paste0("Dim.", PC2_axis)]],
+                  xend = .data[["PC1"]],
+                  yend = .data[["PC2"]],
+                  color = group
+                )) +
+              geom_point(data= group_centroids, aes(x=PC1, y = PC2, color = group), size = input$cexLabelDiag *2.5)
           }
         }
       }
@@ -1050,7 +1170,6 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
       
       summed_contrib_df <- summed_contrib_df %>% 
         dplyr::slice(1:contribThreshold)
-      
       if(input$sumContrib)
       {
         melted_df <- reshape2::melt(summed_contrib_df, id.vars = "Variable")
@@ -1063,12 +1182,12 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
                y = "Total contribution (%)",
                x = input$TaxoSelect) +
           theme_minimal() +
-          pca_theme +
-          theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8),
+          theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8, family = "Helvetica"),
                 legend.title = element_blank()) +
+          pca_theme +
           scale_fill_manual(values = "#9f1853") + 
           guides(fill = FALSE)
-        
+        print(contrib_plot)
       }
       else{
         contrib_plot <- ggplot(contrib_df_filtered, aes(x = reorder(Variable, -!!sym(Dim_1)), y = !!sym(Dim_1), fill = "Dimension 1")) +
@@ -1080,17 +1199,17 @@ PCAPlot_meta <-function(input,dds, group_init, n = min(500, nrow(counts(dds))), 
                                  "\ntotal Dim.", as.character(PC2_axis), " : ", as.character(round(sum(contrib_df_filtered[[paste0("Dim.", as.character(PC2_axis))]])), 4), "%",
                                  "\n", as.character(input$varSlider *100), " % ", "Threshold")) +
           theme_minimal() +
-          pca_theme +
-          theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8),
+          theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8, family = "Helvetica"),
                 legend.title = element_blank()) +
+          pca_theme +
           scale_fill_manual(values = c("Dimension 1" = "#1192e8", "Dimension 2" = "#198038"),
                             name = "Dimension",
                             breaks = c("Dimension 1", "Dimension 2"),
                             labels = c(paste("Dimension", as.character(PC1_axis)), paste("Dimension", as.character(PC2_axis)))) +
           guides(fill = guide_legend(title = NULL))
+        
+        print(contrib_plot)
       }
-      
-      
     }
   }
 }
@@ -1113,6 +1232,8 @@ UmapPlot_meta <- function(input, dds, group_init, n = min(500, nrow(counts(dds))
     y_limit <- c(-y_range * input$cexTitleDiag- y_margin, y_range * input$cexTitleDiag + y_margin)
     
     gg <- ggplot(final, aes(x = !!sym("X1"), y = !!sym("X2"), color = .data[["group"]])) +
+      geom_hline(yintercept = 0, linetype = 2) +
+      geom_vline(xintercept = 0, linetype = 2) +
       scale_color_manual(values = col) +
       scale_fill_manual(values = col) +
       geom_point(aes(fill = group, colour = group),alpha = 1, size = input$cexLabelDiag *2) +

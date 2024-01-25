@@ -230,6 +230,9 @@ options(bitmapType='cairo', rlib_downstream_check = FALSE)
 # if(!require("d3vennR")){
 #   devtools::install_github("timelyportfolio/d3vennR")
 # }
+# if(!require("sunburstR")){
+#   devtools::install_github("timelyportfolio/sunburstR")
+# }
 
 libshaman=c("shiny", "rjson", "ape", "GUniFrac", "psych", "ggplot2", "vegan", "dendextend", 
             "circlize", "genefilter", "SummarizedExperiment", "shinyjs", "DT", "RColorBrewer", 
@@ -238,5 +241,5 @@ libshaman=c("shiny", "rjson", "ape", "GUniFrac", "psych", "ggplot2", "vegan", "d
             "htmltools", "rAmCharts", "colourpicker", "data.table", "UpSetR", "ggrepel", "igraph", 
             "visNetwork", "shinytoastr", "scatterD3", "devtools", "shinydashboardshaman", "d3heatmap", 
             "biomformatshaman", "rNVD3shaman", "DESeq2shaman", "PhyloTreeMetaR", "treeWeightD3", "d3vennR",
-            "googleVis", "stringr", "FactoMineR", "factoextra", "ggnewscale", "ggforce", "TSP", "ppcor")
+            "googleVis", "stringr", "FactoMineR", "factoextra", "ggnewscale", "ggforce", "TSP", "ppcor", "sunburstR")
 lapply(libshaman, require, character.only = TRUE)

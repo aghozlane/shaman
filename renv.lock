@@ -1220,6 +1220,18 @@
       ],
       "Hash": "33850f9837608234f0c627555e27a7f6"
     },
+    "d3r": {
+      "Package": "d3r",
+      "Version": "1.1.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "dplyr",
+        "htmltools",
+        "tidyr"
+      ],
+      "Hash": "ca8c241358352f9fa174b4c7e0390098"
+    },
     "d3vennR": {
       "Package": "d3vennR",
       "Version": "0.1",
@@ -1802,6 +1814,23 @@
       ],
       "Hash": "a57f0f5dbcfd0d77ad4ff33032f5dc79"
     },
+    "ggsunburst": {
+      "Package": "ggsunburst",
+      "Version": "0.3.0",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "didacs",
+      "RemoteRepo": "ggsunburst",
+      "RemoteRef": "master",
+      "RemoteSha": "aec6ad9e3ea036e1a3d1a766dcd78f9dde3e4213",
+      "Requirements": [
+        "R",
+        "ggplot2",
+        "reticulate"
+      ],
+      "Hash": "53088d45072b03194c049341dea042be"
+    },
     "gh": {
       "Package": "gh",
       "Version": "1.1.0",
@@ -1829,14 +1858,14 @@
     },
     "glue": {
       "Package": "glue",
-      "Version": "1.4.1",
+      "Version": "1.6.1",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
         "R",
         "methods"
       ],
-      "Hash": "f43e0d5e85ccb0a4045670c0607ee504"
+      "Hash": "de07842fc27ebf60e1102091c0c85e47"
     },
     "googleVis": {
       "Package": "googleVis",
@@ -3501,7 +3530,7 @@
     },
     "stringi": {
       "Package": "stringi",
-      "Version": "1.4.6",
+      "Version": "1.8.3",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -3510,20 +3539,42 @@
         "tools",
         "utils"
       ],
-      "Hash": "e99d8d656980d2dd416a962ae55aec90"
+      "Hash": "058aebddea264f4c99401515182e656a"
     },
     "stringr": {
       "Package": "stringr",
-      "Version": "1.4.0",
+      "Version": "1.5.1",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
         "R",
+        "cli",
         "glue",
+        "lifecycle",
         "magrittr",
-        "stringi"
+        "rlang",
+        "stringi",
+        "vctrs"
       ],
-      "Hash": "0759e6b6c0957edb1311028a49a35e76"
+      "Hash": "960e2ae9e09656611e0b8214ad543207"
+    },
+    "sunburstR": {
+      "Package": "sunburstR",
+      "Version": "2.1.8",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "timelyportfolio",
+      "RemoteRepo": "sunburstR",
+      "RemoteRef": "master",
+      "RemoteSha": "0d70594a7b56a09b6ae66a2218c348e6f8bb3a80",
+      "Requirements": [
+        "d3r",
+        "dplyr",
+        "htmltools",
+        "htmlwidgets"
+      ],
+      "Hash": "a00a60c0cd3d78351e4a10bd99c5b7fc"
     },
     "survival": {
       "Package": "survival",

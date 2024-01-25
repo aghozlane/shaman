@@ -5691,12 +5691,11 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   output$PlotContrib <- renderPlot({
     resDiff = ResDiffAnal()
+    target = resDiff$target
     if (input$DiagPlot == 'pcaPlot')
-      Plot_diag_Contrib(input, resDiff, pca_data())
+      Plot_diag_Contrib(input, resDiff, pca_data(), colors = colorsVisuPlot())
     if (input$DiagPlot == 'pcoaPlot')
-      Plot_diag_Contrib(input, resDiff, pcoa_data())
-    else
-      Plot_diag_Contrib(input, resDiff, pca_data())
+      Plot_diag_Contrib(input, resDiff, pcoa_data(), colors = colorsVisuPlot())
   }, height = 400)
   
   
@@ -6068,17 +6067,19 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
         )
       resDiff = ResDiffAnal()
       tree = isolate(dataInputTree()$data)
+      target = resDiff$target
+      
       if (input$Exp_plot == "Contribution") {
         if (input$DiagPlot == "pcoaPlot")
-          print(Plot_diag_Contrib(input, resDiff, calcul_df = pcoa_data()))
+          print(Plot_diag_Contrib(input, resDiff, calcul_df = pcoa_data()), colors = colorsVisuPlot())
         else
-          print(Plot_diag_Contrib(input, resDiff, calcul_df = pca_data()))
+          print(Plot_diag_Contrib(input, resDiff, calcul_df = pca_data()), colors = colorsVisuPlot())
       }
       else{
         if (input$DiagPlot == "pcoaPlot")
           print(Plot_diag(input, resDiff, tree, calcul_df = pcoa_data()))
         else if (input$DiagPlot == "umapPlot")
-          print(Plot_diag_Contrib(input, resDiff, calcul_df = umap_data()))
+          print(Plot_diag(input, resDiff, calcul_df = umap_data()))
         else
           print(Plot_diag(input, resDiff, tree, calcul_df = pca_data()))
       }
@@ -6135,7 +6136,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
                                          
                                          if (input$PlotVisuSelect == "Barplot") {
                                            others = get_others()$others
-                                           print(Plot_Visu_Barplot(input, ResDiffAnal(), colors, others)$gg)
+                                           print(Plot_Visu_Barplot(input, ResDiffAnal(), colors = colorsBarplot(), others)$gg)
                                          }
                                          else if (input$PlotVisuSelect == "Heatmap")
                                            Plot_Visu_Heatmap(input, ResDiffAnal(), export = TRUE)
@@ -6151,19 +6152,19 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
                                            )
                                          else if (input$PlotVisuSelect == "Scatterplot")
                                            print(Plot_Visu_Scatterplot(input, ResDiffAnal(), export = TRUE, lmEst = FALSE))
-                                         else if (input$PlotVisuSelect == "Network"){
-                                           print(
-                                             Plot_network(
-                                               input,
-                                               ResDiffAnal(),
-                                               Available_taxo,
-                                               SelectTaxoPlotNetworkDebounce(),
-                                               qualiVariable,
-                                               colors = colorsVisuPlot(),
-                                               dataInputTaxo = dataInput()
-                                             )$voronoi
-                                           )
-                                         }
+                                         # else if (input$PlotVisuSelect == "Network"){
+                                         #   print(
+                                         #     Plot_network(
+                                         #       input,
+                                         #       ResDiffAnal(),
+                                         #       Available_taxo,
+                                         #       SelectTaxoPlotNetworkDebounce(),
+                                         #       qualiVariable,
+                                         #       colors = colorsVisuPlot(),
+                                         #       dataInput = dataInput()
+                                         #     )$voronoi
+                                         #   )
+                                         # }
                                          else if (input$PlotVisuSelect == "Diversity") {
                                            if (input$Exp_format_Visu == "eps")
                                              print(Plot_Visu_Diversity(input, ResDiffAnal(), colors, FALSE, 1)$plot)
@@ -7157,11 +7158,12 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       tmp = Plot_network(
         input,
         resDiff,
+        compute_pcor = compute_pcor(),
         Available_taxo,
         SelectTaxoPlotNetworkDebounce(),
         qualiVariable,
         colors = colorsVisuPlot(),
-        dataInputTaxo = dataInput()
+        dataInput = dataInput()
       )$data$nodes
       names(tmp)[names(tmp) == 'id'] <- as.character(input$TaxoSelect)
       community <- tmp[, c(as.character(input$TaxoSelect), 'community', 'color.background')]
@@ -7239,11 +7241,12 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
         Plot_network(
           input,
           resDiff,
+          compute_pcor = compute_pcor(),
           Available_taxo,
           SelectTaxoPlotNetworkDebounce(),
           qualiVariable,
           colors = colorsVisuPlot(),
-          dataInputTaxo = dataInput()
+          dataInput = dataInput()
         )$data$nodes
       )
       names(tmp)[names(tmp) == 'id'] <-
@@ -7295,11 +7298,12 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
         Plot_network(
           input,
           resDiff,
+          compute_pcor = compute_pcor(),
           Available_taxo,
           ind_taxo,
           qualiVariable,
           colors = colorsVisuPlot(),
-          dataInputTaxo = dataInput()
+          dataInput = dataInput()
         )$plot
       )
   })
@@ -7328,6 +7332,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
         paste("ModVisu", var, sep = ""))
     
     #Each pair will appear at most one
+    
     at_most_one <-
       lapply(input_names, function(input_name)
         unique(input[[input_name]]))
@@ -7335,6 +7340,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     at_most_one$combined <-
       apply(at_most_one, 1, function(row)
         paste(row, collapse = "-"))
+    
     #at_most_one data frame contains all the unique combined variables of interest
     combined_rows <- lapply(at_most_one$combined, as.character)
     if (length(combined_rows) >= 2)
@@ -7350,7 +7356,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       combined_rows <-  NULL
     selectInput(
       "SelectizePairs",
-      "Select your comparison (Wilcoxon test, p-value adjusted)",
+      "Select your comparison (Wilcoxon test, unpaired samples and p-value adjusted)",
       combined_rows,
       multiple = TRUE
     )
@@ -7798,10 +7804,11 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
           edges <-
             Plot_network(input,
                          ResDiffAnal(),
+                         compute_pcor = compute_pcor(),
                          Available_taxo,
                          Available_taxo,
                          qualiVariable,
-                         dataInputTaxo = dataInput())$data$edges
+                         dataInput = dataInput())$data$edges
           edgesFrom <- unique(edges$from)
           edgesTo <- unique(edges$to)
           linked <- unique(c(edgesFrom, edgesTo))
@@ -8476,7 +8483,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       )
   })
   
-
+  
   
   observe({
     visNetworkProxy("NetworkPlot") %>%
@@ -8565,11 +8572,11 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     
     if (!is.null(data$edges)) {
       if (input$colorCorr == 'pcorr') {
-        data$edges$color[data$edges$pcor > 0] <- input$edgeColorPositive
-        data$edges$color[data$edges$pcor <= 0] <- input$edgeColorNegative
+        data$edges$color[data$edges$pcor > 0] <- toString(input$edgeColorPositive)
+        data$edges$color[data$edges$pcor <= 0] <- toString(input$edgeColorNegative)
       }
       else
-        data$edges$color <- '#000000'
+        data$edges$color <- "#000000"
     }
     
     visNetworkProxy("NetworkPlot") %>%
@@ -8612,6 +8619,120 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
     
   })
   
+  compute_pcor <- reactive({
+    dataInput = dataInput()$data
+    taxo = input$TaxoSelect
+    resDiff = ResDiffAnal()
+    res = NULL
+    counts = dataMergeCounts()$counts
+    sumTot = rowSums(counts)
+    ord = order(sumTot,decreasing=TRUE)
+    Available_taxo = rownames(counts)[ord]
+    
+    if (isolate(input$colorCorr == 'corr')) {
+      sec_variable = isolate(input$sec_variable)
+    }
+    else{
+      sec_variable = NULL
+    }
+    
+    data <-
+      GetDataToPlot(
+        input,
+        ResDiffAnal(),
+        input$VisuVarInt,
+        Available_taxo,
+        sec_variable = sec_variable,
+        aggregate = FALSE
+      )
+    if (!is.null(data) && !is.null(data$targetInt)) {
+      counts_tmp_combined <- data$counts
+      dataVariables <- as.matrix(data$targetInt)
+      if (isolate(input$colorCorr == 'corr') &&
+          isolate(qualiVariable()) &&
+          !is.null(dataVariables)) {
+        dataVariables[, sec_variable] <-
+          sapply(dataVariables[, sec_variable], function(x)
+            if (is.element(x, isolate(input$values1))) {
+              1
+            } else{
+              0
+            })
+      }
+      
+      if(!is.null(counts_tmp_combined))
+        countsMatrix <- as.matrix(counts_tmp_combined)  
+      
+      req(countsMatrix)
+      mat <- t(countsMatrix)
+      
+      n_rows <- nrow(mat)
+      correlation_storage <- vector("list", length = n_rows)
+      for (i in 1:n_rows) {
+        correlation_storage[[i]] <- numeric(input$permThreshold * (n_rows - 1))
+      }
+      adjacency_matrix <- matrix(0, nrow = n_rows, ncol = n_rows)
+      correlation_matrix <- matrix(NA, nrow = n_rows, ncol = n_rows)
+      
+      # Loop through each pair of rows
+      for (i in 1:(n_rows - 1)) {
+        for (j in (i + 1):n_rows) {
+          # Initialize vectors to store correlations between rows i and j for each shuffle
+          correlations_i <- numeric(input$permThreshold)
+          correlations_j <- numeric(input$permThreshold)
+          
+          # Shuffle and compute correlations n_iter times
+          for (shuffle in 1:input$permThreshold) {
+            # Shuffle only the i-th and j-th row
+            mat_shuffled_i <- mat
+            mat_shuffled_j <- mat
+            mat_shuffled_i[i, ] <- sample(mat[i, ])
+            mat_shuffled_j[j, ] <- sample(mat[j, ])
+            
+            # Compute correlation of the shuffled i-th row with row j and vice versa
+            correlations_i[shuffle] <- cor(mat_shuffled_i[i, ], mat[j, ], method = input$pcorrMethod)
+            correlations_j[shuffle] <- cor(mat_shuffled_j[j, ], mat[i, ], method = input$pcorrMethod)
+          }
+          
+          # Store the shuffled correlations
+          correlation_storage[[i]][((j - 1) * input$permThreshold + 1):(j * input$permThreshold)] <- correlations_i
+          correlation_storage[[j]][((i - 1) * input$permThreshold + 1):(i * input$permThreshold)] <- correlations_j
+          
+          # Compute the observed correlation once for each unique pair of rows
+          observed_correlation <- cor(mat[i, ], mat[j, ], method = input$pcorrMethod)
+          correlation_matrix[i, j] <- observed_correlation
+          correlation_matrix[j, i] <- observed_correlation  # symmetry
+          
+          # Calculate p-values and fill the adjacency matrix using the observed_correlation
+          p_value_i <- min(sum(correlations_i < observed_correlation), sum(correlations_i > observed_correlation)) / input$permThreshold
+          p_value_j <- min(sum(correlations_j < observed_correlation), sum(correlations_j > observed_correlation)) / input$permThreshold
+          
+          # Determine significance based on the p-value and the sign of the observed correlation
+          if (!is.na(p_value_i) && !is.na(observed_correlation) && !is.na(input$pcorrThreshold)) {
+          if ((p_value_i <= input$pcorrThreshold/2 || p_value_i >= 1 - input$pcorrThreshold/2) && observed_correlation > 0) {
+            adjacency_matrix[i, j] <- 1
+            adjacency_matrix[j, i] <- 1
+          } else if ((p_value_i <= input$pcorrThreshold/2 || p_value_i >= 1 - input$pcorrThreshold/2) && observed_correlation < 0) {
+            adjacency_matrix[i, j] <- -1
+            adjacency_matrix[j, i] <- -1
+          }
+            else{
+              adjacency_matrix[i, j] <- 0
+              adjacency_matrix[j, i] <- 0
+            }
+          }
+          else{
+            adjacency_matrix[i, j] <- 0
+            adjacency_matrix[j, i] <- 0
+          }
+        }
+      }
+    }
+    rownames(adjacency_matrix) <- colnames(countsMatrix)
+    colnames(adjacency_matrix) <- colnames(countsMatrix)
+    # Return the adjacency matrix and the correlation matrix
+    return(list(adjacency_matrix = adjacency_matrix, correlation_matrix = correlation_matrix))
+  })
   
   # observe({
   #   data = dataInput()$data
@@ -8628,31 +8749,62 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   # })
   
   
-  output$Panels <- renderPlot({
+  # output$Panels <- renderPlot({
+  #   counts = dataMergeCounts()$counts
+  #   sumTot = rowSums(counts)
+  #   ord = order(sumTot, decreasing = TRUE)
+  #   Available_taxo = rownames(counts)[ord]
+  #   res = Plot_network(
+  #     input,
+  #     ResDiffAnal(),
+  #     Available_taxo,
+  #     SelectTaxoPlotNetworkDebounce(),
+  #     qualiVariable,
+  #     colors = colorsVisuPlot(),
+  #     dataInput = dataInput()
+  #   )$voronoi
+  #   return(res)
+  # }, height = reactive(input$heightVisu), width = reactive(ifelse(
+  #   input$modifwidthVisu, input$widthVisu, "auto"
+  # )))
+  
+  output$Community <- renderUI({
     counts = dataMergeCounts()$counts
     sumTot = rowSums(counts)
     ord = order(sumTot, decreasing = TRUE)
     Available_taxo = rownames(counts)[ord]
-    res = Plot_network(
+    res = unique(Plot_network(
       input,
       ResDiffAnal(),
+      Available_taxo,
+      compute_pcor = compute_pcor(),
+      SelectTaxoPlotNetworkDebounce(),
+      qualiVariable,
+      colors = colorsVisuPlot(),
+      dataInput = dataInput()
+    )$taxo$Community)
+    selectizeInput("CommunitySunburst", 
+                   "Select the community",
+                   choices = res)
+  })
+  
+  output$CommunitySunburst <- sunburstR::renderSunburst({
+    counts = dataMergeCounts()$counts
+    sumTot = rowSums(counts)
+    ord = order(sumTot, decreasing = TRUE)
+    Available_taxo = rownames(counts)[ord]
+    res = Plot_network_sunburst(
+      input,
+      ResDiffAnal(),
+      compute_pcor = compute_pcor(),
       Available_taxo,
       SelectTaxoPlotNetworkDebounce(),
       qualiVariable,
       colors = colorsVisuPlot(),
-      dataInputTaxo = dataInput()
-    )$voronoi
+      dataInput = dataInput()
+    )
     return(res)
-  }, height = reactive(input$heightVisu), width = reactive(ifelse(
-    input$modifwidthVisu, input$widthVisu, "auto"
-  )))
-  
-  output$CommunityBarplot <- renderPlot({
-    
-    
-  }, height = reactive(input$heightVisu), width = reactive(ifelse(
-    input$modifwidthVisu, input$widthVisu, "auto"
-  )))
+  })
   
   get_data_input <- reactive({
     data = dataInput()
@@ -8672,11 +8824,43 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
         input,
         ResDiffAnal(),
         Available_taxo,
+        compute_pcor = compute_pcor(),
         SelectTaxoPlotNetworkDebounce(),
         qualiVariable,
         colors = colorsVisuPlot(),
-        dataInputTaxo = dataInput()
+        dataInput = dataInput()
       )$plot %>% visSave(con)
     }
   )
+  
+  output$Exportpcor <- downloadHandler(
+    filename = function() {
+      if (input$seppcor == '\t')
+        'SHAMAN_Pcor.tsv'
+    },
+    content = function(file) {
+      resDiff = ResDiffAnal()
+      counts = dataMergeCounts()$counts
+      sumTot = rowSums(counts)
+      ord = order(sumTot, decreasing = TRUE)
+      Available_taxo = rownames(counts)[ord]
+      tmp = isolate(
+        Plot_network(
+          input,
+          resDiff,
+          compute_pcor = compute_pcor(),
+          Available_taxo,
+          SelectTaxoPlotNetworkDebounce(),
+          qualiVariable,
+          colors = colorsVisuPlot(),
+          dataInput = dataInput()
+        )$pcor
+      )
+      write.table(tmp,
+                  file,
+                  row.names = TRUE,
+                  sep = input$seppcor)
+    }
+  )
 })
+
