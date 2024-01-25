@@ -190,12 +190,12 @@ Plot_Visu_Barplot <-
       gg = gg + theme(
         panel.grid.minor.x = element_blank(),
         panel.grid.major.x = element_blank(),
-        axis.text.x = element_text(size = input$sizeBarplotTitle, angle = XRotate),  
-        axis.text.y = element_text(size = input$sizeBarplotTitle),   
-        axis.title.x = element_text(size = input$sizeBarplotTitle * 1.3),  
+        axis.text.x = element_text(angle = XRotate),  
+        axis.text.y = element_text(size = input$sizeBarplotTitle),
+        axis.title.x = element_text(size = input$sizeBarplotTitle * 1.3),
         axis.title.y = element_text(size = input$sizeBarplotTitle * 1.3),
         legend.title = element_text(size = input$sizeBarplotLegend *1.3),
-        legend.text = element_text(size = input$sizeBarplotLegend)) + 
+        legend.text = element_text(size = input$sizeBarplotLegend)) +
         guides(fill = guide_legend(input$TaxoSelect))
       
       if (input$CountsOrProp == "prop")
@@ -1564,6 +1564,58 @@ Plot_Visu_Tree <- function(input, resDiff, CT_Norm_OTU, taxo_table)
 #   return(list(adjacency_matrix = adjacency_matrix, correlation_matrix = correlation_matrix))
 # }
 
+
+# Register the parallel backend
+# numCores <- detectCores() - 1
+# doParallel::registerDoParallel(cores=numCores)
+# # Function to compute partial correlations
+# compute_partial_correlations <- function(mat, n_iter, method, threshold) {
+#   n_rows <- nrow(mat)
+#   corr_storage <- vector("list", length = n_rows)
+#   adjacency <- matrix(0, nrow = n_rows, ncol = n_rows)
+#   corr_matrix <- matrix(NA, nrow = n_rows, ncol = n_rows)
+#   
+#   # Perform parallel computation
+#   results <- foreach(i = 1:(n_rows - 1), .combine = rbind, .multicombine = TRUE, .packages = c("stats")) %dopar% {
+#     local_corrs <- numeric(n_iter)
+#     for (shuffle in 1:n_iter) {
+#       mat_shuffled <- mat
+#       mat_shuffled[i, ] <- sample(mat[i, ])
+#       local_corrs[shuffle] <- cor(mat_shuffled[i, ], mat[j, ], method = method)
+#     }
+#     
+#     # Compute the observed correlation for the i-th row
+#     observed_corr <- sapply((i + 1):n_rows, function(j) cor(mat[i, ], mat[j, ], method = method))
+#     p_values <- sapply((i + 1):n_rows, function(j) {
+#       local_pval <- min(sum(local_corrs < observed_corr[j-i]), sum(local_corrs > observed_corr[j-i])) / n_iter
+#       local_pval
+#     })
+#     
+#     cbind(i, (i + 1):n_rows, observed_corr, p_values)
+#   }
+#   
+#   # Process results
+#   for (result in results) {
+#     i <- result[, 1]
+#     j <- result[, 2]
+#     observed_corr <- result[, 3]
+#     p_value <- result[, 4]
+#     
+#     # Fill the adjacency matrix
+#     adjacency[i, j] <- ifelse(p_value <= threshold/2 || p_value >= 1 - threshold/2, sign(observed_corr), 0)
+#     corr_matrix[i, j] <- observed_corr
+#   }
+#   
+#   # Ensure symmetry
+#   adjacency <- adjacency + t(adjacency)
+#   corr_matrix <- corr_matrix + t(corr_matrix)
+#   
+#   list(adjacency = adjacency, corr_matrix = corr_matrix)
+# }
+# 
+# # Stop the parallel cluster when you are done
+# doParallel::stopImplicitCluster()
+
 Plot_network <-
   function(input,
            resDiff,
@@ -1685,10 +1737,10 @@ Plot_network <-
           # }), nrow = nrow(pcor), ncol = ncol(pcor))
           
           permutation <- compute_pcor
-          adjacency <- permutation$adjacency_matrix
+          adjacency <- permutation$adjacency
           rownames(adjacency) <- colnames(countsMatrix)
           colnames(adjacency) <- colnames(countsMatrix)
-          observed_correlation <- permutation$correlation_matrix
+          observed_correlation <- permutation$corr_matrix
         }
         else{
           adjacency <-
