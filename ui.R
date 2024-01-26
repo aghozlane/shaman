@@ -874,13 +874,9 @@ function(request) {
                                               column(width = 4, checkboxInput("ellipsePCA", label = strong("Show groups"), value = TRUE))
                              ),
                              
-                             conditionalPanel(condition="input.DiagPlot=='pcaPlot' && input.radioPCA != 3 && input.ellipsePCA",
-                                              column(width = 12, sliderInput("cexcirclePCA", "Circle size",min=0,max=1,value = 0.25,step =0.05))
-                             ),
-                             
                              conditionalPanel(condition=" (input.DiagPlot=='pcoaPlot' && input.labelPCOA == input.TaxoSelect) || (input.DiagPlot=='pcaPlot' && (input.radioPCA == 2 || input.radioPCA == 3)) ",
                                               fluidRow(column(12,sliderInput("varSlider", "Select the contribution threshold", min = 0, max = 1, value = 0.8, step = 0.05)),
-                                                       column(12,checkboxInput("sumContrib", "Display the sum of the contributions of each variable")))
+                                                       column(12,checkboxInput("sumContrib", h5(strong("Display the sum of the contributions of each variable")))))
                              ),
                              conditionalPanel(condition="input.DiagPlot=='umapPlot'",
                                               selectInput("distanceUMAP", "Distance", c("Cosine" = "cosine", "Euclidean" = "euclidean", "Manhattan" = "manhattan", "Pearson" = "pearson", "Pearson2"= "pearson2"), selected = "euclidean"),
@@ -925,26 +921,32 @@ function(request) {
                            ),
                            conditionalPanel(condition="input.DiagPlot=='pcoaPlot'",  selectInput("labelPCOA","Label type",c("Group", "Sample"),selected="Group"),
                                             #checkboxInput("colorgroup","Same color for the group",value=FALSE),
-                                            sliderInput("cexcircle", "Circle size",min=0,max=1,value = 0.25,step =0.05),
                                             #sliderInput("cexpoint", "Point size",min=0,max=3,value = 1,step =0.1)
                                             # sliderInput("cexstar", "Star height",min=0,max=1,value = 0.95,step =0.1)
+                           ),
+                           conditionalPanel(condition="input.DiagPlot=='pcoaPlot' && input.labelPCOA == input.TaxoSelect",
+                                            radioButtons("ellipsePCoA", label = h5(strong("Select the ellipse shape")), choices = list("Panels" = "panels", "Without panels" = "w_panels"), selected = "panels")
+                           ),
+                           conditionalPanel(condition = "input.ellipsePCoA == 'w_panels'",
+                                            sliderInput("cexcircle", "Circle size",min=0,max=1,value = 0.25,step =0.05)
                            ),
                            #Display the label button only for individual or correlation plot
                            conditionalPanel(condition="input.DiagPlot=='pcaPlot'",
                                             uiOutput("labelBiplotButton")
                            ),
+                           conditionalPanel(condition="input.DiagPlot=='pcaPlot' && input.radioPCA != 3 && input.ellipsePCA",
+                                            sliderInput("cexcirclePCA", "Circle size",min=0,max=1,value = 0.25,step =0.05)
+                           ),
                            fluidRow(
                              shinyjs::useShinyjs(),
                              column(width=12, p(strong("Size"))),
-                             column(width=6,sliderInput("cexTitleDiag", h6("Axis"),min=0,max=5,value = 1,step =0.1)),
-                             conditionalPanel(condition="input.DiagPlot=='SfactorsVStot' || input.DiagPlot=='nmdsPlot' ||  input.DiagPlot=='umapPlot' || input.DiagPlot == 'pcoaPlot' || (input.DiagPlot=='pcaPlot' && input.radioPCA != 3)",column(width=6,sliderInput("cexLabelDiag", h6("Points"),min=0,max=5,value = 1,step =0.1))),
+                                              column(width=6,sliderInput("cexTitleDiag", h6("Axis"),min=0,max=5,value = 1,step =0.1)),
+                             conditionalPanel(condition="input.DiagPlot=='SfactorsVStot' || input.DiagPlot=='nmdsPlot' ||  input.DiagPlot=='umapPlot' || input.DiagPlot == 'pcoaPlot' || (input.DiagPlot=='pcaPlot' && input.radioPCA != 3)",
+                                              column(width=6,sliderInput("cexLabelDiag", h6("Points"),min=0,max=5,value = 1,step =0.1))),
                              conditionalPanel(condition="input.DiagPlot=='pcaPlot' || input.DiagPlot=='pcoaPlot' || input.DiagPlot=='umapPlot'",
                                               column(width=6, sliderInput("cexAxisLabelDiag", h6("Axis label"), min=0,max=5,value=1,step=0.1)),
                                               column(width=6, sliderInput("cexScaleLabelDiag", h6("X-scale and Y-scale labels"),min=0,max=5,value=1,step=0.1)),
-                                              column(width=6, sliderInput("cexTitlePlotDiag", h6("Title"),min=0,max=5,value=1,step=0.1))
-                                              
-                             ),
-                             conditionalPanel(condition = " input.DiagPlot=='pcoaPlot' || input.DiagPlot=='pcaPlot' || input.DiagPlot=='umapPlot' ",
+                                              column(width=6, sliderInput("cexTitlePlotDiag", h6("Title"),min=0,max=5,value=1,step=0.1)),
                                               column(width=6, sliderInput("cexSubtitleDiag", h6("Subtitle"),min=0,max=5,value=1,step=0.1)),
                                               column(width=6, sliderInput("cexLegendDiag", h6("Legend"),min=0,max=5,value=1,step=0.1))
                              ),
@@ -1233,7 +1235,7 @@ function(request) {
                              ),
                              conditionalPanel(condition="input.colorCorr=='pcorr' && input.PlotVisuSelect=='Network'",
                                               radioButtons("pcorrMethod", label = "Select the partial correlation coefficient", choices = c("Pearson" = "pearson", "Kendall" = "kendall", "Spearman" = "spearman"), selected = "pearson"),
-                                              sliderInput("pcorrThreshold", label = "Select the p-value threshold", min = 0.01, max= 0.05, value = 0.025, step = 0.01)
+                                              sliderInput("pcorrThreshold", label = "Select the p-value threshold", min = 0.01, max= 0.05, value = 0.05, step = 0.01)
                              ),
                              conditionalPanel(condition="input.colorCorr=='pcorr' && input.PlotVisuSelect=='Network'",
                                               sliderInput("permThreshold", label = "Select the number of permutation test iteration", min = 1, max= 100, value = 10, step = 1)
