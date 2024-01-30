@@ -8600,7 +8600,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   
   
   observe({
-    if (input$PlotVisuSelect == "Network")
+    if (input$PlotVisuSelect == "Network"){
       updateRadioButtons(
         session = session,
         "NormOrRaw",
@@ -8608,6 +8608,12 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
         choiceValues = c("norm", "raw", "vst"),
         inline = TRUE
       )
+      updateNumericInput(session, 
+                         "pcorrThreshold",
+                         value = input$ValAlpha,
+                         max = input$valAlpha
+                         )
+    }
     else
       updateRadioButtons(
         session = session,
@@ -8680,6 +8686,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
 
   
   compute_pcor <- reactive({
+    set.seed(08)
     dataInput = dataInput()$data
     taxo = input$TaxoSelect
     resDiff = ResDiffAnal()
@@ -8722,67 +8729,130 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       
       if(!is.null(counts_tmp_combined))
         countsMatrix <- as.matrix(counts_tmp_combined)
-      
       req(countsMatrix)
-      mat <- t(countsMatrix)
-      
-      n_rows <- nrow(mat)
-      corr_storage <- vector("list", length = n_rows)
-      for (i in 1:n_rows) {
-        corr_storage[[i]] <- numeric(input$permThreshold * (n_rows - 1))
-      }
-      adjacency <- matrix(0, nrow = n_rows, ncol = n_rows)
-      corr_matrix <- matrix(NA, nrow = n_rows, ncol = n_rows)
-      
-      for (i in 1:(n_rows - 1)) {
-        for (j in (i + 1):n_rows) {
+      n <- ncol(countsMatrix)
+      dim <- dim(countsMatrix)
+      #If we can compute partial correlations
+      if(dim[2] < dim[1]) 
+      {
+        ppcor <-
+          ppcor::pcor(countsMatrix, method = input$pcorrMethod)
+        corr_matrix <- ppcor$estimate
+        
+        #It means that we got p-values 
+        if(!is.null(ppcor$statistic)){
+          updateRadioButtons(session, "colorCorr", choiceNames = c("Color nodes according to correlation with a variable", paste0("Color edges according to partial correlation")), choiceValues = c("corr", "pcorr"), selected = "pcorr")
+          p_val <- ppcor$p.value
+          adjacency <- matrix(0, nrow = nrow(p_val), ncol = ncol(p_val))  
+          adjacency[p_val > (1 - as.numeric(min(input$AlphaVal, input$pcorrThreshold)))] <- 1
+        }
+        else{
+          updateRadioButtons(session, "colorCorr", choiceNames = c("Color nodes according to correlation with a variable", paste0("Color edges according to correlation")), choiceValues = c("corr", "pcorr"), selected = "pcorr")
+          resCorrTest <- corr.test(countsMatrix, ci = FALSE, method = input$pcorrMethod)
+          corr_matrix <- resCorrTest$r
+          pval <- resCorrTest$p
           
-          corr_i <- numeric(input$permThreshold)
+          pval_bool <-
+            t(apply(pval, 1, function(v) {
+              sapply(v, function(x) {
+                x < min(input$AlphaVal, input$pcorrThreshold)
+              })
+            }))
           
-          # Shuffle and compute corr n_iter times for row i
-          for (shuffle in 1:input$permThreshold) {
-            # Shuffle only the i-th row
-            mat_shuffled_i <- mat
-            mat_shuffled_i[i, ] <- sample(mat[i, ])
-            
-            # Compute correlation of the shuffled i-th row with row j
-            corr_i[shuffle] <- cor(mat_shuffled_i[i, ], mat[j, ], method = input$pcorrMethod)
-          }
+          cor_sgn <- t(apply(corr_matrix, 1, function(v) {
+            sapply(v, sign)
+          }))
           
-          # Store the shuffled corr
-          corr_storage[[i]][((j - 1) * input$permThreshold + 1):(j * input$permThreshold)] <- corr_i
-          
-          # Compute the observed correlation once for each unique pair of rows
-          observed_corr <- cor(mat[i, ], mat[j, ], method = input$pcorrMethod)
-          corr_matrix[i, j] <- observed_corr
-          corr_matrix[j, i] <- observed_corr  # symmetry
-          
-          # Calculate p-values
-          p_value_i <- min(sum(corr_i < observed_corr), sum(corr_i > observed_corr)) / input$permThreshold
-          
-          # Determine significance based on the p-value and the sign of the observed correlation
-          if (!is.na(p_value_i) && !is.na(observed_corr) && !is.na(input$pcorrThreshold)) {
-            if ((p_value_i <= input$pcorrThreshold/2 || p_value_i >= 1 - input$pcorrThreshold/2) && observed_corr > 0) {
-              adjacency[i, j] <- 1
-              adjacency[j, i] <- 1
-            } else if ((p_value_i <= input$pcorrThreshold/2 || p_value_i >= 1 - input$pcorrThreshold/2) && observed_corr < 0) {
-              adjacency[i, j] <- -1
-              adjacency[j, i] <- -1
-            }
-            else{
-              adjacency[i, j] <- 0
-              adjacency[j, i] <- 0
-            }
-          }
-          else{
-            adjacency[i, j] <- 0
-            adjacency[j, i] <- 0
-          }
+          adjacency <-
+            matrix(mapply(function(a, b) {
+              mapply(function(x, y) {
+                x * y
+              }, x = a, y = b)
+            }, a = pval_bool, b = cor_sgn), nrow = n)
         }
       }
+      else{
+        updateRadioButtons(session, "colorCorr", choiceNames = c("Color nodes according to correlation with a variable", paste0("Color edges according to correllation")), choiceValues = c("corr", "pcorr"), selected = "pcorr")
+        resCorrTest <- corr.test(countsMatrix, ci = FALSE, method = input$pcorrMethod)
+        corr_matrix <- resCorrTest$r
+        pval <- resCorrTest$p
+        
+        pval_bool <-
+          t(apply(pval, 1, function(v) {
+            sapply(v, function(x) {
+              x < min(input$AlphaVal, input$pcorrThreshold)
+            })
+          }))
+        
+        cor_sgn <- t(apply(corr_matrix, 1, function(v) {
+          sapply(v, sign)
+        }))
+        
+        adjacency <-
+          matrix(mapply(function(a, b) {
+            mapply(function(x, y) {
+              x * y
+            }, x = a, y = b)
+          }, a = pval_bool, b = cor_sgn), nrow = n)
+      }
+      rownames(corr_matrix) <- colnames(countsMatrix)
+      colnames(corr_matrix) <- colnames(countsMatrix)
+      rownames(adjacency) <- colnames(countsMatrix)
+      colnames(adjacency) <- colnames(countsMatrix)
+      
+      
+
+      # corr_storage <- vector("list", length = n_rows)
+      # for (i in 1:n_rows) {
+      #   corr_storage[[i]] <- numeric(input$permThreshold * (n_rows - 1))
+      # }
+      # adjacency <- matrix(0, nrow = n_rows, ncol = n_rows)
+      # corr_matrix <- matrix(NA, nrow = n_rows, ncol = n_rows)
+      # 
+      # for (i in 1:(n_rows - 1)) {
+      #   for (j in (i + 1):n_rows) {
+      #     corr_i <- numeric(input$permThreshold)
+      #     
+      #     for (shuffle in 1:input$permThreshold) {
+      #       # Shuffle only the i-th row
+      #       mat_shuffled_i <- mat
+      #       mat_shuffled_i[i, ] <- sample(mat[i, ])
+      #       
+      #       # correlation of the shuffled i-th row with row j
+      #       corr_i[shuffle] <- cor(mat_shuffled_i[i, ], mat[j, ], method = input$pcorrMethod)
+      #     }
+      #     
+      #     corr_storage[[i]][((j - 1) * input$permThreshold + 1):(j * input$permThreshold)] <- corr_i
+      #     
+      #     # Compute the observed correlation once for each unique pair of rows
+      #     observed_corr <- cor(mat[i, ], mat[j, ], method = input$pcorrMethod)
+      #     corr_matrix[i, j] <- observed_corr
+      #     corr_matrix[j, i] <- observed_corr  # symmetry
+      #     
+      #     # Calculate p-values
+      #     p_value_i <- min(sum(corr_i < observed_corr), sum(corr_i > observed_corr)) / input$permThreshold
+      #     
+      #     # Determine significance based on the p-value and the sign of the observed correlation
+      #     if (!is.na(p_value_i) && !is.na(observed_corr) && !is.na(input$pcorrThreshold)) {
+      #       if ((p_value_i <= input$pcorrThreshold/2 || p_value_i >= 1 - input$pcorrThreshold/2) && observed_corr > 0) {
+      #         adjacency[i, j] <- 1
+      #         adjacency[j, i] <- 1
+      #       } else if ((p_value_i <= input$pcorrThreshold/2 || p_value_i >= 1 - input$pcorrThreshold/2) && observed_corr < 0) {
+      #         adjacency[i, j] <- -1
+      #         adjacency[j, i] <- -1
+      #       }
+      #       else{
+      #         adjacency[i, j] <- 0
+      #         adjacency[j, i] <- 0
+      #       }
+      #     }
+      #     else{
+      #       adjacency[i, j] <- 0
+      #       adjacency[j, i] <- 0
+      #     }
+      #   }
+      # }
     }
-    rownames(adjacency) <- colnames(countsMatrix)
-    colnames(adjacency) <- colnames(countsMatrix)
     
     return(list(adjacency = adjacency, corr_matrix = corr_matrix))
   })

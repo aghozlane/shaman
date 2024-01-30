@@ -1085,7 +1085,7 @@ function(request) {
                   column(width=9,
                          tags$head(tags$style(HTML(spincss))),
                          div(id = "plot-container",
-                             conditionalPanel(condition="input.PlotVisuSelect=='Boxplot' || input.PlotVisuSelect=='Diversity' || input.PlotVisuSelect=='Rarefaction'",   
+                             conditionalPanel(condition="input.PlotVisuSelect=='Boxplot' || input.PlotVisuSelect=='Diversity' || input.PlotVisuSelect=='Rarefaction' || input.PlotVisuSelect == 'Network' || input.PlotVisuSelect == 'Sunburst'",   
                                               tags$img(src = "gears.gif",id ="loading-spinner")
                              ),
                              # conditionalPanel(condition="input.PlotVisuSelect=='Network'",
@@ -1230,16 +1230,16 @@ function(request) {
                              conditionalPanel(condition="input.colorCorr=='pcorr' && input.PlotVisuSelect=='Network'",
                                               radioButtons("pcorrClustAlgo", label = "Select the clustering algorithm", choices = c("Louvain" = "louvain", "Leiden" = "leiden", "Walktrap" = "walktrap"), selected = "louvain")
                              ),
-                             conditionalPanel(condition="input.NormOrRaw != 'vst' && input.PlotVisuSelect == 'Network'",
+                             conditionalPanel(condition="input.NormOrRaw != 'vst' && input.PlotVisuSelect=='Network' && input.colorCorr=='pcorr'",
                                               radioButtons("clusterWeightsParam", label = "Add weights as a clustering parameter", choices = c("Yes" = "Yes", "No" = "No"), selected = "No")
                              ),
                              conditionalPanel(condition="input.colorCorr=='pcorr' && input.PlotVisuSelect=='Network'",
                                               radioButtons("pcorrMethod", label = "Select the partial correlation coefficient", choices = c("Pearson" = "pearson", "Kendall" = "kendall", "Spearman" = "spearman"), selected = "pearson"),
-                                              sliderInput("pcorrThreshold", label = "Select the p-value threshold", min = 0.01, max= 0.05, value = 0.05, step = 0.01)
+                                              numericInput("pcorrThreshold", label = "Select the p-value threshold", min = 0.01, max= 0.05, value = 0.05, step = 0.001)
                              ),
-                             conditionalPanel(condition="input.colorCorr=='pcorr' && input.PlotVisuSelect=='Network'",
-                                              sliderInput("permThreshold", label = "Select the number of permutation test iteration", min = 1, max= 100, value = 10, step = 1)
-                             ),
+                             # conditionalPanel(condition="input.colorCorr=='pcorr' && input.PlotVisuSelect=='Network'",
+                             #                  sliderInput("permThreshold", label = "Select the number of permutation test iteration", min = 1, max= 100, value = 10, step = 1)
+                             # ),
                              conditionalPanel(condition="input.PlotVisuSelect=='Network'",
                                               uiOutput("SelectTaxoToPlotNetwork"),
                                               uiOutput("TaxoToPlotNetwork")
@@ -1414,8 +1414,8 @@ function(request) {
                                               radioButtons(inputId = "SensPlotVisu",label = h6(strong("Orientation")),choices = c("Vertical" = "Vertical", "Horizontal" = "Horizontal"),selected = "Vertical",inline = TRUE)
                              )
                          ),
-                         ### _____Export ####
-                         conditionalPanel(condition="input.PlotVisuSelect!='Krona' && input.PlotVisuSelect!='Phylogeny' && input.PlotVisuSelect!='Tree'",
+                         ### _____Export ###
+                         conditionalPanel(condition="input.PlotVisuSelect!='Krona' && input.PlotVisuSelect!='Phylogeny' && input.PlotVisuSelect!='Tree' && input.tabBoxNetwork!='Sunburst'",
                                           box(title = "Export",  width = NULL, status = "primary", solidHeader = TRUE,collapsible = TRUE,collapsed= TRUE,
                                               conditionalPanel(condition="input.PlotVisuSelect=='Barplot'",
                                                                radioButtons("positionBarPlot","Position",c("Grouped"="dodge","Stacked"="fill"), selected = "fill",inline=TRUE)
