@@ -145,7 +145,8 @@ shinyServer(function(input, output, session) {
         read.csv(
           inFile$datapath,
           sep = input$septaxo,
-          header = TRUE
+          header = TRUE,
+          check.names = FALSE
         ) -> data,
         #messageId="ErrorTaxo",
         error = function(e)
@@ -166,6 +167,10 @@ shinyServer(function(input, output, session) {
           data = as.matrix(data[, -1])
           rownames(data) = DataNames
           colnames(data) = colNames
+        }
+        empty_columns <- which(colnames(data) == "")
+        if (length(empty_columns) > 0) {
+          data <- data[, -empty_columns]
         }
       }
     }
