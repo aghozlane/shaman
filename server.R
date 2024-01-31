@@ -8777,7 +8777,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
         }
       }
       else{
-        updateRadioButtons(session, "colorCorr", choiceNames = c("Color nodes according to correlation with a variable", paste0("Color edges according to correllation")), choiceValues = c("corr", "pcorr"), selected = "pcorr")
+        updateRadioButtons(session, "colorCorr", choiceNames = c("Color nodes according to correlation with a variable", paste0("Color edges according to correlation")), choiceValues = c("corr", "pcorr"), selected = "pcorr")
         resCorrTest <- corr.test(countsMatrix, ci = FALSE, method = input$pcorrMethod)
         corr_matrix <- resCorrTest$r
         pval <- resCorrTest$p
