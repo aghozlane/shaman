@@ -174,7 +174,9 @@ Plot_Visu_Barplot <-
       #   dplyr::arrange(AllVar)
       
       #colors <- colorRampPalette(brewer.pal(9, "Set1"))(length(unique(main_dataBarPlot_mat$Taxonomy)))
-      colors <- rev(rep(colors, length.out = length(unique(main_dataBarPlot_mat$Taxonomy))))
+      main_dataBarPlot_mat$Taxonomy <- factor(main_dataBarPlot_mat$Taxonomy, levels = unique(main_dataBarPlot_mat$Taxonomy))
+      #colors <- rev(rep(colors, length.out = length(unique(main_dataBarPlot_mat$Taxonomy))))
+      colors <- rev(colors[1:length(unique(main_dataBarPlot_mat$Taxonomy))])
       gg = ggplot(main_dataBarPlot_mat,
                   aes(
                     x = AllVar,
@@ -183,7 +185,7 @@ Plot_Visu_Barplot <-
                   )) 
       if (input$CountsOrProp == "counts" &&
           input$positionBarPlot == "fill")
-        gg = gg + geom_bar(position='stack', stat='identity')
+        gg = gg + geom_bar(position=position_stack(reverse = TRUE), stat='identity')
       else
         gg = gg + geom_bar(position = input$positionBarPlot, stat = 'identity')
       gg = gg + theme_bw() + scale_fill_manual(values = colors)
@@ -1635,6 +1637,7 @@ Plot_network <-
     community_barplot = NULL
     VarInt = input$VisuVarInt
     
+    set.seed(08)
     if (isolate(input$colorCorr == 'corr')) {
       sec_variable = isolate(input$sec_variable)
     }
@@ -1677,9 +1680,7 @@ Plot_network <-
         # pcor <- ppcor$estimate
         # rownames(pcor) <- colnames(countsMatrix)
         # colnames(pcor) <- colnames(countsMatrix)
-        # 
-        # n <- nrow(countsMatrix)  # Number of observations
-        # 
+        #
         # # Step 1: Calculate the variance-covariance matrix
         # covMatrix <- cov(countsMatrix)
         # 
@@ -1697,28 +1698,13 @@ Plot_network <-
         # t_values <- pcorMatrix * sqrt((n - 2) / (1 - pcorMatrix^2))
         # p_values <- 2 * pt(-abs(t_values), df = n - 2)
         # 
-        # n <- ncol(countsMatrix)
-        # resCorrTest <- corr.test(countsMatrix, ci = FALSE)
-        # cor <- resCorrTest$r
-        # pval <- resCorrTest$p
-        # 
-        # pval_bool <-
-        #   t(apply(pval, 1, function(v) {
-        #     sapply(v, function(x) {
-        #       x < 0.05
-        #     })
-        #   }))
-        # 
-        # cor_sgn <- t(apply(cor, 1, function(v) {
-        #   sapply(v, sign)
-        # }))
         
         ################################
         ####### adjacency matrix #######
         ################################
         
         
-        if (input$colorCorr == "pcorr") {
+        #if (input$colorCorr == "pcorr") {
           #   adjacency <- matrix(apply(p_values, c(1, 2), function(p_val, pcor_val) {
           #     if (!is.na(p_val) && p_val <= 0.05) {
           #       return(1) 
@@ -1741,17 +1727,17 @@ Plot_network <-
           rownames(adjacency) <- colnames(countsMatrix)
           colnames(adjacency) <- colnames(countsMatrix)
           observed_correlation <- permutation$corr_matrix
-        }
-        else{
-          adjacency <-
-            matrix(mapply(function(a, b) {
-              mapply(function(x, y) {
-                x * y
-              }, x = a, y = b)
-            }, a = pval_bool, b = cor_sgn), nrow = n)
-          rownames(adjacency) <- colnames(countsMatrix)
-          colnames(adjacency) <- colnames(countsMatrix)
-        }
+        #}
+        # else{
+        #   adjacency <-
+        #     matrix(mapply(function(a, b) {
+        #       mapply(function(x, y) {
+        #         x * y
+        #       }, x = a, y = b)
+        #     }, a = pval_bool, b = cor_sgn), nrow = n)
+        #   rownames(adjacency) <- colnames(countsMatrix)
+        #   colnames(adjacency) <- colnames(countsMatrix)
+        # }
         # ### Remove rows and columns with only NA        # this way, elements with the same count in all sample (often 0 in this case) will not appear
         # adjacency <- adjacency[apply(adjacency, 1, function(y) !all(is.na(y))),]
         # adjacency <- t(adjacency)
@@ -1855,7 +1841,7 @@ Plot_network <-
         
         
         if (input$pcorrClustAlgo == "louvain") {
-          if (input$clusterWeightsParam == "Yes")
+          if (input$clusterWeightsParam == "Yes" && input$NormOrRaw != "vst")
             cluster <-
               igraph::cluster_louvain(igraphGraph, weights = NULL)
           else
@@ -1865,7 +1851,7 @@ Plot_network <-
         
         
         else if (input$pcorrClustAlgo == "leiden") {
-          if (input$clusterWeightsParam == "Yes")
+          if (input$clusterWeightsParam == "Yes" && input$NormOrRaw != "vst")
             cluster <-
               igraph::cluster_leiden(
                 igraphGraph,
@@ -1885,7 +1871,7 @@ Plot_network <-
         
         
         else if (input$pcorrClustAlgo == "walktrap") {
-          if (input$clusterWeightsParam == "Yes")
+          if (input$clusterWeightsParam == "Yes" && input$NormOrRaw != "vst")
             cluster <-
               igraph::cluster_walktrap(igraphGraph, weights = NULL)
           else
