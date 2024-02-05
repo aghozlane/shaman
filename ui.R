@@ -1202,6 +1202,9 @@ function(request) {
                              conditionalPanel(condition="input.PlotVisuSelect!='Network' && input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && input.PlotVisuSelect!='Scatterplot' && input.PlotVisuSelect!='Krona'",
                                               radioButtons("SelectSpecifTaxo","Select the features",c("Most abundant"="Most","All"="All", "Differential features" = "Diff", "Non differential features" = "NoDiff"))
                              ),
+                             conditionalPanel(condition = "input.SelectSpecifTaxo == 'ByNetwork'",
+                                              uiOutput("ByNetworkCommunities")
+                             ),
                              conditionalPanel(condition="input.PlotVisuSelect!='Network' && input.PlotVisuSelect!='Rarefaction' && input.PlotVisuSelect!='Diversity' && input.PlotVisuSelect!='Scatterplot' && (input.SelectSpecifTaxo=='Diff' || input.SelectSpecifTaxo=='NoDiff') && input.PlotVisuSelect!='Krona' ",
                                               selectizeInput("ContrastList_table_Visu","",choices = "", multiple = TRUE),
                                               radioButtons("UnionInterContrasts","Union or intersection ?",c("Union"="Union","Intersection"="Inter"),inline = TRUE)
