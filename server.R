@@ -7604,8 +7604,17 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   #     resDiff = ResDiffAnal()
   #     if(!is.null(resDiff$dds)) Plot_Visu_Diversity(input,resDiff,type="box")
   #   })
+
+observe({
+  if(input$PlotVisuSelect == "Network")
+    updateRadioButtons(session, "SelectSpecifTaxo", choiceNames = c("Most abundant","All", "Differential features", "Non differential features", "By Network communities"), choiceValues = c("Most", "All", "Diff", "NoDiff", "ByNetwork"))
+  if(input$NormOrRaw == "vst")
+    updateRadioButtons(session, "SelectSpecifTaxo", choiceNames = c("Most abundant","All", "Differential features", "Non differential features"), choiceValues = c("Most", "All", "Diff", "NoDiff"))
+  
+})
   
   get_others <- reactive({
+    
     data = dataInput()$data
     taxo = input$TaxoSelect
     resDiff = ResDiffAnal()
@@ -7622,6 +7631,37 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       Available_taxo = rownames(counts)[ord]
       selTaxo = Available_taxo[1:min(12, length(Available_taxo))]
       
+      if (input$SelectSpecifTaxo == "ByNetwork")
+      {
+        taxoCommunities = Plot_network(
+          input,
+          ResDiffAnal(),
+          Available_taxo,
+          compute_pcor = compute_pcor(),
+          SelectTaxoPlotNetworkDebounce(),
+          qualiVariable,
+          colors = colorsVisuPlot(),
+          dataInput = dataInput()
+        )$taxo
+        
+        req(input$CommunityVisuPlot)
+        selTaxo <- taxoCommunities %>%
+          dplyr::filter(Community == as.integer(input$CommunityVisuPlot)) %>% 
+          dplyr::select(input$TaxoSelect) %>%
+          dplyr::distinct()
+        
+        selTaxo <- selTaxo[, 1]
+        res = selectizeInput(
+          "selectTaxoPlot",
+          h6(strong(
+            paste("Select the", input$TaxoSelect, "to plot")
+          )),
+          Available_taxo,
+          selected = selTaxo,
+          multiple = TRUE
+        )
+        
+      }
       if (input$SelectSpecifTaxo == "Most")
         res = selectizeInput(
           "selectTaxoPlot",
@@ -7761,7 +7801,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
           selected = Available_taxo,
           multiple = TRUE
         )
-      others = setdiff(Available_taxo, selTaxo)
+        others = setdiff(Available_taxo, selTaxo)
     }
     return(list(res = res, others = others))
   })
@@ -8895,6 +8935,32 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   # }, height = reactive(input$heightVisu), width = reactive(ifelse(
   #   input$modifwidthVisu, input$widthVisu, "auto"
   # )))
+  
+  output$ByNetworkCommunities <- renderUI({
+    counts = dataMergeCounts()$counts
+    sumTot = rowSums(counts)
+    ord = order(sumTot, decreasing = TRUE)
+    Available_taxo = rownames(counts)[ord]
+    res = unique(Plot_network(
+      input,
+      ResDiffAnal(),
+      Available_taxo,
+      compute_pcor = compute_pcor(),
+      SelectTaxoPlotNetworkDebounce(),
+      qualiVariable,
+      colors = colorsVisuPlot(),
+      dataInput = dataInput()
+    )$taxo$Community)
+    # res_vector <- unlist(res)
+    # 
+    # res_table <- table(res_vector)
+    # 
+    # res <- names(res_table[res_table > 1])
+    
+    selectizeInput("CommunityVisuPlot", 
+                   "Select the community",
+                   choices = res)
+  })
   
   output$Community <- renderUI({
     counts = dataMergeCounts()$counts
