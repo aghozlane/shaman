@@ -72,7 +72,6 @@ Plot_Visu_Barplot <-
         ## All the modalities for all the var of interest
         val = c(val, eval(expr))
       }
-      
       ## Create the others data frame for the plot function
       all_dataBarPlot_mat = c()
       all_tmp_mat = matrix(0, ncol = 3, nrow = length(allnamesTax))
@@ -1557,56 +1556,10 @@ Plot_network <-
       
       if (!is.null(counts_tmp_combined)) {
         #################################
-        ###### partial correlation ######
+        ###### correlation ######
         #################################
         
         countsMatrix <- as.matrix(counts_tmp_combined)
-        # ppcor <-
-        #   ppcor::pcor(countsMatrix, method = input$pcorrMethod)
-        # pcor <- ppcor$estimate
-        # rownames(pcor) <- colnames(countsMatrix)
-        # colnames(pcor) <- colnames(countsMatrix)
-        #
-        # # Step 1: Calculate the variance-covariance matrix
-        # covMatrix <- cov(countsMatrix)
-        # 
-        # # Step 2: Compute the inverse
-        # invCovMatrix <- MASS::ginv(covMatrix)
-        # 
-        # 
-        # # Step 3: Calculate partial correlations
-        # pcorMatrix <- -invCovMatrix / sqrt(outer(diag(invCovMatrix), diag(invCovMatrix)))
-        # 
-        # # Set diagonal to zero (self-correlation is not meaningful)
-        # diag(pcorMatrix) <- 0
-        # 
-        # # Step 4: Calculate p-values
-        # t_values <- pcorMatrix * sqrt((n - 2) / (1 - pcorMatrix^2))
-        # p_values <- 2 * pt(-abs(t_values), df = n - 2)
-        # 
-        
-        ################################
-        ####### adjacency matrix #######
-        ################################
-        
-        
-        #if (input$colorCorr == "pcorr") {
-          #   adjacency <- matrix(apply(p_values, c(1, 2), function(p_val, pcor_val) {
-          #     if (!is.na(p_val) && p_val <= 0.05) {
-          #       return(1) 
-          #     } else {
-          #       return(0)
-          #     }
-          #   }, pcor_val = pcor), nrow = nrow(p_values), ncol = ncol(p_values))
-          
-          # adjacency <- matrix(apply(pcor, c(1, 2), function(x) {
-          #   # Check for NA values in x and ensure input$pcorrThreshold is not NA
-          #   if (!is.na(x) && !is.na(input$pcorrThreshold) && abs(x) > as.numeric(input$pcorrThreshold)) {
-          #     return(x)
-          #   } else {
-          #     return(0)
-          #   }
-          # }), nrow = nrow(pcor), ncol = ncol(pcor))
           
           permutation <- compute_pcor
           adjacency <- permutation$adjacency
@@ -1652,7 +1605,6 @@ Plot_network <-
         req(igraphGraph)
         dataVN <- toVisNetworkData(igraphGraph)
         dataVN$nodes$title <- paste0("<b>", dataVN$nodes$id, "</b>")
-        dataVN$nodes$label <- dataVN$nodes$id
         # dataVN$nodes$label <- sapply(dataVN$nodes$id, function(x)if(is.element(x, list_to_label)){x}else{""})
         dataVN$nodes$cor <- 0
         dataVN$edges$pcor <- 0
@@ -1806,7 +1758,7 @@ Plot_network <-
         dataVN$edges[which(!dataVN$edges$from %in% dataVN$nodes),]
         dataVN$edges[which(!dataVN$edges$to %in% dataVN$nodes),]
         
-        
+        dataVN$nodes$label <- paste0(dataVN$nodes$id, " - C", dataVN$nodes$community) 
         plot <-
           visNetwork(nodes = dataVN$nodes, edges = dataVN$edges)
         plot <-
