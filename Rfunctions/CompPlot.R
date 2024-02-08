@@ -194,7 +194,7 @@ Plot_Comp_Logit <- function(input, BaseContrast, resDiff, SelectTaxoPlotCompDebo
                            axis.text = element_text(size = input$axisFontSizeLogit),
                            legend.title = element_text(size = input$legendFontSizeLogit),
                            legend.text = element_text(size = input$legendFontSizeLogit))
-      plot <- plot + geom_text(aes(label = labels, color = color_var), size = input$labelsSizeLogit %/% 3, hjust = 1, vjust = 1, show.legend = FALSE)
+      plot <- plot + geom_text_repel(aes(label = labels, color = color_var), size = input$labelsSize %/% 3, hjust = 1, vjust = 1, show.legend = FALSE)
       plot <- plot + scale_color_manual(name = "Legend title", values = c("Not significant" = input$colour01, "Significant for contrast 1" = input$colour02,
                                                                           "Significant for contrast 2" = input$colour03, "Significant for both contrasts" = input$colour04))
       if (input$fixed11) {
