@@ -72,7 +72,6 @@ Plot_Visu_Barplot <-
         ## All the modalities for all the var of interest
         val = c(val, eval(expr))
       }
-      
       ## Create the others data frame for the plot function
       all_dataBarPlot_mat = c()
       all_tmp_mat = matrix(0, ncol = 3, nrow = length(allnamesTax))
@@ -1504,120 +1503,6 @@ Plot_Visu_Tree <- function(input, resDiff, CT_Norm_OTU, taxo_table)
 ##      NETWORK
 ##                       ##
 
-#Function that computes a permutation test and return an adjacency matrix
-#input: mat, max iteration number
-#output: adjacency matrix
-
-# compute_pcor <- function(input, mat, n_iter = 100) {
-#   
-#   n_rows <- nrow(mat)
-#   correlation_storage <- vector("list", length = n_rows)
-#   for (i in 1:n_rows) {
-#     correlation_storage[[i]] <- numeric(n_iter * (n_rows - 1))
-#   }
-#   adjacency_matrix <- matrix(0, nrow = n_rows, ncol = n_rows)
-#   correlation_matrix <- matrix(NA, nrow = n_rows, ncol = n_rows)
-#   
-#   # Loop through each pair of rows
-#   for (i in 1:(n_rows - 1)) {
-#     for (j in (i + 1):n_rows) {
-#       # Initialize vectors to store correlations between rows i and j for each shuffle
-#       correlations_i <- numeric(n_iter)
-#       correlations_j <- numeric(n_iter)
-#       
-#       # Shuffle and compute correlations n_iter times
-#       for (shuffle in 1:n_iter) {
-#         # Shuffle only the i-th and j-th row
-#         mat_shuffled_i <- mat
-#         mat_shuffled_j <- mat
-#         mat_shuffled_i[i, ] <- sample(mat[i, ])
-#         mat_shuffled_j[j, ] <- sample(mat[j, ])
-#         
-#         # Compute correlation of the shuffled i-th row with row j and vice versa
-#         correlations_i[shuffle] <- cor(mat_shuffled_i[i, ], mat[j, ])
-#         correlations_j[shuffle] <- cor(mat_shuffled_j[j, ], mat[i, ])
-#       }
-#       
-#       # Store the shuffled correlations
-#       correlation_storage[[i]][((j - 1) * n_iter + 1):(j * n_iter)] <- correlations_i
-#       correlation_storage[[j]][((i - 1) * n_iter + 1):(i * n_iter)] <- correlations_j
-#       
-#       # Compute the observed correlation once for each unique pair of rows
-#       observed_correlation <- cor(mat[i, ], mat[j, ])
-#       correlation_matrix[i, j] <- observed_correlation
-#       correlation_matrix[j, i] <- observed_correlation  # symmetry
-#       
-#       # Calculate p-values and fill the adjacency matrix using the observed_correlation
-#       p_value_i <- min(sum(correlations_i < observed_correlation), sum(correlations_i > observed_correlation)) / n_iter
-#       p_value_j <- min(sum(correlations_j < observed_correlation), sum(correlations_j > observed_correlation)) / n_iter
-#       
-#       # Determine significance based on the p-value and the sign of the observed correlation
-#       if ((p_value_i <= 0.025 || p_value_i >= 0.975) && observed_correlation > 0) {
-#         adjacency_matrix[i, j] <- 1
-#         adjacency_matrix[j, i] <- 1
-#       } else if ((p_value_i <= 0.025 || p_value_i >= 0.975) && observed_correlation < 0) {
-#         adjacency_matrix[i, j] <- -1
-#         adjacency_matrix[j, i] <- -1
-#       }
-#     }
-#   }
-#   
-#   # Return the adjacency matrix and the correlation matrix
-#   return(list(adjacency_matrix = adjacency_matrix, correlation_matrix = correlation_matrix))
-# }
-
-
-# Register the parallel backend
-# numCores <- detectCores() - 1
-# doParallel::registerDoParallel(cores=numCores)
-# # Function to compute partial correlations
-# compute_partial_correlations <- function(mat, n_iter, method, threshold) {
-#   n_rows <- nrow(mat)
-#   corr_storage <- vector("list", length = n_rows)
-#   adjacency <- matrix(0, nrow = n_rows, ncol = n_rows)
-#   corr_matrix <- matrix(NA, nrow = n_rows, ncol = n_rows)
-#   
-#   # Perform parallel computation
-#   results <- foreach(i = 1:(n_rows - 1), .combine = rbind, .multicombine = TRUE, .packages = c("stats")) %dopar% {
-#     local_corrs <- numeric(n_iter)
-#     for (shuffle in 1:n_iter) {
-#       mat_shuffled <- mat
-#       mat_shuffled[i, ] <- sample(mat[i, ])
-#       local_corrs[shuffle] <- cor(mat_shuffled[i, ], mat[j, ], method = method)
-#     }
-#     
-#     # Compute the observed correlation for the i-th row
-#     observed_corr <- sapply((i + 1):n_rows, function(j) cor(mat[i, ], mat[j, ], method = method))
-#     p_values <- sapply((i + 1):n_rows, function(j) {
-#       local_pval <- min(sum(local_corrs < observed_corr[j-i]), sum(local_corrs > observed_corr[j-i])) / n_iter
-#       local_pval
-#     })
-#     
-#     cbind(i, (i + 1):n_rows, observed_corr, p_values)
-#   }
-#   
-#   # Process results
-#   for (result in results) {
-#     i <- result[, 1]
-#     j <- result[, 2]
-#     observed_corr <- result[, 3]
-#     p_value <- result[, 4]
-#     
-#     # Fill the adjacency matrix
-#     adjacency[i, j] <- ifelse(p_value <= threshold/2 || p_value >= 1 - threshold/2, sign(observed_corr), 0)
-#     corr_matrix[i, j] <- observed_corr
-#   }
-#   
-#   # Ensure symmetry
-#   adjacency <- adjacency + t(adjacency)
-#   corr_matrix <- corr_matrix + t(corr_matrix)
-#   
-#   list(adjacency = adjacency, corr_matrix = corr_matrix)
-# }
-# 
-# # Stop the parallel cluster when you are done
-# doParallel::stopImplicitCluster()
-
 Plot_network <-
   function(input,
            resDiff,
@@ -1671,56 +1556,10 @@ Plot_network <-
       
       if (!is.null(counts_tmp_combined)) {
         #################################
-        ###### partial correlation ######
+        ###### correlation ######
         #################################
         
         countsMatrix <- as.matrix(counts_tmp_combined)
-        # ppcor <-
-        #   ppcor::pcor(countsMatrix, method = input$pcorrMethod)
-        # pcor <- ppcor$estimate
-        # rownames(pcor) <- colnames(countsMatrix)
-        # colnames(pcor) <- colnames(countsMatrix)
-        #
-        # # Step 1: Calculate the variance-covariance matrix
-        # covMatrix <- cov(countsMatrix)
-        # 
-        # # Step 2: Compute the inverse
-        # invCovMatrix <- MASS::ginv(covMatrix)
-        # 
-        # 
-        # # Step 3: Calculate partial correlations
-        # pcorMatrix <- -invCovMatrix / sqrt(outer(diag(invCovMatrix), diag(invCovMatrix)))
-        # 
-        # # Set diagonal to zero (self-correlation is not meaningful)
-        # diag(pcorMatrix) <- 0
-        # 
-        # # Step 4: Calculate p-values
-        # t_values <- pcorMatrix * sqrt((n - 2) / (1 - pcorMatrix^2))
-        # p_values <- 2 * pt(-abs(t_values), df = n - 2)
-        # 
-        
-        ################################
-        ####### adjacency matrix #######
-        ################################
-        
-        
-        #if (input$colorCorr == "pcorr") {
-          #   adjacency <- matrix(apply(p_values, c(1, 2), function(p_val, pcor_val) {
-          #     if (!is.na(p_val) && p_val <= 0.05) {
-          #       return(1) 
-          #     } else {
-          #       return(0)
-          #     }
-          #   }, pcor_val = pcor), nrow = nrow(p_values), ncol = ncol(p_values))
-          
-          # adjacency <- matrix(apply(pcor, c(1, 2), function(x) {
-          #   # Check for NA values in x and ensure input$pcorrThreshold is not NA
-          #   if (!is.na(x) && !is.na(input$pcorrThreshold) && abs(x) > as.numeric(input$pcorrThreshold)) {
-          #     return(x)
-          #   } else {
-          #     return(0)
-          #   }
-          # }), nrow = nrow(pcor), ncol = ncol(pcor))
           
           permutation <- compute_pcor
           adjacency <- permutation$adjacency
@@ -1766,7 +1605,6 @@ Plot_network <-
         req(igraphGraph)
         dataVN <- toVisNetworkData(igraphGraph)
         dataVN$nodes$title <- paste0("<b>", dataVN$nodes$id, "</b>")
-        dataVN$nodes$label <- dataVN$nodes$id
         # dataVN$nodes$label <- sapply(dataVN$nodes$id, function(x)if(is.element(x, list_to_label)){x}else{""})
         dataVN$nodes$cor <- 0
         dataVN$edges$pcor <- 0
@@ -1920,7 +1758,7 @@ Plot_network <-
         dataVN$edges[which(!dataVN$edges$from %in% dataVN$nodes),]
         dataVN$edges[which(!dataVN$edges$to %in% dataVN$nodes),]
         
-        
+        dataVN$nodes$label <- paste0(dataVN$nodes$id, " - C", dataVN$nodes$community) 
         plot <-
           visNetwork(nodes = dataVN$nodes, edges = dataVN$edges)
         plot <-

@@ -7604,8 +7604,17 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   #     resDiff = ResDiffAnal()
   #     if(!is.null(resDiff$dds)) Plot_Visu_Diversity(input,resDiff,type="box")
   #   })
+
+observe({
+  if(input$PlotVisuSelect == "Network")
+    updateRadioButtons(session, "SelectSpecifTaxo", choiceNames = c("Most abundant","All", "Differential features", "Non differential features", "By Network communities"), choiceValues = c("Most", "All", "Diff", "NoDiff", "ByNetwork"))
+  if(input$NormOrRaw == "vst")
+    updateRadioButtons(session, "SelectSpecifTaxo", choiceNames = c("Most abundant","All", "Differential features", "Non differential features"), choiceValues = c("Most", "All", "Diff", "NoDiff"))
+  
+})
   
   get_others <- reactive({
+    
     data = dataInput()$data
     taxo = input$TaxoSelect
     resDiff = ResDiffAnal()
@@ -7622,6 +7631,37 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       Available_taxo = rownames(counts)[ord]
       selTaxo = Available_taxo[1:min(12, length(Available_taxo))]
       
+      if (input$SelectSpecifTaxo == "ByNetwork")
+      {
+        taxoCommunities = Plot_network(
+          input,
+          ResDiffAnal(),
+          Available_taxo,
+          compute_pcor = compute_pcor(),
+          SelectTaxoPlotNetworkDebounce(),
+          qualiVariable,
+          colors = colorsVisuPlot(),
+          dataInput = dataInput()
+        )$taxo
+        
+        req(input$CommunityVisuPlot)
+        selTaxo <- taxoCommunities %>%
+          dplyr::filter(Community == as.integer(input$CommunityVisuPlot)) %>% 
+          dplyr::select(input$TaxoSelect) %>%
+          dplyr::distinct()
+        
+        selTaxo <- selTaxo[, 1]
+        res = selectizeInput(
+          "selectTaxoPlot",
+          h6(strong(
+            paste("Select the", input$TaxoSelect, "to plot")
+          )),
+          Available_taxo,
+          selected = selTaxo,
+          multiple = TRUE
+        )
+        
+      }
       if (input$SelectSpecifTaxo == "Most")
         res = selectizeInput(
           "selectTaxoPlot",
@@ -7761,7 +7801,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
           selected = Available_taxo,
           multiple = TRUE
         )
-      others = setdiff(Available_taxo, selTaxo)
+        others = setdiff(Available_taxo, selTaxo)
     }
     return(list(res = res, others = others))
   })
@@ -7859,17 +7899,37 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   })
   
   output$SelectValueQualiVar <- renderUI({
-    target = isolate(values$TargetWorking)
+    VarInt = input$VisuVarInt
+    target = values$TargetWorking
+    val = NULL
+    if (length(VarInt) > 0)
+    {
+      
+      #Get the modalities
+      for (i in 1:length(VarInt))
+      {
+        ## Replace "-" by "."
+        target[, VarInt[i]] =  gsub("-", ".", target[, VarInt[i]])
+        
+        Tinput = paste("input$", "ModVisu", VarInt[i], sep = "")
+        expr = parse(text = Tinput)
+        ## All the modalities for all the var of interest
+        val = c(val, eval(expr))
+      }
+    }
+    req(val)
     if (!is.null(target)) {
       conditionalPanel(
         condition = "input.colorCorr == 'corr'",
         selectInput(
           "values1",
           'Values to consider as "1"',
-          choices = as.character(unique(as.factor(target[, input$sec_variable]))),
-          selected = min(as.character(unique(
-            as.factor(target[, input$sec_variable])
-          ))),
+          choices = val,
+          selected = ifelse(!is.null(val), val, NULL),
+          # choices = as.character(unique(as.factor(target[, input$sec_variable]))),
+          # selected = min(as.character(unique(
+          #   as.factor(target[, input$sec_variable])
+          # ))),
           multiple = TRUE
         ),
         h6('Other values will be considered as "0"', align = "center")
@@ -8615,8 +8675,7 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
       )
       updateNumericInput(session, 
                          "pcorrThreshold",
-                         value = input$ValAlpha,
-                         max = input$valAlpha
+                         value = input$ValAlpha
                          )
     }
     else
@@ -8746,18 +8805,40 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
         
         #It means that we got p-values 
         if(!is.null(ppcor$statistic)){
-          updateRadioButtons(session, "colorCorr", choiceNames = c("Color nodes according to correlation with a variable", paste0("Color edges according to partial correlation")), choiceValues = c("corr", "pcorr"), selected = "pcorr")
+          #updateRadioButtons(session, "colorCorr", choiceNames = c("Color nodes according to correlation with a variable", paste0("Color edges according to partial correlation")), choiceValues = c("corr", "pcorr"))
           p_val <- ppcor$p.value
+          
+          if(isTRUE(input$correctPval)){
+            p_val_vector <- as.vector(p_val)
+            
+            # Apply the Bonferroni correction
+            p_val_adjusted_vector <- p.adjust(p_val_vector, method = "bonferroni")
+            # Reshape the vector back to the original matrix dimensions
+            p_val_adjusted_matrix <- matrix(p_val_adjusted_vector, nrow = nrow(p_val), ncol = ncol(p_val))
+            
+            p_val <- p_val_adjusted_matrix
+          }
           adjacency <- matrix(0, nrow = nrow(p_val), ncol = ncol(p_val))  
           adjacency[p_val > (1 - as.numeric(min(input$AlphaVal, input$pcorrThreshold)))] <- 1
         }
         else{
-          updateRadioButtons(session, "colorCorr", choiceNames = c("Color nodes according to correlation with a variable", paste0("Color edges according to correlation")), choiceValues = c("corr", "pcorr"), selected = "pcorr")
+          #updateRadioButtons(session, "colorCorr", choiceNames = c("Color nodes according to correlation with a variable", paste0("Color edges according to correlation")), choiceValues = c("corr", "pcorr"))
           resCorrTest <- corr.test(countsMatrix, ci = FALSE, method = input$pcorrMethod)
           corr_matrix <- resCorrTest$r
           pval <- resCorrTest$p
           
-          pval_bool <-
+          if(isTRUE(input$correctPval)){
+            p_val_vector <- as.vector(pval)
+            
+            # Apply the Bonferroni correction
+            p_val_adjusted_vector <- p.adjust(p_val_vector, method = "bonferroni")
+            # Reshape the vector back to the original matrix dimensions
+            p_val_adjusted_matrix <- matrix(p_val_adjusted_vector, nrow = nrow(pval), ncol = ncol(pval))
+            
+            pval <- p_val_adjusted_matrix
+          }
+          
+          pval_bool <- 
             t(apply(pval, 1, function(v) {
               sapply(v, function(x) {
                 x < min(input$AlphaVal, input$pcorrThreshold)
@@ -8777,11 +8858,20 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
         }
       }
       else{
-        updateRadioButtons(session, "colorCorr", choiceNames = c("Color nodes according to correlation with a variable", paste0("Color edges according to correlation")), choiceValues = c("corr", "pcorr"), selected = "pcorr")
+        #updateRadioButtons(session, "colorCorr", choiceNames = c("Color nodes according to correlation with a variable", paste0("Color edges according to correlation")), choiceValues = c("corr", "pcorr"))
         resCorrTest <- corr.test(countsMatrix, ci = FALSE, method = input$pcorrMethod)
         corr_matrix <- resCorrTest$r
         pval <- resCorrTest$p
-        
+        if(isTRUE(input$correctPval)){
+          p_val_vector <- as.vector(pval)
+          
+          # Apply the Bonferroni correction
+          p_val_adjusted_vector <- p.adjust(p_val_vector, method = "bonferroni")
+          # Reshape the vector back to the original matrix dimensions
+          p_val_adjusted_matrix <- matrix(p_val_adjusted_vector, nrow = nrow(pval), ncol = ncol(pval))
+          
+          pval <- p_val_adjusted_matrix
+        }
         pval_bool <-
           t(apply(pval, 1, function(v) {
             sapply(v, function(x) {
@@ -8895,6 +8985,32 @@ CAAGCAGAAGACGGCATACGAGCTCTTCCGATCT"
   # }, height = reactive(input$heightVisu), width = reactive(ifelse(
   #   input$modifwidthVisu, input$widthVisu, "auto"
   # )))
+  
+  output$ByNetworkCommunities <- renderUI({
+    counts = dataMergeCounts()$counts
+    sumTot = rowSums(counts)
+    ord = order(sumTot, decreasing = TRUE)
+    Available_taxo = rownames(counts)[ord]
+    res = unique(Plot_network(
+      input,
+      ResDiffAnal(),
+      Available_taxo,
+      compute_pcor = compute_pcor(),
+      SelectTaxoPlotNetworkDebounce(),
+      qualiVariable,
+      colors = colorsVisuPlot(),
+      dataInput = dataInput()
+    )$taxo$Community)
+    # res_vector <- unlist(res)
+    # 
+    # res_table <- table(res_vector)
+    # 
+    # res <- names(res_table[res_table > 1])
+    
+    selectizeInput("CommunityVisuPlot", 
+                   "Select the community",
+                   choices = res)
+  })
   
   output$Community <- renderUI({
     counts = dataMergeCounts()$counts
