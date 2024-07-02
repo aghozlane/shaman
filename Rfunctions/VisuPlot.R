@@ -128,6 +128,7 @@ Plot_Visu_Barplot <-
         main_dataBarPlot_mat <- rbind(main_dataBarPlot_mat, others_dataBarPlot_mat)
       }
       main_dataBarPlot_mat <- as.data.frame(main_dataBarPlot_mat)
+      print(main_dataBarPlot_mat)
       if (input$SensPlotVisu == "Vertical")
         Sens = "multiBarChart"
       else
@@ -200,7 +201,7 @@ Plot_Visu_Barplot <-
         guides(fill = guide_legend(input$TaxoSelect))
       
       if (input$CountsOrProp == "prop")
-        gg = gg + labs(y = "Relative abundance (%)", x = "")
+        gg = gg + labs(y = "Relative abundance", x = "")
       if (input$CountsOrProp == "counts" &&
           input$NormOrRaw == "norm")
         gg = gg + labs(y = "Normalized counts", x = "")
@@ -1071,12 +1072,13 @@ Plot_Visu_Diversity <-
       ## Get interactivity
       #ff = ggplotly(gg)
       gg <- gg +
-        theme(axis.text.x = element_text(size = input$sizeDiversityTitle),  
-              axis.text.y = element_text(size = input$sizeDiversityTitle),   
-              axis.title.x = element_text(size = input$sizeDiversityTitle * 1.3),  
-              axis.title.y = element_text(size = input$sizeDiversityTitle * 1.3),
-              legend.text = element_text(size = input$sizeDiversityLegend)) +
-        guides(fill = guide_legend(title="Groups"))
+        theme(
+          axis.text.x = element_text(size = input$sizeDiversityTitle),  
+          axis.text.y = element_text(size = input$sizeDiversityTitle),   
+          axis.title.x = element_text(size = input$sizeDiversityTitle * 1.3),  
+          axis.title.y = element_text(size = input$sizeDiversityTitle * 1.3),
+          legend.text = element_text(size = input$sizeDiversityLegend)
+        ) #+ guides(fill = guide_legend(title = "Groups"))
     }
     return(list(plot = gg, dataDiv = dataDiv))
     
