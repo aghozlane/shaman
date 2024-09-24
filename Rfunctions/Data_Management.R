@@ -586,6 +586,7 @@ GetDataFromCT <-function(dataC,dataT, MGSTable)
     side = tolower(substr(colnames(taxo), 1, 1))
     # Add OTU_annotation field
     taxo$OTU_annotation = apply(tibble::rownames_to_column(taxo), 1, function(x) paste(x[1], "_",side[which(tail(na.omit(x), 1) == x) -1], "_", tail(na.omit(x), 1), sep=""))
+    taxo$OTU_annotation <- sapply(taxo$OTU_annotation, paste, collapse = "")
   }
   # Biom taxonomy must have seven levels + 1 with the OTU_annotation
   taxo_temp = as.matrix(taxo)
