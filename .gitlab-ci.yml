@@ -24,9 +24,6 @@ build_master:
     - docker tag $CI_REGISTRY_IMAGE:latest aghozlane/shaman
     - docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
     - docker push aghozlane/shaman
-  trigger:
-    project: hub/shaman-hosting
-    strategy: depend
   only:
     - master
 
@@ -53,3 +50,13 @@ build_conda:
     #- anaconda upload $res
   only:
     - tags
+  
+
+trigger_shaman_hosting:
+  stage: trigger
+  needs: ["build_master"]  # Optional, if you want the trigger to wait for 'build_master'
+  trigger:
+    project: hub/shaman-hosting
+    strategy: depend
+  only:
+    - master
