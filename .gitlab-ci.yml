@@ -53,7 +53,7 @@ build_conda:
   
 
 trigger_shaman_hosting:
-  stage: trigger
+  stage: deploy
   needs: ["build_master"]  # Optional, if you want the trigger to wait for 'build_master'
   trigger:
     project: hub/shaman-hosting
