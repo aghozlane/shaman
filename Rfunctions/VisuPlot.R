@@ -30,16 +30,13 @@ Plot_Visu_Barplot <-
       else if (!is.null(others))
         OthersnamesTax = others
     }
-    else{
-      
-    }
     dataNull = data.frame(x = c(0, 0), y = c(1, 2))
     
     all_tmp_combined <-
       GetDataToPlot(input, resDiff, VarInt, c(ind_taxo, others))
     all_counts_tmp_combined <- all_tmp_combined$counts
     allSamplesNames <- all_tmp_combined$namesCounts
-    allnamesTax = c(ind_taxo, others)
+    allnamesTax = colnames(all_tmp_combined$counts)
     plotd3 = nvd3Plot(
       x ~ y ,
       data = dataNull,
@@ -86,11 +83,9 @@ Plot_Visu_Barplot <-
         tmpProp =  all_counts_tmp_combined[i, ]
         if (input$CountsOrProp == "prop")
         {
-          tmpProp = round(tmpProp / sum(tmpProp), 3)
-          tmpProp = as.numeric(tmpProp / sum(tmpProp) * 100)
+          tmpProp = as.numeric(round(tmpProp / sum(tmpProp), 5) * 100)
         }
         all_tmp_counts = c(all_tmp_counts, tmpProp)
-        
         ## Meta data
         all_tmp_mat[1:length(allnamesTax), 3] = as.character(rep(allSamplesNames[i], length(allnamesTax)))
         
@@ -128,7 +123,6 @@ Plot_Visu_Barplot <-
         main_dataBarPlot_mat <- rbind(main_dataBarPlot_mat, others_dataBarPlot_mat)
       }
       main_dataBarPlot_mat <- as.data.frame(main_dataBarPlot_mat)
-      print(main_dataBarPlot_mat)
       if (input$SensPlotVisu == "Vertical")
         Sens = "multiBarChart"
       else
@@ -1274,9 +1268,11 @@ GetDataToPlot <-
         levelsMod = levels(targetInt$AllVar)
         
         ## Create the counts matrix only for the selected subset
-        counts_tmp = counts[Taxonomy %in% ind_taxo, ]
+        ind_taxo <- factor(ind_taxo, levels = unique(ind_taxo))
+        counts_tmp <- counts[Taxonomy %in% levels(ind_taxo), ]
+        counts_tmp <- counts_tmp[match(levels(ind_taxo), Taxonomy), ]
+        # counts_tmp = counts[Taxonomy %in% ind_taxo, ]
         counts_tmp = counts_tmp[, colnames(counts_tmp) %in% rownames(targetInt)]
-        
         ## Proportions over all the taxonomies
         ## Proportion verified
         prop_all = t(counts) / rowSums(t(counts))
