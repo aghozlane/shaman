@@ -87,6 +87,7 @@ function(request) {
                          box(
                            title = "What's new in SHAMAN", width = NULL, status = "primary",
                            div(style = 'overflow-y: scroll; height: 550px',
+                               addNews("October 29th 2024", "Barplot visualization", "Bug fix in the barplot. In some case the composition of the barplot were mixed."),
                                addNews("January 8th 2024", "Sunburst visualization", "You can now see the composition of the communities detected in the Network."),
                                addNews("December 6th 2023", "Database update", "Greengenes2 and unite are up-to-date. New host genomes (mostly mosquitoes) are available."),
                                addNews("November 23th 2023", "New data visualization and Global View features", "UMAP has been added. We have also updated the Barplot to show other abundances for visualization of the 12 most abundant. For diversity, we have added a visualization of richness with comparison tests."),
