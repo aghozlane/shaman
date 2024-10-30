@@ -1268,10 +1268,7 @@ GetDataToPlot <-
         levelsMod = levels(targetInt$AllVar)
         
         ## Create the counts matrix only for the selected subset
-        ind_taxo <- factor(ind_taxo, levels = unique(ind_taxo))
-        counts_tmp <- counts[Taxonomy %in% levels(ind_taxo), ]
-        counts_tmp <- counts_tmp[match(levels(ind_taxo), Taxonomy), ]
-        # counts_tmp = counts[Taxonomy %in% ind_taxo, ]
+        counts_tmp = counts[Taxonomy %in% ind_taxo, ]
         counts_tmp = counts_tmp[, colnames(counts_tmp) %in% rownames(targetInt)]
         ## Proportions over all the taxonomies
         ## Proportion verified
