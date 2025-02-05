@@ -50,3 +50,13 @@ build_conda:
     #- anaconda upload $res
   only:
     - tags
+  
+
+trigger_shaman_hosting:
+  stage: deploy
+  needs: ["build_master"]  # Optional, if you want the trigger to wait for 'build_master'
+  trigger:
+    project: hub/shaman-hosting
+    strategy: depend
+  only:
+    - master

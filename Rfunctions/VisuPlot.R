@@ -30,16 +30,13 @@ Plot_Visu_Barplot <-
       else if (!is.null(others))
         OthersnamesTax = others
     }
-    else{
-      
-    }
     dataNull = data.frame(x = c(0, 0), y = c(1, 2))
     
     all_tmp_combined <-
       GetDataToPlot(input, resDiff, VarInt, c(ind_taxo, others))
     all_counts_tmp_combined <- all_tmp_combined$counts
     allSamplesNames <- all_tmp_combined$namesCounts
-    allnamesTax = c(ind_taxo, others)
+    allnamesTax = colnames(all_tmp_combined$counts)
     plotd3 = nvd3Plot(
       x ~ y ,
       data = dataNull,
@@ -86,11 +83,9 @@ Plot_Visu_Barplot <-
         tmpProp =  all_counts_tmp_combined[i, ]
         if (input$CountsOrProp == "prop")
         {
-          tmpProp = round(tmpProp / sum(tmpProp), 3)
-          tmpProp = as.numeric(tmpProp / sum(tmpProp) * 100)
+          tmpProp = as.numeric(round(tmpProp / sum(tmpProp), 5) * 100)
         }
         all_tmp_counts = c(all_tmp_counts, tmpProp)
-        
         ## Meta data
         all_tmp_mat[1:length(allnamesTax), 3] = as.character(rep(allSamplesNames[i], length(allnamesTax)))
         
@@ -200,7 +195,7 @@ Plot_Visu_Barplot <-
         guides(fill = guide_legend(input$TaxoSelect))
       
       if (input$CountsOrProp == "prop")
-        gg = gg + labs(y = "Relative abundance (%)", x = "")
+        gg = gg + labs(y = "Relative abundance", x = "")
       if (input$CountsOrProp == "counts" &&
           input$NormOrRaw == "norm")
         gg = gg + labs(y = "Normalized counts", x = "")
@@ -1071,12 +1066,13 @@ Plot_Visu_Diversity <-
       ## Get interactivity
       #ff = ggplotly(gg)
       gg <- gg +
-        theme(axis.text.x = element_text(size = input$sizeDiversityTitle),  
-              axis.text.y = element_text(size = input$sizeDiversityTitle),   
-              axis.title.x = element_text(size = input$sizeDiversityTitle * 1.3),  
-              axis.title.y = element_text(size = input$sizeDiversityTitle * 1.3),
-              legend.text = element_text(size = input$sizeDiversityLegend)) +
-        guides(fill = guide_legend(title="Groups"))
+        theme(
+          axis.text.x = element_text(size = input$sizeDiversityTitle),  
+          axis.text.y = element_text(size = input$sizeDiversityTitle),   
+          axis.title.x = element_text(size = input$sizeDiversityTitle * 1.3),  
+          axis.title.y = element_text(size = input$sizeDiversityTitle * 1.3),
+          legend.text = element_text(size = input$sizeDiversityLegend)
+        ) #+ guides(fill = guide_legend(title = "Groups"))
     }
     return(list(plot = gg, dataDiv = dataDiv))
     
@@ -1274,7 +1270,6 @@ GetDataToPlot <-
         ## Create the counts matrix only for the selected subset
         counts_tmp = counts[Taxonomy %in% ind_taxo, ]
         counts_tmp = counts_tmp[, colnames(counts_tmp) %in% rownames(targetInt)]
-        
         ## Proportions over all the taxonomies
         ## Proportion verified
         prop_all = t(counts) / rowSums(t(counts))
